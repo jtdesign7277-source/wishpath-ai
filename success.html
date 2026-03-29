@@ -474,20 +474,30 @@
         return;
       }
 
-      const btn = event.target;
+      const btn = document.querySelector('#emailModal .action-btn.primary');
       btn.textContent = 'Sending...';
       btn.disabled = true;
 
       try {
-        const data = JSON.parse(localStorage.getItem('wishpath_data') || '{}');
-        await fetch(EDGE_FN, {
+        const res = await fetch(EDGE_FN, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...data, email: email }),
+          body: JSON.stringify({
+            emailOnly: true,
+            email: email,
+            wish: currentWish,
+            roadmap: currentRoadmap,
+          }),
         });
+        const result = await res.json();
         hideEmailModal();
-        showToast('Roadmap sent to ' + email);
+        if (res.ok) {
+          showToast('Roadmap sent to ' + email);
+        } else {
+          showToast(result.error || 'Failed to send. Try again.');
+        }
       } catch {
+        hideEmailModal();
         showToast('Failed to send. Try again.');
       }
 
