@@ -44,11 +44,19 @@
       --radius-sm: 10px;
     }
 
-    html { scroll-behavior: smooth; max-width: 100vw; overflow-x: hidden; }
+    html {
+      scroll-behavior: smooth;
+      max-width: 100vw;
+      overflow-x: hidden;
+      background-color: #0a0a0f;
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
+    }
 
     body {
       font-family: 'Inter', sans-serif;
       background: var(--bg);
+      background-color: #0a0a0f;
       color: var(--text);
       overflow-x: hidden;
       max-width: 100vw;
