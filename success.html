@@ -169,7 +169,7 @@
     </div>
 
     <!-- Roadmap -->
-    <div class="state" id="roadmapState" style="display:none;">
+    <div class="state" id="roadmapState">
       <!-- Save Panel -->
       <div id="savePanel" style="background: #161b22; border: 1px solid #30363d; border-radius: 14px; padding: 28px; margin-bottom: 32px;">
         <div id="savePanelForm">
@@ -241,8 +241,10 @@
     var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1zemlscmV4bHVwenRoYXVvYXhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkzMTU3ODksImV4cCI6MjA4NDg5MTc4OX0.zgkl2tTTVXZax_jjT4SAGhl4ILsS__g1qpZUtPOWCaI';
 
     function showState(id) {
-      document.querySelectorAll('.state').forEach(function(el) { el.classList.remove('active'); });
-      document.getElementById(id).classList.add('active');
+      document.querySelectorAll('.state').forEach(function(el) { el.classList.remove('active'); el.style.display = ''; });
+      var target = document.getElementById(id);
+      target.classList.add('active');
+      target.style.display = 'block';
     }
 
     function animateSteps() {
