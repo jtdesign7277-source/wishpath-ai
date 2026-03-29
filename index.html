@@ -1211,10 +1211,10 @@
       time: document.getElementById('timeAvail')?.value || '',
     };
 
-    // Persist wish to session storage for post-payment retrieval
-    sessionStorage.setItem('wishpath_data', JSON.stringify(ctx));
+    // Persist wish to localStorage for post-payment retrieval
+    localStorage.setItem('wishpath_data', JSON.stringify(ctx));
 
-    const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/7sY5kFcppgwpfVOaOI1ck03';
+    const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/6oU8wR3STa813929KE1ck04';
 
     // Append metadata as URL params for post-payment processing
     const params = new URLSearchParams({ prefilled_email: '' });
