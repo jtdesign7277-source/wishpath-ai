@@ -63,7 +63,9 @@
     .rm-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 0.72rem; font-weight: 600; color: var(--green); background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2); border-radius: 99px; padding: 5px 14px; margin-bottom: 20px; letter-spacing: 0.04em; text-transform: uppercase; }
     .rm-title { font-size: clamp(1.8rem, 5vw, 2.4rem); font-weight: 800; color: var(--text); letter-spacing: -0.04em; line-height: 1.12; margin-bottom: 8px; }
     .rm-summary { color: var(--text-muted); font-size: 1rem; line-height: 1.65; margin-bottom: 40px; max-width: 640px; }
-    .rm-wish { border-left: 4px solid var(--purple); background: rgba(124,58,237,0.06); padding: 16px 20px; border-radius: 0 12px 12px 0; margin-bottom: 12px; }
+    .rm-generated { background: rgba(34,197,94,0.1); border-radius: 8px; padding: 14px 20px; margin-bottom: 40px; display: flex; align-items: center; gap: 10px; font-size: 0.95rem; color: var(--text-sub); }
+    .rm-generated-icon { font-size: 1.2rem; }
+    .rm-wish { border-left: 4px solid var(--purple); background: rgba(124,58,237,0.06); padding: 16px 20px; border-radius: 0 12px 12px 0; margin-bottom: 16px; }
     .rm-wish-label { font-size: 0.7rem; font-weight: 600; color: var(--purple-light); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; }
     .rm-wish-text { font-size: 0.95rem; color: var(--text-sub); line-height: 1.55; }
     .rm-meta { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 48px; }
@@ -71,20 +73,19 @@
     .rm-meta-pill strong { color: var(--text-sub); }
 
     /* Phase */
-    .rm-phase { margin-bottom: 56px; }
-    .rm-phase-head { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
-    .rm-phase-label { font-size: 1.1rem; font-weight: 600; color: var(--text); white-space: nowrap; }
-    .rm-phase-title { font-size: 1.35rem; font-weight: 500; color: var(--text); margin-bottom: 24px; }
-    .rm-section-label { font-weight: 600; color: var(--text); font-size: 0.95rem; margin-bottom: 8px; }
-    .rm-body { color: var(--text-sub); font-size: 0.93rem; line-height: 1.7; }
-    .rm-body p { margin-bottom: 20px; }
-    .rm-body ul { padding-left: 22px; margin-bottom: 24px; list-style: disc; }
-    .rm-body ul li { margin-bottom: 6px; padding-left: 4px; }
-    .rm-body ul li::marker { color: var(--text-dim); }
-    .rm-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 24px; }
-    .rm-two-col ul { font-size: 0.87rem; }
-    .rm-tips ul { font-size: 0.87rem; }
-    .rm-divider { border: none; border-top: 1px solid var(--border); margin: 0 0 56px; }
+    .rm-phase { margin-bottom: 48px; }
+    .rm-phase-heading { font-size: 1.25rem; font-weight: 600; color: #5b9bd5; margin-bottom: 24px; }
+    .rm-section-label { font-weight: 700; color: var(--text); font-size: 1rem; margin: 28px 0 10px; }
+    .rm-section-label:first-child { margin-top: 0; }
+    .rm-body { color: var(--text-sub); font-size: 0.95rem; line-height: 1.75; }
+    .rm-body ul { padding-left: 8px; margin-bottom: 8px; list-style: none; }
+    .rm-body ul li { margin-bottom: 8px; padding-left: 0; display: flex; gap: 8px; align-items: flex-start; }
+    .rm-body ul li .em { flex-shrink: 0; font-size: 1rem; line-height: 1.5; }
+    .rm-tips-callout { background: rgba(234,179,8,0.08); border: 1px solid rgba(234,179,8,0.2); border-radius: 8px; padding: 16px 20px; margin-top: 28px; }
+    .rm-tips-callout-head { font-weight: 700; color: var(--text); font-size: 0.95rem; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+    .rm-tips-callout ul { padding-left: 8px; list-style: none; }
+    .rm-tips-callout ul li { margin-bottom: 6px; display: flex; gap: 8px; align-items: flex-start; font-size: 0.9rem; }
+    .rm-divider { display: none; }
 
     /* Quick Wins / Watch Out */
     .rm-callout { border-radius: 12px; padding: 20px 24px; margin-bottom: 24px; }
@@ -99,8 +100,8 @@
     .rm-callout-item span { color: var(--text-muted); }
 
     /* Footer mark */
-    .rm-footer { margin-top: 56px; padding-top: 24px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: var(--text-dim); }
-    .rm-footer-diamond { color: var(--purple-light); }
+    .rm-footer { margin-top: 56px; background: rgba(255,255,255,0.04); border: 1px solid var(--border-light); border-radius: 8px; padding: 16px 20px; display: flex; align-items: center; gap: 10px; font-size: 0.9rem; color: var(--text-muted); }
+    .rm-footer-diamond { color: var(--text-dim); font-size: 1rem; }
 
     /* Actions */
     .actions { text-align: center; margin-top: 48px; }
@@ -228,42 +229,81 @@
       }, 3000);
     }
 
+    // Emoji sets for Notion-style bullets
+    var actionEmojis = ['🧠','🎯','🔍','📮','💼','📋','🛠','💡','📊','🔑','⚡','🚀','📌','🔧','💻'];
+    var milestoneEmoji = '✅';
+    var metricEmojis = ['📊','🔘','📋','📈','⏱','💰','🎯','📉'];
+
     function renderRoadmap(roadmap, wish) {
       document.getElementById('roadmapTitle').textContent = roadmap.title || 'Your Roadmap';
       document.getElementById('roadmapSummary').textContent = roadmap.summary || '';
       document.getElementById('wishText').textContent = wish;
 
-      // Meta
+      // Generated-for bar
       var metaRow = document.getElementById('metaRow');
-      metaRow.innerHTML = '';
-      if (roadmap.estimatedTimeline) metaRow.innerHTML += '<div class="rm-meta-pill"><strong>Timeline:</strong> ' + roadmap.estimatedTimeline + '</div>';
-      if (roadmap.estimatedTotalCost) metaRow.innerHTML += '<div class="rm-meta-pill"><strong>Est. Cost:</strong> ' + roadmap.estimatedTotalCost + '</div>';
+      var metaParts = [];
+      if (roadmap.estimatedTimeline) metaParts.push(roadmap.estimatedTimeline);
+      if (roadmap.estimatedTotalCost) metaParts.push('Est. ' + roadmap.estimatedTotalCost);
+      metaRow.innerHTML = '<div class="rm-generated"><span class="rm-generated-icon">🧭</span><span><strong>Generated for:</strong> ' + (metaParts.length ? metaParts.join(' • ') : 'Your personalized goal') + '</span></div>';
 
       // Phases — Notion style
       var container = document.getElementById('phasesContainer');
       container.innerHTML = '';
       (roadmap.phases || []).forEach(function(p, idx) {
-        var stepsHtml = (p.steps || []).map(function(s) {
-          return '<li>' + s.action + (s.detail ? ' — <span style="color:var(--text-muted);">' + s.detail + '</span>' : '') +
-            (s.cost || s.time ? '<br><span style="font-size:0.82rem;">' +
-              (s.cost ? '<strong style="color:var(--purple-light);">Cost: ' + s.cost + '</strong> ' : '') +
-              (s.time ? '<span style="color:var(--text-dim);">| Time: ' + s.time + '</span>' : '') +
-            '</span>' : '') +
-          '</li>';
+        // Action items with emoji bullets
+        var actionsHtml = (p.steps || []).map(function(s, si) {
+          var emoji = actionEmojis[si % actionEmojis.length];
+          var text = s.action;
+          if (s.detail) text += '. ' + s.detail;
+          return '<li><span class="em">' + emoji + '</span><span>' + text + '</span></li>';
         }).join('');
 
-        var html = '<div class="rm-phase">' +
-          '<div class="rm-phase-head"><span class="rm-phase-label">Phase ' + p.phase + ': ' + (p.timeframe || '') + '</span></div>' +
-          '<div class="rm-phase-title">' + p.name + '</div>' +
-          '<div class="rm-body">' +
-            '<p class="rm-section-label">Key Actions</p>' +
-            '<ul>' + stepsHtml + '</ul>' +
-          '</div>' +
-        '</div>';
+        // Build phase HTML
+        var html = '';
+        if (idx > 0) html += '<hr style="border:none;border-top:1px solid var(--border);margin:48px 0;">';
+        html += '<div class="rm-phase">';
+        html += '<div class="rm-phase-heading">Phase ' + p.phase + ' (' + (p.timeframe || '') + '): ' + p.name + '</div>';
+        html += '<div class="rm-body">';
 
-        if (idx > 0) {
-          container.innerHTML += '<hr class="rm-divider">';
+        // Focus section (use first step detail or generic)
+        html += '<p class="rm-section-label">Focus</p>';
+        html += '<ul><li><span class="em">•</span><span>' + (p.steps && p.steps[0] ? p.steps[0].detail || p.steps[0].action : p.name) + '</span></li></ul>';
+
+        // Key Actions
+        html += '<p class="rm-section-label">Key Actions</p>';
+        html += '<ul>' + actionsHtml + '</ul>';
+
+        // Milestones
+        html += '<p class="rm-section-label">Milestones by ' + (p.timeframe || 'End of Phase') + '</p>';
+        html += '<ul>';
+        (p.steps || []).slice(0, 3).forEach(function(s) {
+          html += '<li><span class="em">' + milestoneEmoji + '</span><span>' + s.action + '</span></li>';
+        });
+        html += '</ul>';
+
+        // Metrics
+        html += '<p class="rm-section-label">Metrics to Track</p>';
+        html += '<ul>';
+        (p.steps || []).slice(0, 3).forEach(function(s, si) {
+          var me = metricEmojis[si % metricEmojis.length];
+          html += '<li><span class="em">' + me + '</span><span>' + (s.time ? 'Time: ' + s.time : s.action) + (s.cost ? ' (Cost: ' + s.cost + ')' : '') + '</span></li>';
+        });
+        html += '</ul>';
+
+        // Tips callout (if available from watchOut, or generate contextual tips)
+        html += '<div class="rm-tips-callout">';
+        html += '<div class="rm-tips-callout-head">⚠️ Tips & Pitfalls to Avoid</div>';
+        html += '<ul>';
+        if (roadmap.watchOut && roadmap.watchOut.length > idx) {
+          html += '<li><span>•</span><span>' + roadmap.watchOut[idx % roadmap.watchOut.length].mistake + '. ' + roadmap.watchOut[idx % roadmap.watchOut.length].why + '</span></li>';
         }
+        if (roadmap.watchOut && roadmap.watchOut.length > (idx + 1) % roadmap.watchOut.length) {
+          var nextWo = roadmap.watchOut[(idx + 1) % roadmap.watchOut.length];
+          html += '<li><span>•</span><span>' + nextWo.mistake + '. ' + nextWo.why + '</span></li>';
+        }
+        html += '</ul></div>';
+
+        html += '</div></div>';
         container.innerHTML += html;
       });
 
@@ -275,13 +315,8 @@
         }).join('');
       }
 
-      // Watch Out
-      if (roadmap.watchOut && roadmap.watchOut.length) {
-        document.getElementById('watchOutCard').style.display = 'block';
-        document.getElementById('watchOutList').innerHTML = roadmap.watchOut.map(function(w) {
-          return '<div class="rm-callout-item"><strong>' + w.mistake + '</strong> <span>— ' + w.why + '</span></div>';
-        }).join('');
-      }
+      // Watch Out (global, already distributed per-phase)
+      document.getElementById('watchOutCard').style.display = 'none';
 
       showState('roadmapState');
     }
