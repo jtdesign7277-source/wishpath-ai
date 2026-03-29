@@ -161,12 +161,15 @@
   <script>
     var wishes = [];
     var coachHistory = [];
+    var currentConvoId = null;
+    var currentUserId = null;
     var EDGE_FN = 'https://mszilrexlupzthauoaxb.supabase.co/functions/v1/wishpath-generate';
 
     // Auth check
     (async function() {
       var session = await requireAuth();
       if (!session) return;
+      currentUserId = session.user.id;
       document.getElementById('userEmail').textContent = session.user.email;
       var profile = await getUserProfile();
       if (profile) {
@@ -255,11 +258,88 @@
       if (view === 'wishes') closeViewer();
     }
 
-    // Coach
+    // Coach — persistent conversations
     function populateCoachSelect() {
       var sel = document.getElementById('coachSelect');
       if (!wishes.length) { sel.innerHTML = '<option value="">No saved roadmaps yet</option>'; return; }
-      sel.innerHTML = wishes.map(function(w, i) { return '<option value="' + i + '">' + (w.wish_title || 'Untitled') + '</option>'; }).join('');
+      sel.innerHTML = wishes.map(function(w, i) { return '<option value="' + i + '" data-wish-id="' + w.id + '">' + (w.wish_title || 'Untitled') + '</option>'; }).join('');
+      // Load conversation for first wish
+      loadConversation(wishes[0].id);
+    }
+
+    // When user switches wish in dropdown
+    document.getElementById('coachSelect').addEventListener('change', function() {
+      var idx = this.value;
+      if (wishes[idx]) loadConversation(wishes[idx].id);
+    });
+
+    async function loadConversation(wishId) {
+      coachHistory = [];
+      currentConvoId = null;
+      var msgs = document.getElementById('coachMessages');
+      msgs.innerHTML = '<div class="msg ai">Loading your conversation...</div>';
+
+      try {
+        var sb = getSupabase();
+        var { data, error } = await sb
+          .from('coach_conversations')
+          .select('*')
+          .eq('user_id', currentUserId)
+          .eq('wish_id', wishId)
+          .order('updated_at', { ascending: false })
+          .limit(1);
+
+        if (data && data.length > 0) {
+          currentConvoId = data[0].id;
+          coachHistory = data[0].messages || [];
+          // Render saved messages
+          msgs.innerHTML = '';
+          coachHistory.forEach(function(m) {
+            var cls = m.role === 'user' ? 'user' : 'ai';
+            var content = m.role === 'user' ? m.content.replace(/</g,'&lt;') : m.content.replace(/\n/g,'<br>').replace(/</g,'&lt;').replace(/&lt;br>/g,'<br>');
+            msgs.innerHTML += '<div class="msg ' + cls + '">' + content + '</div>';
+          });
+          if (coachHistory.length === 0) {
+            msgs.innerHTML = '<div class="msg ai">Welcome back! I remember our conversation. What would you like to work on today?</div>';
+          }
+        } else {
+          // New conversation
+          msgs.innerHTML = '<div class="msg ai">Hi! I\'m your WishPath Coach. I\'ve studied your roadmap in detail. What would you like to tackle first? I can help you break down any phase into daily actions.</div>';
+        }
+        msgs.scrollTop = msgs.scrollHeight;
+      } catch (e) {
+        msgs.innerHTML = '<div class="msg ai">Hi! I\'m your WishPath Coach. Select a roadmap above and let\'s get to work.</div>';
+      }
+    }
+
+    async function saveConversation(wishId) {
+      if (!currentUserId || !wishId) return;
+      var sb = getSupabase();
+
+      // Build a summary from last few messages for context
+      var summary = '';
+      if (coachHistory.length > 6) {
+        var recent = coachHistory.slice(-6).map(function(m) { return m.role + ': ' + m.content.substring(0, 100); }).join('\n');
+        summary = recent;
+      }
+
+      if (currentConvoId) {
+        // Update existing
+        await sb.from('coach_conversations').update({
+          messages: coachHistory,
+          summary: summary,
+          updated_at: new Date().toISOString(),
+        }).eq('id', currentConvoId);
+      } else {
+        // Create new
+        var { data } = await sb.from('coach_conversations').insert({
+          user_id: currentUserId,
+          wish_id: wishId,
+          messages: coachHistory,
+          summary: summary,
+        }).select('id').single();
+        if (data) currentConvoId = data.id;
+      }
     }
 
     async function sendCoachMsg() {
@@ -270,14 +350,15 @@
 
       var selIdx = document.getElementById('coachSelect').value;
       var wish = wishes[selIdx];
-      var roadmapContext = wish ? JSON.stringify(wish.roadmap_data).substring(0, 3000) : 'No roadmap selected';
-      var wishTitle = wish ? wish.wish_title : 'general goal';
+      if (!wish) { showToast('Select a roadmap first', 'error'); return; }
 
-      // Add user message
+      var roadmapContext = JSON.stringify(wish.roadmap_data).substring(0, 3000);
+      var wishTitle = wish.wish_title;
+      var wishId = wish.id;
+
+      // Add user message to UI
       var msgs = document.getElementById('coachMessages');
       msgs.innerHTML += '<div class="msg user">' + msg.replace(/</g,'&lt;') + '</div>';
-
-      // Add typing indicator
       msgs.innerHTML += '<div class="msg ai" id="coachTyping"><span class="typing">Thinking</span></div>';
       msgs.scrollTop = msgs.scrollHeight;
 
@@ -287,9 +368,19 @@
       coachHistory.push({ role: 'user', content: msg });
 
       try {
-        var systemPrompt = 'You are WishPath Coach, an encouraging, strategic executive coach. The user has a saved roadmap titled "' + wishTitle + '". Reference the full roadmap JSON below. Guide them step-by-step through execution. Ask clarifying questions, celebrate wins, suggest daily actions, and keep them accountable. Never hallucinate steps. Current date is ' + new Date().toLocaleDateString() + '.\n\nRoadmap data:\n' + roadmapContext;
+        // Build system prompt with conversation memory
+        var memoryContext = '';
+        if (coachHistory.length > 10) {
+          // Summarize older messages so Claude has context without hitting token limits
+          memoryContext = '\n\nPrevious conversation summary (older messages):\n';
+          coachHistory.slice(0, -10).forEach(function(m) {
+            memoryContext += m.role + ': ' + m.content.substring(0, 150) + '...\n';
+          });
+        }
 
-        var res = await fetch('https://mszilrexlupzthauoaxb.supabase.co/functions/v1/wishpath-generate', {
+        var systemPrompt = 'You are WishPath Coach, an encouraging, strategic executive coach. The user has a saved roadmap titled "' + wishTitle + '". Reference the full roadmap JSON below. Guide them step-by-step through execution. Ask clarifying questions, celebrate wins, suggest daily actions, and keep them accountable. Never hallucinate steps. Remember everything from previous conversations — the user expects continuity. Current date is ' + new Date().toLocaleDateString() + '.\n\nRoadmap data:\n' + roadmapContext + memoryContext;
+
+        var res = await fetch(EDGE_FN, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -300,13 +391,17 @@
         });
 
         var data = await res.json();
-        var reply = data.reply || data.error || 'I couldn\'t process that. Try again.';
+        var reply = data.reply || 'I couldn\'t process that. Try again.';
 
         coachHistory.push({ role: 'assistant', content: reply });
 
         var typing = document.getElementById('coachTyping');
         if (typing) typing.remove();
         msgs.innerHTML += '<div class="msg ai">' + reply.replace(/\n/g, '<br>').replace(/</g,'&lt;').replace(/&lt;br>/g,'<br>') + '</div>';
+
+        // Save conversation to Supabase after every exchange
+        await saveConversation(wishId);
+
       } catch (e) {
         var typing = document.getElementById('coachTyping');
         if (typing) typing.remove();
