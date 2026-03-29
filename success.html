@@ -14,23 +14,27 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: #0a0a0f; --purple: #7c3aed; --purple-light: #9d5cf6;
-      --purple-dim: rgba(124,58,237,0.15); --blue: #3b82f6;
-      --gold: #c7a86e; --gold-dim: rgba(199,168,110,0.15);
-      --green: #22c55e; --red: #ef4444;
-      --text: #e8e8f0; --text-muted: #8888aa;
-      --border: rgba(124,58,237,0.2); --border-subtle: rgba(255,255,255,0.06);
-      --card: rgba(15,15,26,0.9); --radius: 16px;
+      --bg: #0a0a14; --card-bg: #111827;
+      --purple: #7c3aed; --purple-light: #a78bfa; --blue: #3b82f6;
+      --gold: #c7a86e; --green: #22c55e; --red: #ef4444;
+      --text: #f0f0f8; --text-sub: #d1d5db; --text-muted: #9ca3af; --text-dim: #6b7280;
+      --border: rgba(55,65,81,0.7); --border-light: rgba(55,65,81,0.4);
     }
     html { background: #000; }
-    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; min-height: 100dvh; }
+    body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text-sub); min-height: 100vh; line-height: 1.65; font-size: 15px; }
+
+    /* Ambient */
     .glow-blob { position: fixed; border-radius: 50%; filter: blur(120px); pointer-events: none; z-index: 0; }
-    .glow-blob-1 { width: 500px; height: 500px; background: radial-gradient(circle, rgba(124,58,237,0.15) 0%, transparent 70%); top: -100px; left: -100px; }
-    .glow-blob-2 { width: 400px; height: 400px; background: radial-gradient(circle, rgba(59,130,246,0.1) 0%, transparent 70%); bottom: 10%; right: -80px; }
-    nav { position: sticky; top: 0; z-index: 100; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); background: rgba(0,0,0,0.85); border-bottom: 1px solid var(--border-subtle); padding: calc(16px + env(safe-area-inset-top)) 24px 16px; display: flex; align-items: center; justify-content: space-between; }
-    .nav-logo { font-size: 1.1rem; font-weight: 700; background: linear-gradient(135deg, #9d5cf6, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; text-decoration: none; }
-    .nav-btn { font-size: 0.8rem; font-weight: 600; color: var(--purple-light); background: var(--purple-dim); border: 1px solid rgba(124,58,237,0.3); border-radius: 99px; padding: 6px 16px; cursor: pointer; text-decoration: none; }
-    .container { max-width: 780px; margin: 0 auto; padding: 32px 24px 80px; position: relative; z-index: 1; }
+    .glow-blob-1 { width: 500px; height: 500px; background: radial-gradient(circle, rgba(124,58,237,0.12) 0%, transparent 70%); top: -100px; left: -100px; }
+    .glow-blob-2 { width: 400px; height: 400px; background: radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 70%); bottom: 10%; right: -80px; }
+
+    /* Nav */
+    nav { position: sticky; top: 0; z-index: 100; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); background: rgba(10,10,20,0.88); border-bottom: 1px solid var(--border-light); padding: calc(16px + env(safe-area-inset-top)) 24px 16px; display: flex; align-items: center; justify-content: space-between; }
+    .nav-logo { font-size: 1.1rem; font-weight: 700; background: linear-gradient(135deg, #a78bfa, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; text-decoration: none; }
+    .nav-btn { font-size: 0.8rem; font-weight: 600; color: var(--purple-light); background: rgba(124,58,237,0.12); border: 1px solid rgba(124,58,237,0.3); border-radius: 99px; padding: 6px 16px; text-decoration: none; }
+
+    /* Container */
+    .container { max-width: 800px; margin: 0 auto; padding: 32px 24px 80px; position: relative; z-index: 1; }
 
     /* States */
     .state { display: none; }
@@ -40,64 +44,95 @@
     .loading { text-align: center; padding: 100px 24px; }
     .loading-orb { width: 80px; height: 80px; margin: 0 auto 32px; border-radius: 50%; background: radial-gradient(circle, rgba(124,58,237,0.6), rgba(59,130,246,0.3), transparent); animation: pulse 2s ease-in-out infinite; box-shadow: 0 0 60px rgba(124,58,237,0.3); }
     @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.15); opacity: 1; } }
-    .loading h2 { font-size: 1.4rem; margin-bottom: 12px; }
-    .loading p { color: var(--text-muted); font-size: 0.95rem; }
+    .loading h2 { font-size: 1.4rem; color: var(--text); margin-bottom: 12px; }
+    .loading p { color: var(--text-muted); }
     .loading-steps { display: flex; flex-direction: column; gap: 12px; max-width: 320px; margin: 32px auto 0; text-align: left; }
     .loading-step { display: flex; align-items: center; gap: 12px; font-size: 0.85rem; color: var(--text-muted); transition: color 0.3s; }
     .loading-step.active { color: var(--text); }
     .loading-step.done { color: var(--green); }
-    .loading-step-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted); flex-shrink: 0; transition: background 0.3s; }
+    .loading-step-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-dim); flex-shrink: 0; transition: background 0.3s; }
     .loading-step.active .loading-step-dot { background: var(--purple); animation: pulse 1s ease-in-out infinite; }
     .loading-step.done .loading-step-dot { background: var(--green); }
 
     /* Error / No Access */
     .error-state { text-align: center; padding: 100px 24px; }
-    .error-state h2 { font-size: 1.3rem; margin-bottom: 12px; }
+    .error-state h2 { font-size: 1.3rem; color: var(--red); margin-bottom: 12px; }
     .error-state p { color: var(--text-muted); margin-bottom: 24px; }
 
-    /* Roadmap */
-    .roadmap-header { text-align: center; margin-bottom: 40px; }
-    .roadmap-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: 600; color: var(--green); background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2); border-radius: 99px; padding: 5px 14px; margin-bottom: 16px; letter-spacing: 0.04em; text-transform: uppercase; }
-    .roadmap-title { font-size: 1.6rem; font-weight: 800; line-height: 1.2; margin-bottom: 12px; }
-    .roadmap-summary { color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; max-width: 600px; margin: 0 auto; }
-    .wish-card { background: var(--purple-dim); border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; margin-bottom: 32px; }
-    .wish-label { font-size: 0.7rem; font-weight: 600; color: var(--purple-light); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 6px; }
-    .wish-text { font-size: 0.95rem; line-height: 1.5; }
-    .meta-row { display: flex; gap: 16px; margin-bottom: 32px; flex-wrap: wrap; }
-    .meta-pill { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 500; background: rgba(255,255,255,0.04); border: 1px solid var(--border-subtle); border-radius: 99px; padding: 6px 14px; color: var(--text-muted); }
-    .meta-pill strong { color: var(--text); }
-    .phase { background: var(--card); border: 1px solid var(--border-subtle); border-radius: 16px; padding: 24px; margin-bottom: 20px; transition: border-color 0.2s; }
-    .phase:hover { border-color: var(--border); }
-    .phase-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
-    .phase-num { width: 32px; height: 32px; border-radius: 8px; background: var(--purple-dim); color: var(--purple-light); display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700; flex-shrink: 0; }
-    .phase-name { font-size: 1.05rem; font-weight: 700; }
-    .phase-time { margin-left: auto; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); background: rgba(255,255,255,0.04); border-radius: 99px; padding: 4px 10px; white-space: nowrap; }
-    .step { padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.04); display: grid; gap: 4px; }
-    .step:last-child { border-bottom: none; }
-    .step-action { font-size: 0.9rem; font-weight: 600; }
-    .step-detail { font-size: 0.83rem; color: var(--text-muted); line-height: 1.5; }
-    .step-meta { display: flex; gap: 12px; margin-top: 4px; }
-    .step-tag { font-size: 0.72rem; font-weight: 500; border-radius: 4px; padding: 2px 8px; }
-    .step-cost { background: rgba(124,58,237,0.12); color: var(--purple-light); }
-    .step-time { background: rgba(59,130,246,0.1); color: #60a5fa; }
-    .section-card { border-radius: 16px; padding: 20px 24px; margin-bottom: 20px; }
-    .section-card.wins { background: rgba(34,197,94,0.06); border: 1px solid rgba(34,197,94,0.15); }
-    .section-card.warnings { background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.15); }
-    .section-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 12px; }
-    .section-card.wins h3 { color: var(--green); }
-    .section-card.warnings h3 { color: var(--red); }
-    .section-item { padding: 8px 0; font-size: 0.85rem; line-height: 1.5; }
-    .section-item + .section-item { border-top: 1px solid rgba(255,255,255,0.04); }
-    .section-item strong { color: var(--text); }
-    .section-item span { color: var(--text-muted); }
-    .actions { display: flex; gap: 12px; margin-top: 32px; flex-wrap: wrap; justify-content: center; }
-    .action-btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; border-radius: 99px; font-size: 0.9rem; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; text-decoration: none; }
+    /* ── Notion-Style Roadmap ── */
+    .rm-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 0.72rem; font-weight: 600; color: var(--green); background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2); border-radius: 99px; padding: 5px 14px; margin-bottom: 20px; letter-spacing: 0.04em; text-transform: uppercase; }
+    .rm-title { font-size: clamp(1.8rem, 5vw, 2.4rem); font-weight: 800; color: var(--text); letter-spacing: -0.04em; line-height: 1.12; margin-bottom: 8px; }
+    .rm-summary { color: var(--text-muted); font-size: 1rem; line-height: 1.65; margin-bottom: 40px; max-width: 640px; }
+    .rm-wish { border-left: 4px solid var(--purple); background: rgba(124,58,237,0.06); padding: 16px 20px; border-radius: 0 12px 12px 0; margin-bottom: 12px; }
+    .rm-wish-label { font-size: 0.7rem; font-weight: 600; color: var(--purple-light); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; }
+    .rm-wish-text { font-size: 0.95rem; color: var(--text-sub); line-height: 1.55; }
+    .rm-meta { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 48px; }
+    .rm-meta-pill { font-size: 0.82rem; font-weight: 500; color: var(--text-muted); background: rgba(255,255,255,0.04); border: 1px solid var(--border-light); border-radius: 99px; padding: 6px 14px; }
+    .rm-meta-pill strong { color: var(--text-sub); }
+
+    /* Phase */
+    .rm-phase { margin-bottom: 56px; }
+    .rm-phase-head { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+    .rm-phase-label { font-size: 1.1rem; font-weight: 600; color: var(--text); white-space: nowrap; }
+    .rm-phase-title { font-size: 1.35rem; font-weight: 500; color: var(--text); margin-bottom: 24px; }
+    .rm-section-label { font-weight: 600; color: var(--text); font-size: 0.95rem; margin-bottom: 8px; }
+    .rm-body { color: var(--text-sub); font-size: 0.93rem; line-height: 1.7; }
+    .rm-body p { margin-bottom: 20px; }
+    .rm-body ul { padding-left: 22px; margin-bottom: 24px; list-style: disc; }
+    .rm-body ul li { margin-bottom: 6px; padding-left: 4px; }
+    .rm-body ul li::marker { color: var(--text-dim); }
+    .rm-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 24px; }
+    .rm-two-col ul { font-size: 0.87rem; }
+    .rm-tips ul { font-size: 0.87rem; }
+    .rm-divider { border: none; border-top: 1px solid var(--border); margin: 0 0 56px; }
+
+    /* Quick Wins / Watch Out */
+    .rm-callout { border-radius: 12px; padding: 20px 24px; margin-bottom: 24px; }
+    .rm-callout.wins { background: rgba(34,197,94,0.06); border: 1px solid rgba(34,197,94,0.15); }
+    .rm-callout.warnings { background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.15); }
+    .rm-callout h3 { font-size: 1rem; font-weight: 700; margin-bottom: 12px; }
+    .rm-callout.wins h3 { color: var(--green); }
+    .rm-callout.warnings h3 { color: var(--red); }
+    .rm-callout-item { padding: 8px 0; font-size: 0.88rem; line-height: 1.55; }
+    .rm-callout-item + .rm-callout-item { border-top: 1px solid rgba(255,255,255,0.04); }
+    .rm-callout-item strong { color: var(--text); }
+    .rm-callout-item span { color: var(--text-muted); }
+
+    /* Footer mark */
+    .rm-footer { margin-top: 56px; padding-top: 24px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: var(--text-dim); }
+    .rm-footer-diamond { color: var(--purple-light); }
+
+    /* Actions */
+    .actions { text-align: center; margin-top: 48px; }
+    .action-btn { display: inline-flex; align-items: center; gap: 8px; padding: 14px 36px; border-radius: 99px; font-size: 0.95rem; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; text-decoration: none; }
     .action-btn.primary { background: linear-gradient(135deg, #7c3aed, #6d28d9); color: white; box-shadow: 0 4px 20px rgba(124,58,237,0.3); }
     .action-btn.primary:hover { transform: translateY(-1px); }
-    .action-btn.secondary { background: rgba(255,255,255,0.06); color: var(--text); border: 1px solid var(--border-subtle); }
-    .toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: rgba(124,58,237,0.95); color: #fff; padding: 12px 22px; border-radius: 99px; font-size: 0.9rem; font-weight: 600; z-index: 9999; white-space: nowrap; box-shadow: 0 4px 24px rgba(0,0,0,0.4); }
-    @media print { nav, .actions, .glow-blob, #upsellSection, #downloadBtn { display: none !important; } body { background: white; color: #1a1a2e; } .phase, .section-card, .wish-card { border-color: #ddd; background: #fafafa; } }
-    @media (max-width: 600px) { .container { padding: 20px 16px 60px; } .roadmap-title { font-size: 1.3rem; } .phase { padding: 18px 16px; } .actions { flex-direction: column; } .action-btn { justify-content: center; } }
+    .action-btn.secondary { background: rgba(255,255,255,0.06); color: var(--text-sub); border: 1px solid var(--border-light); margin-top: 12px; }
+    .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgba(124,58,237,0.95); color: #fff; padding: 12px 22px; border-radius: 99px; font-size: 0.9rem; font-weight: 600; z-index: 9999; box-shadow: 0 4px 24px rgba(0,0,0,0.4); }
+
+    /* ── Print / PDF ── */
+    @media print {
+      nav, .glow-blob, .actions, #upsellSection, #downloadBtn, .rm-badge { display: none !important; }
+      body { background: #0a0a14 !important; color: #d1d5db !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; font-size: 13px; }
+      .container { max-width: 100%; padding: 0 32px; }
+      .rm-title { font-size: 1.8rem !important; color: #fff !important; }
+      .rm-phase-head { border-color: #374151 !important; }
+      .rm-divider { border-color: #374151 !important; }
+      .rm-wish { background: rgba(124,58,237,0.08) !important; border-left-color: #7c3aed !important; }
+      .rm-callout.wins { background: rgba(34,197,94,0.08) !important; border-color: rgba(34,197,94,0.2) !important; }
+      .rm-callout.warnings { background: rgba(239,68,68,0.08) !important; border-color: rgba(239,68,68,0.2) !important; }
+      .rm-footer { border-color: #374151 !important; }
+      .rm-two-col { grid-template-columns: 1fr 1fr; }
+      @page { margin: 0.6in; size: letter; }
+    }
+
+    @media (max-width: 640px) {
+      .container { padding: 20px 16px 60px; }
+      .rm-title { font-size: 1.4rem; }
+      .rm-two-col { grid-template-columns: 1fr; gap: 20px; }
+      .rm-phase { margin-bottom: 40px; }
+      .actions { display: flex; flex-direction: column; align-items: center; }
+    }
   </style>
 </head>
 <body>
@@ -109,14 +144,14 @@
   </nav>
   <div class="container">
 
-    <!-- No Access State -->
+    <!-- No Access -->
     <div class="state error-state" id="noAccessState">
       <h2>No payment found</h2>
       <p>Please complete your purchase to get your roadmap.</p>
       <a class="action-btn primary" href="/">Go to WishPath.ai</a>
     </div>
 
-    <!-- Loading State -->
+    <!-- Loading -->
     <div class="state loading" id="loadingState">
       <div class="loading-orb"></div>
       <h2>Generating Your Roadmap...</h2>
@@ -129,62 +164,48 @@
       </div>
     </div>
 
-    <!-- Error State -->
+    <!-- Error -->
     <div class="state error-state" id="errorState">
       <h2>Something went wrong</h2>
       <p id="errorMsg">We couldn't generate your roadmap. Please contact support.</p>
       <a class="action-btn primary" href="/">Try Again</a>
     </div>
 
-    <!-- Roadmap State -->
+    <!-- Roadmap -->
     <div class="state" id="roadmapState">
-      <div class="roadmap-header">
-        <div class="roadmap-badge">&#x2705; Payment Confirmed &bull; Roadmap Ready</div>
-        <h1 class="roadmap-title" id="roadmapTitle"></h1>
-        <p class="roadmap-summary" id="roadmapSummary"></p>
+      <div class="rm-badge">&#x2705; Payment Confirmed &bull; Roadmap Ready</div>
+      <h1 class="rm-title" id="roadmapTitle"></h1>
+      <p class="rm-summary" id="roadmapSummary"></p>
+      <div class="rm-wish">
+        <div class="rm-wish-label">Your Wish</div>
+        <div class="rm-wish-text" id="wishText"></div>
       </div>
-      <div class="wish-card">
-        <div class="wish-label">&#x2728; Your Wish</div>
-        <div class="wish-text" id="wishText"></div>
-      </div>
-      <div class="meta-row" id="metaRow"></div>
+      <div class="rm-meta" id="metaRow"></div>
       <div id="phasesContainer"></div>
-      <div class="section-card wins" id="quickWinsCard" style="display:none;"><h3>&#x26a1; Quick Wins (Next 24 Hours)</h3><div id="quickWinsList"></div></div>
-      <div class="section-card warnings" id="watchOutCard" style="display:none;"><h3>&#x26a0;&#xfe0f; Watch Out For</h3><div id="watchOutList"></div></div>
-      <!-- Download Button -->
-      <div style="text-align: center; margin-top: 40px;">
-        <button id="downloadBtn"
-                style="padding: 16px 48px; font-size: 1.2rem; background: linear-gradient(135deg, var(--purple-light), var(--blue)); border: none; border-radius: 999px; color: white; font-weight: 700; cursor: pointer; box-shadow: 0 4px 20px rgba(124,58,237,0.3); transition: transform 0.15s;">
-          &#x1f4e5; Download My Roadmap PDF
-        </button>
-        <div style="margin-top: 12px;">
-          <a class="action-btn secondary" href="/">&#x2728; New Wish</a>
-        </div>
+      <div class="rm-callout wins" id="quickWinsCard" style="display:none;"><h3>&#x26a1; Quick Wins (Next 24 Hours)</h3><div id="quickWinsList"></div></div>
+      <div class="rm-callout warnings" id="watchOutCard" style="display:none;"><h3>&#x26a0;&#xfe0f; Watch Out For</h3><div id="watchOutList"></div></div>
+      <div class="rm-footer">
+        <span class="rm-footer-diamond">&#x25c6;</span>
+        <span>Powered by WishPath.ai — researched and tailored specifically for your situation</span>
       </div>
 
-      <!-- Single Extra Roadmap Upsell (shows after download) -->
-      <div id="upsellSection" style="display: none; margin: 60px auto; max-width: 560px; padding: 40px; background: rgba(15,15,26,0.95); border-radius: 20px; border: 1px solid rgba(124,58,237,0.3); text-align: center;">
+      <!-- Actions -->
+      <div class="actions">
+        <button id="downloadBtn" class="action-btn primary">&#x1f4e5; Download My Roadmap PDF</button>
+        <div><a class="action-btn secondary" href="/">&#x2728; New Wish</a></div>
+      </div>
 
+      <!-- Upsell (hidden until download) -->
+      <div id="upsellSection" style="display: none; margin: 60px auto; max-width: 560px; padding: 40px; background: rgba(17,24,39,0.95); border-radius: 20px; border: 1px solid rgba(55,65,81,0.5); text-align: center;">
         <p style="color: var(--gold); font-weight: 600; margin-bottom: 12px;">&#x2728; YOUR FIRST PATH IS READY</p>
-        <h2 style="font-size: 1.7rem; margin: 0 0 20px;">Want a Second Roadmap?</h2>
-        <p style="color: var(--text-muted); max-width: 420px; margin: 0 auto 28px;">
-          Submit another goal or give one to a friend.<br>
-          Same quality, delivered instantly by email.
-        </p>
-
-        <div style="background: rgba(19,19,31,0.9); padding: 24px; border-radius: 16px; margin-bottom: 28px;">
+        <h2 style="font-size: 1.7rem; margin: 0 0 20px; color: var(--text);">Want a Second Roadmap?</h2>
+        <p style="color: var(--text-muted); max-width: 420px; margin: 0 auto 28px;">Submit another goal or give one to a friend.<br>Same quality, delivered instantly by email.</p>
+        <div style="background: rgba(17,24,39,0.9); padding: 24px; border-radius: 16px; margin-bottom: 28px; border: 1px solid var(--border-light);">
           <div style="font-size: 2.1rem; font-weight: 700; color: var(--purple-light);">$2.99</div>
           <p style="color: var(--text-muted); margin: 8px 0 0;">One extra personalized roadmap</p>
         </div>
-
-        <a href="https://buy.stripe.com/aFabJ3ahhfsl8tm1e81ck07"
-           style="display: inline-block; padding: 16px 44px; background: linear-gradient(135deg, var(--purple), var(--blue)); color: white; font-weight: 700; font-size: 1.15rem; border-radius: 999px; text-decoration: none;">
-          Yes — Get My Second Roadmap for $2.99
-        </a>
-
-        <p style="margin-top: 32px; font-size: 0.9rem; color: var(--text-muted);">
-          One-time &bull; No account needed &bull; Delivered by email
-        </p>
+        <a href="https://buy.stripe.com/aFabJ3ahhfsl8tm1e81ck07" style="display: inline-block; padding: 16px 44px; background: linear-gradient(135deg, var(--purple), var(--blue)); color: white; font-weight: 700; font-size: 1.15rem; border-radius: 999px; text-decoration: none;">Yes — Get My Second Roadmap for $2.99</a>
+        <p style="margin-top: 32px; font-size: 0.9rem; color: var(--text-dim);">One-time &bull; No account needed &bull; Delivered by email</p>
       </div>
     </div>
   </div>
@@ -212,30 +233,54 @@
       document.getElementById('roadmapSummary').textContent = roadmap.summary || '';
       document.getElementById('wishText').textContent = wish;
 
+      // Meta
       var metaRow = document.getElementById('metaRow');
       metaRow.innerHTML = '';
-      if (roadmap.estimatedTimeline) metaRow.innerHTML += '<div class="meta-pill"><strong>Timeline:</strong> ' + roadmap.estimatedTimeline + '</div>';
-      if (roadmap.estimatedTotalCost) metaRow.innerHTML += '<div class="meta-pill"><strong>Est. Cost:</strong> ' + roadmap.estimatedTotalCost + '</div>';
+      if (roadmap.estimatedTimeline) metaRow.innerHTML += '<div class="rm-meta-pill"><strong>Timeline:</strong> ' + roadmap.estimatedTimeline + '</div>';
+      if (roadmap.estimatedTotalCost) metaRow.innerHTML += '<div class="rm-meta-pill"><strong>Est. Cost:</strong> ' + roadmap.estimatedTotalCost + '</div>';
 
+      // Phases — Notion style
       var container = document.getElementById('phasesContainer');
       container.innerHTML = '';
-      (roadmap.phases || []).forEach(function(p) {
+      (roadmap.phases || []).forEach(function(p, idx) {
         var stepsHtml = (p.steps || []).map(function(s) {
-          var meta = '';
-          if (s.cost) meta += '<span class="step-tag step-cost">' + s.cost + '</span>';
-          if (s.time) meta += '<span class="step-tag step-time">' + s.time + '</span>';
-          return '<div class="step"><div class="step-action">' + s.action + '</div><div class="step-detail">' + s.detail + '</div>' + (meta ? '<div class="step-meta">' + meta + '</div>' : '') + '</div>';
+          return '<li>' + s.action + (s.detail ? ' — <span style="color:var(--text-muted);">' + s.detail + '</span>' : '') +
+            (s.cost || s.time ? '<br><span style="font-size:0.82rem;">' +
+              (s.cost ? '<strong style="color:var(--purple-light);">Cost: ' + s.cost + '</strong> ' : '') +
+              (s.time ? '<span style="color:var(--text-dim);">| Time: ' + s.time + '</span>' : '') +
+            '</span>' : '') +
+          '</li>';
         }).join('');
-        container.innerHTML += '<div class="phase"><div class="phase-header"><div class="phase-num">' + p.phase + '</div><div class="phase-name">' + p.name + '</div><div class="phase-time">' + (p.timeframe || '') + '</div></div>' + stepsHtml + '</div>';
+
+        var html = '<div class="rm-phase">' +
+          '<div class="rm-phase-head"><span class="rm-phase-label">Phase ' + p.phase + ': ' + (p.timeframe || '') + '</span></div>' +
+          '<div class="rm-phase-title">' + p.name + '</div>' +
+          '<div class="rm-body">' +
+            '<p class="rm-section-label">Key Actions</p>' +
+            '<ul>' + stepsHtml + '</ul>' +
+          '</div>' +
+        '</div>';
+
+        if (idx > 0) {
+          container.innerHTML += '<hr class="rm-divider">';
+        }
+        container.innerHTML += html;
       });
 
+      // Quick Wins
       if (roadmap.quickWins && roadmap.quickWins.length) {
         document.getElementById('quickWinsCard').style.display = 'block';
-        document.getElementById('quickWinsList').innerHTML = roadmap.quickWins.map(function(q) { return '<div class="section-item"><strong>' + q.action + '</strong> <span>— ' + q.detail + '</span></div>'; }).join('');
+        document.getElementById('quickWinsList').innerHTML = roadmap.quickWins.map(function(q) {
+          return '<div class="rm-callout-item"><strong>' + q.action + '</strong> <span>— ' + q.detail + '</span></div>';
+        }).join('');
       }
+
+      // Watch Out
       if (roadmap.watchOut && roadmap.watchOut.length) {
         document.getElementById('watchOutCard').style.display = 'block';
-        document.getElementById('watchOutList').innerHTML = roadmap.watchOut.map(function(w) { return '<div class="section-item"><strong>' + w.mistake + '</strong> <span>— ' + w.why + '</span></div>'; }).join('');
+        document.getElementById('watchOutList').innerHTML = roadmap.watchOut.map(function(w) {
+          return '<div class="rm-callout-item"><strong>' + w.mistake + '</strong> <span>— ' + w.why + '</span></div>';
+        }).join('');
       }
 
       showState('roadmapState');
@@ -252,29 +297,18 @@
     (async function() {
       var params = new URLSearchParams(window.location.search);
       var sessionId = params.get('session_id');
+      if (!sessionId) { showState('noAccessState'); return; }
 
-      // No session_id = no valid payment
-      if (!sessionId) {
-        showState('noAccessState');
-        return;
-      }
-
-      // Show loading and start step animation
       showState('loadingState');
       var stepInterval = animateSteps();
-
-      // Poll Supabase for the completed order
-      var maxAttempts = 30; // 30 x 3s = 90 seconds max
+      var maxAttempts = 30;
       var attempt = 0;
 
       async function pollOrder() {
         attempt++;
         try {
           var res = await fetch(SUPABASE_URL + '/rest/v1/wishpath_orders?stripe_checkout_session_id=eq.' + sessionId + '&select=*', {
-            headers: {
-              'apikey': SUPABASE_ANON_KEY,
-              'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
-            }
+            headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
           });
           var orders = await res.json();
           var order = orders && orders[0];
@@ -288,34 +322,19 @@
             setTimeout(function() { renderRoadmap(order.roadmap, order.wish); }, 800);
             return;
           }
-
           if (order && order.status === 'error') {
             clearInterval(stepInterval);
             document.getElementById('errorMsg').textContent = 'Roadmap generation failed. Please contact support.';
             showState('errorState');
             return;
           }
-
-          // Still pending/processing — keep polling
-          if (attempt < maxAttempts) {
-            setTimeout(pollOrder, 3000);
-          } else {
-            clearInterval(stepInterval);
-            document.getElementById('errorMsg').textContent = 'Taking longer than expected. Your roadmap will be emailed to you shortly.';
-            showState('errorState');
-          }
+          if (attempt < maxAttempts) { setTimeout(pollOrder, 3000); }
+          else { clearInterval(stepInterval); document.getElementById('errorMsg').textContent = 'Taking longer than expected. Your roadmap will be emailed to you shortly.'; showState('errorState'); }
         } catch (err) {
-          if (attempt < maxAttempts) {
-            setTimeout(pollOrder, 3000);
-          } else {
-            clearInterval(stepInterval);
-            document.getElementById('errorMsg').textContent = 'Network error. Your roadmap will be emailed to you.';
-            showState('errorState');
-          }
+          if (attempt < maxAttempts) { setTimeout(pollOrder, 3000); }
+          else { clearInterval(stepInterval); document.getElementById('errorMsg').textContent = 'Network error. Your roadmap will be emailed to you.'; showState('errorState'); }
         }
       }
-
-      // Start polling after a brief delay to let webhook fire
       setTimeout(pollOrder, 2000);
     })();
 
