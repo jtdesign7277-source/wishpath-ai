@@ -60,47 +60,41 @@
     .error-state p { color: var(--text-muted); margin-bottom: 24px; }
 
     /* ── Notion-Style Roadmap ── */
+    .rm-card { background: #1e293b; border: 1px solid rgba(71,85,105,0.5); border-radius: 16px; padding: 40px 36px; margin-bottom: 24px; }
     .rm-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 0.72rem; font-weight: 600; color: var(--green); background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2); border-radius: 99px; padding: 5px 14px; margin-bottom: 20px; letter-spacing: 0.04em; text-transform: uppercase; }
-    .rm-title { font-size: clamp(1.8rem, 5vw, 2.4rem); font-weight: 800; color: var(--text); letter-spacing: -0.04em; line-height: 1.12; margin-bottom: 8px; }
-    .rm-summary { color: var(--text-muted); font-size: 1rem; line-height: 1.65; margin-bottom: 40px; max-width: 640px; }
-    .rm-generated { background: rgba(34,197,94,0.1); border-radius: 8px; padding: 14px 20px; margin-bottom: 40px; display: flex; align-items: center; gap: 10px; font-size: 0.95rem; color: var(--text-sub); }
+    .rm-title { font-size: clamp(1.8rem, 5vw, 2.4rem); font-weight: 800; color: var(--text); letter-spacing: -0.04em; line-height: 1.12; margin-bottom: 24px; }
+    .rm-summary { display: none; }
+    .rm-generated { background: rgba(45,130,100,0.15); border: 1px solid rgba(45,130,100,0.3); border-radius: 10px; padding: 14px 20px; margin-bottom: 32px; display: flex; align-items: center; gap: 10px; font-size: 0.95rem; color: var(--text-sub); }
     .rm-generated-icon { font-size: 1.2rem; }
-    .rm-wish { border-left: 4px solid var(--purple); background: rgba(124,58,237,0.06); padding: 16px 20px; border-radius: 0 12px 12px 0; margin-bottom: 16px; }
-    .rm-wish-label { font-size: 0.7rem; font-weight: 600; color: var(--purple-light); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; }
-    .rm-wish-text { font-size: 0.95rem; color: var(--text-sub); line-height: 1.55; }
-    .rm-meta { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 48px; }
-    .rm-meta-pill { font-size: 0.82rem; font-weight: 500; color: var(--text-muted); background: rgba(255,255,255,0.04); border: 1px solid var(--border-light); border-radius: 99px; padding: 6px 14px; }
-    .rm-meta-pill strong { color: var(--text-sub); }
+    .rm-wish { display: none; }
+    .rm-wish-label { display: none; }
+    .rm-wish-text { display: none; }
+    .rm-meta { display: none; }
 
     /* Phase */
-    .rm-phase { margin-bottom: 48px; }
-    .rm-phase-heading { font-size: 1.25rem; font-weight: 600; color: #5b9bd5; margin-bottom: 24px; }
-    .rm-section-label { font-weight: 700; color: var(--text); font-size: 1rem; margin: 28px 0 10px; }
-    .rm-section-label:first-child { margin-top: 0; }
-    .rm-body { color: var(--text-sub); font-size: 0.95rem; line-height: 1.75; }
-    .rm-body ul { padding-left: 8px; margin-bottom: 8px; list-style: none; }
-    .rm-body ul li { margin-bottom: 8px; padding-left: 0; display: flex; gap: 8px; align-items: flex-start; }
-    .rm-body ul li .em { flex-shrink: 0; font-size: 1rem; line-height: 1.5; }
-    .rm-tips-callout { background: rgba(234,179,8,0.08); border: 1px solid rgba(234,179,8,0.2); border-radius: 8px; padding: 16px 20px; margin-top: 28px; }
-    .rm-tips-callout-head { font-weight: 700; color: var(--text); font-size: 0.95rem; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
-    .rm-tips-callout ul { padding-left: 8px; list-style: none; }
-    .rm-tips-callout ul li { margin-bottom: 6px; display: flex; gap: 8px; align-items: flex-start; font-size: 0.9rem; }
-    .rm-divider { display: none; }
+    .rm-phase { margin-bottom: 0; }
+    .rm-phase-accent { height: 4px; background: linear-gradient(90deg, #2dd4bf, #0ea5e9); border-radius: 2px; margin-bottom: 4px; }
+    .rm-phase-heading { font-size: 1.2rem; font-weight: 600; color: #5bbfb5; padding: 14px 16px; background: rgba(255,255,255,0.03); border-radius: 8px; margin-bottom: 2px; }
+    .rm-phase:nth-child(3n+2) .rm-phase-heading { color: #e8a850; }
+    .rm-section-label { font-weight: 700; color: var(--text); font-size: 0.95rem; padding: 10px 16px; background: rgba(255,255,255,0.04); border-radius: 6px; margin: 2px 0; }
+    .rm-body { color: var(--text-sub); font-size: 0.93rem; line-height: 1.7; }
+    .rm-body ul { padding: 0; margin: 0; list-style: none; }
+    .rm-body ul li { padding: 8px 16px; background: rgba(255,255,255,0.02); border-radius: 6px; margin: 1px 0; display: flex; gap: 8px; align-items: flex-start; }
+    .rm-body ul li:nth-child(odd) { background: rgba(255,255,255,0.035); }
+    .rm-body ul li .em { flex-shrink: 0; font-size: 1rem; line-height: 1.6; }
+    .rm-body ul li .bullet { color: var(--text-dim); margin-right: 4px; }
+    .rm-tips-callout { background: rgba(161,140,50,0.12); border: 1px solid rgba(161,140,50,0.25); border-radius: 10px; padding: 18px 22px; margin: 8px 0 0; }
+    .rm-tips-callout-head { font-weight: 700; color: var(--text); font-size: 0.95rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+    .rm-tips-callout ul { padding: 0; margin: 0; list-style: none; }
+    .rm-tips-callout ul li { padding: 6px 0 6px 20px; font-size: 0.9rem; color: var(--text-sub); position: relative; }
+    .rm-tips-callout ul li::before { content: '•'; position: absolute; left: 4px; color: var(--text-dim); }
+    .rm-phase-divider { margin: 32px 0; }
 
-    /* Quick Wins / Watch Out */
-    .rm-callout { border-radius: 12px; padding: 20px 24px; margin-bottom: 24px; }
-    .rm-callout.wins { background: rgba(34,197,94,0.06); border: 1px solid rgba(34,197,94,0.15); }
-    .rm-callout.warnings { background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.15); }
-    .rm-callout h3 { font-size: 1rem; font-weight: 700; margin-bottom: 12px; }
-    .rm-callout.wins h3 { color: var(--green); }
-    .rm-callout.warnings h3 { color: var(--red); }
-    .rm-callout-item { padding: 8px 0; font-size: 0.88rem; line-height: 1.55; }
-    .rm-callout-item + .rm-callout-item { border-top: 1px solid rgba(255,255,255,0.04); }
-    .rm-callout-item strong { color: var(--text); }
-    .rm-callout-item span { color: var(--text-muted); }
+    /* Quick Wins / Watch Out (hidden — distributed per phase) */
+    .rm-callout { display: none; }
 
     /* Footer mark */
-    .rm-footer { margin-top: 56px; background: rgba(255,255,255,0.04); border: 1px solid var(--border-light); border-radius: 8px; padding: 16px 20px; display: flex; align-items: center; gap: 10px; font-size: 0.9rem; color: var(--text-muted); }
+    .rm-footer { margin-top: 32px; background: rgba(255,255,255,0.04); border: 1px solid rgba(71,85,105,0.4); border-radius: 10px; padding: 16px 20px; display: flex; align-items: center; gap: 10px; font-size: 0.9rem; color: var(--text-muted); }
     .rm-footer-diamond { color: var(--text-dim); font-size: 1rem; }
 
     /* Actions */
@@ -114,16 +108,18 @@
     /* ── Print / PDF ── */
     @media print {
       nav, .glow-blob, .actions, #upsellSection, #downloadBtn, .rm-badge { display: none !important; }
-      body { background: #0a0a14 !important; color: #d1d5db !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; font-size: 13px; }
-      .container { max-width: 100%; padding: 0 32px; }
-      .rm-title { font-size: 1.8rem !important; color: #fff !important; }
-      .rm-phase-head { border-color: #374151 !important; }
-      .rm-divider { border-color: #374151 !important; }
-      .rm-wish { background: rgba(124,58,237,0.08) !important; border-left-color: #7c3aed !important; }
-      .rm-callout.wins { background: rgba(34,197,94,0.08) !important; border-color: rgba(34,197,94,0.2) !important; }
-      .rm-callout.warnings { background: rgba(239,68,68,0.08) !important; border-color: rgba(239,68,68,0.2) !important; }
-      .rm-footer { border-color: #374151 !important; }
-      .rm-two-col { grid-template-columns: 1fr 1fr; }
+      body { background: #0f172a !important; color: #d1d5db !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; font-size: 12px; }
+      .container { max-width: 100%; padding: 0 16px; }
+      .rm-card { background: #1e293b !important; border-color: rgba(71,85,105,0.5) !important; padding: 32px 28px !important; }
+      .rm-title { font-size: 1.6rem !important; color: #fff !important; }
+      .rm-phase-accent { background: linear-gradient(90deg, #2dd4bf, #0ea5e9) !important; }
+      .rm-phase-heading { background: rgba(255,255,255,0.03) !important; }
+      .rm-section-label { background: rgba(255,255,255,0.04) !important; }
+      .rm-body ul li { background: rgba(255,255,255,0.02) !important; }
+      .rm-body ul li:nth-child(odd) { background: rgba(255,255,255,0.035) !important; }
+      .rm-tips-callout { background: rgba(161,140,50,0.12) !important; border-color: rgba(161,140,50,0.25) !important; }
+      .rm-footer { background: rgba(255,255,255,0.04) !important; border-color: rgba(71,85,105,0.4) !important; }
+      .rm-generated { background: rgba(45,130,100,0.15) !important; border-color: rgba(45,130,100,0.3) !important; }
       @page { margin: 0.6in; size: letter; }
     }
 
@@ -175,19 +171,21 @@
     <!-- Roadmap -->
     <div class="state" id="roadmapState">
       <div class="rm-badge">&#x2705; Payment Confirmed &bull; Roadmap Ready</div>
-      <h1 class="rm-title" id="roadmapTitle"></h1>
-      <p class="rm-summary" id="roadmapSummary"></p>
-      <div class="rm-wish">
-        <div class="rm-wish-label">Your Wish</div>
-        <div class="rm-wish-text" id="wishText"></div>
-      </div>
-      <div class="rm-meta" id="metaRow"></div>
-      <div id="phasesContainer"></div>
-      <div class="rm-callout wins" id="quickWinsCard" style="display:none;"><h3>&#x26a1; Quick Wins (Next 24 Hours)</h3><div id="quickWinsList"></div></div>
-      <div class="rm-callout warnings" id="watchOutCard" style="display:none;"><h3>&#x26a0;&#xfe0f; Watch Out For</h3><div id="watchOutList"></div></div>
-      <div class="rm-footer">
-        <span class="rm-footer-diamond">&#x25c6;</span>
-        <span>Powered by WishPath.ai — researched and tailored specifically for your situation</span>
+      <div class="rm-card">
+        <h1 class="rm-title" id="roadmapTitle"></h1>
+        <p class="rm-summary" id="roadmapSummary"></p>
+        <div class="rm-wish">
+          <div class="rm-wish-label">Your Wish</div>
+          <div class="rm-wish-text" id="wishText"></div>
+        </div>
+        <div id="metaRow"></div>
+        <div id="phasesContainer"></div>
+        <div class="rm-callout wins" id="quickWinsCard" style="display:none;"><h3>&#x26a1; Quick Wins</h3><div id="quickWinsList"></div></div>
+        <div class="rm-callout warnings" id="watchOutCard" style="display:none;"><h3>&#x26a0;&#xfe0f; Watch Out</h3><div id="watchOutList"></div></div>
+        <div class="rm-footer">
+          <span class="rm-footer-diamond">&#x25c6;</span>
+          <span>Powered by <a href="https://wishpath-ai.pages.dev" style="color:var(--text-sub);text-decoration:underline;">WishPath.ai</a> — researched and tailored specifically for your situation</span>
+        </div>
       </div>
 
       <!-- Actions -->
@@ -230,9 +228,9 @@
     }
 
     // Emoji sets for Notion-style bullets
-    var actionEmojis = ['🧠','🎯','🔍','📮','💼','📋','🛠','💡','📊','🔑','⚡','🚀','📌','🔧','💻'];
+    var actionEmojis = ['🧠','🎯','🔍','📮','💼','✍️','📋','🤝','⭐','🛠','💡','🔑','⚡','🚀','📌'];
     var milestoneEmoji = '✅';
-    var metricEmojis = ['📊','🔘','📋','📈','⏱','💰','🎯','📉'];
+    var metricEmojis = ['🚀','⏱','📈','💰','🔘','📋','📊','📉','🎯','🧮'];
 
     function renderRoadmap(roadmap, wish) {
       document.getElementById('roadmapTitle').textContent = roadmap.title || 'Your Roadmap';
@@ -260,8 +258,9 @@
 
         // Build phase HTML
         var html = '';
-        if (idx > 0) html += '<hr style="border:none;border-top:1px solid var(--border);margin:48px 0;">';
+        if (idx > 0) html += '<div class="rm-phase-divider"></div>';
         html += '<div class="rm-phase">';
+        html += '<div class="rm-phase-accent"></div>';
         html += '<div class="rm-phase-heading">Phase ' + p.phase + ' (' + (p.timeframe || '') + '): ' + p.name + '</div>';
         html += '<div class="rm-body">';
 
