@@ -14,189 +14,75 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: #0a0a0f;
-      --purple: #7c3aed;
-      --purple-light: #9d5cf6;
-      --purple-dim: rgba(124, 58, 237, 0.15);
-      --blue: #3b82f6;
-      --gold: #c7a86e;
-      --gold-dim: rgba(199, 168, 110, 0.15);
-      --green: #22c55e;
-      --red: #ef4444;
-      --text: #e8e8f0;
-      --text-muted: #8888aa;
-      --border: rgba(124, 58, 237, 0.2);
-      --border-subtle: rgba(255, 255, 255, 0.06);
-      --card: rgba(15, 15, 26, 0.9);
+      --bg: #0a0a0f; --purple: #7c3aed; --purple-light: #9d5cf6;
+      --purple-dim: rgba(124,58,237,0.15); --blue: #3b82f6;
+      --gold: #c7a86e; --gold-dim: rgba(199,168,110,0.15);
+      --green: #22c55e; --red: #ef4444;
+      --text: #e8e8f0; --text-muted: #8888aa;
+      --border: rgba(124,58,237,0.2); --border-subtle: rgba(255,255,255,0.06);
+      --card: rgba(15,15,26,0.9); --radius: 16px;
     }
-
     html { background: #000; }
-    body {
-      font-family: 'Inter', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      min-height: 100dvh;
-    }
-
-    /* Glow blobs */
-    .glow-blob {
-      position: fixed; border-radius: 50%; filter: blur(120px);
-      pointer-events: none; z-index: 0;
-    }
-    .glow-blob-1 {
-      width: 500px; height: 500px;
-      background: radial-gradient(circle, rgba(124,58,237,0.15) 0%, transparent 70%);
-      top: -100px; left: -100px;
-    }
-    .glow-blob-2 {
-      width: 400px; height: 400px;
-      background: radial-gradient(circle, rgba(59,130,246,0.1) 0%, transparent 70%);
-      bottom: 10%; right: -80px;
-    }
-
-    /* Nav */
-    nav {
-      position: sticky; top: 0; z-index: 100;
-      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-      background: rgba(0,0,0,0.85);
-      border-bottom: 1px solid var(--border-subtle);
-      padding: calc(16px + env(safe-area-inset-top)) 24px 16px;
-      display: flex; align-items: center; justify-content: space-between;
-    }
-    .nav-logo {
-      font-size: 1.1rem; font-weight: 700;
-      background: linear-gradient(135deg, #9d5cf6, #3b82f6);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-    }
-    .nav-btn {
-      font-size: 0.8rem; font-weight: 600; color: var(--purple-light);
-      background: var(--purple-dim); border: 1px solid rgba(124,58,237,0.3);
-      border-radius: 99px; padding: 6px 16px; cursor: pointer;
-      text-decoration: none; transition: background 0.15s;
-    }
-    .nav-btn:hover { background: rgba(124,58,237,0.25); }
-
-    /* Container */
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; min-height: 100dvh; }
+    .glow-blob { position: fixed; border-radius: 50%; filter: blur(120px); pointer-events: none; z-index: 0; }
+    .glow-blob-1 { width: 500px; height: 500px; background: radial-gradient(circle, rgba(124,58,237,0.15) 0%, transparent 70%); top: -100px; left: -100px; }
+    .glow-blob-2 { width: 400px; height: 400px; background: radial-gradient(circle, rgba(59,130,246,0.1) 0%, transparent 70%); bottom: 10%; right: -80px; }
+    nav { position: sticky; top: 0; z-index: 100; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); background: rgba(0,0,0,0.85); border-bottom: 1px solid var(--border-subtle); padding: calc(16px + env(safe-area-inset-top)) 24px 16px; display: flex; align-items: center; justify-content: space-between; }
+    .nav-logo { font-size: 1.1rem; font-weight: 700; background: linear-gradient(135deg, #9d5cf6, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; text-decoration: none; }
+    .nav-btn { font-size: 0.8rem; font-weight: 600; color: var(--purple-light); background: var(--purple-dim); border: 1px solid rgba(124,58,237,0.3); border-radius: 99px; padding: 6px 16px; cursor: pointer; text-decoration: none; }
     .container { max-width: 780px; margin: 0 auto; padding: 32px 24px 80px; position: relative; z-index: 1; }
 
-    /* Loading state */
-    .loading { text-align: center; padding: 120px 24px; }
-    .loading-orb {
-      width: 80px; height: 80px; margin: 0 auto 32px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(124,58,237,0.6), rgba(59,130,246,0.3), transparent);
-      animation: pulse 2s ease-in-out infinite;
-      box-shadow: 0 0 60px rgba(124,58,237,0.3);
-    }
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); opacity: 0.8; }
-      50% { transform: scale(1.15); opacity: 1; }
-    }
+    /* States */
+    .state { display: none; }
+    .state.active { display: block; }
+
+    /* Loading */
+    .loading { text-align: center; padding: 100px 24px; }
+    .loading-orb { width: 80px; height: 80px; margin: 0 auto 32px; border-radius: 50%; background: radial-gradient(circle, rgba(124,58,237,0.6), rgba(59,130,246,0.3), transparent); animation: pulse 2s ease-in-out infinite; box-shadow: 0 0 60px rgba(124,58,237,0.3); }
+    @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.15); opacity: 1; } }
     .loading h2 { font-size: 1.4rem; margin-bottom: 12px; }
     .loading p { color: var(--text-muted); font-size: 0.95rem; }
-    .loading-steps {
-      display: flex; flex-direction: column; gap: 12px;
-      max-width: 320px; margin: 32px auto 0; text-align: left;
-    }
-    .loading-step {
-      display: flex; align-items: center; gap: 12px;
-      font-size: 0.85rem; color: var(--text-muted);
-      transition: color 0.3s;
-    }
+    .loading-steps { display: flex; flex-direction: column; gap: 12px; max-width: 320px; margin: 32px auto 0; text-align: left; }
+    .loading-step { display: flex; align-items: center; gap: 12px; font-size: 0.85rem; color: var(--text-muted); transition: color 0.3s; }
     .loading-step.active { color: var(--text); }
     .loading-step.done { color: var(--green); }
-    .loading-step-dot {
-      width: 8px; height: 8px; border-radius: 50%;
-      background: var(--text-muted); flex-shrink: 0;
-      transition: background 0.3s;
-    }
+    .loading-step-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted); flex-shrink: 0; transition: background 0.3s; }
     .loading-step.active .loading-step-dot { background: var(--purple); animation: pulse 1s ease-in-out infinite; }
     .loading-step.done .loading-step-dot { background: var(--green); }
 
-    /* Error state */
-    .error { text-align: center; padding: 120px 24px; }
-    .error h2 { font-size: 1.3rem; color: var(--red); margin-bottom: 12px; }
-    .error p { color: var(--text-muted); margin-bottom: 24px; }
+    /* Error / No Access */
+    .error-state { text-align: center; padding: 100px 24px; }
+    .error-state h2 { font-size: 1.3rem; margin-bottom: 12px; }
+    .error-state p { color: var(--text-muted); margin-bottom: 24px; }
 
     /* Roadmap */
-    .roadmap { display: none; }
-    .roadmap.visible { display: block; }
-
     .roadmap-header { text-align: center; margin-bottom: 40px; }
-    .roadmap-badge {
-      display: inline-flex; align-items: center; gap: 6px;
-      font-size: 0.75rem; font-weight: 600; color: var(--green);
-      background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2);
-      border-radius: 99px; padding: 5px 14px; margin-bottom: 16px;
-      letter-spacing: 0.04em; text-transform: uppercase;
-    }
+    .roadmap-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: 600; color: var(--green); background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2); border-radius: 99px; padding: 5px 14px; margin-bottom: 16px; letter-spacing: 0.04em; text-transform: uppercase; }
     .roadmap-title { font-size: 1.6rem; font-weight: 800; line-height: 1.2; margin-bottom: 12px; }
     .roadmap-summary { color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; max-width: 600px; margin: 0 auto; }
-
-    .wish-card {
-      background: var(--purple-dim); border: 1px solid var(--border);
-      border-radius: 12px; padding: 16px 20px; margin-bottom: 32px;
-    }
+    .wish-card { background: var(--purple-dim); border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; margin-bottom: 32px; }
     .wish-label { font-size: 0.7rem; font-weight: 600; color: var(--purple-light); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 6px; }
     .wish-text { font-size: 0.95rem; line-height: 1.5; }
-
-    .meta-row {
-      display: flex; gap: 16px; margin-bottom: 32px; flex-wrap: wrap;
-    }
-    .meta-pill {
-      display: flex; align-items: center; gap: 6px;
-      font-size: 0.8rem; font-weight: 500;
-      background: rgba(255,255,255,0.04); border: 1px solid var(--border-subtle);
-      border-radius: 99px; padding: 6px 14px; color: var(--text-muted);
-    }
+    .meta-row { display: flex; gap: 16px; margin-bottom: 32px; flex-wrap: wrap; }
+    .meta-pill { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 500; background: rgba(255,255,255,0.04); border: 1px solid var(--border-subtle); border-radius: 99px; padding: 6px 14px; color: var(--text-muted); }
     .meta-pill strong { color: var(--text); }
-
-    /* Phase card */
-    .phase {
-      background: var(--card); border: 1px solid var(--border-subtle);
-      border-radius: 16px; padding: 24px; margin-bottom: 20px;
-      transition: border-color 0.2s;
-    }
+    .phase { background: var(--card); border: 1px solid var(--border-subtle); border-radius: 16px; padding: 24px; margin-bottom: 20px; transition: border-color 0.2s; }
     .phase:hover { border-color: var(--border); }
     .phase-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
-    .phase-num {
-      width: 32px; height: 32px; border-radius: 8px;
-      background: var(--purple-dim); color: var(--purple-light);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.85rem; font-weight: 700; flex-shrink: 0;
-    }
+    .phase-num { width: 32px; height: 32px; border-radius: 8px; background: var(--purple-dim); color: var(--purple-light); display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700; flex-shrink: 0; }
     .phase-name { font-size: 1.05rem; font-weight: 700; }
-    .phase-time {
-      margin-left: auto; font-size: 0.75rem; font-weight: 500;
-      color: var(--text-muted); background: rgba(255,255,255,0.04);
-      border-radius: 99px; padding: 4px 10px; white-space: nowrap;
-    }
-
-    .step {
-      padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
-      display: grid; gap: 4px;
-    }
-    .step:last-child { border-bottom: none; padding-bottom: 0; }
+    .phase-time { margin-left: auto; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); background: rgba(255,255,255,0.04); border-radius: 99px; padding: 4px 10px; white-space: nowrap; }
+    .step { padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.04); display: grid; gap: 4px; }
+    .step:last-child { border-bottom: none; }
     .step-action { font-size: 0.9rem; font-weight: 600; }
     .step-detail { font-size: 0.83rem; color: var(--text-muted); line-height: 1.5; }
     .step-meta { display: flex; gap: 12px; margin-top: 4px; }
-    .step-tag {
-      font-size: 0.72rem; font-weight: 500; border-radius: 4px; padding: 2px 8px;
-    }
+    .step-tag { font-size: 0.72rem; font-weight: 500; border-radius: 4px; padding: 2px 8px; }
     .step-cost { background: rgba(124,58,237,0.12); color: var(--purple-light); }
     .step-time { background: rgba(59,130,246,0.1); color: #60a5fa; }
-
-    /* Quick wins & warnings */
-    .section-card {
-      border-radius: 16px; padding: 20px 24px; margin-bottom: 20px;
-    }
-    .section-card.wins {
-      background: rgba(34,197,94,0.06); border: 1px solid rgba(34,197,94,0.15);
-    }
-    .section-card.warnings {
-      background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.15);
-    }
+    .section-card { border-radius: 16px; padding: 20px 24px; margin-bottom: 20px; }
+    .section-card.wins { background: rgba(34,197,94,0.06); border: 1px solid rgba(34,197,94,0.15); }
+    .section-card.warnings { background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.15); }
     .section-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 12px; }
     .section-card.wins h3 { color: var(--green); }
     .section-card.warnings h3 { color: var(--red); }
@@ -204,361 +90,202 @@
     .section-item + .section-item { border-top: 1px solid rgba(255,255,255,0.04); }
     .section-item strong { color: var(--text); }
     .section-item span { color: var(--text-muted); }
-
-    /* Actions */
-    .actions {
-      display: flex; gap: 12px; margin-top: 32px; flex-wrap: wrap;
-      justify-content: center;
-    }
-    .action-btn {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 12px 24px; border-radius: 99px; font-size: 0.9rem;
-      font-weight: 600; cursor: pointer; border: none; transition: all 0.15s;
-    }
-    .action-btn.primary {
-      background: linear-gradient(135deg, #7c3aed, #6d28d9);
-      color: white; box-shadow: 0 4px 20px rgba(124,58,237,0.3);
-    }
-    .action-btn.primary:hover { transform: translateY(-1px); box-shadow: 0 6px 28px rgba(124,58,237,0.4); }
-    .action-btn.secondary {
-      background: rgba(255,255,255,0.06); color: var(--text);
-      border: 1px solid var(--border-subtle);
-    }
-    .action-btn.secondary:hover { background: rgba(255,255,255,0.1); }
-
-    /* Email modal */
-    .email-modal {
-      display: none; position: fixed; inset: 0; z-index: 200;
-      background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
-      align-items: center; justify-content: center; padding: 24px;
-    }
-    .email-modal.visible { display: flex; }
-    .email-modal-card {
-      background: #13131f; border: 1px solid var(--border);
-      border-radius: 16px; padding: 32px; max-width: 400px; width: 100%;
-      text-align: center;
-    }
-    .email-modal h3 { font-size: 1.1rem; margin-bottom: 8px; }
-    .email-modal p { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 20px; }
-    .email-input {
-      width: 100%; padding: 12px 16px; border-radius: 10px;
-      border: 1px solid var(--border); background: rgba(255,255,255,0.04);
-      color: var(--text); font: inherit; font-size: 0.95rem;
-      outline: none; margin-bottom: 12px;
-    }
-    .email-input:focus { border-color: var(--purple); }
-    .email-input::placeholder { color: rgba(255,255,255,0.2); }
-
-    /* Toast */
-    .toast {
-      position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
-      background: rgba(124,58,237,0.95); color: #fff; padding: 12px 22px;
-      border-radius: 99px; font-size: 0.9rem; font-weight: 600;
-      z-index: 9999; white-space: nowrap; box-shadow: 0 4px 24px rgba(0,0,0,0.4);
-    }
-
-    @media print {
-      nav, .actions, .glow-blob { display: none !important; }
-      body { background: white; color: #1a1a2e; }
-      .phase, .section-card, .wish-card { border-color: #ddd; background: #fafafa; }
-      .phase-num { background: #f0e6ff; }
-      .step-detail, .roadmap-summary, .section-item span { color: #555; }
-    }
-
-    @media (max-width: 600px) {
-      .container { padding: 20px 16px 60px; }
-      .roadmap-title { font-size: 1.3rem; }
-      .phase { padding: 18px 16px; }
-      .meta-row { gap: 8px; }
-      .actions { flex-direction: column; }
-      .action-btn { justify-content: center; }
-    }
+    .actions { display: flex; gap: 12px; margin-top: 32px; flex-wrap: wrap; justify-content: center; }
+    .action-btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; border-radius: 99px; font-size: 0.9rem; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; text-decoration: none; }
+    .action-btn.primary { background: linear-gradient(135deg, #7c3aed, #6d28d9); color: white; box-shadow: 0 4px 20px rgba(124,58,237,0.3); }
+    .action-btn.primary:hover { transform: translateY(-1px); }
+    .action-btn.secondary { background: rgba(255,255,255,0.06); color: var(--text); border: 1px solid var(--border-subtle); }
+    .toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: rgba(124,58,237,0.95); color: #fff; padding: 12px 22px; border-radius: 99px; font-size: 0.9rem; font-weight: 600; z-index: 9999; white-space: nowrap; box-shadow: 0 4px 24px rgba(0,0,0,0.4); }
+    @media print { nav, .actions, .glow-blob { display: none !important; } body { background: white; color: #1a1a2e; } .phase, .section-card, .wish-card { border-color: #ddd; background: #fafafa; } }
+    @media (max-width: 600px) { .container { padding: 20px 16px 60px; } .roadmap-title { font-size: 1.3rem; } .phase { padding: 18px 16px; } .actions { flex-direction: column; } .action-btn { justify-content: center; } }
   </style>
 </head>
 <body>
   <div class="glow-blob glow-blob-1"></div>
   <div class="glow-blob glow-blob-2"></div>
-
   <nav>
     <a class="nav-logo" href="/">&#x2728; WishPath.ai</a>
     <a class="nav-btn" href="/">New Wish</a>
   </nav>
-
   <div class="container">
+
+    <!-- No Access State -->
+    <div class="state error-state" id="noAccessState">
+      <h2>No payment found</h2>
+      <p>Please complete your purchase to get your roadmap.</p>
+      <a class="action-btn primary" href="/">Go to WishPath.ai</a>
+    </div>
+
     <!-- Loading State -->
-    <div class="loading" id="loadingState">
+    <div class="state loading" id="loadingState">
       <div class="loading-orb"></div>
       <h2>Generating Your Roadmap...</h2>
-      <p>Our AI is building your personalized action plan</p>
+      <p>Payment confirmed! Our AI is building your personalized plan.</p>
       <div class="loading-steps">
-        <div class="loading-step active" id="step1">
-          <span class="loading-step-dot"></span>
-          Analyzing your goal...
-        </div>
-        <div class="loading-step" id="step2">
-          <span class="loading-step-dot"></span>
-          Researching strategies...
-        </div>
-        <div class="loading-step" id="step3">
-          <span class="loading-step-dot"></span>
-          Building action steps...
-        </div>
-        <div class="loading-step" id="step4">
-          <span class="loading-step-dot"></span>
-          Finalizing roadmap...
-        </div>
+        <div class="loading-step active" id="step1"><span class="loading-step-dot"></span>Payment verified...</div>
+        <div class="loading-step" id="step2"><span class="loading-step-dot"></span>Analyzing your goal...</div>
+        <div class="loading-step" id="step3"><span class="loading-step-dot"></span>Researching strategies...</div>
+        <div class="loading-step" id="step4"><span class="loading-step-dot"></span>Building your roadmap...</div>
       </div>
     </div>
 
     <!-- Error State -->
-    <div class="error" id="errorState" style="display:none;">
+    <div class="state error-state" id="errorState">
       <h2>Something went wrong</h2>
-      <p id="errorMsg">We couldn't generate your roadmap. Please try again.</p>
+      <p id="errorMsg">We couldn't generate your roadmap. Please contact support.</p>
       <a class="action-btn primary" href="/">Try Again</a>
     </div>
 
-    <!-- Roadmap -->
-    <div class="roadmap" id="roadmapState">
+    <!-- Roadmap State -->
+    <div class="state" id="roadmapState">
       <div class="roadmap-header">
-        <div class="roadmap-badge">&#x2705; Roadmap Ready</div>
+        <div class="roadmap-badge">&#x2705; Payment Confirmed &bull; Roadmap Ready</div>
         <h1 class="roadmap-title" id="roadmapTitle"></h1>
         <p class="roadmap-summary" id="roadmapSummary"></p>
       </div>
-
       <div class="wish-card">
         <div class="wish-label">&#x2728; Your Wish</div>
         <div class="wish-text" id="wishText"></div>
       </div>
-
       <div class="meta-row" id="metaRow"></div>
-
       <div id="phasesContainer"></div>
-
-      <div class="section-card wins" id="quickWinsCard" style="display:none;">
-        <h3>&#x26a1; Quick Wins (Next 24 Hours)</h3>
-        <div id="quickWinsList"></div>
-      </div>
-
-      <div class="section-card warnings" id="watchOutCard" style="display:none;">
-        <h3>&#x26a0;&#xfe0f; Watch Out For</h3>
-        <div id="watchOutList"></div>
-      </div>
-
+      <div class="section-card wins" id="quickWinsCard" style="display:none;"><h3>&#x26a1; Quick Wins (Next 24 Hours)</h3><div id="quickWinsList"></div></div>
+      <div class="section-card warnings" id="watchOutCard" style="display:none;"><h3>&#x26a0;&#xfe0f; Watch Out For</h3><div id="watchOutList"></div></div>
       <div class="actions">
         <button class="action-btn primary" onclick="window.print()">&#x1f4e5; Download PDF</button>
-        <button class="action-btn secondary" onclick="showEmailModal()">&#x2709;&#xfe0f; Email Me This</button>
         <a class="action-btn secondary" href="/">&#x2728; New Wish</a>
       </div>
     </div>
   </div>
 
-  <!-- Email Modal -->
-  <div class="email-modal" id="emailModal">
-    <div class="email-modal-card">
-      <h3>Email Your Roadmap</h3>
-      <p>We'll send the full roadmap to your inbox.</p>
-      <input class="email-input" id="emailInput" type="email" placeholder="you@example.com" />
-      <button class="action-btn primary" onclick="sendEmail()" style="width:100%;justify-content:center;">Send</button>
-      <button class="action-btn secondary" onclick="hideEmailModal()" style="width:100%;justify-content:center;margin-top:8px;">Cancel</button>
-    </div>
-  </div>
-
   <script>
-    const EDGE_FN = 'https://mszilrexlupzthauoaxb.supabase.co/functions/v1/wishpath-generate';
+    var SUPABASE_URL = 'https://mszilrexlupzthauoaxb.supabase.co';
+    var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1zemlscmV4bHVwenRoYXVvYXhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkzMTU3ODksImV4cCI6MjA4NDg5MTc4OX0.zgkl2tTTVXZax_jjT4SAGhl4ILsS__g1qpZUtPOWCaI';
 
-    let currentRoadmap = null;
-    let currentWish = '';
-
-    // Loading step animation
-    function animateSteps() {
-      const steps = ['step1','step2','step3','step4'];
-      let i = 0;
-      return setInterval(() => {
-        if (i > 0) {
-          document.getElementById(steps[i-1]).classList.remove('active');
-          document.getElementById(steps[i-1]).classList.add('done');
-        }
-        if (i < steps.length) {
-          document.getElementById(steps[i]).classList.add('active');
-          i++;
-        }
-      }, 2500);
+    function showState(id) {
+      document.querySelectorAll('.state').forEach(function(el) { el.classList.remove('active'); });
+      document.getElementById(id).classList.add('active');
     }
 
-    function showError(msg) {
-      document.getElementById('loadingState').style.display = 'none';
-      document.getElementById('errorState').style.display = 'block';
-      document.getElementById('errorMsg').textContent = msg || 'We couldn\'t generate your roadmap. Please try again.';
+    function animateSteps() {
+      var steps = ['step1','step2','step3','step4'];
+      var i = 0;
+      return setInterval(function() {
+        if (i > 0) { document.getElementById(steps[i-1]).classList.remove('active'); document.getElementById(steps[i-1]).classList.add('done'); }
+        if (i < steps.length) { document.getElementById(steps[i]).classList.add('active'); i++; }
+      }, 3000);
     }
 
     function renderRoadmap(roadmap, wish) {
-      currentRoadmap = roadmap;
-      currentWish = wish;
-
-      document.getElementById('loadingState').style.display = 'none';
       document.getElementById('roadmapTitle').textContent = roadmap.title || 'Your Roadmap';
       document.getElementById('roadmapSummary').textContent = roadmap.summary || '';
       document.getElementById('wishText').textContent = wish;
 
-      // Meta row
-      const metaRow = document.getElementById('metaRow');
+      var metaRow = document.getElementById('metaRow');
       metaRow.innerHTML = '';
-      if (roadmap.estimatedTimeline) {
-        metaRow.innerHTML += '<div class="meta-pill"><strong>Timeline:</strong> ' + roadmap.estimatedTimeline + '</div>';
-      }
-      if (roadmap.estimatedTotalCost) {
-        metaRow.innerHTML += '<div class="meta-pill"><strong>Est. Cost:</strong> ' + roadmap.estimatedTotalCost + '</div>';
-      }
+      if (roadmap.estimatedTimeline) metaRow.innerHTML += '<div class="meta-pill"><strong>Timeline:</strong> ' + roadmap.estimatedTimeline + '</div>';
+      if (roadmap.estimatedTotalCost) metaRow.innerHTML += '<div class="meta-pill"><strong>Est. Cost:</strong> ' + roadmap.estimatedTotalCost + '</div>';
 
-      // Phases
-      const container = document.getElementById('phasesContainer');
+      var container = document.getElementById('phasesContainer');
       container.innerHTML = '';
       (roadmap.phases || []).forEach(function(p) {
-        let stepsHtml = '';
-        (p.steps || []).forEach(function(s) {
-          let metaTags = '';
-          if (s.cost) metaTags += '<span class="step-tag step-cost">' + s.cost + '</span>';
-          if (s.time) metaTags += '<span class="step-tag step-time">' + s.time + '</span>';
-          stepsHtml += '<div class="step">' +
-            '<div class="step-action">' + s.action + '</div>' +
-            '<div class="step-detail">' + s.detail + '</div>' +
-            (metaTags ? '<div class="step-meta">' + metaTags + '</div>' : '') +
-            '</div>';
-        });
-        container.innerHTML += '<div class="phase">' +
-          '<div class="phase-header">' +
-            '<div class="phase-num">' + p.phase + '</div>' +
-            '<div class="phase-name">' + p.name + '</div>' +
-            '<div class="phase-time">' + (p.timeframe || '') + '</div>' +
-          '</div>' +
-          stepsHtml +
-          '</div>';
+        var stepsHtml = (p.steps || []).map(function(s) {
+          var meta = '';
+          if (s.cost) meta += '<span class="step-tag step-cost">' + s.cost + '</span>';
+          if (s.time) meta += '<span class="step-tag step-time">' + s.time + '</span>';
+          return '<div class="step"><div class="step-action">' + s.action + '</div><div class="step-detail">' + s.detail + '</div>' + (meta ? '<div class="step-meta">' + meta + '</div>' : '') + '</div>';
+        }).join('');
+        container.innerHTML += '<div class="phase"><div class="phase-header"><div class="phase-num">' + p.phase + '</div><div class="phase-name">' + p.name + '</div><div class="phase-time">' + (p.timeframe || '') + '</div></div>' + stepsHtml + '</div>';
       });
 
-      // Quick Wins
-      if (roadmap.quickWins && roadmap.quickWins.length > 0) {
-        const card = document.getElementById('quickWinsCard');
-        card.style.display = 'block';
-        const list = document.getElementById('quickWinsList');
-        list.innerHTML = roadmap.quickWins.map(function(q) {
-          return '<div class="section-item"><strong>' + q.action + '</strong> <span>— ' + q.detail + '</span></div>';
-        }).join('');
+      if (roadmap.quickWins && roadmap.quickWins.length) {
+        document.getElementById('quickWinsCard').style.display = 'block';
+        document.getElementById('quickWinsList').innerHTML = roadmap.quickWins.map(function(q) { return '<div class="section-item"><strong>' + q.action + '</strong> <span>— ' + q.detail + '</span></div>'; }).join('');
+      }
+      if (roadmap.watchOut && roadmap.watchOut.length) {
+        document.getElementById('watchOutCard').style.display = 'block';
+        document.getElementById('watchOutList').innerHTML = roadmap.watchOut.map(function(w) { return '<div class="section-item"><strong>' + w.mistake + '</strong> <span>— ' + w.why + '</span></div>'; }).join('');
       }
 
-      // Watch Out
-      if (roadmap.watchOut && roadmap.watchOut.length > 0) {
-        const card = document.getElementById('watchOutCard');
-        card.style.display = 'block';
-        const list = document.getElementById('watchOutList');
-        list.innerHTML = roadmap.watchOut.map(function(w) {
-          return '<div class="section-item"><strong>' + w.mistake + '</strong> <span>— ' + w.why + '</span></div>';
-        }).join('');
-      }
-
-      document.getElementById('roadmapState').classList.add('visible');
-    }
-
-    function showEmailModal() {
-      document.getElementById('emailModal').classList.add('visible');
-      document.getElementById('emailInput').focus();
-    }
-
-    function hideEmailModal() {
-      document.getElementById('emailModal').classList.remove('visible');
-    }
-
-    async function sendEmail() {
-      const email = document.getElementById('emailInput').value.trim();
-      if (!email || !email.includes('@')) {
-        document.getElementById('emailInput').style.borderColor = '#ef4444';
-        return;
-      }
-
-      const btn = document.querySelector('#emailModal .action-btn.primary');
-      btn.textContent = 'Sending...';
-      btn.disabled = true;
-
-      try {
-        const res = await fetch(EDGE_FN, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            emailOnly: true,
-            email: email,
-            wish: currentWish,
-            roadmap: currentRoadmap,
-          }),
-        });
-        const result = await res.json();
-        hideEmailModal();
-        if (res.ok) {
-          showToast('Roadmap sent to ' + email);
-        } else {
-          showToast(result.error || 'Failed to send. Try again.');
-        }
-      } catch {
-        hideEmailModal();
-        showToast('Failed to send. Try again.');
-      }
-
-      btn.textContent = 'Send';
-      btn.disabled = false;
+      showState('roadmapState');
     }
 
     function showToast(msg) {
-      const t = document.createElement('div');
-      t.className = 'toast';
-      t.textContent = msg;
+      var t = document.createElement('div');
+      t.className = 'toast'; t.textContent = msg;
       document.body.appendChild(t);
       setTimeout(function() { t.style.opacity = '0'; t.style.transition = 'opacity 0.4s'; setTimeout(function() { t.remove(); }, 400); }, 3000);
     }
 
-    // Main flow
+    // ── Main flow ──
     (async function() {
-      const data = JSON.parse(localStorage.getItem('wishpath_data') || 'null');
+      var params = new URLSearchParams(window.location.search);
+      var sessionId = params.get('session_id');
 
-      if (!data || !data.wish) {
-        showError('No wish found. Please go back and enter your goal.');
+      // No session_id = no valid payment
+      if (!sessionId) {
+        showState('noAccessState');
         return;
       }
 
-      const stepInterval = animateSteps();
+      // Show loading and start step animation
+      showState('loadingState');
+      var stepInterval = animateSteps();
 
-      try {
-        const res = await fetch(EDGE_FN, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data),
-        });
+      // Poll Supabase for the completed order
+      var maxAttempts = 30; // 30 x 3s = 90 seconds max
+      var attempt = 0;
 
-        clearInterval(stepInterval);
+      async function pollOrder() {
+        attempt++;
+        try {
+          var res = await fetch(SUPABASE_URL + '/rest/v1/wishpath_orders?stripe_checkout_session_id=eq.' + sessionId + '&select=*', {
+            headers: {
+              'apikey': SUPABASE_ANON_KEY,
+              'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+            }
+          });
+          var orders = await res.json();
+          var order = orders && orders[0];
 
-        if (!res.ok) {
-          const errData = await res.json().catch(function() { return {}; });
-          showError(errData.error || 'Failed to generate roadmap. Please try again.');
-          return;
+          if (order && order.status === 'completed' && order.roadmap) {
+            clearInterval(stepInterval);
+            ['step1','step2','step3','step4'].forEach(function(id) {
+              document.getElementById(id).classList.remove('active');
+              document.getElementById(id).classList.add('done');
+            });
+            setTimeout(function() { renderRoadmap(order.roadmap, order.wish); }, 800);
+            return;
+          }
+
+          if (order && order.status === 'error') {
+            clearInterval(stepInterval);
+            document.getElementById('errorMsg').textContent = 'Roadmap generation failed. Please contact support.';
+            showState('errorState');
+            return;
+          }
+
+          // Still pending/processing — keep polling
+          if (attempt < maxAttempts) {
+            setTimeout(pollOrder, 3000);
+          } else {
+            clearInterval(stepInterval);
+            document.getElementById('errorMsg').textContent = 'Taking longer than expected. Your roadmap will be emailed to you shortly.';
+            showState('errorState');
+          }
+        } catch (err) {
+          if (attempt < maxAttempts) {
+            setTimeout(pollOrder, 3000);
+          } else {
+            clearInterval(stepInterval);
+            document.getElementById('errorMsg').textContent = 'Network error. Your roadmap will be emailed to you.';
+            showState('errorState');
+          }
         }
-
-        const result = await res.json();
-        if (!result.roadmap) {
-          showError('Invalid response. Please try again.');
-          return;
-        }
-
-        // Mark all steps done
-        ['step1','step2','step3','step4'].forEach(function(id) {
-          document.getElementById(id).classList.remove('active');
-          document.getElementById(id).classList.add('done');
-        });
-
-        setTimeout(function() {
-          renderRoadmap(result.roadmap, data.wish);
-        }, 600);
-
-      } catch (err) {
-        clearInterval(stepInterval);
-        showError('Network error. Please check your connection and try again.');
       }
+
+      // Start polling after a brief delay to let webhook fire
+      setTimeout(pollOrder, 2000);
     })();
   </script>
 </body>

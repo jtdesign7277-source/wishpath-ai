@@ -1262,7 +1262,7 @@
   }
 
   // ── Checkout ───────────────────────────────────────────────────────────────
-  function handleCheckout() {
+  async function handleCheckout() {
     const wishText = wish.value.trim();
     if (!wishText) {
       wish.focus();
@@ -1284,14 +1284,30 @@
       time: document.getElementById('timeAvail')?.value || '',
     };
 
-    // Persist wish to localStorage for post-payment retrieval
-    localStorage.setItem('wishpath_data', JSON.stringify(ctx));
+    // Call checkout endpoint to create secure Stripe session
+    const ctaBtn = document.getElementById('ctaBtn');
+    ctaBtn.disabled = true;
+    ctaBtn.textContent = 'Creating checkout...';
 
-    const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/6oU8wR3STa813929KE1ck04';
-
-    // Append metadata as URL params for post-payment processing
-    const params = new URLSearchParams({ prefilled_email: '' });
-    window.location.href = `${STRIPE_PAYMENT_LINK}?${params.toString()}`;
+    try {
+      const res = await fetch('https://mszilrexlupzthauoaxb.supabase.co/functions/v1/wishpath-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(ctx),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        showToast(data.error || 'Checkout failed. Please try again.');
+        ctaBtn.disabled = false;
+        ctaBtn.textContent = '✨ Grant My Wish — Unlock My Roadmap ($4.99)';
+      }
+    } catch {
+      showToast('Connection error. Please try again.');
+      ctaBtn.disabled = false;
+      ctaBtn.textContent = '✨ Grant My Wish — Unlock My Roadmap ($4.99)';
+    }
   }
 
   function showToast(msg) {
