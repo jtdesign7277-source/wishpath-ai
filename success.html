@@ -96,7 +96,7 @@
     .action-btn.primary:hover { transform: translateY(-1px); }
     .action-btn.secondary { background: rgba(255,255,255,0.06); color: var(--text); border: 1px solid var(--border-subtle); }
     .toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: rgba(124,58,237,0.95); color: #fff; padding: 12px 22px; border-radius: 99px; font-size: 0.9rem; font-weight: 600; z-index: 9999; white-space: nowrap; box-shadow: 0 4px 24px rgba(0,0,0,0.4); }
-    @media print { nav, .actions, .glow-blob { display: none !important; } body { background: white; color: #1a1a2e; } .phase, .section-card, .wish-card { border-color: #ddd; background: #fafafa; } }
+    @media print { nav, .actions, .glow-blob, #upsellSection, #downloadBtn { display: none !important; } body { background: white; color: #1a1a2e; } .phase, .section-card, .wish-card { border-color: #ddd; background: #fafafa; } }
     @media (max-width: 600px) { .container { padding: 20px 16px 60px; } .roadmap-title { font-size: 1.3rem; } .phase { padding: 18px 16px; } .actions { flex-direction: column; } .action-btn { justify-content: center; } }
   </style>
 </head>
@@ -151,9 +151,48 @@
       <div id="phasesContainer"></div>
       <div class="section-card wins" id="quickWinsCard" style="display:none;"><h3>&#x26a1; Quick Wins (Next 24 Hours)</h3><div id="quickWinsList"></div></div>
       <div class="section-card warnings" id="watchOutCard" style="display:none;"><h3>&#x26a0;&#xfe0f; Watch Out For</h3><div id="watchOutList"></div></div>
-      <div class="actions">
-        <button class="action-btn primary" onclick="window.print()">&#x1f4e5; Download PDF</button>
-        <a class="action-btn secondary" href="/">&#x2728; New Wish</a>
+      <!-- Download Button -->
+      <div style="text-align: center; margin-top: 40px;">
+        <button id="downloadBtn"
+                style="padding: 16px 48px; font-size: 1.2rem; background: linear-gradient(135deg, var(--purple-light), var(--blue)); border: none; border-radius: 999px; color: white; font-weight: 700; cursor: pointer; box-shadow: 0 4px 20px rgba(124,58,237,0.3); transition: transform 0.15s;">
+          &#x1f4e5; Download My Roadmap PDF
+        </button>
+        <div style="margin-top: 12px;">
+          <a class="action-btn secondary" href="/">&#x2728; New Wish</a>
+        </div>
+      </div>
+
+      <!-- Upsell (hidden until download) -->
+      <div id="upsellSection" style="display: none; margin: 60px auto; max-width: 620px; padding: 40px; background: var(--bg, #0a0a0f); border-radius: 20px; border: 1px solid rgba(124,58,237,0.3); text-align: center;">
+        <p style="color: var(--gold); font-weight: 600; margin-bottom: 8px;">&#x1f389; YOU'RE ALREADY ON YOUR WAY!</p>
+        <h2 style="font-size: 1.75rem; margin: 0 0 24px;">Want Even Better Results?</h2>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 520px; margin: 0 auto;">
+
+          <div style="background: rgba(19,19,31,0.9); padding: 28px 20px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.06);">
+            <h3 style="margin: 0 0 12px;">Extra Roadmap</h3>
+            <p style="color: var(--text-muted); font-size: 0.95rem;">Another goal or for a friend</p>
+            <div style="font-size: 2rem; font-weight: 700; margin: 20px 0; color: var(--purple-light);">$2.99</div>
+            <a href="https://buy.stripe.com/7sY6oJcpp2FzbFy8GA1ck05"
+               style="display: block; padding: 14px; background: var(--purple); color: white; border-radius: 999px; text-decoration: none; font-weight: 600;">
+              Add for $2.99
+            </a>
+          </div>
+
+          <div style="background: linear-gradient(135deg, rgba(124,58,237,0.15), rgba(59,130,246,0.1)); padding: 28px 20px; border-radius: 16px; border: 2px solid var(--purple-light); position: relative;">
+            <div style="position: absolute; top: -12px; right: 20px; background: var(--gold); color: #0a0a0f; font-size: 0.8rem; padding: 4px 12px; border-radius: 999px; font-weight: 700;">BEST VALUE</div>
+            <h3 style="margin: 0 0 12px;">Deluxe Pack</h3>
+            <p style="color: var(--text-muted); font-size: 0.95rem;">Extra Roadmap + Notion Templates + Weekly Prompts + Resources</p>
+            <div style="font-size: 2rem; font-weight: 700; margin: 20px 0; color: var(--purple-light);">$7.99</div>
+            <a href="https://buy.stripe.com/28E9AV899cg9bFye0U1ck06"
+               style="display: block; padding: 14px; background: linear-gradient(135deg, var(--purple-light), var(--blue)); color: white; border-radius: 999px; text-decoration: none; font-weight: 700;">
+              Upgrade to Deluxe ($7.99)
+            </a>
+          </div>
+
+        </div>
+        <p style="margin-top: 32px; color: var(--text-muted); font-size: 0.9rem;">
+          One-time payments &bull; Delivered instantly by email
+        </p>
       </div>
     </div>
   </div>
@@ -287,6 +326,15 @@
       // Start polling after a brief delay to let webhook fire
       setTimeout(pollOrder, 2000);
     })();
+
+    // Download PDF + show upsell
+    document.getElementById('downloadBtn').addEventListener('click', function() {
+      window.print();
+      setTimeout(function() {
+        document.getElementById('upsellSection').style.display = 'block';
+        document.getElementById('upsellSection').scrollIntoView({ behavior: 'smooth' });
+      }, 1000);
+    });
   </script>
 </body>
 </html>
