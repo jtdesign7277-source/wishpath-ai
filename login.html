@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Log In — WishPath.ai</title>
+  <meta name="theme-color" content="#0d1117" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x2728;</text></svg>" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: #0d1117; color: #e6edf3; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+    .card { width: 100%; max-width: 400px; background: #161b22; border: 1px solid #30363d; border-radius: 16px; padding: 40px 32px; }
+    .logo { font-size: 1.3rem; font-weight: 800; text-align: center; margin-bottom: 32px; }
+    .logo a { text-decoration: none; background: linear-gradient(135deg, #00c9a7, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    h1 { font-size: 1.4rem; font-weight: 700; text-align: center; margin-bottom: 8px; }
+    .sub { text-align: center; color: #8b949e; font-size: 0.9rem; margin-bottom: 28px; }
+    .tabs { display: flex; border-bottom: 1px solid #30363d; margin-bottom: 24px; }
+    .tab { flex: 1; text-align: center; padding: 10px; font-size: 0.9rem; font-weight: 600; color: #8b949e; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; }
+    .tab.active { color: #00c9a7; border-bottom-color: #00c9a7; }
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-size: 0.8rem; font-weight: 600; color: #8b949e; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
+    input { width: 100%; padding: 12px 14px; background: #0d1117; border: 1px solid #30363d; border-radius: 10px; color: #e6edf3; font: inherit; font-size: 0.95rem; outline: none; transition: border-color 0.2s; }
+    input:focus { border-color: #00c9a7; }
+    input::placeholder { color: #484f58; }
+    .pw-wrap { position: relative; }
+    .pw-toggle { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #8b949e; cursor: pointer; font-size: 0.8rem; }
+    .btn { width: 100%; padding: 14px; background: #00c9a7; color: #0d1117; border: none; border-radius: 10px; font: inherit; font-size: 1rem; font-weight: 700; cursor: pointer; transition: opacity 0.15s, transform 0.15s; margin-top: 8px; }
+    .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .error { color: #f85149; font-size: 0.82rem; margin-top: 8px; min-height: 18px; }
+    .switch { text-align: center; margin-top: 20px; font-size: 0.85rem; color: #8b949e; }
+    .switch a { color: #00c9a7; text-decoration: none; font-weight: 600; }
+    .back-home { display: block; text-align: center; margin-top: 16px; color: #484f58; font-size: 0.82rem; text-decoration: none; }
+    .back-home:hover { color: #8b949e; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo"><a href="/">&#x2728; WishPath.ai</a></div>
+
+    <div class="tabs">
+      <div class="tab active" id="tabLogin" onclick="switchTab('login')">Log In</div>
+      <div class="tab" id="tabSignup" onclick="switchTab('signup')">Sign Up</div>
+    </div>
+
+    <!-- Login Form -->
+    <form id="loginForm" onsubmit="handleLogin(event)">
+      <div class="form-group">
+        <label for="loginEmail">Email</label>
+        <input id="loginEmail" type="email" placeholder="you@example.com" required />
+      </div>
+      <div class="form-group">
+        <label for="loginPw">Password</label>
+        <div class="pw-wrap">
+          <input id="loginPw" type="password" placeholder="Your password" required />
+          <button type="button" class="pw-toggle" onclick="togglePw('loginPw', this)">Show</button>
+        </div>
+      </div>
+      <div class="error" id="loginError"></div>
+      <button class="btn" type="submit" id="loginBtn">Log In</button>
+    </form>
+
+    <!-- Sign Up Form -->
+    <form id="signupForm" class="hidden" onsubmit="handleSignup(event)">
+      <div class="form-group">
+        <label for="signupName">Display Name (optional)</label>
+        <input id="signupName" type="text" placeholder="Your name" />
+      </div>
+      <div class="form-group">
+        <label for="signupEmail">Email</label>
+        <input id="signupEmail" type="email" placeholder="you@example.com" required />
+      </div>
+      <div class="form-group">
+        <label for="signupPw">Password</label>
+        <div class="pw-wrap">
+          <input id="signupPw" type="password" placeholder="Min 8 characters" minlength="8" required />
+          <button type="button" class="pw-toggle" onclick="togglePw('signupPw', this)">Show</button>
+        </div>
+      </div>
+      <div class="error" id="signupError"></div>
+      <button class="btn" type="submit" id="signupBtn">Create Free Account</button>
+    </form>
+
+    <div class="switch" id="switchText">
+      Don't have an account? <a href="#" onclick="switchTab('signup'); return false;">Sign up free</a>
+    </div>
+    <a class="back-home" href="/">&larr; Back to WishPath.ai</a>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="/auth.js"></script>
+  <script>
+    var redirect = new URLSearchParams(window.location.search).get('redirect') || '/dashboard.html';
+
+    // If already logged in, redirect
+    (async function() {
+      var session = await getSession();
+      if (session) window.location.href = redirect;
+    })();
+
+    function switchTab(tab) {
+      document.getElementById('loginForm').classList.toggle('hidden', tab !== 'login');
+      document.getElementById('signupForm').classList.toggle('hidden', tab !== 'signup');
+      document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
+      document.getElementById('tabSignup').classList.toggle('active', tab === 'signup');
+      document.getElementById('switchText').innerHTML = tab === 'login'
+        ? 'Don\'t have an account? <a href="#" onclick="switchTab(\'signup\'); return false;">Sign up free</a>'
+        : 'Already have an account? <a href="#" onclick="switchTab(\'login\'); return false;">Log in</a>';
+    }
+
+    function togglePw(id, btn) {
+      var inp = document.getElementById(id);
+      inp.type = inp.type === 'password' ? 'text' : 'password';
+      btn.textContent = inp.type === 'password' ? 'Show' : 'Hide';
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      var btn = document.getElementById('loginBtn');
+      var err = document.getElementById('loginError');
+      err.textContent = '';
+      btn.disabled = true; btn.textContent = 'Logging in...';
+      try {
+        await signIn(document.getElementById('loginEmail').value, document.getElementById('loginPw').value);
+        window.location.href = redirect;
+      } catch (ex) {
+        err.textContent = ex.message || 'Login failed';
+        btn.disabled = false; btn.textContent = 'Log In';
+      }
+    }
+
+    async function handleSignup(e) {
+      e.preventDefault();
+      var btn = document.getElementById('signupBtn');
+      var err = document.getElementById('signupError');
+      err.textContent = '';
+      btn.disabled = true; btn.textContent = 'Creating account...';
+      try {
+        await signUp(
+          document.getElementById('signupEmail').value,
+          document.getElementById('signupPw').value,
+          document.getElementById('signupName').value
+        );
+        showToast('Account created! Redirecting...');
+        setTimeout(function() { window.location.href = redirect; }, 1000);
+      } catch (ex) {
+        err.textContent = ex.message || 'Sign up failed';
+        btn.disabled = false; btn.textContent = 'Create Free Account';
+      }
+    }
+  </script>
+</body>
+</html>

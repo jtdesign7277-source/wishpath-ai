@@ -169,7 +169,32 @@
     </div>
 
     <!-- Roadmap -->
-    <div class="state" id="roadmapState">
+    <div class="state" id="roadmapState" style="display:none;">
+      <!-- Save Panel -->
+      <div id="savePanel" style="background: #161b22; border: 1px solid #30363d; border-radius: 14px; padding: 28px; margin-bottom: 32px;">
+        <div id="savePanelForm">
+          <h3 style="font-size: 1.1rem; font-weight: 700; color: #fff; margin-bottom: 6px;">Save this roadmap forever — it's free</h3>
+          <p style="color: #8b949e; font-size: 0.88rem; margin-bottom: 20px;">Create an account to access your roadmap anytime.</p>
+          <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; font-size: 0.85rem; color: #8b949e;">
+            <div>&#x2705; Access from any device</div>
+            <div>&#x1f9e0; Track your progress with AI Coach</div>
+            <div>&#x2728; Unlock unlimited wishes later</div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px;">
+            <input id="saveEmail" type="email" placeholder="Email" style="padding: 11px 14px; background: #0d1117; border: 1px solid #30363d; border-radius: 8px; color: #e6edf3; font: inherit; font-size: 0.9rem; outline: none;" />
+            <input id="savePw" type="password" placeholder="Password (min 8 chars)" minlength="8" style="padding: 11px 14px; background: #0d1117; border: 1px solid #30363d; border-radius: 8px; color: #e6edf3; font: inherit; font-size: 0.9rem; outline: none;" />
+            <button onclick="handleSaveSignup()" id="saveBtn" style="padding: 12px; background: #00c9a7; color: #0d1117; border: none; border-radius: 8px; font: inherit; font-weight: 700; cursor: pointer;">Create Free Account &amp; Save</button>
+          </div>
+          <div id="saveError" style="color: #f85149; font-size: 0.82rem; min-height: 18px;"></div>
+          <p style="font-size: 0.8rem; color: #484f58;">Already have an account? <a href="/login.html" style="color: #00c9a7;">Log in</a></p>
+        </div>
+        <div id="savePanelDone" style="display: none; text-align: center;">
+          <div style="font-size: 2rem; margin-bottom: 12px;">&#x2705;</div>
+          <h3 style="font-size: 1.05rem; color: #fff; margin-bottom: 8px;">Roadmap saved to your account!</h3>
+          <a href="/dashboard.html" style="display: inline-block; padding: 10px 24px; background: #00c9a7; color: #0d1117; border-radius: 8px; font-weight: 700; text-decoration: none; margin-top: 8px;">Go to Dashboard &rarr;</a>
+        </div>
+      </div>
+
       <div class="rm-badge">&#x2705; Payment Confirmed &bull; Roadmap Ready</div>
       <div class="rm-card">
         <h1 class="rm-title" id="roadmapTitle"></h1>
@@ -209,6 +234,8 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="/auth.js"></script>
   <script>
     var SUPABASE_URL = 'https://mszilrexlupzthauoaxb.supabase.co';
     var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1zemlscmV4bHVwenRoYXVvYXhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkzMTU3ODksImV4cCI6MjA4NDg5MTc4OX0.zgkl2tTTVXZax_jjT4SAGhl4ILsS__g1qpZUtPOWCaI';
@@ -371,6 +398,63 @@
       }
       setTimeout(pollOrder, 2000);
     })();
+
+    // Check if already logged in — auto-save
+    var _sessionId = new URLSearchParams(window.location.search).get('session_id');
+    (async function checkAuth() {
+      try {
+        var session = await getSession();
+        if (session) {
+          document.getElementById('savePanelForm').style.display = 'none';
+          document.getElementById('savePanelDone').style.display = 'block';
+          // Auto-save wish when roadmap is ready
+          var checkSave = setInterval(async function() {
+            var el = document.getElementById('roadmapTitle');
+            if (el && el.textContent) {
+              clearInterval(checkSave);
+              // Get order data
+              var res = await fetch(SUPABASE_URL + '/rest/v1/wishpath_orders?stripe_checkout_session_id=eq.' + _sessionId + '&select=*', {
+                headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
+              });
+              var orders = await res.json();
+              if (orders && orders[0] && orders[0].roadmap) {
+                await saveWishToVault(session.user.id, _sessionId, orders[0].roadmap, orders[0].wish);
+              }
+            }
+          }, 2000);
+        }
+      } catch(e) {}
+    })();
+
+    async function handleSaveSignup() {
+      var email = document.getElementById('saveEmail').value.trim();
+      var pw = document.getElementById('savePw').value;
+      var err = document.getElementById('saveError');
+      var btn = document.getElementById('saveBtn');
+      err.textContent = '';
+      if (!email || !email.includes('@')) { err.textContent = 'Enter a valid email.'; return; }
+      if (pw.length < 8) { err.textContent = 'Password must be at least 8 characters.'; return; }
+      btn.disabled = true; btn.textContent = 'Creating account...';
+      try {
+        var data = await signUp(email, pw, email.split('@')[0]);
+        if (data.user) {
+          // Save the roadmap
+          var res = await fetch(SUPABASE_URL + '/rest/v1/wishpath_orders?stripe_checkout_session_id=eq.' + _sessionId + '&select=*', {
+            headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
+          });
+          var orders = await res.json();
+          if (orders && orders[0] && orders[0].roadmap) {
+            await saveWishToVault(data.user.id, _sessionId, orders[0].roadmap, orders[0].wish);
+          }
+          document.getElementById('savePanelForm').style.display = 'none';
+          document.getElementById('savePanelDone').style.display = 'block';
+          showToast('Account created & roadmap saved!');
+        }
+      } catch (ex) {
+        err.textContent = ex.message || 'Sign up failed';
+        btn.disabled = false; btn.textContent = 'Create Free Account & Save';
+      }
+    }
 
     // Download PDF + show upsell
     document.getElementById('downloadBtn').addEventListener('click', function() {

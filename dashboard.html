@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard — WishPath.ai</title>
+  <meta name="theme-color" content="#0d1117" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x2728;</text></svg>" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --bg: #0d1117; --card: #161b22; --border: #30363d; --accent: #00c9a7; --accent-dim: rgba(0,201,167,0.12); --text: #e6edf3; --text-muted: #8b949e; --text-dim: #484f58; --purple: #a78bfa; --red: #f85149; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; }
+
+    /* Sidebar */
+    .sidebar { width: 240px; background: var(--bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 50; }
+    .sidebar-logo { padding: 20px 20px 16px; font-size: 1.1rem; font-weight: 800; }
+    .sidebar-logo a { text-decoration: none; background: linear-gradient(135deg, #00c9a7, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .sidebar-nav { flex: 1; padding: 8px 12px; display: flex; flex-direction: column; gap: 2px; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; font-size: 0.88rem; font-weight: 500; color: var(--text-muted); cursor: pointer; transition: all 0.15s; text-decoration: none; }
+    .nav-item:hover { background: rgba(255,255,255,0.04); color: var(--text); }
+    .nav-item.active { background: var(--accent-dim); color: var(--accent); }
+    .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .sidebar-bottom { padding: 16px 20px; border-top: 1px solid var(--border); }
+    .plan-badge { font-size: 0.75rem; font-weight: 600; color: var(--accent); background: var(--accent-dim); border: 1px solid rgba(0,201,167,0.2); border-radius: 99px; padding: 4px 12px; display: inline-block; }
+    .user-email { font-size: 0.78rem; color: var(--text-dim); margin-top: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    /* Main */
+    .main { margin-left: 240px; flex: 1; min-height: 100vh; }
+    .main-header { padding: 24px 32px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .main-header h1 { font-size: 1.4rem; font-weight: 700; }
+    .main-content { padding: 32px; }
+
+    /* View toggle */
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* Wish cards grid */
+    .wish-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+    .wish-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 24px; transition: border-color 0.2s, transform 0.15s; cursor: pointer; }
+    .wish-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .wish-card-title { font-size: 1rem; font-weight: 700; margin-bottom: 6px; line-height: 1.3; }
+    .wish-card-date { font-size: 0.78rem; color: var(--text-dim); margin-bottom: 10px; }
+    .wish-card-summary { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 16px; }
+    .wish-card-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: var(--accent); color: var(--bg); border: none; border-radius: 8px; font: inherit; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
+
+    /* Empty state */
+    .empty { text-align: center; padding: 80px 24px; }
+    .empty-icon { font-size: 3rem; margin-bottom: 16px; }
+    .empty h3 { font-size: 1.2rem; margin-bottom: 8px; }
+    .empty p { color: var(--text-muted); margin-bottom: 24px; }
+    .empty-btn { display: inline-flex; padding: 12px 28px; background: var(--accent); color: var(--bg); border-radius: 10px; font-weight: 700; text-decoration: none; }
+
+    /* Roadmap viewer */
+    .roadmap-viewer { display: none; }
+    .roadmap-viewer.active { display: block; }
+    .viewer-back { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 8px; color: var(--text-muted); font-size: 0.85rem; cursor: pointer; margin-bottom: 24px; text-decoration: none; }
+    .viewer-back:hover { color: var(--text); }
+
+    /* Coach */
+    .coach-container { max-width: 720px; }
+    .coach-select { width: 100%; padding: 10px 14px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font: inherit; font-size: 0.9rem; margin-bottom: 20px; }
+    .coach-messages { min-height: 400px; max-height: 60vh; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; padding: 16px 0; margin-bottom: 16px; }
+    .msg { max-width: 85%; padding: 14px 18px; border-radius: 14px; font-size: 0.9rem; line-height: 1.6; }
+    .msg.user { align-self: flex-end; background: var(--accent); color: var(--bg); border-bottom-right-radius: 4px; }
+    .msg.ai { align-self: flex-start; background: var(--card); border: 1px solid var(--border); color: var(--text); border-bottom-left-radius: 4px; }
+    .msg.ai .typing { display: inline-block; }
+    .msg.ai .typing::after { content: '...'; animation: dots 1.5s infinite; }
+    @keyframes dots { 0% { content: '.'; } 33% { content: '..'; } 66% { content: '...'; } }
+    .coach-input-row { display: flex; gap: 10px; }
+    .coach-input { flex: 1; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; color: var(--text); font: inherit; font-size: 0.95rem; outline: none; resize: none; min-height: 48px; max-height: 120px; }
+    .coach-input:focus { border-color: var(--accent); }
+    .coach-send { padding: 12px 20px; background: var(--accent); color: var(--bg); border: none; border-radius: 12px; font: inherit; font-weight: 700; cursor: pointer; flex-shrink: 0; }
+    .coach-send:disabled { opacity: 0.5; }
+
+    /* Mobile */
+    .menu-toggle { display: none; position: fixed; top: 16px; left: 16px; z-index: 60; background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; color: var(--text); cursor: pointer; }
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); transition: transform 0.2s; }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-left: 0; }
+      .menu-toggle { display: block; }
+      .main-header { padding-left: 60px; }
+      .wish-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <button class="menu-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">&#9776;</button>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo"><a href="/">&#x2728; WishPath.ai</a></div>
+    <nav class="sidebar-nav">
+      <a class="nav-item active" data-view="wishes" onclick="showView('wishes')">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h12v12H4z" rx="2"/><path d="M8 8h4M8 11h2"/></svg>
+        My Wishes
+      </a>
+      <a class="nav-item" data-view="coach" onclick="showView('coach')">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="7"/><path d="M10 7v3l2 2"/></svg>
+        AI Coach
+      </a>
+      <a class="nav-item" href="/">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8l7-5 7 5v8a1 1 0 01-1 1H4a1 1 0 01-1-1V8z"/></svg>
+        Back to Home
+      </a>
+      <a class="nav-item" onclick="signOut()" style="margin-top: auto; color: var(--red);">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7 4H4v12h3M10 10h7m0 0l-3-3m3 3l-3 3"/></svg>
+        Log Out
+      </a>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="plan-badge" id="planBadge">Free Plan</div>
+      <div class="user-email" id="userEmail"></div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="main-header">
+      <h1 id="viewTitle">My Wishes</h1>
+    </div>
+    <div class="main-content">
+
+      <!-- Wishes View -->
+      <div class="view active" id="wishesView">
+        <div class="wish-grid" id="wishGrid"></div>
+        <div class="empty" id="emptyState" style="display:none;">
+          <div class="empty-icon">&#x2728;</div>
+          <h3>Your wish vault is empty</h3>
+          <p>Buy your first roadmap and save it here to track your progress.</p>
+          <a class="empty-btn" href="/">Get My First Roadmap</a>
+        </div>
+        <!-- Roadmap viewer (inline) -->
+        <div class="roadmap-viewer" id="roadmapViewer">
+          <a class="viewer-back" onclick="closeViewer()">&larr; Back to wishes</a>
+          <div id="viewerContent"></div>
+        </div>
+      </div>
+
+      <!-- Coach View -->
+      <div class="view" id="coachView">
+        <div class="coach-container">
+          <p style="color: var(--text-muted); margin-bottom: 12px; font-size: 0.88rem;">Select a roadmap to coach on:</p>
+          <select class="coach-select" id="coachSelect"><option value="">Loading wishes...</option></select>
+          <div class="coach-messages" id="coachMessages">
+            <div class="msg ai">Hi! I'm your WishPath Coach. Select a roadmap above and I'll help you execute it step by step. Ask me anything about your plan.</div>
+          </div>
+          <div class="coach-input-row">
+            <textarea class="coach-input" id="coachInput" placeholder="Ask your coach anything..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendCoachMsg();}"></textarea>
+            <button class="coach-send" id="coachSendBtn" onclick="sendCoachMsg()">Send</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="/auth.js"></script>
+  <script>
+    var wishes = [];
+    var coachHistory = [];
+    var EDGE_FN = 'https://mszilrexlupzthauoaxb.supabase.co/functions/v1/wishpath-generate';
+
+    // Auth check
+    (async function() {
+      var session = await requireAuth();
+      if (!session) return;
+      document.getElementById('userEmail').textContent = session.user.email;
+      var profile = await getUserProfile();
+      if (profile) {
+        document.getElementById('planBadge').textContent = (profile.plan || 'free').charAt(0).toUpperCase() + (profile.plan || 'free').slice(1) + ' Plan';
+      }
+      loadWishes();
+    })();
+
+    async function loadWishes() {
+      try {
+        wishes = await getUserWishes();
+        renderWishes();
+        populateCoachSelect();
+      } catch (e) {
+        console.error('Load wishes error:', e);
+      }
+    }
+
+    function renderWishes() {
+      var grid = document.getElementById('wishGrid');
+      var empty = document.getElementById('emptyState');
+      if (!wishes.length) { grid.style.display = 'none'; empty.style.display = 'block'; return; }
+      grid.style.display = 'grid'; empty.style.display = 'none';
+      grid.innerHTML = wishes.map(function(w, i) {
+        var date = new Date(w.generated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        return '<div class="wish-card" onclick="openWish(' + i + ')">' +
+          '<div class="wish-card-title">' + (w.wish_title || 'Untitled') + '</div>' +
+          '<div class="wish-card-date">' + date + '</div>' +
+          '<div class="wish-card-summary">' + (w.wish_summary || '') + '</div>' +
+          '<button class="wish-card-btn">Open Roadmap &rarr;</button>' +
+        '</div>';
+      }).join('');
+    }
+
+    function openWish(idx) {
+      var w = wishes[idx];
+      if (!w || !w.roadmap_data) return;
+      document.getElementById('wishGrid').style.display = 'none';
+      document.getElementById('emptyState').style.display = 'none';
+      var viewer = document.getElementById('roadmapViewer');
+      viewer.classList.add('active');
+      document.getElementById('viewerContent').innerHTML = renderNotionRoadmap(w.roadmap_data, w.wish_summary || w.wish_title);
+      document.getElementById('viewTitle').textContent = w.wish_title;
+    }
+
+    function closeViewer() {
+      document.getElementById('roadmapViewer').classList.remove('active');
+      document.getElementById('wishGrid').style.display = 'grid';
+      document.getElementById('viewTitle').textContent = 'My Wishes';
+    }
+
+    function renderNotionRoadmap(roadmap, wish) {
+      var actionEmojis = ['🧠','🎯','🔍','📮','💼','✍️','📋','🤝','⭐','🛠','💡','🔑','⚡','🚀','📌'];
+      var metricEmojis = ['🚀','⏱','📈','💰','🔘','📋','📊','📉','🎯','🧮'];
+      var html = '<h2 style="font-size:1.5rem;font-weight:800;color:#fff;margin-bottom:8px;">' + (roadmap.title || 'Your Roadmap') + '</h2>';
+      html += '<p style="color:#8b949e;margin-bottom:24px;">' + (roadmap.summary || '') + '</p>';
+
+      (roadmap.phases || []).forEach(function(p, idx) {
+        if (idx > 0) html += '<div style="margin:32px 0;"></div>';
+        html += '<div style="height:4px;background:linear-gradient(90deg,#00c9a7,#3b82f6);border-radius:2px;margin-bottom:4px;"></div>';
+        html += '<div style="font-size:1.15rem;font-weight:600;color:#00c9a7;padding:12px 16px;background:rgba(255,255,255,0.03);border-radius:8px;margin-bottom:2px;">Phase ' + p.phase + ' (' + (p.timeframe||'') + '): ' + p.name + '</div>';
+        html += '<div style="font-weight:700;color:#fff;padding:10px 16px;background:rgba(255,255,255,0.04);border-radius:6px;margin:2px 0;">Key Actions</div>';
+        (p.steps || []).forEach(function(s, si) {
+          var em = actionEmojis[si % actionEmojis.length];
+          var bg = si % 2 === 0 ? 'rgba(255,255,255,0.035)' : 'rgba(255,255,255,0.02)';
+          html += '<div style="padding:8px 16px;background:' + bg + ';border-radius:6px;margin:1px 0;color:#d1d5db;font-size:0.93rem;">' + em + ' ' + s.action + (s.detail ? '. ' + s.detail : '') + '</div>';
+        });
+      });
+
+      if (roadmap.quickWins && roadmap.quickWins.length) {
+        html += '<div style="background:rgba(0,201,167,0.08);border:1px solid rgba(0,201,167,0.2);border-radius:10px;padding:18px 22px;margin-top:24px;">';
+        html += '<div style="font-weight:700;color:#00c9a7;margin-bottom:10px;">&#x26a1; Quick Wins</div>';
+        roadmap.quickWins.forEach(function(q) { html += '<div style="padding:4px 0;color:#d1d5db;font-size:0.9rem;">&#x2022; <strong>' + q.action + '</strong> — ' + q.detail + '</div>'; });
+        html += '</div>';
+      }
+      return html;
+    }
+
+    // View switching
+    function showView(view) {
+      document.querySelectorAll('.view').forEach(function(v) { v.classList.remove('active'); });
+      document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
+      document.getElementById(view + 'View').classList.add('active');
+      document.querySelector('[data-view="' + view + '"]').classList.add('active');
+      document.getElementById('viewTitle').textContent = view === 'wishes' ? 'My Wishes' : 'AI Coach';
+      if (view === 'wishes') closeViewer();
+    }
+
+    // Coach
+    function populateCoachSelect() {
+      var sel = document.getElementById('coachSelect');
+      if (!wishes.length) { sel.innerHTML = '<option value="">No saved roadmaps yet</option>'; return; }
+      sel.innerHTML = wishes.map(function(w, i) { return '<option value="' + i + '">' + (w.wish_title || 'Untitled') + '</option>'; }).join('');
+    }
+
+    async function sendCoachMsg() {
+      var input = document.getElementById('coachInput');
+      var msg = input.value.trim();
+      if (!msg) return;
+      input.value = '';
+
+      var selIdx = document.getElementById('coachSelect').value;
+      var wish = wishes[selIdx];
+      var roadmapContext = wish ? JSON.stringify(wish.roadmap_data).substring(0, 3000) : 'No roadmap selected';
+      var wishTitle = wish ? wish.wish_title : 'general goal';
+
+      // Add user message
+      var msgs = document.getElementById('coachMessages');
+      msgs.innerHTML += '<div class="msg user">' + msg.replace(/</g,'&lt;') + '</div>';
+
+      // Add typing indicator
+      msgs.innerHTML += '<div class="msg ai" id="coachTyping"><span class="typing">Thinking</span></div>';
+      msgs.scrollTop = msgs.scrollHeight;
+
+      var btn = document.getElementById('coachSendBtn');
+      btn.disabled = true;
+
+      coachHistory.push({ role: 'user', content: msg });
+
+      try {
+        var systemPrompt = 'You are WishPath Coach, an encouraging, strategic executive coach. The user has a saved roadmap titled "' + wishTitle + '". Reference the full roadmap JSON below. Guide them step-by-step through execution. Ask clarifying questions, celebrate wins, suggest daily actions, and keep them accountable. Never hallucinate steps. Current date is ' + new Date().toLocaleDateString() + '.\n\nRoadmap data:\n' + roadmapContext;
+
+        var res = await fetch('https://mszilrexlupzthauoaxb.supabase.co/functions/v1/wishpath-generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            coachMode: true,
+            systemPrompt: systemPrompt,
+            messages: coachHistory.slice(-10),
+          }),
+        });
+
+        var data = await res.json();
+        var reply = data.reply || data.error || 'I couldn\'t process that. Try again.';
+
+        coachHistory.push({ role: 'assistant', content: reply });
+
+        var typing = document.getElementById('coachTyping');
+        if (typing) typing.remove();
+        msgs.innerHTML += '<div class="msg ai">' + reply.replace(/\n/g, '<br>').replace(/</g,'&lt;').replace(/&lt;br>/g,'<br>') + '</div>';
+      } catch (e) {
+        var typing = document.getElementById('coachTyping');
+        if (typing) typing.remove();
+        msgs.innerHTML += '<div class="msg ai" style="color:#f85149;">Connection error. Please try again.</div>';
+      }
+
+      btn.disabled = false;
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+  </script>
+</body>
+</html>
