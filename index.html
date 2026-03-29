@@ -44,13 +44,14 @@
       --radius-sm: 10px;
     }
 
-    html { scroll-behavior: smooth; }
+    html { scroll-behavior: smooth; max-width: 100vw; overflow-x: hidden; }
 
     body {
       font-family: 'Inter', sans-serif;
       background: var(--bg);
       color: var(--text);
       overflow-x: hidden;
+      max-width: 100vw;
       min-height: 100vh;
     }
 
@@ -191,12 +192,16 @@
       50%       { transform: translateY(-12px) rotate(3deg); }
     }
 
+    .mobile-break { display: none; }
+    @media (max-width: 480px) { .mobile-break { display: block; } }
+
     .hero h1 {
-      font-size: clamp(2rem, 8vw, 3.8rem);
+      font-size: clamp(1.6rem, 7vw, 3.8rem);
       font-weight: 900;
       line-height: 1.1;
       letter-spacing: -0.03em;
       margin-bottom: 22px;
+      word-break: break-word;
     }
 
     .hero h1 .price-highlight {
@@ -211,7 +216,7 @@
       color: var(--text-muted);
       line-height: 1.6;
       max-width: 560px;
-      margin: 0 auto 48px;
+      margin: 0 auto 32px;
       font-weight: 400;
     }
 
@@ -878,7 +883,7 @@
     <div class="container">
       <div class="hero-badge">✨ AI-Powered Roadmaps</div>
       <div class="orb">🪄</div>
-      <h1>One Wish. One Click.<br><span class="price-highlight">Your Perfect Path — $4.99.</span></h1>
+      <h1>One Wish. One Click.<br class="mobile-break"><span class="price-highlight">Your Perfect Path — $4.99.</span></h1>
       <p class="hero-sub">Describe any goal or problem. Get a custom roadmap built with real-time data, deep analysis, and step-by-step actions. No fluff. No generic advice.</p>
 
       <!-- Input Card -->
@@ -1195,14 +1200,30 @@
     // Persist wish to session storage for post-payment retrieval
     sessionStorage.setItem('wishpath_data', JSON.stringify(ctx));
 
-    // TODO: Replace with your Stripe Payment Link
-    // After payment, Stripe redirects to your success URL with a session_id
-    // Your backend reads sessionStorage and processes the wish via AI
-    const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/YOUR_PAYMENT_LINK';
+    const STRIPE_PAYMENT_LINK = null; // TODO: add Stripe payment link when ready
+
+    if (!STRIPE_PAYMENT_LINK) {
+      showToast('Setting up payment — check back shortly!');
+      return;
+    }
 
     // Append metadata as URL params for post-payment processing
     const params = new URLSearchParams({ prefilled_email: '' });
     window.location.href = `${STRIPE_PAYMENT_LINK}?${params.toString()}`;
+  }
+
+  function showToast(msg) {
+    const t = document.createElement('div');
+    t.textContent = msg;
+    Object.assign(t.style, {
+      position: 'fixed', bottom: '100px', left: '50%', transform: 'translateX(-50%)',
+      background: 'rgba(124,58,237,0.95)', color: '#fff', padding: '12px 22px',
+      borderRadius: '99px', fontSize: '0.9rem', fontWeight: '600',
+      zIndex: '9999', whiteSpace: 'nowrap', boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
+      transition: 'opacity 0.4s', opacity: '1',
+    });
+    document.body.appendChild(t);
+    setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 400); }, 3000);
   }
 
   // Stagger fade-up delays for grid items
