@@ -282,15 +282,22 @@
         </table>
       </div>
 
-      <!-- Notes View (split: note list left, editor right) -->
+      <!-- Notes View (split: AI agent left, note editor right) -->
       <div class="view" id="notesView">
         <div class="coach-layout">
-          <div class="coach-left" style="padding-right:16px;">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-              <h3 style="font-size:1rem;font-weight:700;">My Notes</h3>
-              <button class="new-page-btn" onclick="createNewNote()" style="font-size:0.78rem;padding:6px 14px;">+ New</button>
+          <div class="coach-left">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-shrink:0;">
+              <select class="coach-select" id="noteSelect" style="margin-bottom:0;flex:1;"><option value="">Select a note...</option></select>
+              <button class="new-page-btn" onclick="createNewNote()" style="font-size:0.78rem;padding:8px 14px;white-space:nowrap;">+ New</button>
             </div>
-            <div id="notesList" style="flex:1;overflow-y:auto;"></div>
+            <div class="coach-messages" id="noteCoachMessages">
+              <div class="msg ai">I'm your notes assistant. Select or create a note on the right, and I can help you write, brainstorm, or organize your thoughts. Just ask!</div>
+            </div>
+            <div class="coach-input-row">
+              <button class="save-btn" id="noteCoachSaveBtn" onclick="manualSaveNoteConvo()" title="Save conversation">&#x1F4BE;</button>
+              <textarea class="coach-input" id="noteCoachInput" placeholder="Ask for help with your note..." rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendNoteCoachMsg();}"></textarea>
+              <button class="coach-send" id="noteCoachSendBtn" onclick="sendNoteCoachMsg()">Send</button>
+            </div>
           </div>
           <div class="coach-right-wrapper">
             <div class="coach-right" id="noteEditorPanel">
@@ -894,24 +901,24 @@
     var currentNoteId = null;
 
     async function renderNotesList() {
-      var list = document.getElementById('notesList');
-      list.innerHTML = '<div style="color:var(--text-dim);font-size:0.85rem;padding:16px 0;">Loading...</div>';
+      var sel = document.getElementById('noteSelect');
       try {
         var sb = getSupabase();
         var { data } = await sb.from('user_notes').select('*').eq('user_id', currentUserId).order('updated_at', { ascending: false });
         if (!data || data.length === 0) {
-          list.innerHTML = '<div style="color:var(--text-dim);font-size:0.85rem;padding:16px 0;text-align:center;">No notes yet.<br>Click + New to create one.</div>';
+          sel.innerHTML = '<option value="">No notes yet — click + New</option>';
           return;
         }
-        list.innerHTML = data.map(function(n) {
-          var active = n.id === currentNoteId ? 'background:rgba(255,255,255,0.04);color:var(--text);' : '';
-          return '<div onclick="openNote(\'' + n.id + '\')" style="padding:10px 12px;border-radius:8px;cursor:pointer;margin-bottom:2px;font-size:0.85rem;color:var(--text-muted);transition:background 0.1s;' + active + '">' +
-            '<div style="font-weight:600;color:var(--text);margin-bottom:2px;">&#x1F4DD; ' + (n.title || 'Untitled') + '</div>' +
-            '<div style="font-size:0.75rem;color:var(--text-dim);">' + timeAgo(n.updated_at) + '</div>' +
-          '</div>';
+        window._notesData = data;
+        sel.innerHTML = data.map(function(n) {
+          return '<option value="' + n.id + '"' + (n.id === currentNoteId ? ' selected' : '') + '>' + (n.title || 'Untitled') + '</option>';
         }).join('');
-      } catch(e) { list.innerHTML = '<div style="color:var(--red);font-size:0.85rem;">Error loading notes.</div>'; }
+      } catch(e) {}
     }
+
+    document.getElementById('noteSelect').addEventListener('change', function() {
+      if (this.value) openNote(this.value);
+    });
 
     async function createNewNote() {
       var sb = getSupabase();
@@ -929,8 +936,13 @@
       var { data } = await sb.from('user_notes').select('*').eq('id', noteId).single();
       if (!data) return;
 
+      var created = new Date(data.created_at).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+      var updated = new Date(data.updated_at).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+
       var panel = document.getElementById('noteEditorPanel');
       panel.innerHTML = '<div class="note-editor">' +
+        '<div style="font-size:0.75rem;color:var(--text-dim);margin-bottom:8px;">Created: ' + created + '</div>' +
+        '<div style="font-size:0.75rem;color:var(--text-dim);margin-bottom:16px;">Last saved: ' + updated + '</div>' +
         '<input class="note-title-input" id="noteTitleInput" value="' + (data.title || '').replace(/"/g, '&quot;') + '" placeholder="Note title..." />' +
         '<textarea class="note-body-input" id="noteBodyInput" placeholder="Start writing...">' + (data.content || '') + '</textarea>' +
         '<div class="note-save-bar">' +
@@ -939,7 +951,8 @@
           '<button onclick="deleteCurrentNote()" style="margin-left:auto;background:none;border:1px solid rgba(248,81,73,0.3);color:var(--red);padding:8px 16px;border-radius:8px;font:inherit;font-size:0.82rem;cursor:pointer;">Delete</button>' +
         '</div>' +
       '</div>';
-      renderNotesList();
+      // Update dropdown selection
+      document.getElementById('noteSelect').value = noteId;
     }
 
     async function openNoteInSplit(noteId) {
@@ -957,6 +970,59 @@
       status.textContent = 'Saved!';
       setTimeout(function() { status.textContent = ''; }, 2000);
       renderNotesList();
+    }
+
+    var noteCoachHistory = [];
+    async function sendNoteCoachMsg() {
+      var input = document.getElementById('noteCoachInput');
+      var msg = input.value.trim();
+      if (!msg) return;
+      input.value = '';
+      input.style.height = 'auto';
+
+      var msgs = document.getElementById('noteCoachMessages');
+      msgs.innerHTML += '<div class="msg user">' + msg.replace(/</g,'&lt;') + '</div>';
+      msgs.innerHTML += '<div class="msg ai" id="noteCoachTyping"><span class="typing">Thinking</span></div>';
+      msgs.scrollTop = msgs.scrollHeight;
+
+      var btn = document.getElementById('noteCoachSendBtn');
+      btn.disabled = true;
+      noteCoachHistory.push({ role: 'user', content: msg });
+
+      // Get current note content for context
+      var noteCtx = '';
+      var titleEl = document.getElementById('noteTitleInput');
+      var bodyEl = document.getElementById('noteBodyInput');
+      if (titleEl && bodyEl) {
+        noteCtx = '\n\nCurrent note title: "' + titleEl.value + '"\nCurrent note content: "' + bodyEl.value.substring(0, 2000) + '"';
+      }
+
+      try {
+        var systemPrompt = 'You are a helpful notes assistant for WishPath.ai. Help the user write, brainstorm, organize, or improve their notes. Be concise and practical. If they ask you to write something, provide it in a format they can easily copy and paste.' + noteCtx;
+        var res = await fetch(EDGE_FN, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ coachMode: true, systemPrompt: systemPrompt, messages: noteCoachHistory.slice(-10) }),
+        });
+        var data = await res.json();
+        var reply = data.reply || 'I couldn\'t process that. Try again.';
+        noteCoachHistory.push({ role: 'assistant', content: reply });
+        var typing = document.getElementById('noteCoachTyping');
+        if (typing) typing.remove();
+        msgs.innerHTML += '<div class="msg ai">' + reply.replace(/\n/g, '<br>').replace(/</g,'&lt;').replace(/&lt;br>/g,'<br>') + '</div>';
+      } catch(e) {
+        var typing = document.getElementById('noteCoachTyping');
+        if (typing) typing.remove();
+        msgs.innerHTML += '<div class="msg ai" style="color:#f85149;">Connection error. Please try again.</div>';
+      }
+      btn.disabled = false;
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+
+    async function manualSaveNoteConvo() {
+      // Notes coach conversations are lightweight — no persistent save needed for now
+      document.getElementById('noteCoachSaveBtn').style.color = 'var(--accent)';
+      setTimeout(function() { document.getElementById('noteCoachSaveBtn').style.color = ''; }, 1500);
     }
 
     async function deleteCurrentNote() {
