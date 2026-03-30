@@ -1428,23 +1428,34 @@
     }
 
     async function manualSaveNoteConvo() {
-      if (!currentUserId || noteCoachHistory.length === 0) return;
       var btn = document.getElementById('noteCoachSaveBtn');
+      if (!currentUserId) { alert('Please log in to save chats.'); return; }
+      if (!noteCoachHistory || noteCoachHistory.length === 0) { btn.innerHTML = '&#x274C; No chat'; setTimeout(function() { btn.innerHTML = '&#x1F4BE;'; }, 2000); return; }
       btn.disabled = true;
+      btn.innerHTML = '&#x23F3;';
       try {
         var sb = getSupabase();
         var wishId = 'note-' + (currentNoteId || 'general');
+        var firstMsg = noteCoachHistory.find(function(m) { return m.role === 'user'; });
+        var title = firstMsg ? firstMsg.content.substring(0, 60) : 'Notes Chat';
         var summary = noteCoachHistory.slice(-6).map(function(m) { return m.role + ': ' + m.content.substring(0, 100); }).join('\n');
         var { data: existing } = await sb.from('coach_conversations').select('id').eq('user_id', currentUserId).eq('wish_id', wishId).limit(1);
         if (existing && existing.length > 0) {
-          await sb.from('coach_conversations').update({ messages: noteCoachHistory, summary: summary, updated_at: new Date().toISOString() }).eq('id', existing[0].id);
+          var { error } = await sb.from('coach_conversations').update({ messages: noteCoachHistory, summary: summary, title: title, updated_at: new Date().toISOString() }).eq('id', existing[0].id);
+          if (error) throw error;
         } else {
-          await sb.from('coach_conversations').insert({ user_id: currentUserId, wish_id: wishId, messages: noteCoachHistory, summary: summary });
+          var { error } = await sb.from('coach_conversations').insert({ user_id: currentUserId, wish_id: wishId, messages: noteCoachHistory, summary: summary, title: title });
+          if (error) throw error;
         }
-        btn.style.color = 'var(--accent)';
-        setTimeout(function() { btn.style.color = ''; }, 1500);
+        btn.innerHTML = '&#x2705;';
+        setTimeout(function() { btn.innerHTML = '&#x1F4BE;'; }, 2000);
         renderSavedChatsSidebar();
-      } catch(e) { console.error('Save note convo error:', e); }
+      } catch(e) {
+        console.error('Save note convo error:', e);
+        btn.innerHTML = '&#x274C;';
+        setTimeout(function() { btn.innerHTML = '&#x1F4BE;'; }, 2000);
+        alert('Save failed: ' + (e.message || e));
+      }
       btn.disabled = false;
     }
 
@@ -1694,22 +1705,31 @@
     }
 
     async function manualSaveTodoConvo() {
-      if (!currentUserId || todoCoachHistory.length === 0) return;
-      var btn = event && event.target ? event.target : null;
-      if (btn) btn.disabled = true;
+      var btn = document.querySelector('#todosView .save-btn') || (event && event.target);
+      if (!currentUserId) { alert('Please log in to save chats.'); return; }
+      if (!todoCoachHistory || todoCoachHistory.length === 0) { if (btn) { btn.innerHTML = '&#x274C; No chat'; setTimeout(function() { btn.innerHTML = '&#x1F4BE; Save Chat'; }, 2000); } return; }
+      if (btn) { btn.disabled = true; btn.innerHTML = '&#x23F3; Saving...'; }
       try {
         var sb = getSupabase();
         var wishId = 'todo-' + (currentTodoId || 'general');
+        var firstMsg = todoCoachHistory.find(function(m) { return m.role === 'user'; });
+        var title = firstMsg ? firstMsg.content.substring(0, 60) : 'To-Do Chat';
         var summary = todoCoachHistory.slice(-6).map(function(m) { return m.role + ': ' + m.content.substring(0, 100); }).join('\n');
         var { data: existing } = await sb.from('coach_conversations').select('id').eq('user_id', currentUserId).eq('wish_id', wishId).limit(1);
         if (existing && existing.length > 0) {
-          await sb.from('coach_conversations').update({ messages: todoCoachHistory, summary: summary, updated_at: new Date().toISOString() }).eq('id', existing[0].id);
+          var { error } = await sb.from('coach_conversations').update({ messages: todoCoachHistory, summary: summary, title: title, updated_at: new Date().toISOString() }).eq('id', existing[0].id);
+          if (error) throw error;
         } else {
-          await sb.from('coach_conversations').insert({ user_id: currentUserId, wish_id: wishId, messages: todoCoachHistory, summary: summary });
+          var { error } = await sb.from('coach_conversations').insert({ user_id: currentUserId, wish_id: wishId, messages: todoCoachHistory, summary: summary, title: title });
+          if (error) throw error;
         }
-        if (btn) { btn.style.color = 'var(--accent)'; setTimeout(function() { btn.style.color = ''; }, 1500); }
+        if (btn) { btn.innerHTML = '&#x2705; Saved!'; setTimeout(function() { btn.innerHTML = '&#x1F4BE; Save Chat'; }, 2000); }
         renderSavedChatsSidebar();
-      } catch(e) { console.error('Save todo convo error:', e); }
+      } catch(e) {
+        console.error('Save todo convo error:', e);
+        if (btn) { btn.innerHTML = '&#x274C; Failed'; setTimeout(function() { btn.innerHTML = '&#x1F4BE; Save Chat'; }, 2000); }
+        alert('Save failed: ' + (e.message || e));
+      }
       if (btn) btn.disabled = false;
     }
 
