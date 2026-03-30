@@ -1499,6 +1499,53 @@
 
     async function manualSaveTodoConvo() {}
 
+    // ── Save & Email new wish ──
+    async function saveNewWishToVault() {
+      var roadmap = window._lastGeneratedRoadmap;
+      var wish = window._lastGeneratedWish;
+      if (!roadmap || !currentUserId) return;
+      var btn = document.getElementById('saveWishBtn');
+      btn.disabled = true; btn.textContent = 'Saving...';
+      try {
+        await saveWishToVault(currentUserId, null, roadmap, wish);
+        btn.textContent = '\u2705 Saved!';
+        document.getElementById('wishActionStatus').textContent = 'Added to My Wishes';
+        await loadWishes();
+      } catch(e) {
+        btn.textContent = 'Save failed';
+        btn.disabled = false;
+      }
+    }
+
+    async function emailNewWish() {
+      var roadmap = window._lastGeneratedRoadmap;
+      var wish = window._lastGeneratedWish;
+      if (!roadmap) return;
+      var session = await getSession();
+      var email = session ? session.user.email : '';
+      if (!email) { alert('No email found on your account.'); return; }
+      var btn = document.getElementById('emailWishBtn');
+      btn.disabled = true; btn.textContent = 'Sending...';
+      try {
+        var res = await fetch(EDGE_FN, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ emailOnly: true, email: email, roadmap: roadmap, wish: wish }),
+        });
+        var data = await res.json();
+        if (data.success) {
+          btn.textContent = '\u2709\uFE0F Sent!';
+          document.getElementById('wishActionStatus').textContent = 'Email sent to ' + email;
+        } else {
+          btn.textContent = 'Send failed';
+          btn.disabled = false;
+        }
+      } catch(e) {
+        btn.textContent = 'Send failed';
+        btn.disabled = false;
+      }
+    }
+
     // ── New Wish ──
     function toggleWishContext(field, btn) {
       var input = document.getElementById('wish' + field.charAt(0).toUpperCase() + field.slice(1));
@@ -1543,8 +1590,16 @@
         clearInterval(thinkInt);
 
         if (data.roadmap) {
-          panel.innerHTML = '<div class="coach-roadmap">' + renderNotionRoadmap(data.roadmap, wish) + '</div>';
-          // Reload wishes so it appears in My Wishes
+          // Store for save/email
+          window._lastGeneratedRoadmap = data.roadmap;
+          window._lastGeneratedWish = wish;
+
+          panel.innerHTML = '<div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;">' +
+            '<button onclick="saveNewWishToVault()" id="saveWishBtn" style="padding:10px 22px;background:var(--accent);color:var(--bg);border:none;border-radius:8px;font:inherit;font-size:0.85rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;">&#x1F4BE; Save to My Wishes</button>' +
+            '<button onclick="emailNewWish()" id="emailWishBtn" style="padding:10px 22px;background:rgba(255,255,255,0.06);color:var(--text);border:1px solid var(--border);border-radius:8px;font:inherit;font-size:0.85rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;">&#x2709;&#xFE0F; Email to Me</button>' +
+            '<span id="wishActionStatus" style="font-size:0.78rem;color:var(--accent);align-self:center;"></span>' +
+          '</div>' +
+          '<div class="coach-roadmap">' + renderNotionRoadmap(data.roadmap, wish) + '</div>';
           await loadWishes();
           btn.disabled = false; btn.textContent = '\u2728 Generate My Roadmap';
         } else {
