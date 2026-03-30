@@ -89,7 +89,7 @@
     .msg.ai .typing::after { content: '...'; animation: dots 1.5s infinite; }
     @keyframes dots { 0% { content: '.'; } 33% { content: '..'; } 66% { content: '...'; } }
     .coach-input-row { display: flex; gap: 8px; flex-shrink: 0; }
-    .coach-input { flex: 1; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; color: var(--text); font: inherit; font-size: 0.9rem; outline: none; resize: none; min-height: 48px; max-height: 100px; }
+    .coach-input { flex: 1; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; color: var(--text); font: inherit; font-size: 0.9rem; outline: none; resize: none; min-height: 48px; max-height: 240px; overflow-y: auto; }
     .coach-input:focus { border-color: var(--accent); }
     .coach-send { padding: 12px 20px; background: var(--accent); color: var(--bg); border: none; border-radius: 12px; font: inherit; font-weight: 700; cursor: pointer; flex-shrink: 0; }
     .coach-send:disabled { opacity: 0.5; }
@@ -175,7 +175,7 @@
               <div class="msg ai">Hi! I'm your WishPath Coach. Select a roadmap above and I'll help you execute it step by step. Ask me anything about your plan.</div>
             </div>
             <div class="coach-input-row">
-              <textarea class="coach-input" id="coachInput" placeholder="Ask your coach anything..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendCoachMsg();}"></textarea>
+              <textarea class="coach-input" id="coachInput" placeholder="Ask your coach anything..." rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendCoachMsg();}"></textarea>
               <button class="coach-send" id="coachSendBtn" onclick="sendCoachMsg()">Send</button>
             </div>
           </div>
@@ -510,6 +510,7 @@
       var msg = input.value.trim();
       if (!msg) return;
       input.value = '';
+      input.style.height = 'auto';
 
       var selIdx = document.getElementById('coachSelect').value;
       var wish = wishes[selIdx];
