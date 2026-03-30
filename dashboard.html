@@ -108,7 +108,7 @@
     .coach-roadmap h2 { font-size: 1.2rem; font-weight: 800; color: #fff; margin-bottom: 6px; }
     .coach-roadmap p { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 16px; }
     /* Save button */
-    .save-btn { padding: 10px 12px; background: rgba(0,201,167,0.15); color: var(--accent); border: 1px solid rgba(0,201,167,0.3); border-radius: 12px; font-size: 1rem; cursor: pointer; transition: all 0.15s; flex-shrink: 0; line-height: 1; }
+    .save-btn { padding: 8px 14px; background: rgba(0,201,167,0.15); color: var(--accent); border: 1px solid rgba(0,201,167,0.3); border-radius: 12px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.15s; flex-shrink: 0; white-space: nowrap; font-family: inherit; }
     .save-btn:hover { background: rgba(0,201,167,0.25); }
     .save-status { font-size: 0.7rem; color: var(--accent); flex-shrink: 0; min-width: 0; }
 
@@ -243,7 +243,7 @@
               <div class="msg ai">Hi! I'm your WishPath Coach. Select a roadmap above and I'll help you execute it step by step. Ask me anything about your plan.</div>
             </div>
             <div class="coach-input-row">
-              <button class="save-btn" id="saveConvoBtn" onclick="manualSaveConversation()" title="Save conversation">&#x1F4BE;</button>
+              <button class="save-btn" id="saveConvoBtn" onclick="manualSaveConversation()" title="Save conversation">&#x1F4BE; Save Chat</button>
               <span class="save-status" id="saveStatus"></span>
               <textarea class="coach-input" id="coachInput" placeholder="Ask your coach anything..." rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendCoachMsg();}"></textarea>
               <button class="coach-send" id="coachSendBtn" onclick="sendCoachMsg()">Send</button>
