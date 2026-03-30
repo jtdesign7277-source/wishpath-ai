@@ -397,6 +397,7 @@
           <div class="library-filter" onclick="filterLibrary('roadmaps', this)">Roadmaps</div>
           <div class="library-filter" onclick="filterLibrary('chats', this)">Chats</div>
           <div class="library-filter" onclick="filterLibrary('notes', this)">Notes</div>
+          <div class="library-filter" onclick="filterLibrary('todos', this)">To-Dos</div>
         </div>
         <table class="library-table">
           <thead>
@@ -1163,6 +1164,19 @@
         } catch(e) {}
       }
 
+      // To-Dos
+      if (libraryFilter === 'all' || libraryFilter === 'todos') {
+        try {
+          var sb = getSupabase();
+          var { data } = await sb.from('user_todos').select('*').eq('user_id', currentUserId).order('updated_at', { ascending: false });
+          if (data) data.forEach(function(t) {
+            var itemCount = (t.items || []).length;
+            var doneCount = (t.items || []).filter(function(i) { return i.done; }).length;
+            items.push({ name: (t.title || 'Untitled') + ' (' + doneCount + '/' + itemCount + ')', icon: '&#x2705;', type: 'To-Do', edited: t.updated_at, created: t.created_at, action: function() { openTodoInSplit(t.id); } });
+          });
+        } catch(e) {}
+      }
+
       // Sort by edited desc
       items.sort(function(a, b) { return new Date(b.edited) - new Date(a.edited); });
 
@@ -1245,6 +1259,11 @@
     async function openNoteInSplit(noteId) {
       showView('notes');
       await openNote(noteId);
+    }
+
+    async function openTodoInSplit(todoId) {
+      showView('todos');
+      await openTodoList(todoId);
     }
 
     async function saveCurrentNote() {
