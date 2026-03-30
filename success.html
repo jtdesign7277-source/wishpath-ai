@@ -134,6 +134,23 @@
       .actions { display: flex; flex-direction: column; align-items: center; }
     }
   </style>
+  <!-- Meta Pixel Code -->
+  <script>
+  !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+  n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+  document,'script','https://connect.facebook.net/en_US/fbevents.js');
+  fbq('init', '953934817395153');
+  fbq('track', 'PageView');
+  // Fire Purchase event — user landed here after successful Stripe payment
+  var _sid = new URLSearchParams(window.location.search).get('session_id');
+  if (_sid) {
+    fbq('track', 'Purchase', {content_name: 'WishPath AI Roadmap', content_type: 'product', value: 4.99, currency: 'USD', content_ids: [_sid]});
+  }
+  </script>
+  <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=953934817395153&ev=PageView&noscript=1"/></noscript>
+  <!-- End Meta Pixel Code -->
 </head>
 <body>
   <div class="glow-blob glow-blob-1"></div>
