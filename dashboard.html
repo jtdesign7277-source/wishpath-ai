@@ -392,10 +392,28 @@
       renderActiveTab();
     }
 
-    function switchTab(id) {
+    async function switchTab(id) {
       activeTabId = id;
       renderTabBar();
       renderActiveTab();
+
+      // If it's a roadmap tab, sync the dropdown and load the correct conversation
+      if (id && id.startsWith('roadmap-')) {
+        var idx = parseInt(id.replace('roadmap-', ''));
+        var wish = wishes[idx];
+        if (wish) {
+          var sel = document.getElementById('coachSelect');
+          if (sel.value != idx) {
+            // Auto-save current conversation before switching
+            if (currentWishId && coachHistory.length > 0) {
+              await saveConversation(currentWishId);
+            }
+            sel.value = idx;
+            currentWishId = wish.id;
+            await loadConversation(wish.id);
+          }
+        }
+      }
     }
 
     function renderTabBar() {
