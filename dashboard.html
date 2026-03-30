@@ -241,13 +241,13 @@
       .menu-toggle { display: none !important; }
       .sidebar-expand-btn { display: none !important; }
       .sidebar-collapse-btn { display: none; }
-      .main-header { padding-left: 56px !important; padding-top: 60px !important; padding-bottom: 12px !important; margin-bottom: 8px !important; }
+      .main-header { padding-left: 56px !important; padding-top: 60px !important; padding-bottom: 4px !important; margin-bottom: 0 !important; }
       .main-header h1, .main-header h2 { font-size: 1.1rem; margin-bottom: 4px !important; }
       .mobile-home.active { padding-top: 56px !important; }
       .main-content { padding: 12px; }
-      .tab-bar { margin-top: 8px !important; padding: 4px 8px !important; }
-      .coach-select { margin-bottom: 12px !important; }
-      .view { padding: 8px 12px !important; padding-top: 60px !important; }
+      .tab-bar { margin-top: 0 !important; padding-top: 0 !important; padding: 4px 8px !important; }
+      .coach-select { margin-bottom: 12px !important; margin-top: 4px !important; }
+      .view { padding: 8px 12px !important; padding-top: 48px !important; }
 
       /* Wish grid */
       .wish-grid { grid-template-columns: 1fr; gap: 12px; }
@@ -335,7 +335,7 @@
 
       /* ── Notion-style bottom bar ── */
       .mobile-bottom-bar {
-        display: flex; position: fixed; bottom: 0; left: 0; right: 0;
+        display: flex !important; position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important;
         height: auto; min-height: 64px; background: #191919;
         border-top: 1px solid rgba(255,255,255,0.08);
         align-items: center; justify-content: center;
@@ -463,7 +463,7 @@
         background: #2a2a2a !important;
       }
       .coach-input, textarea, input, select {
-        background: #202020 !important;
+        background-color: #202020 !important;
         border-color: rgba(255,255,255,0.08) !important;
         color: rgba(255,255,255,0.9) !important;
       }
@@ -471,7 +471,7 @@
         border-color: rgba(255,255,255,0.2) !important;
       }
       .coach-select, .tab-item, .note-item, .todo-item {
-        background: #202020 !important;
+        background-color: #202020 !important;
       }
       .tab-item.active {
         background: #2a2a2a !important;
