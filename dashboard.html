@@ -134,6 +134,10 @@
     .sidebar-chat-item:hover { background: rgba(255,255,255,0.04); color: var(--text-muted); }
 
     /* Mobile handled below */
+    /* Mobile-only elements — hidden on desktop */
+    .mobile-bottom-bar { display: none; }
+    .mobile-ask-ai-overlay { display: none; }
+    .mobile-home { display: none; }
 
     /* Library view */
     .library-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
@@ -310,6 +314,97 @@
       /* Overlay background when sidebar is open */
       .sidebar-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; }
       .sidebar.open ~ .sidebar-backdrop { display: block; }
+
+      /* ── Notion-style bottom bar ── */
+      .mobile-bottom-bar {
+        display: flex; position: fixed; bottom: 0; left: 0; right: 0;
+        height: 60px; background: #191919;
+        border-top: 1px solid rgba(255,255,255,0.08);
+        align-items: center; justify-content: space-between;
+        padding: 0 20px; padding-bottom: env(safe-area-inset-bottom);
+        z-index: 9998;
+      }
+      .mobile-bottom-bar .bar-btn {
+        background: none; border: none; color: rgba(255,255,255,0.5);
+        font-size: 20px; padding: 6px 10px; cursor: pointer;
+        font-family: inherit; display: flex; flex-direction: column;
+        align-items: center; gap: 2px;
+      }
+      .mobile-bottom-bar .bar-btn .bar-lbl {
+        font-size: 10px; color: rgba(255,255,255,0.35); font-weight: 500;
+      }
+      .mobile-bottom-bar .ask-ai-pill {
+        background: rgba(255,255,255,0.08);
+        border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 20px; padding: 8px 22px;
+        color: rgba(255,255,255,0.5); font-size: 14px;
+        font-family: inherit; display: flex; align-items: center;
+        gap: 6px; cursor: pointer;
+      }
+
+      /* ── Ask AI bottom sheet ── */
+      .mobile-ask-ai-overlay.active {
+        display: flex; position: fixed; inset: 0;
+        background: rgba(0,0,0,0.5); z-index: 10000;
+        align-items: flex-end;
+      }
+      .mobile-ask-ai-sheet {
+        background: #191919;
+        border-top: 1px solid rgba(255,255,255,0.1);
+        border-radius: 20px 20px 0 0;
+        padding: 16px 20px;
+        padding-bottom: calc(20px + env(safe-area-inset-bottom));
+        width: 100%; animation: slideUpSheet 0.25s ease;
+      }
+      @keyframes slideUpSheet { from { transform: translateY(100%); } to { transform: translateY(0); } }
+      .ask-ai-handle { width: 36px; height: 4px; background: rgba(255,255,255,0.15); border-radius: 2px; margin: 0 auto 16px; }
+      .ask-ai-sheet-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+      .ask-ai-sheet-hdr span { font-size: 15px; font-weight: 600; color: rgba(255,255,255,0.9); }
+      .ask-ai-sheet-close { background: none; border: none; color: rgba(255,255,255,0.4); font-size: 24px; cursor: pointer; padding: 0 4px; line-height: 1; }
+      .ask-ai-input-row { display: flex; gap: 8px; align-items: flex-end; }
+      .ask-ai-textarea {
+        flex: 1; padding: 12px 14px;
+        background: rgba(255,255,255,0.07);
+        border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 12px; color: rgba(255,255,255,0.9);
+        font: inherit; font-size: 16px; outline: none; resize: none;
+        min-height: 48px; max-height: 140px; overflow-y: auto;
+      }
+      .ask-ai-textarea:focus { border-color: rgba(0,201,167,0.5); }
+      .ask-ai-send-btn {
+        width: 44px; height: 44px; background: #00c9a7; border: none;
+        border-radius: 10px; color: #0d1117; cursor: pointer;
+        flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+      }
+
+      /* ── Mobile home screen ── */
+      .mobile-home.active {
+        display: block; position: fixed; top: 0; left: 0; right: 0;
+        bottom: 60px; background: #191919; z-index: 500;
+        overflow-y: auto; padding: 56px 20px 24px;
+      }
+      .mobile-home-title { font-size: 28px; font-weight: 700; color: rgba(255,255,255,0.92); line-height: 1.2; margin-bottom: 6px; }
+      .mobile-home-sub { font-size: 14px; color: rgba(255,255,255,0.4); margin-bottom: 28px; }
+      .mobile-sec-label { font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 10px; }
+      .mobile-recents-row { display: flex; gap: 12px; overflow-x: auto; -webkit-overflow-scrolling: touch; scroll-snap-type: x mandatory; padding-bottom: 8px; margin-bottom: 24px; }
+      .mobile-recents-row::-webkit-scrollbar { display: none; }
+      .mobile-recent-card { min-width: 155px; background: #1e1e1e; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 16px; scroll-snap-align: start; cursor: pointer; flex-shrink: 0; transition: border-color 0.15s; }
+      .mobile-recent-card:active { border-color: rgba(0,201,167,0.4); }
+      .mobile-recent-icon { font-size: 22px; margin-bottom: 8px; }
+      .mobile-recent-title { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.85); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; max-width: 123px; }
+      .mobile-recent-meta { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 4px; }
+      .mobile-nav-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+      .mobile-nav-tile { background: #1e1e1e; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 18px 16px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: border-color 0.15s; }
+      .mobile-nav-tile:active { border-color: rgba(0,201,167,0.4); }
+      .mobile-nav-tile-icon { font-size: 20px; }
+      .mobile-nav-tile-label { font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.85); }
+
+      /* ── Green Notion-style checkboxes ── */
+      .todo-check { border-radius: 5px !important; width: 20px !important; height: 20px !important; }
+      .todo-check.done { background: #22c55e !important; border-color: #22c55e !important; }
+
+      /* ── Content padding so nothing hides behind bottom bar ── */
+      .main-content { padding-bottom: 80px; }
     }
   </style>
 </head>
@@ -551,6 +646,45 @@
 
     </div>
   </main>
+
+  <!-- Mobile Bottom Bar -->
+  <div class="mobile-bottom-bar" id="mobileBottomBar">
+    <button class="bar-btn" onclick="mobileBottomSave()">💾<span class="bar-lbl">Save</span></button>
+    <button class="ask-ai-pill" onclick="openMobileAskAI()">✨ Ask AI</button>
+    <button class="bar-btn" onclick="mobileBottomNew()">📝<span class="bar-lbl">New</span></button>
+  </div>
+
+  <!-- Mobile Ask AI Bottom Sheet -->
+  <div class="mobile-ask-ai-overlay" id="mobileAskAIOverlay" onclick="if(event.target===this)closeMobileAskAI()">
+    <div class="mobile-ask-ai-sheet">
+      <div class="ask-ai-handle"></div>
+      <div class="ask-ai-sheet-hdr">
+        <span>✨ Ask AI</span>
+        <button class="ask-ai-sheet-close" onclick="closeMobileAskAI()">×</button>
+      </div>
+      <div class="ask-ai-input-row">
+        <textarea class="ask-ai-textarea" id="mobileAskAIInput" placeholder="Ask your AI coach anything..." rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMobileAskAI();}"></textarea>
+        <button class="ask-ai-send-btn" onclick="sendMobileAskAI()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Home Screen -->
+  <div class="mobile-home" id="mobileHome">
+    <div class="mobile-home-title">Welcome to WishPath ✨</div>
+    <div class="mobile-home-sub">Your AI-powered roadmap to achieving your goals.</div>
+    <div class="mobile-sec-label">Recents</div>
+    <div class="mobile-recents-row" id="mobileRecentsRow">
+      <div class="mobile-recent-card" style="display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.3);font-size:13px;">Loading...</div>
+    </div>
+    <div class="mobile-sec-label" style="margin-top:4px;">Quick Access</div>
+    <div class="mobile-nav-grid">
+      <div class="mobile-nav-tile" onclick="hideMobileHome();showView('coach')"><span class="mobile-nav-tile-icon">🤖</span><span class="mobile-nav-tile-label">AI Coach</span></div>
+      <div class="mobile-nav-tile" onclick="hideMobileHome();showView('todos')"><span class="mobile-nav-tile-icon">✅</span><span class="mobile-nav-tile-label">To-Dos</span></div>
+      <div class="mobile-nav-tile" onclick="hideMobileHome();showView('notes')"><span class="mobile-nav-tile-icon">📝</span><span class="mobile-nav-tile-label">Notes</span></div>
+      <div class="mobile-nav-tile" onclick="hideMobileHome();showView('library')"><span class="mobile-nav-tile-icon">📚</span><span class="mobile-nav-tile-label">Library</span></div>
+    </div>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="/auth.js"></script>
@@ -874,6 +1008,7 @@
       if (window.innerWidth <= 768) {
         document.querySelector('.sidebar').classList.remove('open');
         document.getElementById('sidebarBackdrop').style.display = 'none';
+        hideMobileHome();
       }
     }
 
@@ -1845,6 +1980,100 @@
         panel.innerHTML = '<div class="coach-right-empty" style="color:var(--red);">Connection error. Please try again.</div>';
         btn.disabled = false; btn.textContent = '\u2728 Generate My Roadmap';
       }
+    }
+    // ── Mobile home screen ──
+    function showMobileHome() {
+      if (window.innerWidth > 768) return;
+      document.getElementById('mobileHome').classList.add('active');
+      renderMobileRecents();
+    }
+    function hideMobileHome() {
+      document.getElementById('mobileHome').classList.remove('active');
+    }
+    function renderMobileRecents() {
+      var row = document.getElementById('mobileRecentsRow');
+      if (!row) return;
+      if (!wishes || !wishes.length) {
+        row.innerHTML = '<div class="mobile-recent-card" style="display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.3);font-size:13px;min-width:155px;">No roadmaps yet</div>';
+        return;
+      }
+      row.innerHTML = wishes.slice(0, 8).map(function(w, i) {
+        var date = new Date(w.generated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        return '<div class="mobile-recent-card" onclick="hideMobileHome();openWish(' + i + ')">' +
+          '<div class="mobile-recent-icon">🧭</div>' +
+          '<div class="mobile-recent-title">' + (w.wish_title || 'Untitled').replace(/</g,'&lt;') + '</div>' +
+          '<div class="mobile-recent-meta">' + date + '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    // Patch renderWishes to also refresh mobile recents
+    var _origRenderWishes = renderWishes;
+    renderWishes = function() {
+      _origRenderWishes();
+      if (window.innerWidth <= 768) renderMobileRecents();
+    };
+
+    // On mobile: swap sidebar toggle to a home button and show home screen
+    if (window.innerWidth <= 768) {
+      var _mobileToggle = document.querySelector('.mobile-sidebar-toggle');
+      if (_mobileToggle) {
+        _mobileToggle.innerHTML = '<svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 10L10 3l7 7"/><path d="M5 8v8h4v-5h2v5h4V8"/></svg>';
+        _mobileToggle.onclick = function() { showMobileHome(); };
+      }
+      showMobileHome();
+    }
+
+    // ── Mobile Ask AI overlay ──
+    function openMobileAskAI() {
+      var overlay = document.getElementById('mobileAskAIOverlay');
+      overlay.classList.add('active');
+      setTimeout(function() {
+        var input = document.getElementById('mobileAskAIInput');
+        if (input) input.focus();
+      }, 300);
+    }
+    function closeMobileAskAI() {
+      document.getElementById('mobileAskAIOverlay').classList.remove('active');
+    }
+    function sendMobileAskAI() {
+      var input = document.getElementById('mobileAskAIInput');
+      var msg = input.value.trim();
+      if (!msg) return;
+      closeMobileAskAI();
+      var activeView = document.querySelector('.view.active');
+      var viewId = activeView ? activeView.id : '';
+      if (viewId === 'todosView') {
+        document.getElementById('todoCoachInput').value = msg;
+        input.value = ''; input.style.height = 'auto';
+        sendTodoCoachMsg();
+      } else if (viewId === 'notesView') {
+        document.getElementById('noteCoachInput').value = msg;
+        input.value = ''; input.style.height = 'auto';
+        sendNoteCoachMsg();
+      } else {
+        document.getElementById('coachInput').value = msg;
+        input.value = ''; input.style.height = 'auto';
+        hideMobileHome();
+        showView('coach');
+        sendCoachMsg();
+      }
+    }
+
+    // ── Mobile bottom bar actions ──
+    function mobileBottomSave() {
+      var activeView = document.querySelector('.view.active');
+      var viewId = activeView ? activeView.id : '';
+      if (viewId === 'notesView') { if (typeof saveCurrentNote === 'function') saveCurrentNote(); }
+      else if (viewId === 'todosView') { if (typeof saveTodoList === 'function') saveTodoList(); }
+      else { manualSaveConversation(); }
+    }
+    function mobileBottomNew() {
+      var activeView = document.querySelector('.view.active');
+      var viewId = activeView ? activeView.id : '';
+      if (viewId === 'notesView') { createNewNote(); }
+      else if (viewId === 'todosView') { createNewTodoList(); }
+      else { hideMobileHome(); showView('newwish'); }
     }
   </script>
 </body>
