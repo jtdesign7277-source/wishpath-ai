@@ -158,6 +158,24 @@
     .note-save-btn { padding: 10px 24px; background: var(--accent); color: var(--bg); border: none; border-radius: 8px; font: inherit; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
     .note-save-status { font-size: 0.78rem; color: var(--text-dim); }
 
+    /* New Wish */
+    .wish-form-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 28px; }
+    .wish-label { font-size: 0.78rem; font-weight: 700; color: var(--purple); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
+    .wish-textarea { width: 100%; min-height: 140px; padding: 16px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font: inherit; font-size: 0.95rem; line-height: 1.6; outline: none; resize: none; }
+    .wish-textarea:focus { border-color: var(--accent); }
+    .wish-textarea::placeholder { color: var(--text-dim); }
+    .wish-char-count { text-align: right; font-size: 0.75rem; color: var(--text-dim); margin-top: 6px; }
+    .wish-context-label { text-align: center; font-size: 0.85rem; color: var(--text-muted); margin: 20px 0 12px; }
+    .wish-context-chips { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-bottom: 20px; }
+    .wish-chip { padding: 8px 18px; border: 1px solid var(--border); border-radius: 99px; color: var(--text-muted); font-size: 0.82rem; cursor: pointer; transition: all 0.15s; background: none; font-family: inherit; }
+    .wish-chip:hover { border-color: var(--accent); color: var(--text); }
+    .wish-chip.active { border-color: var(--accent); background: var(--accent-dim); color: var(--accent); }
+    .wish-context-input { display: none; width: 100%; padding: 10px 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font: inherit; font-size: 0.88rem; outline: none; margin-top: 8px; }
+    .wish-context-input.visible { display: block; }
+    .wish-submit { display: block; width: 100%; padding: 16px; background: var(--accent); color: var(--bg); border: none; border-radius: 10px; font: inherit; font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 20px; transition: opacity 0.15s; }
+    .wish-submit:hover { opacity: 0.9; }
+    .wish-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
     /* Todos */
     .todo-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border-radius: 8px; transition: background 0.1s; }
     .todo-item:hover { background: rgba(255,255,255,0.03); }
@@ -217,9 +235,9 @@
       </a>
       <div class="sidebar-section" id="savedChatsLabel" style="display:none;">Saved Chats</div>
       <div id="savedChatsList"></div>
-      <a class="nav-item" href="/" style="margin-top: 12px;">
-        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8l7-5 7 5v8a1 1 0 01-1 1H4a1 1 0 01-1-1V8z"/></svg>
-        Back to Home
+      <a class="nav-item" data-view="newwish" onclick="showView('newwish')" style="margin-top: 12px;">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 3l2 4 4.5 0.5-3.3 3 1 4.5L10 13l-4.2 2 1-4.5-3.3-3L8 8z"/></svg>
+        Your Wish
       </a>
       <a class="nav-item" onclick="signOut()" style="margin-top: auto; color: var(--red);">
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7 4H4v12h3M10 10h7m0 0l-3-3m3 3l-3 3"/></svg>
@@ -349,6 +367,36 @@
           <div class="coach-right-wrapper">
             <div class="coach-right" id="todoRightPanel">
               <div class="coach-right-empty">Ask the agent to create a to-do list, spreadsheet, or checklist. It'll appear here automatically.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- New Wish View -->
+      <div class="view" id="newwishView">
+        <div class="coach-layout">
+          <div class="coach-left" style="overflow-y:auto;">
+            <div class="wish-form-card">
+              <div class="wish-label">&#x2728; Your Wish</div>
+              <textarea class="wish-textarea" id="wishInput" placeholder="I want to start a side hustle with only 5 hours/week and $500 to invest. I have a background in marketing..." maxlength="800" oninput="document.getElementById('wishCharCount').textContent=this.value.length+' / 800'"></textarea>
+              <div class="wish-char-count" id="wishCharCount">0 / 800</div>
+              <div class="wish-context-label">Add optional context for a more personalized roadmap:</div>
+              <div class="wish-context-chips">
+                <button class="wish-chip" onclick="toggleWishContext('age', this)">+ Age</button>
+                <button class="wish-chip" onclick="toggleWishContext('location', this)">+ Location</button>
+                <button class="wish-chip" onclick="toggleWishContext('budget', this)">+ Budget</button>
+                <button class="wish-chip" onclick="toggleWishContext('time', this)">+ Time Available</button>
+              </div>
+              <input class="wish-context-input" id="wishAge" placeholder="Your age..." />
+              <input class="wish-context-input" id="wishLocation" placeholder="City, State or Country..." />
+              <input class="wish-context-input" id="wishBudget" placeholder="e.g. $500, $5000..." />
+              <input class="wish-context-input" id="wishTime" placeholder="e.g. 5 hours/week, evenings only..." />
+              <button class="wish-submit" id="wishSubmitBtn" onclick="submitNewWish()">&#x2728; Generate My Roadmap</button>
+            </div>
+          </div>
+          <div class="coach-right-wrapper">
+            <div class="coach-right" id="wishResultPanel">
+              <div class="coach-right-empty">Type your wish on the left and hit generate. Your personalized roadmap will appear here.</div>
             </div>
           </div>
         </div>
@@ -575,7 +623,7 @@
     }
 
     // View switching
-    var viewTitles = { wishes: 'My Wishes', coach: 'AI Coach', library: 'Library', notes: 'Notes', todos: 'To-Dos' };
+    var viewTitles = { wishes: 'My Wishes', coach: 'AI Coach', library: 'Library', notes: 'Notes', todos: 'To-Dos', newwish: 'Your Wish' };
     function showView(view) {
       document.querySelectorAll('.view').forEach(function(v) { v.classList.remove('active'); });
       document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
@@ -1369,6 +1417,65 @@
     }
 
     async function manualSaveTodoConvo() {}
+
+    // ── New Wish ──
+    function toggleWishContext(field, btn) {
+      var input = document.getElementById('wish' + field.charAt(0).toUpperCase() + field.slice(1));
+      btn.classList.toggle('active');
+      input.classList.toggle('visible');
+      if (input.classList.contains('visible')) input.focus();
+    }
+
+    async function submitNewWish() {
+      var wish = document.getElementById('wishInput').value.trim();
+      if (!wish || wish.length < 10) { alert('Please describe your wish in more detail.'); return; }
+
+      var btn = document.getElementById('wishSubmitBtn');
+      btn.disabled = true; btn.textContent = 'Generating...';
+
+      var panel = document.getElementById('wishResultPanel');
+      panel.innerHTML = '<div style="text-align:center;padding:60px 24px;"><div class="thinking-status" style="justify-content:center;margin-bottom:16px;"><span class="thinking-label" id="wishThinkingLabel" style="color:var(--accent);font-weight:500;">Generating your roadmap</span><div class="thinking-dots"><span></span><span></span><span></span></div></div><p style="color:var(--text-dim);font-size:0.9rem;">This usually takes 30-60 seconds...</p></div>';
+
+      // Rotate thinking text
+      var phrases = ['Generating your roadmap', 'Analyzing your goal', 'Researching strategies', 'Building your phases', 'Crafting quick wins'];
+      var pi = 0;
+      var thinkInt = setInterval(function() {
+        pi = (pi + 1) % phrases.length;
+        var el = document.getElementById('wishThinkingLabel');
+        if (el) el.textContent = phrases[pi];
+      }, 3000);
+
+      var age = document.getElementById('wishAge').value.trim();
+      var location = document.getElementById('wishLocation').value.trim();
+      var budget = document.getElementById('wishBudget').value.trim();
+      var time = document.getElementById('wishTime').value.trim();
+      var session = await getSession();
+      var email = session ? session.user.email : '';
+
+      try {
+        var res = await fetch(EDGE_FN, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ wish: wish, age: age || null, location: location || null, budget: budget || null, time: time || null, email: email }),
+        });
+        var data = await res.json();
+        clearInterval(thinkInt);
+
+        if (data.roadmap) {
+          panel.innerHTML = '<div class="coach-roadmap">' + renderNotionRoadmap(data.roadmap, wish) + '</div>';
+          // Reload wishes so it appears in My Wishes
+          await loadWishes();
+          btn.disabled = false; btn.textContent = '\u2728 Generate My Roadmap';
+        } else {
+          panel.innerHTML = '<div class="coach-right-empty" style="color:var(--red);">Failed to generate roadmap. Please try again.</div>';
+          btn.disabled = false; btn.textContent = '\u2728 Generate My Roadmap';
+        }
+      } catch(e) {
+        clearInterval(thinkInt);
+        panel.innerHTML = '<div class="coach-right-empty" style="color:var(--red);">Connection error. Please try again.</div>';
+        btn.disabled = false; btn.textContent = '\u2728 Generate My Roadmap';
+      }
+    }
   </script>
 </body>
 </html>
