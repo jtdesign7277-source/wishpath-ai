@@ -96,7 +96,7 @@
     select { appearance: none !important; -webkit-appearance: none !important; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='rgba(255,255,255,0.6)' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E") !important; background-repeat: no-repeat !important; background-position: right 12px center !important; padding-right: 36px !important; }
     .coach-messages { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 8px 0; margin-bottom: 12px; }
     .msg { max-width: 90%; padding: 12px 16px; border-radius: 14px; font-size: 0.88rem; line-height: 1.6; }
-    .msg.user { align-self: flex-end; background: var(--accent); color: var(--bg); border-bottom-right-radius: 4px; }
+    .msg.user { align-self: flex-end; background: #2a2040; color: rgba(255,255,255,0.9); border-bottom-right-radius: 4px; }
     .msg.ai { align-self: flex-start; background: var(--card); border: 1px solid var(--border); color: var(--text); border-bottom-left-radius: 4px; }
     .msg.ai .thinking-status { display: flex; align-items: center; gap: 8px; }
     .msg.ai .thinking-label { color: var(--accent); font-weight: 500; }
@@ -460,7 +460,8 @@
         background: #191919 !important;
       }
       .msg.user {
-        background: #2a2a2a !important;
+        background: #2a2040 !important;
+        color: rgba(255,255,255,0.9) !important;
       }
       .coach-input, textarea, input, select {
         background-color: #202020 !important;
@@ -2175,7 +2176,7 @@
       chat.style.display = 'flex';
       // Add user bubble
       var msgs = document.getElementById('mobileChatMessages');
-      msgs.innerHTML += '<div style="text-align:right;margin-bottom:16px;"><div style="display:inline-block;background:#2a2a2a;padding:12px 16px;border-radius:16px 16px 4px 16px;max-width:82%;text-align:left;color:rgba(255,255,255,0.9);font-size:15px;line-height:1.5;">' + msg.replace(/</g,'&lt;') + '</div></div>';
+      msgs.innerHTML += '<div style="text-align:right;margin-bottom:16px;"><div style="display:inline-block;background:#2a2040;padding:12px 16px;border-radius:16px 16px 4px 16px;max-width:82%;text-align:left;color:rgba(255,255,255,0.9);font-size:15px;line-height:1.5;">' + msg.replace(/</g,'&lt;') + '</div></div>';
       // Add thinking indicator
       msgs.innerHTML += '<div id="mobileHomeThinking" style="margin-bottom:16px;"><div style="display:inline-flex;align-items:center;gap:8px;background:#202020;padding:10px 14px;border-radius:16px 16px 16px 4px;color:rgba(255,255,255,0.5);font-size:14px;">✨ <span id="mobileHomeThinkingLabel">Analyzing</span><span style="display:flex;gap:3px;margin-left:2px;"><span style="width:5px;height:5px;border-radius:50%;background:rgba(0,201,167,0.7);display:inline-block;animation:dotPulse 1.4s infinite ease-in-out;"></span><span style="width:5px;height:5px;border-radius:50%;background:rgba(0,201,167,0.7);display:inline-block;animation:dotPulse 1.4s 0.2s infinite ease-in-out;"></span><span style="width:5px;height:5px;border-radius:50%;background:rgba(0,201,167,0.7);display:inline-block;animation:dotPulse 1.4s 0.4s infinite ease-in-out;"></span></span></div></div>';
       msgs.scrollTop = msgs.scrollHeight;
