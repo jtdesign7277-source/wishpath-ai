@@ -128,6 +128,31 @@
       .coach-right-wrapper { max-height: 50vh; border-left: none; border-top: 1px solid var(--border); }
     }
 
+    /* Library view */
+    .library-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .library-header h2 { font-size: 1.4rem; font-weight: 800; }
+    .library-filters { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+    .library-filter { padding: 8px 16px; font-size: 0.82rem; font-weight: 500; color: var(--text-dim); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; }
+    .library-filter:hover { color: var(--text-muted); }
+    .library-filter.active { color: var(--text); border-bottom-color: var(--accent); }
+    .library-table { width: 100%; border-collapse: collapse; }
+    .library-table th { text-align: left; font-size: 0.72rem; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.04em; padding: 8px 12px; border-bottom: 1px solid var(--border); }
+    .library-table td { padding: 10px 12px; border-bottom: 1px solid rgba(48,54,61,0.4); font-size: 0.85rem; color: var(--text-muted); }
+    .library-table tr { cursor: pointer; transition: background 0.1s; }
+    .library-table tbody tr:hover { background: rgba(255,255,255,0.03); }
+    .library-table .lib-name { color: var(--text); font-weight: 500; display: flex; align-items: center; gap: 8px; }
+    .library-table .lib-icon { font-size: 1rem; }
+    .library-table .lib-time { font-size: 0.78rem; color: var(--text-dim); }
+    .new-page-btn { padding: 8px 18px; background: var(--accent); color: var(--bg); border: none; border-radius: 8px; font: inherit; font-size: 0.82rem; font-weight: 700; cursor: pointer; }
+
+    /* Notes editor */
+    .note-editor { display: flex; flex-direction: column; height: 100%; }
+    .note-title-input { font-size: 1.3rem; font-weight: 700; background: none; border: none; color: var(--text); outline: none; padding: 0 0 12px; border-bottom: 1px solid var(--border); margin-bottom: 16px; font-family: inherit; }
+    .note-body-input { flex: 1; background: none; border: none; color: var(--text-muted); font: inherit; font-size: 0.92rem; line-height: 1.7; outline: none; resize: none; min-height: 200px; }
+    .note-save-bar { display: flex; gap: 8px; align-items: center; padding-top: 12px; flex-shrink: 0; }
+    .note-save-btn { padding: 10px 24px; background: var(--accent); color: var(--bg); border: none; border-radius: 8px; font: inherit; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
+    .note-save-status { font-size: 0.78rem; color: var(--text-dim); }
+
     /* Mobile */
     .menu-toggle { display: none; position: fixed; top: 16px; left: 16px; z-index: 60; background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; color: var(--text); cursor: pointer; }
     @media (max-width: 768px) {
@@ -158,6 +183,14 @@
       <a class="nav-item" data-view="coach" onclick="showView('coach')">
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="7"/><path d="M10 7v3l2 2"/></svg>
         AI Coach
+      </a>
+      <a class="nav-item" data-view="library" onclick="showView('library')">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4h2v12H3zM7 4h2v12H7zM11 4h2v12h-2zM15 4h2v12h-2z"/></svg>
+        Library
+      </a>
+      <a class="nav-item" data-view="notes" onclick="showView('notes')">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 3h10a1 1 0 011 1v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M8 7h4M8 10h4M8 13h2"/></svg>
+        Notes
       </a>
       <div class="sidebar-section" id="savedChatsLabel" style="display:none;">Saved Chats</div>
       <div id="savedChatsList"></div>
@@ -218,6 +251,49 @@
           <div class="coach-right-wrapper">
             <div class="coach-right" id="coachRightContent">
               <div class="coach-right-empty">Select a roadmap to view it here while you chat with your coach.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Library View -->
+      <div class="view" id="libraryView">
+        <div class="library-header">
+          <h2>Library</h2>
+          <button class="new-page-btn" onclick="createNewNote()">+ New Note</button>
+        </div>
+        <div class="library-filters">
+          <div class="library-filter active" onclick="filterLibrary('all', this)">All</div>
+          <div class="library-filter" onclick="filterLibrary('roadmaps', this)">Roadmaps</div>
+          <div class="library-filter" onclick="filterLibrary('chats', this)">Chats</div>
+          <div class="library-filter" onclick="filterLibrary('notes', this)">Notes</div>
+        </div>
+        <table class="library-table">
+          <thead>
+            <tr>
+              <th>Page name</th>
+              <th>Type</th>
+              <th>Last edited</th>
+              <th>Created</th>
+            </tr>
+          </thead>
+          <tbody id="libraryBody"></tbody>
+        </table>
+      </div>
+
+      <!-- Notes View (split: note list left, editor right) -->
+      <div class="view" id="notesView">
+        <div class="coach-layout">
+          <div class="coach-left" style="padding-right:16px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+              <h3 style="font-size:1rem;font-weight:700;">My Notes</h3>
+              <button class="new-page-btn" onclick="createNewNote()" style="font-size:0.78rem;padding:6px 14px;">+ New</button>
+            </div>
+            <div id="notesList" style="flex:1;overflow-y:auto;"></div>
+          </div>
+          <div class="coach-right-wrapper">
+            <div class="coach-right" id="noteEditorPanel">
+              <div class="coach-right-empty">Select a note or create a new one.</div>
             </div>
           </div>
         </div>
@@ -376,13 +452,17 @@
     }
 
     // View switching
+    var viewTitles = { wishes: 'My Wishes', coach: 'AI Coach', library: 'Library', notes: 'Notes' };
     function showView(view) {
       document.querySelectorAll('.view').forEach(function(v) { v.classList.remove('active'); });
       document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
       document.getElementById(view + 'View').classList.add('active');
-      document.querySelector('[data-view="' + view + '"]').classList.add('active');
-      document.getElementById('viewTitle').textContent = view === 'wishes' ? 'My Wishes' : 'AI Coach';
+      var navItem = document.querySelector('[data-view="' + view + '"]');
+      if (navItem) navItem.classList.add('active');
+      document.getElementById('viewTitle').textContent = viewTitles[view] || view;
       if (view === 'wishes') closeViewer();
+      if (view === 'library') renderLibrary();
+      if (view === 'notes') renderNotesList();
     }
 
     // Coach — persistent conversations
@@ -728,6 +808,163 @@
 
       btn.disabled = false;
       msgs.scrollTop = msgs.scrollHeight;
+    }
+
+    // ── Library ──
+    var libraryFilter = 'all';
+    function filterLibrary(filter, el) {
+      libraryFilter = filter;
+      document.querySelectorAll('.library-filter').forEach(function(f) { f.classList.remove('active'); });
+      if (el) el.classList.add('active');
+      renderLibrary();
+    }
+
+    function timeAgo(dateStr) {
+      if (!dateStr) return '';
+      var d = new Date(dateStr);
+      var now = new Date();
+      var diff = Math.floor((now - d) / 1000);
+      if (diff < 60) return 'just now';
+      if (diff < 3600) return Math.floor(diff/60) + 'm ago';
+      if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
+      if (diff < 604800) return Math.floor(diff/86400) + 'd ago';
+      return Math.floor(diff/604800) + 'w ago';
+    }
+
+    async function renderLibrary() {
+      var body = document.getElementById('libraryBody');
+      body.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-dim);padding:24px;">Loading...</td></tr>';
+      var items = [];
+
+      // Roadmaps
+      if (libraryFilter === 'all' || libraryFilter === 'roadmaps') {
+        wishes.forEach(function(w, i) {
+          items.push({ name: w.wish_title || 'Untitled', icon: '&#x1F9ED;', type: 'Roadmap', edited: w.generated_at, created: w.generated_at, action: function() { openWish(i); } });
+        });
+      }
+
+      // Chats
+      if (libraryFilter === 'all' || libraryFilter === 'chats') {
+        try {
+          var sb = getSupabase();
+          var { data } = await sb.from('coach_conversations').select('id, wish_id, updated_at, created_at, messages').eq('user_id', currentUserId).order('updated_at', { ascending: false });
+          if (data) data.forEach(function(c) {
+            if (!c.messages || c.messages.length === 0) return;
+            var wish = wishes.find(function(w) { return w.id === c.wish_id; });
+            var name = wish ? wish.wish_title : 'Chat';
+            items.push({ name: name + ' (Chat)', icon: '&#x1F4AC;', type: 'Chat', edited: c.updated_at, created: c.created_at, action: function() { loadSavedChat(c.wish_id); } });
+          });
+        } catch(e) {}
+      }
+
+      // Notes
+      if (libraryFilter === 'all' || libraryFilter === 'notes') {
+        try {
+          var sb = getSupabase();
+          var { data } = await sb.from('user_notes').select('*').eq('user_id', currentUserId).order('updated_at', { ascending: false });
+          if (data) data.forEach(function(n) {
+            items.push({ name: n.title || 'Untitled', icon: '&#x1F4DD;', type: 'Note', edited: n.updated_at, created: n.created_at, action: function() { openNoteInSplit(n.id); } });
+          });
+        } catch(e) {}
+      }
+
+      // Sort by edited desc
+      items.sort(function(a, b) { return new Date(b.edited) - new Date(a.edited); });
+
+      if (items.length === 0) {
+        body.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-dim);padding:40px;">Nothing here yet. Create a roadmap or note to get started.</td></tr>';
+        return;
+      }
+
+      body.innerHTML = items.map(function(item, i) {
+        return '<tr onclick="libraryItems[' + i + ']()">' +
+          '<td><div class="lib-name"><span class="lib-icon">' + item.icon + '</span>' + item.name + '</div></td>' +
+          '<td>' + item.type + '</td>' +
+          '<td class="lib-time">' + timeAgo(item.edited) + '</td>' +
+          '<td class="lib-time">' + timeAgo(item.created) + '</td>' +
+        '</tr>';
+      }).join('');
+
+      // Store click handlers
+      window.libraryItems = items.map(function(item) { return item.action; });
+    }
+
+    // ── Notes ──
+    var currentNoteId = null;
+
+    async function renderNotesList() {
+      var list = document.getElementById('notesList');
+      list.innerHTML = '<div style="color:var(--text-dim);font-size:0.85rem;padding:16px 0;">Loading...</div>';
+      try {
+        var sb = getSupabase();
+        var { data } = await sb.from('user_notes').select('*').eq('user_id', currentUserId).order('updated_at', { ascending: false });
+        if (!data || data.length === 0) {
+          list.innerHTML = '<div style="color:var(--text-dim);font-size:0.85rem;padding:16px 0;text-align:center;">No notes yet.<br>Click + New to create one.</div>';
+          return;
+        }
+        list.innerHTML = data.map(function(n) {
+          var active = n.id === currentNoteId ? 'background:rgba(255,255,255,0.04);color:var(--text);' : '';
+          return '<div onclick="openNote(\'' + n.id + '\')" style="padding:10px 12px;border-radius:8px;cursor:pointer;margin-bottom:2px;font-size:0.85rem;color:var(--text-muted);transition:background 0.1s;' + active + '">' +
+            '<div style="font-weight:600;color:var(--text);margin-bottom:2px;">&#x1F4DD; ' + (n.title || 'Untitled') + '</div>' +
+            '<div style="font-size:0.75rem;color:var(--text-dim);">' + timeAgo(n.updated_at) + '</div>' +
+          '</div>';
+        }).join('');
+      } catch(e) { list.innerHTML = '<div style="color:var(--red);font-size:0.85rem;">Error loading notes.</div>'; }
+    }
+
+    async function createNewNote() {
+      var sb = getSupabase();
+      var { data, error } = await sb.from('user_notes').insert({ user_id: currentUserId, title: 'Untitled', content: '' }).select('id').single();
+      if (data) {
+        showView('notes');
+        openNote(data.id);
+        renderNotesList();
+      }
+    }
+
+    async function openNote(noteId) {
+      currentNoteId = noteId;
+      var sb = getSupabase();
+      var { data } = await sb.from('user_notes').select('*').eq('id', noteId).single();
+      if (!data) return;
+
+      var panel = document.getElementById('noteEditorPanel');
+      panel.innerHTML = '<div class="note-editor">' +
+        '<input class="note-title-input" id="noteTitleInput" value="' + (data.title || '').replace(/"/g, '&quot;') + '" placeholder="Note title..." />' +
+        '<textarea class="note-body-input" id="noteBodyInput" placeholder="Start writing...">' + (data.content || '') + '</textarea>' +
+        '<div class="note-save-bar">' +
+          '<button class="note-save-btn" onclick="saveCurrentNote()">Save Note</button>' +
+          '<span class="note-save-status" id="noteSaveStatus"></span>' +
+          '<button onclick="deleteCurrentNote()" style="margin-left:auto;background:none;border:1px solid rgba(248,81,73,0.3);color:var(--red);padding:8px 16px;border-radius:8px;font:inherit;font-size:0.82rem;cursor:pointer;">Delete</button>' +
+        '</div>' +
+      '</div>';
+      renderNotesList();
+    }
+
+    async function openNoteInSplit(noteId) {
+      showView('notes');
+      await openNote(noteId);
+    }
+
+    async function saveCurrentNote() {
+      if (!currentNoteId) return;
+      var title = document.getElementById('noteTitleInput').value.trim() || 'Untitled';
+      var content = document.getElementById('noteBodyInput').value;
+      var sb = getSupabase();
+      await sb.from('user_notes').update({ title: title, content: content, updated_at: new Date().toISOString() }).eq('id', currentNoteId);
+      var status = document.getElementById('noteSaveStatus');
+      status.textContent = 'Saved!';
+      setTimeout(function() { status.textContent = ''; }, 2000);
+      renderNotesList();
+    }
+
+    async function deleteCurrentNote() {
+      if (!currentNoteId || !confirm('Delete this note?')) return;
+      var sb = getSupabase();
+      await sb.from('user_notes').delete().eq('id', currentNoteId);
+      currentNoteId = null;
+      document.getElementById('noteEditorPanel').innerHTML = '<div class="coach-right-empty">Note deleted. Select another or create a new one.</div>';
+      renderNotesList();
     }
   </script>
 </body>
