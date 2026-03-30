@@ -154,6 +154,20 @@
     .note-save-btn { padding: 10px 24px; background: var(--accent); color: var(--bg); border: none; border-radius: 8px; font: inherit; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
     .note-save-status { font-size: 0.78rem; color: var(--text-dim); }
 
+    /* Todos */
+    .todo-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border-radius: 8px; transition: background 0.1s; }
+    .todo-item:hover { background: rgba(255,255,255,0.03); }
+    .todo-check { width: 18px; height: 18px; border: 2px solid var(--border); border-radius: 4px; cursor: pointer; flex-shrink: 0; margin-top: 2px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+    .todo-check.done { background: var(--accent); border-color: var(--accent); }
+    .todo-check.done::after { content: '\2713'; color: var(--bg); font-size: 0.7rem; font-weight: 700; }
+    .todo-text { font-size: 0.9rem; color: var(--text-muted); line-height: 1.5; }
+    .todo-text.done { text-decoration: line-through; color: var(--text-dim); }
+    /* Auto-rendered right panel content */
+    .auto-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .auto-table th { text-align: left; padding: 8px 12px; background: rgba(255,255,255,0.04); border-bottom: 1px solid var(--border); font-weight: 600; color: var(--text); font-size: 0.78rem; text-transform: uppercase; }
+    .auto-table td { padding: 8px 12px; border-bottom: 1px solid rgba(48,54,61,0.3); color: var(--text-muted); }
+    .auto-table tr:hover td { background: rgba(255,255,255,0.02); }
+
     /* Mobile */
     .menu-toggle { display: none; position: fixed; top: 16px; left: 16px; z-index: 60; background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; color: var(--text); cursor: pointer; }
     @media (max-width: 768px) {
@@ -192,6 +206,10 @@
       <a class="nav-item" data-view="notes" onclick="showView('notes')">
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 3h10a1 1 0 011 1v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M8 7h4M8 10h4M8 13h2"/></svg>
         Notes
+      </a>
+      <a class="nav-item" data-view="todos" onclick="showView('todos')">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 5h12M4 10h12M4 15h8"/><path d="M2 5l1 1 2-2M2 10l1 1 2-2"/></svg>
+        To-Dos
       </a>
       <div class="sidebar-section" id="savedChatsLabel" style="display:none;">Saved Chats</div>
       <div id="savedChatsList"></div>
@@ -302,6 +320,31 @@
           <div class="coach-right-wrapper">
             <div class="coach-right" id="noteEditorPanel">
               <div class="coach-right-empty">Select a note or create a new one.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- To-Dos View (split: AI agent left, todos right) -->
+      <div class="view" id="todosView">
+        <div class="coach-layout">
+          <div class="coach-left">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-shrink:0;">
+              <select class="coach-select" id="todoSelect" style="margin-bottom:0;flex:1;"><option value="">Select a list...</option></select>
+              <button class="new-page-btn" onclick="createNewTodoList()" style="font-size:0.78rem;padding:8px 14px;white-space:nowrap;">+ New</button>
+            </div>
+            <div class="coach-messages" id="todoCoachMessages">
+              <div class="msg ai">I'm your to-do assistant. Ask me to create a to-do list, spreadsheet, checklist, or any structured content — I'll build it and show it on the right automatically. Try: "Create a weekly trading checklist" or "Build me a budget spreadsheet."</div>
+            </div>
+            <div class="coach-input-row">
+              <button class="save-btn" onclick="manualSaveTodoConvo()" title="Save chat">&#x1F4BE; Save Chat</button>
+              <textarea class="coach-input" id="todoCoachInput" placeholder="Ask me to create lists, tables, checklists..." rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendTodoCoachMsg();}"></textarea>
+              <button class="coach-send" id="todoCoachSendBtn" onclick="sendTodoCoachMsg()">Send</button>
+            </div>
+          </div>
+          <div class="coach-right-wrapper">
+            <div class="coach-right" id="todoRightPanel">
+              <div class="coach-right-empty">Ask the agent to create a to-do list, spreadsheet, or checklist. It'll appear here automatically.</div>
             </div>
           </div>
         </div>
@@ -460,7 +503,7 @@
     }
 
     // View switching
-    var viewTitles = { wishes: 'My Wishes', coach: 'AI Coach', library: 'Library', notes: 'Notes' };
+    var viewTitles = { wishes: 'My Wishes', coach: 'AI Coach', library: 'Library', notes: 'Notes', todos: 'To-Dos' };
     function showView(view) {
       document.querySelectorAll('.view').forEach(function(v) { v.classList.remove('active'); });
       document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
@@ -471,6 +514,7 @@
       if (view === 'wishes') closeViewer();
       if (view === 'library') renderLibrary();
       if (view === 'notes') renderNotesList();
+      if (view === 'todos') renderTodoSelect();
     }
 
     // Coach — persistent conversations
@@ -1033,6 +1077,246 @@
       document.getElementById('noteEditorPanel').innerHTML = '<div class="coach-right-empty">Note deleted. Select another or create a new one.</div>';
       renderNotesList();
     }
+
+    // ── To-Dos ──
+    var currentTodoId = null;
+    var todoCoachHistory = [];
+
+    async function renderTodoSelect() {
+      var sel = document.getElementById('todoSelect');
+      try {
+        var sb = getSupabase();
+        var { data } = await sb.from('user_todos').select('*').eq('user_id', currentUserId).order('updated_at', { ascending: false });
+        if (!data || data.length === 0) {
+          sel.innerHTML = '<option value="">No lists yet — ask the agent or click + New</option>';
+          return;
+        }
+        sel.innerHTML = data.map(function(t) {
+          return '<option value="' + t.id + '"' + (t.id === currentTodoId ? ' selected' : '') + '>' + (t.title || 'Untitled') + '</option>';
+        }).join('');
+      } catch(e) {}
+    }
+
+    document.getElementById('todoSelect').addEventListener('change', function() {
+      if (this.value) openTodoList(this.value);
+    });
+
+    async function createNewTodoList() {
+      var sb = getSupabase();
+      var { data } = await sb.from('user_todos').insert({ user_id: currentUserId, title: 'New List', items: [] }).select('id').single();
+      if (data) { currentTodoId = data.id; renderTodoSelect(); openTodoList(data.id); }
+    }
+
+    async function openTodoList(todoId) {
+      currentTodoId = todoId;
+      var sb = getSupabase();
+      var { data } = await sb.from('user_todos').select('*').eq('id', todoId).single();
+      if (!data) return;
+      renderTodoPanel(data);
+      document.getElementById('todoSelect').value = todoId;
+    }
+
+    function renderTodoPanel(todoData) {
+      var panel = document.getElementById('todoRightPanel');
+      var items = todoData.items || [];
+      var updated = new Date(todoData.updated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+
+      var html = '<div style="margin-bottom:16px;">' +
+        '<input id="todoTitleInput" value="' + (todoData.title || '').replace(/"/g, '&quot;') + '" style="font-size:1.2rem;font-weight:700;background:none;border:none;color:var(--text);outline:none;width:100%;font-family:inherit;" />' +
+        '<div style="font-size:0.72rem;color:var(--text-dim);margin-top:4px;">Last saved: ' + updated + '</div>' +
+      '</div>';
+
+      html += '<div id="todoItemsContainer">';
+      items.forEach(function(item, i) {
+        var doneClass = item.done ? ' done' : '';
+        html += '<div class="todo-item">' +
+          '<div class="todo-check' + doneClass + '" onclick="toggleTodoItem(' + i + ')"></div>' +
+          '<div class="todo-text' + doneClass + '" contenteditable="true" onblur="updateTodoText(' + i + ', this.textContent)">' + (item.text || '') + '</div>' +
+        '</div>';
+      });
+      html += '</div>';
+
+      html += '<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">' +
+        '<button onclick="addTodoItem()" style="padding:8px 16px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;color:var(--text-muted);font:inherit;font-size:0.82rem;cursor:pointer;">+ Add item</button>' +
+        '<button onclick="saveTodoList()" class="note-save-btn" style="padding:8px 16px;font-size:0.82rem;">Save List</button>' +
+        '<span id="todoSaveStatus" style="font-size:0.78rem;color:var(--text-dim);align-self:center;"></span>' +
+        '<button onclick="deleteTodoList()" style="margin-left:auto;background:none;border:1px solid rgba(248,81,73,0.3);color:var(--red);padding:8px 16px;border-radius:8px;font:inherit;font-size:0.82rem;cursor:pointer;">Delete</button>' +
+      '</div>';
+
+      panel.innerHTML = html;
+    }
+
+    async function toggleTodoItem(idx) {
+      if (!currentTodoId) return;
+      var sb = getSupabase();
+      var { data } = await sb.from('user_todos').select('items').eq('id', currentTodoId).single();
+      if (!data) return;
+      var items = data.items || [];
+      if (items[idx]) items[idx].done = !items[idx].done;
+      await sb.from('user_todos').update({ items: items, updated_at: new Date().toISOString() }).eq('id', currentTodoId);
+      openTodoList(currentTodoId);
+    }
+
+    async function updateTodoText(idx, text) {
+      if (!currentTodoId) return;
+      var sb = getSupabase();
+      var { data } = await sb.from('user_todos').select('items').eq('id', currentTodoId).single();
+      if (!data) return;
+      var items = data.items || [];
+      if (items[idx]) items[idx].text = text;
+      await sb.from('user_todos').update({ items: items, updated_at: new Date().toISOString() }).eq('id', currentTodoId);
+    }
+
+    async function addTodoItem() {
+      if (!currentTodoId) return;
+      var sb = getSupabase();
+      var { data } = await sb.from('user_todos').select('items').eq('id', currentTodoId).single();
+      if (!data) return;
+      var items = data.items || [];
+      items.push({ text: '', done: false });
+      await sb.from('user_todos').update({ items: items, updated_at: new Date().toISOString() }).eq('id', currentTodoId);
+      openTodoList(currentTodoId);
+    }
+
+    async function saveTodoList() {
+      if (!currentTodoId) return;
+      var title = document.getElementById('todoTitleInput').value.trim() || 'Untitled';
+      var sb = getSupabase();
+      await sb.from('user_todos').update({ title: title, updated_at: new Date().toISOString() }).eq('id', currentTodoId);
+      document.getElementById('todoSaveStatus').textContent = 'Saved!';
+      setTimeout(function() { document.getElementById('todoSaveStatus').textContent = ''; }, 2000);
+      renderTodoSelect();
+    }
+
+    async function deleteTodoList() {
+      if (!currentTodoId || !confirm('Delete this list?')) return;
+      var sb = getSupabase();
+      await sb.from('user_todos').delete().eq('id', currentTodoId);
+      currentTodoId = null;
+      document.getElementById('todoRightPanel').innerHTML = '<div class="coach-right-empty">List deleted.</div>';
+      renderTodoSelect();
+    }
+
+    // Parse agent response for structured content and auto-render on right panel
+    function parseAndRenderStructured(reply) {
+      // Check for markdown table
+      var tableMatch = reply.match(/\|(.+\|)+\n\|[-:\s|]+\|\n((\|.+\|)\n?)+/);
+      if (tableMatch) {
+        var tableHtml = markdownTableToHtml(tableMatch[0]);
+        var titleMatch = reply.match(/(?:\*\*|##)\s*(.+?)(?:\*\*|\n)/);
+        var title = titleMatch ? titleMatch[1] : 'Table';
+        return { type: 'table', title: title, html: '<div style="overflow-x:auto;">' + tableHtml + '</div>' };
+      }
+
+      // Check for checklist / to-do list (lines starting with - [ ] or - [x] or numbered items)
+      var checklistLines = reply.match(/^[\s]*[-*]\s*\[[ x]\]\s*.+$/gm);
+      if (checklistLines && checklistLines.length >= 2) {
+        var items = checklistLines.map(function(line) {
+          var done = /\[x\]/i.test(line);
+          var text = line.replace(/^[\s]*[-*]\s*\[[ x]\]\s*/, '');
+          return { text: text, done: done };
+        });
+        var titleMatch = reply.match(/(?:\*\*|##)\s*(.+?)(?:\*\*|\n)/);
+        return { type: 'checklist', title: titleMatch ? titleMatch[1] : 'Checklist', items: items };
+      }
+
+      // Check for numbered list (5+ items = likely a structured list)
+      var numberedLines = reply.match(/^\d+\.\s+.+$/gm);
+      if (numberedLines && numberedLines.length >= 5) {
+        var items = numberedLines.map(function(line) {
+          return { text: line.replace(/^\d+\.\s+/, ''), done: false };
+        });
+        var titleMatch = reply.match(/(?:\*\*|##)\s*(.+?)(?:\*\*|\n)/);
+        return { type: 'checklist', title: titleMatch ? titleMatch[1] : 'List', items: items };
+      }
+
+      return null;
+    }
+
+    function markdownTableToHtml(mdTable) {
+      var lines = mdTable.trim().split('\n');
+      if (lines.length < 3) return '';
+      var headers = lines[0].split('|').filter(function(c) { return c.trim(); });
+      var html = '<table class="auto-table"><thead><tr>';
+      headers.forEach(function(h) { html += '<th>' + h.trim() + '</th>'; });
+      html += '</tr></thead><tbody>';
+      for (var i = 2; i < lines.length; i++) {
+        var cells = lines[i].split('|').filter(function(c) { return c.trim(); });
+        if (cells.length === 0) continue;
+        html += '<tr>';
+        cells.forEach(function(c) { html += '<td>' + c.trim() + '</td>'; });
+        html += '</tr>';
+      }
+      html += '</tbody></table>';
+      return html;
+    }
+
+    async function autoSaveStructuredContent(parsed) {
+      if (parsed.type === 'checklist') {
+        var sb = getSupabase();
+        var { data } = await sb.from('user_todos').insert({
+          user_id: currentUserId,
+          title: parsed.title,
+          items: parsed.items,
+        }).select('id').single();
+        if (data) {
+          currentTodoId = data.id;
+          renderTodoPanel({ id: data.id, title: parsed.title, items: parsed.items, updated_at: new Date().toISOString() });
+          renderTodoSelect();
+        }
+      } else if (parsed.type === 'table') {
+        var panel = document.getElementById('todoRightPanel');
+        panel.innerHTML = '<h3 style="font-size:1.1rem;font-weight:700;margin-bottom:16px;">' + parsed.title + '</h3>' + parsed.html;
+      }
+    }
+
+    async function sendTodoCoachMsg() {
+      var input = document.getElementById('todoCoachInput');
+      var msg = input.value.trim();
+      if (!msg) return;
+      input.value = '';
+      input.style.height = 'auto';
+
+      var msgs = document.getElementById('todoCoachMessages');
+      msgs.innerHTML += '<div class="msg user">' + msg.replace(/</g,'&lt;') + '</div>';
+      msgs.innerHTML += '<div class="msg ai" id="todoCoachTyping"><span class="typing">Thinking</span></div>';
+      msgs.scrollTop = msgs.scrollHeight;
+
+      var btn = document.getElementById('todoCoachSendBtn');
+      btn.disabled = true;
+      todoCoachHistory.push({ role: 'user', content: msg });
+
+      try {
+        var systemPrompt = 'You are a productivity assistant for WishPath.ai. You help users create to-do lists, checklists, spreadsheets, tables, and structured content.\n\nIMPORTANT RULES:\n- When asked to create a list, checklist, or to-dos, format items with markdown checkboxes: - [ ] Item text\n- When asked to create a spreadsheet or table, use markdown table format with | Header1 | Header2 | etc.\n- Always include a title with ** bold ** before structured content.\n- Make content specific and actionable, not generic.\n- You have web search — use it for current data when needed (prices, dates, facts).';
+
+        var res = await fetch(EDGE_FN, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ coachMode: true, systemPrompt: systemPrompt, messages: todoCoachHistory.slice(-10) }),
+        });
+        var data = await res.json();
+        var reply = data.reply || 'I couldn\'t process that. Try again.';
+        todoCoachHistory.push({ role: 'assistant', content: reply });
+
+        var typing = document.getElementById('todoCoachTyping');
+        if (typing) typing.remove();
+        msgs.innerHTML += '<div class="msg ai">' + reply.replace(/\n/g, '<br>').replace(/</g,'&lt;').replace(/&lt;br>/g,'<br>') + '</div>';
+
+        // Auto-detect and render structured content on right panel
+        var parsed = parseAndRenderStructured(reply);
+        if (parsed) {
+          await autoSaveStructuredContent(parsed);
+        }
+      } catch(e) {
+        var typing = document.getElementById('todoCoachTyping');
+        if (typing) typing.remove();
+        msgs.innerHTML += '<div class="msg ai" style="color:#f85149;">Connection error. Please try again.</div>';
+      }
+      btn.disabled = false;
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+
+    async function manualSaveTodoConvo() {}
   </script>
 </body>
 </html>
