@@ -244,14 +244,26 @@
       .chat-view-toggle { display: flex; }
 
       /* Fullscreen chat mode */
-      #coachView.fullscreen-chat .coach-layout { height: calc(100dvh - 120px) !important; display: flex !important; flex-direction: column; }
-      #coachView.fullscreen-chat .coach-left { flex: 1; min-height: 0; padding-bottom: 8px; }
-      #coachView.fullscreen-chat .coach-messages { max-height: none; flex: 1; }
-      #coachView.fullscreen-chat .coach-right-wrapper { display: none !important; }
+      #coachView.fullscreen-chat .coach-layout,
+      #notesView.fullscreen-chat .coach-layout,
+      #todosView.fullscreen-chat .coach-layout { height: calc(100dvh - 120px) !important; display: flex !important; flex-direction: column; }
+      #coachView.fullscreen-chat .coach-left,
+      #notesView.fullscreen-chat .coach-left,
+      #todosView.fullscreen-chat .coach-left { flex: 1; min-height: 0; padding-bottom: 8px; }
+      #coachView.fullscreen-chat .coach-messages,
+      #notesView.fullscreen-chat .coach-messages,
+      #todosView.fullscreen-chat .coach-messages { max-height: none; flex: 1; }
+      #coachView.fullscreen-chat .coach-right-wrapper,
+      #notesView.fullscreen-chat .coach-right-wrapper,
+      #todosView.fullscreen-chat .coach-right-wrapper { display: none !important; }
 
       /* Split view mode (explicit) */
-      #coachView.split-view .coach-messages { max-height: 35vh; }
-      #coachView.split-view .coach-right-wrapper { display: flex !important; min-height: 40vh; }
+      #coachView.split-view .coach-messages,
+      #notesView.split-view .coach-messages,
+      #todosView.split-view .coach-messages { max-height: 35vh; }
+      #coachView.split-view .coach-right-wrapper,
+      #notesView.split-view .coach-right-wrapper,
+      #todosView.split-view .coach-right-wrapper { display: flex !important; min-height: 40vh; }
 
       /* Tab bar — horizontal scroll */
       .tab-bar { overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -458,6 +470,9 @@
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-shrink:0;">
               <select class="coach-select" id="noteSelect" style="margin-bottom:0;flex:1;"><option value="">Select a note...</option></select>
               <button class="new-page-btn" onclick="createNewNote()" style="font-size:0.78rem;padding:8px 14px;white-space:nowrap;">+ New</button>
+              <button class="chat-view-toggle" onclick="toggleChatView()" title="Toggle fullscreen/split view">
+                <svg viewBox="0 0 20 20" fill="currentColor"><rect x="2" y="2" width="16" height="7" rx="1.5"/><rect x="2" y="11" width="16" height="7" rx="1.5"/></svg>
+              </button>
             </div>
             <div class="coach-messages" id="noteCoachMessages">
               <div class="msg ai">I'm your notes assistant. Select or create a note on the right, and I can help you write, brainstorm, or organize your thoughts. Just ask!</div>
@@ -483,6 +498,9 @@
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-shrink:0;">
               <select class="coach-select" id="todoSelect" style="margin-bottom:0;flex:1;"><option value="">Select a list...</option></select>
               <button class="new-page-btn" onclick="createNewTodoList()" style="font-size:0.78rem;padding:8px 14px;white-space:nowrap;">+ New</button>
+              <button class="chat-view-toggle" onclick="toggleChatView()" title="Toggle fullscreen/split view">
+                <svg viewBox="0 0 20 20" fill="currentColor"><rect x="2" y="2" width="16" height="7" rx="1.5"/><rect x="2" y="11" width="16" height="7" rx="1.5"/></svg>
+              </button>
             </div>
             <div class="coach-messages" id="todoCoachMessages">
               <div class="msg ai">I'm your to-do assistant. Ask me to create a to-do list, spreadsheet, checklist, or any structured content — I'll build it and show it on the right automatically. Try: "Create a weekly trading checklist" or "Build me a budget spreadsheet."</div>
@@ -808,19 +826,18 @@
     var FULLSCREEN_ICON = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 8 3 3 8 3"/><polyline points="17 8 17 3 12 3"/><polyline points="3 12 3 17 8 17"/><polyline points="17 12 17 17 12 17"/></svg>';
 
     function toggleChatView() {
-      var coachView = document.getElementById('coachView');
-      var btn = document.getElementById('chatViewToggle');
-      if (coachView.classList.contains('fullscreen-chat')) {
-        coachView.classList.remove('fullscreen-chat');
-        coachView.classList.add('split-view');
-        btn.innerHTML = FULLSCREEN_ICON;
-        btn.title = 'Fullscreen chat';
+      var activeView = document.querySelector('.view.active');
+      if (!activeView) return;
+      var btn = activeView.querySelector('.chat-view-toggle');
+      if (activeView.classList.contains('fullscreen-chat')) {
+        activeView.classList.remove('fullscreen-chat');
+        activeView.classList.add('split-view');
+        if (btn) { btn.innerHTML = FULLSCREEN_ICON; btn.title = 'Fullscreen chat'; }
         localStorage.setItem('chatViewMode', 'split');
       } else {
-        coachView.classList.remove('split-view');
-        coachView.classList.add('fullscreen-chat');
-        btn.innerHTML = SPLIT_ICON;
-        btn.title = 'Split view';
+        activeView.classList.remove('split-view');
+        activeView.classList.add('fullscreen-chat');
+        if (btn) { btn.innerHTML = SPLIT_ICON; btn.title = 'Split view'; }
         localStorage.setItem('chatViewMode', 'fullscreen');
       }
     }
@@ -828,17 +845,18 @@
     (function initChatViewMode() {
       if (window.innerWidth > 768) return;
       var saved = localStorage.getItem('chatViewMode') || 'fullscreen';
-      var coachView = document.getElementById('coachView');
-      var btn = document.getElementById('chatViewToggle');
-      if (saved === 'split') {
-        coachView.classList.add('split-view');
-        if (btn) btn.innerHTML = FULLSCREEN_ICON;
-        if (btn) btn.title = 'Fullscreen chat';
-      } else {
-        coachView.classList.add('fullscreen-chat');
-        if (btn) btn.innerHTML = SPLIT_ICON;
-        if (btn) btn.title = 'Split view';
-      }
+      ['coachView', 'notesView', 'todosView'].forEach(function(id) {
+        var view = document.getElementById(id);
+        if (!view) return;
+        var btn = view.querySelector('.chat-view-toggle');
+        if (saved === 'split') {
+          view.classList.add('split-view');
+          if (btn) { btn.innerHTML = FULLSCREEN_ICON; btn.title = 'Fullscreen chat'; }
+        } else {
+          view.classList.add('fullscreen-chat');
+          if (btn) { btn.innerHTML = SPLIT_ICON; btn.title = 'Split view'; }
+        }
+      });
     })();
 
     function showView(view) {
