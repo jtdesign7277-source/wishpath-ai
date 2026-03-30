@@ -128,10 +128,7 @@
     .sidebar-chat-item { display: flex; align-items: center; gap: 6px; padding: 5px 8px; border-radius: 6px; font-size: 0.78rem; color: var(--text-dim); cursor: pointer; transition: background 0.15s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .sidebar-chat-item:hover { background: rgba(255,255,255,0.04); color: var(--text-muted); }
 
-    @media (max-width: 768px) {
-      .coach-layout { grid-template-columns: 1fr; height: auto; }
-      .coach-right-wrapper { max-height: 50vh; border-left: none; border-top: 1px solid var(--border); }
-    }
+    /* Mobile handled below */
 
     /* Library view */
     .library-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
@@ -207,12 +204,70 @@
     /* Mobile */
     .menu-toggle { display: none; position: fixed; top: 16px; left: 16px; z-index: 60; background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; color: var(--text); cursor: pointer; }
     @media (max-width: 768px) {
-      .sidebar { transform: translateX(-100%); transition: transform 0.2s; }
+      /* Sidebar — hidden by default, slide-in overlay */
+      .sidebar { transform: translateX(-100%); transition: transform 0.2s; width: 280px; z-index: 100; }
       .sidebar.open { transform: translateX(0); }
-      .main { margin-left: 0; }
+      .sidebar.collapsed { transform: translateX(-280px); }
+      .main { margin-left: 0 !important; }
+      .main.expanded { margin-left: 0 !important; }
+      .main.expanded .main-header { padding-left: 60px; }
       .menu-toggle { display: block; }
       .main-header { padding-left: 60px; }
-      .wish-grid { grid-template-columns: 1fr; }
+      .main-header h1 { font-size: 1.1rem; }
+      .main-content { padding: 16px; }
+
+      /* Sidebar expand button */
+      .sidebar-expand-btn { display: none !important; }
+
+      /* Wish grid */
+      .wish-grid { grid-template-columns: 1fr; gap: 12px; }
+      .wish-card { padding: 18px; }
+      .wish-card-title { font-size: 0.95rem; }
+
+      /* Split layouts → stack vertically */
+      .coach-layout { grid-template-columns: 1fr !important; height: auto !important; gap: 0; }
+      .coach-left { padding-right: 0 !important; min-height: 50vh; }
+      .coach-right-wrapper { border-left: none !important; border-top: 1px solid var(--border); min-height: 40vh; }
+      .coach-right { padding: 16px; }
+      .coach-messages { min-height: 200px; max-height: 40vh; }
+
+      /* Tab bar — horizontal scroll */
+      .tab-bar { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .tab-item { min-width: auto; padding: 8px 12px; font-size: 0.72rem; }
+
+      /* Input row */
+      .coach-input-row { gap: 6px; }
+      .coach-input { font-size: 16px !important; padding: 10px 12px; min-height: 44px; }
+      .coach-send { padding: 10px 16px; font-size: 0.85rem; }
+      .save-btn { padding: 8px 10px; font-size: 0.72rem; }
+
+      /* Dropdowns */
+      .coach-select { font-size: 16px !important; padding: 12px 36px 12px 12px; }
+
+      /* Library table — scroll horizontally */
+      .library-table { display: block; overflow-x: auto; }
+      .library-filters { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .library-filter { white-space: nowrap; padding: 8px 12px; font-size: 0.78rem; }
+
+      /* Wish form */
+      .wish-form-card { padding: 20px; }
+      .wish-textarea { font-size: 16px !important; min-height: 100px; }
+      .wish-context-chips { gap: 6px; }
+      .wish-chip { padding: 6px 14px; font-size: 0.78rem; }
+      .wish-submit { padding: 14px; font-size: 0.95rem; }
+
+      /* Notes */
+      .note-title-input { font-size: 1.1rem; }
+      .note-body-input { font-size: 16px !important; }
+
+      /* Paywall */
+      .paywall-modal { padding: 28px 20px; }
+      .paywall-modal h2 { font-size: 1.2rem; }
+      .paywall-price { font-size: 1.8rem; }
+      .paywall-cta { padding: 14px 32px; font-size: 0.95rem; }
+
+      /* Sidebar bottom */
+      .sidebar-bottom { padding: 12px 16px; }
     }
   </style>
 </head>
@@ -712,6 +767,10 @@
       if (view === 'library') renderLibrary();
       if (view === 'notes') renderNotesList();
       if (view === 'todos') renderTodoSelect();
+      // Close sidebar on mobile after navigation
+      if (window.innerWidth <= 768) {
+        document.querySelector('.sidebar').classList.remove('open');
+      }
     }
 
     // Coach — persistent conversations
