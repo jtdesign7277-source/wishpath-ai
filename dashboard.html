@@ -369,11 +369,29 @@
 
       /* ── Mobile home screen ── */
       .mobile-home.active {
-        display: block; position: fixed; top: 0; left: 0; right: 0;
+        display: flex; flex-direction: column;
+        position: fixed; top: 0; left: 0; right: 0;
         bottom: 0; background: #191919; z-index: 500;
-        overflow-y: auto;
+        overflow: hidden;
+      }
+      #mobileHomeContent {
+        flex: 1; overflow-y: auto;
         padding-bottom: calc(80px + env(safe-area-inset-bottom));
       }
+      #mobileChat {
+        flex: 1; display: none; flex-direction: column; overflow: hidden;
+      }
+      #mobileChatMessages {
+        flex: 1; overflow-y: auto; padding: 16px 16px;
+        padding-bottom: calc(80px + env(safe-area-inset-bottom));
+      }
+      .mobile-chat-back {
+        display: flex; align-items: center; gap: 6px;
+        padding: 12px 16px 8px; color: rgba(255,255,255,0.5);
+        font-size: 15px; cursor: pointer; border: none; background: none;
+        font-family: inherit; flex-shrink: 0; text-align: left;
+      }
+      .mobile-chat-back:active { color: rgba(255,255,255,0.85); }
       .mobile-home-topbar { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px 8px; height: 56px; }
       .mobile-home-topbar-logo { font-size: 22px; line-height: 1; }
       .mobile-info-btn { background: none; border: none; color: rgba(255,255,255,0.3); font-size: 18px; cursor: pointer; padding: 4px; line-height: 1; }
@@ -716,43 +734,50 @@
 
   <!-- Mobile Home Screen -->
   <div class="mobile-home" id="mobileHome">
-    <!-- Top bar: spacer aligns with fixed sidebar toggle, centered logo, info -->
-    <div class="mobile-home-topbar">
-      <div style="width:34px;height:34px;flex-shrink:0;"></div>
-      <span class="mobile-home-topbar-logo">✨</span>
-      <button class="mobile-info-btn" title="About WishPath">ⓘ</button>
+    <div id="mobileHomeContent">
+      <!-- Top bar: spacer aligns with fixed sidebar toggle, centered logo, info -->
+      <div class="mobile-home-topbar">
+        <div style="width:34px;height:34px;flex-shrink:0;"></div>
+        <span class="mobile-home-topbar-logo">✨</span>
+        <button class="mobile-info-btn" title="About WishPath">ⓘ</button>
+      </div>
+      <div class="mobile-home-inner">
+        <!-- Hero title -->
+        <div class="mobile-home-title">What do you want to build today?</div>
+        <!-- Ask AI input -->
+        <div class="mobile-home-input-wrap">
+          <textarea class="mobile-home-input" id="mobileHomeInput" placeholder="Describe your goal, dream, or problem..." rows="2" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMobileHomeInput();}"></textarea>
+          <button class="mobile-home-input-send" onclick="sendMobileHomeInput()">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 16V8M8 12l4-4 4 4"/></svg>
+          </button>
+        </div>
+        <!-- Suggestion chips -->
+        <div class="mobile-chips-row">
+          <div class="mobile-chip" onclick="prefillMobileHomeInput('Make a plan for my goal')"><span>📋</span>Make a plan</div>
+          <div class="mobile-chip" onclick="prefillMobileHomeInput('Help me manage my tasks')"><span>✅</span>Manage tasks</div>
+          <div class="mobile-chip" onclick="prefillMobileHomeInput('Give me advice on achieving my goal')"><span>💡</span>Get advice</div>
+          <div class="mobile-chip" onclick="prefillMobileHomeInput('Help me track my progress')"><span>📊</span>Track progress</div>
+          <div class="mobile-chip" onclick="prefillMobileHomeInput('Help me start a side hustle')"><span>🚀</span>Start a side hustle</div>
+        </div>
+        <!-- Recents -->
+        <div class="mobile-sec-label">Recents</div>
+        <div class="mobile-recents-row" id="mobileRecentsRow">
+          <div class="mobile-recent-card" style="display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.3);font-size:13px;">Loading...</div>
+        </div>
+        <!-- Quick Access -->
+        <div class="mobile-sec-label" style="margin-top:4px;">Quick Access</div>
+        <div class="mobile-nav-grid">
+          <div class="mobile-nav-tile" onclick="hideMobileHome();showView('coach')"><span class="mobile-nav-tile-icon">🤖</span><span class="mobile-nav-tile-label">AI Coach</span></div>
+          <div class="mobile-nav-tile" onclick="hideMobileHome();showView('todos')"><span class="mobile-nav-tile-icon">✅</span><span class="mobile-nav-tile-label">To-Dos</span></div>
+          <div class="mobile-nav-tile" onclick="hideMobileHome();showView('notes')"><span class="mobile-nav-tile-icon">📝</span><span class="mobile-nav-tile-label">Notes</span></div>
+          <div class="mobile-nav-tile" onclick="hideMobileHome();showView('library')"><span class="mobile-nav-tile-icon">📚</span><span class="mobile-nav-tile-label">Library</span></div>
+        </div>
+      </div>
     </div>
-    <div class="mobile-home-inner">
-      <!-- Hero title -->
-      <div class="mobile-home-title">What do you want to build today?</div>
-      <!-- Ask AI input -->
-      <div class="mobile-home-input-wrap">
-        <textarea class="mobile-home-input" id="mobileHomeInput" placeholder="Describe your goal, dream, or problem..." rows="2" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMobileHomeInput();}"></textarea>
-        <button class="mobile-home-input-send" onclick="sendMobileHomeInput()">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 16V8M8 12l4-4 4 4"/></svg>
-        </button>
-      </div>
-      <!-- Suggestion chips -->
-      <div class="mobile-chips-row">
-        <div class="mobile-chip" onclick="prefillMobileHomeInput('Make a plan for my goal')"><span>📋</span>Make a plan</div>
-        <div class="mobile-chip" onclick="prefillMobileHomeInput('Help me manage my tasks')"><span>✅</span>Manage tasks</div>
-        <div class="mobile-chip" onclick="prefillMobileHomeInput('Give me advice on achieving my goal')"><span>💡</span>Get advice</div>
-        <div class="mobile-chip" onclick="prefillMobileHomeInput('Help me track my progress')"><span>📊</span>Track progress</div>
-        <div class="mobile-chip" onclick="prefillMobileHomeInput('Help me start a side hustle')"><span>🚀</span>Start a side hustle</div>
-      </div>
-      <!-- Recents -->
-      <div class="mobile-sec-label">Recents</div>
-      <div class="mobile-recents-row" id="mobileRecentsRow">
-        <div class="mobile-recent-card" style="display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.3);font-size:13px;">Loading...</div>
-      </div>
-      <!-- Quick Access -->
-      <div class="mobile-sec-label" style="margin-top:4px;">Quick Access</div>
-      <div class="mobile-nav-grid">
-        <div class="mobile-nav-tile" onclick="hideMobileHome();showView('coach')"><span class="mobile-nav-tile-icon">🤖</span><span class="mobile-nav-tile-label">AI Coach</span></div>
-        <div class="mobile-nav-tile" onclick="hideMobileHome();showView('todos')"><span class="mobile-nav-tile-icon">✅</span><span class="mobile-nav-tile-label">To-Dos</span></div>
-        <div class="mobile-nav-tile" onclick="hideMobileHome();showView('notes')"><span class="mobile-nav-tile-icon">📝</span><span class="mobile-nav-tile-label">Notes</span></div>
-        <div class="mobile-nav-tile" onclick="hideMobileHome();showView('library')"><span class="mobile-nav-tile-icon">📚</span><span class="mobile-nav-tile-label">Library</span></div>
-      </div>
+    <!-- Inline mobile chat (shown when user submits from home input) -->
+    <div id="mobileChat">
+      <button class="mobile-chat-back" onclick="closeMobileChat()">← Back</button>
+      <div id="mobileChatMessages"></div>
     </div>
   </div>
 
@@ -2099,11 +2124,64 @@
       var input = document.getElementById('mobileHomeInput');
       var msg = (input ? input.value : '').trim();
       if (!msg) return;
-      document.getElementById('coachInput').value = msg;
       if (input) { input.value = ''; input.style.height = 'auto'; }
-      hideMobileHome();
-      showView('coach');
-      sendCoachMsg();
+      submitHomeQuestion(msg);
+    }
+
+    var mobileHomeChatHistory = [];
+
+    function submitHomeQuestion(msg) {
+      if (!checkAgentLimit()) return;
+      // Hide home content, show chat
+      document.getElementById('mobileHomeContent').style.display = 'none';
+      var chat = document.getElementById('mobileChat');
+      chat.style.display = 'flex';
+      // Add user bubble
+      var msgs = document.getElementById('mobileChatMessages');
+      msgs.innerHTML += '<div style="text-align:right;margin-bottom:16px;"><div style="display:inline-block;background:#2a2a2a;padding:12px 16px;border-radius:16px 16px 4px 16px;max-width:82%;text-align:left;color:rgba(255,255,255,0.9);font-size:15px;line-height:1.5;">' + msg.replace(/</g,'&lt;') + '</div></div>';
+      // Add thinking indicator
+      msgs.innerHTML += '<div id="mobileHomeThinking" style="margin-bottom:16px;"><div style="display:inline-flex;align-items:center;gap:8px;background:#202020;padding:10px 14px;border-radius:16px 16px 16px 4px;color:rgba(255,255,255,0.5);font-size:14px;">✨ <span id="mobileHomeThinkingLabel">Analyzing</span><span style="display:flex;gap:3px;margin-left:2px;"><span style="width:5px;height:5px;border-radius:50%;background:rgba(0,201,167,0.7);display:inline-block;animation:dotPulse 1.4s infinite ease-in-out;"></span><span style="width:5px;height:5px;border-radius:50%;background:rgba(0,201,167,0.7);display:inline-block;animation:dotPulse 1.4s 0.2s infinite ease-in-out;"></span><span style="width:5px;height:5px;border-radius:50%;background:rgba(0,201,167,0.7);display:inline-block;animation:dotPulse 1.4s 0.4s infinite ease-in-out;"></span></span></div></div>';
+      msgs.scrollTop = msgs.scrollHeight;
+      sendToCoachFromHome(msg);
+    }
+
+    async function sendToCoachFromHome(msg) {
+      mobileHomeChatHistory.push({ role: 'user', content: msg });
+      try {
+        var systemPrompt = 'You are WishPath Coach, an encouraging, strategic executive coach. Help the user with their goal or question. Be practical, actionable, and motivating. Use clear formatting with headers and bullet points where helpful. Current date is ' + new Date().toLocaleDateString() + '.';
+        var res = await fetch(EDGE_FN, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ coachMode: true, systemPrompt: systemPrompt, messages: mobileHomeChatHistory.slice(-10) }),
+        });
+        var data = await res.json();
+        var reply = data.reply || "I couldn't process that. Please try again.";
+        mobileHomeChatHistory.push({ role: 'assistant', content: reply });
+        var thinking = document.getElementById('mobileHomeThinking');
+        if (thinking) thinking.remove();
+        var msgs = document.getElementById('mobileChatMessages');
+        var htmlReply = reply
+          .replace(/\n/g, '<br>')
+          .replace(/###\s*(.+?)(<br>|$)/g, '<div style="font-weight:700;color:#e6edf3;font-size:0.95em;margin:12px 0 6px;">$1</div>')
+          .replace(/##\s*(.+?)(<br>|$)/g, '<div style="font-weight:700;color:#00c9a7;font-size:1.05em;margin:14px 0 8px;border-bottom:1px solid rgba(0,201,167,0.2);padding-bottom:6px;">$1</div>')
+          .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#e6edf3;">$1</strong>')
+          .replace(/^- (.+?)(<br>|$)/gm, '<div style="padding:4px 0 4px 16px;position:relative;"><span style="position:absolute;left:0;color:#00c9a7;">•</span>$1</div>');
+        msgs.innerHTML += '<div style="margin-bottom:16px;"><div style="display:inline-block;max-width:90%;background:#202020;padding:12px 16px;border-radius:16px 16px 16px 4px;color:rgba(255,255,255,0.85);font-size:15px;line-height:1.6;">' + htmlReply + '</div></div>';
+        msgs.scrollTop = msgs.scrollHeight;
+        incrementAgentUsage();
+      } catch(e) {
+        var thinking = document.getElementById('mobileHomeThinking');
+        if (thinking) thinking.remove();
+        var msgs = document.getElementById('mobileChatMessages');
+        msgs.innerHTML += '<div style="margin-bottom:12px;color:rgba(248,81,73,0.9);font-size:14px;padding:8px 2px;">Connection error. Please try again.</div>';
+      }
+    }
+
+    function closeMobileChat() {
+      document.getElementById('mobileChat').style.display = 'none';
+      document.getElementById('mobileHomeContent').style.display = '';
+      document.getElementById('mobileChatMessages').innerHTML = '';
+      mobileHomeChatHistory = [];
     }
     function prefillMobileHomeInput(text) {
       var input = document.getElementById('mobileHomeInput');
@@ -2123,6 +2201,13 @@
       var input = document.getElementById('mobileAIInput');
       var msg = input.value.trim();
       if (!msg) return;
+      // If home chat is open, route follow-ups there
+      var mobileChat = document.getElementById('mobileChat');
+      if (mobileChat && mobileChat.style.display === 'flex') {
+        input.value = '';
+        submitHomeQuestion(msg);
+        return;
+      }
       var activeView = document.querySelector('.view.active');
       var viewId = activeView ? activeView.id : '';
       if (viewId === 'todosView') {
