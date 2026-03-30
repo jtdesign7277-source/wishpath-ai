@@ -180,7 +180,42 @@
 
     async function loadWishes() {
       try {
-        wishes = await getUserWishes();
+        // Get explicitly saved wishes
+        var savedWishes = await getUserWishes();
+
+        // Also get all completed orders by this user's email
+        var session = await getSession();
+        var userEmail = session ? session.user.email : '';
+        var orderWishes = [];
+        if (userEmail) {
+          var sb = getSupabase();
+          var { data: orders } = await sb
+            .from('wishpath_orders')
+            .select('id, wish, roadmap, customer_email, created_at, status')
+            .or('customer_email.eq.' + userEmail + ',email.eq.' + userEmail)
+            .eq('status', 'completed')
+            .not('roadmap', 'is', null)
+            .order('created_at', { ascending: false });
+
+          // Convert orders to same shape as user_wishes
+          if (orders && orders.length) {
+            var savedIds = new Set(savedWishes.map(function(w) { return w.stripe_checkout_session_id; }));
+            orderWishes = orders
+              .filter(function(o) { return !savedIds.has(o.id); })
+              .map(function(o) {
+                return {
+                  id: o.id,
+                  wish_title: o.roadmap ? o.roadmap.title : o.wish,
+                  wish_summary: o.roadmap ? o.roadmap.summary : o.wish,
+                  roadmap_data: o.roadmap,
+                  generated_at: o.created_at,
+                };
+              });
+          }
+        }
+
+        // Merge: saved wishes first, then orders not already saved
+        wishes = savedWishes.concat(orderWishes);
         renderWishes();
         populateCoachSelect();
       } catch (e) {
