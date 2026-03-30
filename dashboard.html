@@ -58,10 +58,28 @@
     .viewer-back:hover { color: var(--text); }
 
     /* Coach — split panel */
-    .coach-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; height: calc(100vh - 120px); }
-    .coach-left { display: flex; flex-direction: column; min-height: 0; }
-    .coach-right { overflow-y: auto; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 24px; }
+    .coach-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 0; height: calc(100vh - 120px); }
+    .coach-left { display: flex; flex-direction: column; min-height: 0; padding-right: 16px; }
+    .coach-right-wrapper { display: flex; flex-direction: column; min-height: 0; border-left: 1px solid var(--border); }
+
+    /* Notion-style tab bar */
+    .tab-bar { display: flex; align-items: center; gap: 0; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border); flex-shrink: 0; overflow-x: auto; padding: 0 4px; }
+    .tab-bar::-webkit-scrollbar { height: 0; }
+    .tab-item { display: flex; align-items: center; gap: 6px; padding: 8px 14px; font-size: 0.78rem; font-weight: 500; color: var(--text-dim); cursor: pointer; white-space: nowrap; border-bottom: 2px solid transparent; transition: all 0.15s; position: relative; max-width: 200px; }
+    .tab-item:hover { color: var(--text-muted); background: rgba(255,255,255,0.03); }
+    .tab-item.active { color: var(--text); border-bottom-color: var(--accent); background: rgba(255,255,255,0.04); }
+    .tab-item .tab-icon { font-size: 0.85rem; flex-shrink: 0; }
+    .tab-item .tab-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .tab-item .tab-close { opacity: 0; font-size: 0.7rem; color: var(--text-dim); margin-left: 4px; padding: 2px 4px; border-radius: 4px; flex-shrink: 0; }
+    .tab-item:hover .tab-close { opacity: 1; }
+    .tab-item .tab-close:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+
+    /* Right panel content */
+    .coach-right { flex: 1; overflow-y: auto; padding: 20px 24px; }
     .coach-right-empty { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-dim); font-size: 0.9rem; text-align: center; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
     .coach-select { width: 100%; padding: 10px 14px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font: inherit; font-size: 0.9rem; margin-bottom: 12px; flex-shrink: 0; }
     .coach-messages { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 8px 0; margin-bottom: 12px; }
     .msg { max-width: 90%; padding: 12px 16px; border-radius: 14px; font-size: 0.88rem; line-height: 1.6; }
@@ -80,7 +98,7 @@
     .coach-roadmap p { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 16px; }
     @media (max-width: 768px) {
       .coach-layout { grid-template-columns: 1fr; height: auto; }
-      .coach-right { max-height: 50vh; }
+      .coach-right-wrapper { max-height: 50vh; border-left: none; border-top: 1px solid var(--border); }
     }
 
     /* Mobile */
@@ -148,7 +166,7 @@
         </div>
       </div>
 
-      <!-- Coach View — Split Panel -->
+      <!-- Coach View — Split Panel with Tabs -->
       <div class="view" id="coachView">
         <div class="coach-layout">
           <div class="coach-left">
@@ -161,8 +179,11 @@
               <button class="coach-send" id="coachSendBtn" onclick="sendCoachMsg()">Send</button>
             </div>
           </div>
-          <div class="coach-right" id="coachRoadmapPanel">
-            <div class="coach-right-empty">Select a roadmap to view it here while you chat with your coach.</div>
+          <div class="coach-right-wrapper">
+            <div class="tab-bar" id="tabBar"></div>
+            <div class="coach-right" id="coachRightContent">
+              <div class="coach-right-empty">Select a roadmap to view it here while you chat with your coach.</div>
+            </div>
           </div>
         </div>
       </div>
@@ -320,24 +341,90 @@
     }
 
     // Coach — persistent conversations
+    // ── Tab system for right panel ──
+    var rightPanelTabs = []; // { id, icon, label, html, type }
+    var activeTabId = null;
+
+    function addTab(id, icon, label, html, type, activate) {
+      // Check if tab already exists — update content
+      var existing = rightPanelTabs.find(function(t) { return t.id === id; });
+      if (existing) {
+        existing.html = html;
+        existing.label = label;
+        if (activate) switchTab(id);
+        else if (activeTabId === id) renderActiveTab();
+        return;
+      }
+      rightPanelTabs.push({ id: id, icon: icon, label: label, html: html, type: type || 'content' });
+      renderTabBar();
+      if (activate) switchTab(id);
+    }
+
+    function removeTab(id) {
+      rightPanelTabs = rightPanelTabs.filter(function(t) { return t.id !== id; });
+      if (activeTabId === id) {
+        activeTabId = rightPanelTabs.length ? rightPanelTabs[rightPanelTabs.length - 1].id : null;
+      }
+      renderTabBar();
+      renderActiveTab();
+    }
+
+    function switchTab(id) {
+      activeTabId = id;
+      renderTabBar();
+      renderActiveTab();
+    }
+
+    function renderTabBar() {
+      var bar = document.getElementById('tabBar');
+      bar.innerHTML = rightPanelTabs.map(function(t) {
+        var cls = t.id === activeTabId ? 'tab-item active' : 'tab-item';
+        return '<div class="' + cls + '" onclick="switchTab(\'' + t.id + '\')">' +
+          '<span class="tab-icon">' + t.icon + '</span>' +
+          '<span class="tab-label">' + t.label + '</span>' +
+          '<span class="tab-close" onclick="event.stopPropagation();removeTab(\'' + t.id + '\')">&times;</span>' +
+        '</div>';
+      }).join('');
+    }
+
+    function renderActiveTab() {
+      var content = document.getElementById('coachRightContent');
+      if (!activeTabId) {
+        content.innerHTML = '<div class="coach-right-empty">Open a roadmap or ask your coach to create something.</div>';
+        return;
+      }
+      var tab = rightPanelTabs.find(function(t) { return t.id === activeTabId; });
+      if (tab) {
+        content.innerHTML = tab.html;
+        content.scrollTop = 0;
+      }
+    }
+
+    // Open roadmap as a tab
+    function openRoadmapTab(idx) {
+      var w = wishes[idx];
+      if (!w || !w.roadmap_data) return;
+      var tabId = 'roadmap-' + idx;
+      var title = (w.wish_title || 'Untitled');
+      var shortTitle = title.length > 28 ? title.substring(0, 28) + '...' : title;
+      var html = '<div class="coach-roadmap">' + renderNotionRoadmap(w.roadmap_data, w.wish_summary || w.wish_title) + '</div>';
+      addTab(tabId, '&#x1F9ED;', shortTitle, html, 'roadmap', true);
+    }
+
+    // Open agent response as a tab (called from coach AI responses)
+    function openAgentTab(title, html) {
+      var tabId = 'agent-' + Date.now();
+      var shortTitle = title.length > 28 ? title.substring(0, 28) + '...' : title;
+      addTab(tabId, '&#x2728;', shortTitle, html, 'agent', true);
+    }
+
     function populateCoachSelect() {
       var sel = document.getElementById('coachSelect');
       if (!wishes.length) { sel.innerHTML = '<option value="">No saved roadmaps yet</option>'; return; }
       sel.innerHTML = wishes.map(function(w, i) { return '<option value="' + i + '" data-wish-id="' + w.id + '">' + (w.wish_title || 'Untitled') + '</option>'; }).join('');
-      // Load conversation + roadmap for first wish
+      // Load conversation + open roadmap tab for first wish
       loadConversation(wishes[0].id);
-      renderCoachRoadmap(0);
-    }
-
-    function renderCoachRoadmap(idx) {
-      var panel = document.getElementById('coachRoadmapPanel');
-      var w = wishes[idx];
-      if (!w || !w.roadmap_data) {
-        panel.innerHTML = '<div class="coach-right-empty">No roadmap data available.</div>';
-        return;
-      }
-      panel.innerHTML = '<div class="coach-roadmap">' + renderNotionRoadmap(w.roadmap_data, w.wish_summary || w.wish_title) + '</div>';
-      panel.scrollTop = 0;
+      openRoadmapTab(0);
     }
 
     // When user switches wish in dropdown
@@ -345,7 +432,7 @@
       var idx = this.value;
       if (wishes[idx]) {
         loadConversation(wishes[idx].id);
-        renderCoachRoadmap(idx);
+        openRoadmapTab(parseInt(idx));
       }
     });
 
