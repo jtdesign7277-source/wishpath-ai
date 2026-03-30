@@ -190,6 +190,20 @@
     .auto-table td { padding: 8px 12px; border-bottom: 1px solid rgba(48,54,61,0.3); color: var(--text-muted); }
     .auto-table tr:hover td { background: rgba(255,255,255,0.02); }
 
+    /* Paywall modal */
+    .paywall-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+    .paywall-overlay.active { display: flex; }
+    .paywall-modal { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 40px; max-width: 440px; width: 90%; text-align: center; }
+    .paywall-modal h2 { font-size: 1.4rem; font-weight: 800; margin-bottom: 8px; }
+    .paywall-modal p { color: var(--text-muted); font-size: 0.9rem; line-height: 1.6; margin-bottom: 24px; }
+    .paywall-price { font-size: 2.2rem; font-weight: 800; color: var(--accent); margin-bottom: 4px; }
+    .paywall-sub { font-size: 0.82rem; color: var(--text-dim); margin-bottom: 24px; }
+    .paywall-features { text-align: left; margin-bottom: 28px; }
+    .paywall-features div { padding: 6px 0; font-size: 0.88rem; color: var(--text-muted); }
+    .paywall-cta { display: inline-block; padding: 16px 40px; background: var(--accent); color: var(--bg); border-radius: 12px; font-weight: 700; font-size: 1rem; text-decoration: none; transition: opacity 0.15s; }
+    .paywall-cta:hover { opacity: 0.9; }
+    .paywall-close { margin-top: 16px; background: none; border: none; color: var(--text-dim); font-size: 0.82rem; cursor: pointer; }
+
     /* Mobile */
     .menu-toggle { display: none; position: fixed; top: 16px; left: 16px; z-index: 60; background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; color: var(--text); cursor: pointer; }
     @media (max-width: 768px) {
@@ -203,6 +217,26 @@
   </style>
 </head>
 <body>
+  <!-- Paywall Modal -->
+  <div class="paywall-overlay" id="paywallOverlay">
+    <div class="paywall-modal">
+      <div style="font-size:2.5rem;margin-bottom:12px;">&#x1FA84;</div>
+      <h2>Unlock WishPath Pro</h2>
+      <p>You've used your 3 free AI coach messages. Upgrade to Pro for unlimited access to everything.</p>
+      <div class="paywall-price">$19.99</div>
+      <div class="paywall-sub">One-time payment &bull; Lifetime access</div>
+      <div class="paywall-features">
+        <div>&#x2705; Unlimited AI coach conversations</div>
+        <div>&#x2705; Unlimited roadmap generation</div>
+        <div>&#x2705; Notes, to-dos, and library</div>
+        <div>&#x2705; Real-time web search powered answers</div>
+        <div>&#x2705; All data saved forever</div>
+      </div>
+      <a class="paywall-cta" href="https://buy.stripe.com/00w4gB2OP7ZT8tm0a41ck08" target="_blank">Upgrade to Pro</a>
+      <div><button class="paywall-close" onclick="document.getElementById('paywallOverlay').classList.remove('active')">Maybe later</button></div>
+    </div>
+  </div>
+
   <button class="menu-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">&#9776;</button>
   <button class="sidebar-expand-btn" id="sidebarExpandBtn" onclick="toggleSidebar()" title="Open sidebar"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="16" height="14" rx="2"/><line x1="7" y1="3" x2="7" y2="17"/></svg></button>
 
@@ -491,6 +525,41 @@
       return msgDiv;
     }
 
+    // ── Agent usage tracking ──
+    var userIsPro = false;
+    var agentMessagesUsed = 0;
+    var FREE_MESSAGE_LIMIT = 3;
+
+    async function loadUserPlan() {
+      try {
+        var sb = getSupabase();
+        var user = await getUser();
+        if (!user) return;
+        var { data } = await sb.from('user_profiles').select('is_pro, agent_messages_used').eq('id', user.id).single();
+        if (data) {
+          userIsPro = data.is_pro || false;
+          agentMessagesUsed = data.agent_messages_used || 0;
+        }
+      } catch(e) {}
+    }
+
+    async function incrementAgentUsage() {
+      agentMessagesUsed++;
+      try {
+        var sb = getSupabase();
+        await sb.from('user_profiles').update({ agent_messages_used: agentMessagesUsed }).eq('id', currentUserId);
+      } catch(e) {}
+    }
+
+    function checkAgentLimit() {
+      if (userIsPro) return true;
+      if (agentMessagesUsed >= FREE_MESSAGE_LIMIT) {
+        document.getElementById('paywallOverlay').classList.add('active');
+        return false;
+      }
+      return true;
+    }
+
     var wishes = [];
     var coachHistory = [];
     var currentConvoId = null;
@@ -507,6 +576,8 @@
       if (profile) {
         document.getElementById('planBadge').textContent = (profile.plan || 'free').charAt(0).toUpperCase() + (profile.plan || 'free').slice(1) + ' Plan';
       }
+      await loadUserPlan();
+      if (userIsPro) document.getElementById('planBadge').textContent = 'Pro';
       loadWishes();
     })();
 
@@ -918,6 +989,7 @@
     }
 
     async function sendCoachMsg() {
+      if (!checkAgentLimit()) return;
       var input = document.getElementById('coachInput');
       var msg = input.value.trim();
       if (!msg) return;
@@ -964,7 +1036,7 @@
         coachHistory.push({ role: 'assistant', content: reply });
 
         stopThinking('coachTyping');
-        typewriterEffect(msgs, reply, function() { saveConversation(wishId); });
+        typewriterEffect(msgs, reply, function() { saveConversation(wishId); incrementAgentUsage(); });
 
       } catch (e) {
         stopThinking('coachTyping');
@@ -1130,6 +1202,7 @@
 
     var noteCoachHistory = [];
     async function sendNoteCoachMsg() {
+      if (!checkAgentLimit()) return;
       var input = document.getElementById('noteCoachInput');
       var msg = input.value.trim();
       if (!msg) return;
@@ -1164,7 +1237,7 @@
         var reply = data.reply || 'I couldn\'t process that. Try again.';
         noteCoachHistory.push({ role: 'assistant', content: reply });
         stopThinking('noteCoachTyping');
-        typewriterEffect(msgs, reply);
+        typewriterEffect(msgs, reply, function() { incrementAgentUsage(); });
       } catch(e) {
         stopThinking('noteCoachTyping');
         msgs.innerHTML += '<div class="msg ai" style="color:#f85149;">Connection error. Please try again.</div>';
@@ -1381,6 +1454,7 @@
     }
 
     async function sendTodoCoachMsg() {
+      if (!checkAgentLimit()) return;
       var input = document.getElementById('todoCoachInput');
       var msg = input.value.trim();
       if (!msg) return;
@@ -1413,6 +1487,7 @@
         typewriterEffect(msgs, reply, async function() {
           var parsed = parseAndRenderStructured(reply);
           if (parsed) await autoSaveStructuredContent(parsed);
+          incrementAgentUsage();
         });
       } catch(e) {
         stopThinking('todoCoachTyping');
@@ -1449,7 +1524,7 @@
         pi = (pi + 1) % phrases.length;
         var el = document.getElementById('wishThinkingLabel');
         if (el) el.textContent = phrases[pi];
-      }, 3000);
+      }, 6000);
 
       var age = document.getElementById('wishAge').value.trim();
       var location = document.getElementById('wishLocation').value.trim();
