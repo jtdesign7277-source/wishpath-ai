@@ -361,6 +361,7 @@
     }
 
     function removeTab(id) {
+      // Don't fully delete roadmap tabs — just hide them. They can be re-opened from the dropdown.
       rightPanelTabs = rightPanelTabs.filter(function(t) { return t.id !== id; });
       if (activeTabId === id) {
         activeTabId = rightPanelTabs.length ? rightPanelTabs[rightPanelTabs.length - 1].id : null;
@@ -427,12 +428,22 @@
       openRoadmapTab(0);
     }
 
-    // When user switches wish in dropdown
+    // When user switches wish in dropdown — always re-open roadmap tab
     document.getElementById('coachSelect').addEventListener('change', function() {
       var idx = this.value;
       if (wishes[idx]) {
         loadConversation(wishes[idx].id);
         openRoadmapTab(parseInt(idx));
+      }
+    });
+    // Also re-open roadmap if user clicks the dropdown on the same selection
+    document.getElementById('coachSelect').addEventListener('click', function() {
+      var idx = this.value;
+      if (wishes[idx]) {
+        var tabId = 'roadmap-' + idx;
+        var exists = rightPanelTabs.find(function(t) { return t.id === tabId; });
+        if (!exists) openRoadmapTab(parseInt(idx));
+        else switchTab(tabId);
       }
     });
 
