@@ -405,6 +405,40 @@
 
       /* ── Content padding so nothing hides behind bottom bar ── */
       .main-content { padding-bottom: 80px; }
+
+      /* ── Unified Notion dark color scheme ── */
+      body, .app-container, .main-content, .view, .coach-layout, .coach-left, .coach-right-wrapper {
+        background: #191919 !important;
+      }
+      .main, .main-header {
+        background: #191919 !important;
+      }
+      .coach-messages, .msg.ai {
+        background: #191919 !important;
+      }
+      .msg.user {
+        background: #2a2a2a !important;
+      }
+      .coach-input, textarea, input, select {
+        background: #202020 !important;
+        border-color: rgba(255,255,255,0.08) !important;
+        color: rgba(255,255,255,0.9) !important;
+      }
+      .coach-input:focus, textarea:focus {
+        border-color: rgba(255,255,255,0.2) !important;
+      }
+      .coach-select, .tab-item, .note-item, .todo-item {
+        background: #202020 !important;
+      }
+      .tab-item.active {
+        background: #2a2a2a !important;
+      }
+      .view h2, .view h3, .main-header h2 {
+        color: rgba(255,255,255,0.9) !important;
+      }
+      .tab-bar, .coach-right, .tab-content {
+        background: #191919 !important;
+      }
     }
   </style>
 </head>
@@ -516,7 +550,8 @@
               <div class="msg ai">Hi! I'm your WishPath Coach. Select a roadmap above and I'll help you execute it step by step. Ask me anything about your plan.</div>
             </div>
             <div class="coach-input-row">
-              <textarea class="coach-input" id="coachInput" placeholder="Ask your coach anything..." rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendCoachMsg();}"></textarea>
+              <span style="font-size:16px;flex-shrink:0;padding-left:4px;">✨</span>
+              <textarea class="coach-input" id="coachInput" placeholder="Ask AI" rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendCoachMsg();}"></textarea>
               <button class="coach-send" id="coachSendBtn" onclick="sendCoachMsg()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
             </div>
             <div style="display:flex;align-items:center;gap:8px;margin-top:6px;flex-shrink:0;">
@@ -574,7 +609,8 @@
             </div>
             <div class="coach-input-row">
               <button class="save-btn" id="noteCoachSaveBtn" onclick="manualSaveNoteConvo()" title="Save conversation">&#x1F4BE;</button>
-              <textarea class="coach-input" id="noteCoachInput" placeholder="Ask for help with your note..." rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendNoteCoachMsg();}"></textarea>
+              <span style="font-size:16px;flex-shrink:0;padding-left:4px;">✨</span>
+              <textarea class="coach-input" id="noteCoachInput" placeholder="Ask AI" rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendNoteCoachMsg();}"></textarea>
               <button class="coach-send" id="noteCoachSendBtn" onclick="sendNoteCoachMsg()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
             </div>
           </div>
@@ -602,7 +638,8 @@
             </div>
             <div class="coach-input-row">
               <button class="save-btn" onclick="manualSaveTodoConvo()" title="Save chat">&#x1F4BE; Save Chat</button>
-              <textarea class="coach-input" id="todoCoachInput" placeholder="Ask me to create lists, tables, checklists..." rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendTodoCoachMsg();}"></textarea>
+              <span style="font-size:16px;flex-shrink:0;padding-left:4px;">✨</span>
+              <textarea class="coach-input" id="todoCoachInput" placeholder="Ask AI" rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendTodoCoachMsg();}"></textarea>
               <button class="coach-send" id="todoCoachSendBtn" onclick="sendTodoCoachMsg()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
             </div>
           </div>
@@ -663,7 +700,7 @@
         <button class="ask-ai-sheet-close" onclick="closeMobileAskAI()">×</button>
       </div>
       <div class="ask-ai-input-row">
-        <textarea class="ask-ai-textarea" id="mobileAskAIInput" placeholder="Ask your AI coach anything..." rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMobileAskAI();}"></textarea>
+        <textarea class="ask-ai-textarea" id="mobileAskAIInput" placeholder="Ask AI" rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMobileAskAI();}"></textarea>
         <button class="ask-ai-send-btn" onclick="sendMobileAskAI()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
       </div>
     </div>
