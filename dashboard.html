@@ -96,6 +96,25 @@
     /* Coach roadmap panel styles */
     .coach-roadmap h2 { font-size: 1.2rem; font-weight: 800; color: #fff; margin-bottom: 6px; }
     .coach-roadmap p { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 16px; }
+    /* Save button */
+    .save-bar { display: flex; gap: 8px; align-items: center; flex-shrink: 0; padding-top: 8px; }
+    .save-btn { padding: 8px 16px; background: rgba(0,201,167,0.15); color: var(--accent); border: 1px solid rgba(0,201,167,0.3); border-radius: 8px; font: inherit; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+    .save-btn:hover { background: rgba(0,201,167,0.25); }
+    .save-btn.saved { color: var(--text-dim); border-color: var(--border); background: transparent; }
+    .save-status { font-size: 0.75rem; color: var(--text-dim); }
+
+    /* Sidebar saved chats */
+    .sidebar-section { padding: 8px 12px 4px; font-size: 0.7rem; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 8px; }
+    .sidebar-folder { padding: 0 8px; }
+    .sidebar-folder-head { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border-radius: 6px; font-size: 0.8rem; color: var(--text-muted); cursor: pointer; transition: background 0.15s; }
+    .sidebar-folder-head:hover { background: rgba(255,255,255,0.04); }
+    .sidebar-folder-head .folder-arrow { font-size: 0.6rem; transition: transform 0.15s; }
+    .sidebar-folder-head .folder-arrow.open { transform: rotate(90deg); }
+    .sidebar-folder-items { display: none; padding-left: 20px; }
+    .sidebar-folder-items.open { display: block; }
+    .sidebar-chat-item { display: flex; align-items: center; gap: 6px; padding: 5px 8px; border-radius: 6px; font-size: 0.78rem; color: var(--text-dim); cursor: pointer; transition: background 0.15s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sidebar-chat-item:hover { background: rgba(255,255,255,0.04); color: var(--text-muted); }
+
     @media (max-width: 768px) {
       .coach-layout { grid-template-columns: 1fr; height: auto; }
       .coach-right-wrapper { max-height: 50vh; border-left: none; border-top: 1px solid var(--border); }
@@ -128,7 +147,9 @@
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="7"/><path d="M10 7v3l2 2"/></svg>
         AI Coach
       </a>
-      <a class="nav-item" href="/">
+      <div class="sidebar-section" id="savedChatsLabel" style="display:none;">Saved Chats</div>
+      <div id="savedChatsList"></div>
+      <a class="nav-item" href="/" style="margin-top: 12px;">
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8l7-5 7 5v8a1 1 0 01-1 1H4a1 1 0 01-1-1V8z"/></svg>
         Back to Home
       </a>
@@ -177,6 +198,10 @@
             <div class="coach-input-row">
               <textarea class="coach-input" id="coachInput" placeholder="Ask your coach anything..." rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendCoachMsg();}"></textarea>
               <button class="coach-send" id="coachSendBtn" onclick="sendCoachMsg()">Send</button>
+            </div>
+            <div class="save-bar">
+              <button class="save-btn" id="saveConvoBtn" onclick="manualSaveConversation()">&#x1F4BE; Save Chat</button>
+              <span class="save-status" id="saveStatus"></span>
             </div>
           </div>
           <div class="coach-right-wrapper">
@@ -265,6 +290,7 @@
         wishes = savedWishes.concat(orderWishes);
         renderWishes();
         populateCoachSelect();
+        renderSavedChatsSidebar();
       } catch (e) {
         console.error('Load wishes error:', e);
       }
@@ -428,12 +454,21 @@
       openRoadmapTab(0);
     }
 
-    // When user switches wish in dropdown — always re-open roadmap tab
-    document.getElementById('coachSelect').addEventListener('change', function() {
+    var currentWishId = null;
+
+    // When user switches wish in dropdown — auto-save current, then load new
+    document.getElementById('coachSelect').addEventListener('change', async function() {
       var idx = this.value;
       if (wishes[idx]) {
-        loadConversation(wishes[idx].id);
+        // Auto-save current conversation before switching
+        if (currentWishId && coachHistory.length > 0) {
+          await saveConversation(currentWishId);
+          updateSaveStatus('Auto-saved');
+        }
+        currentWishId = wishes[idx].id;
+        await loadConversation(wishes[idx].id);
         openRoadmapTab(parseInt(idx));
+        renderSavedChatsSidebar();
       }
     });
     // Also re-open roadmap if user clicks the dropdown on the same selection
@@ -447,9 +482,28 @@
       }
     });
 
+    function updateSaveStatus(text) {
+      var el = document.getElementById('saveStatus');
+      el.textContent = text;
+      setTimeout(function() { el.textContent = ''; }, 3000);
+    }
+
+    async function manualSaveConversation() {
+      var selIdx = document.getElementById('coachSelect').value;
+      var wish = wishes[selIdx];
+      if (!wish || coachHistory.length === 0) { updateSaveStatus('Nothing to save'); return; }
+      var btn = document.getElementById('saveConvoBtn');
+      btn.disabled = true; btn.textContent = 'Saving...';
+      await saveConversation(wish.id);
+      btn.disabled = false; btn.textContent = '\u{1F4BE} Save Chat';
+      updateSaveStatus('Saved!');
+      renderSavedChatsSidebar();
+    }
+
     async function loadConversation(wishId) {
       coachHistory = [];
       currentConvoId = null;
+      currentWishId = wishId;
       var msgs = document.getElementById('coachMessages');
       msgs.innerHTML = '<div class="msg ai">Loading your conversation...</div>';
 
@@ -466,7 +520,6 @@
         if (data && data.length > 0) {
           currentConvoId = data[0].id;
           coachHistory = data[0].messages || [];
-          // Render saved messages
           msgs.innerHTML = '';
           coachHistory.forEach(function(m) {
             var cls = m.role === 'user' ? 'user' : 'ai';
@@ -477,13 +530,66 @@
             msgs.innerHTML = '<div class="msg ai">Welcome back! I remember our conversation. What would you like to work on today?</div>';
           }
         } else {
-          // New conversation
           msgs.innerHTML = '<div class="msg ai">Hi! I\'m your WishPath Coach. I\'ve studied your roadmap in detail. What would you like to tackle first? I can help you break down any phase into daily actions.</div>';
         }
         msgs.scrollTop = msgs.scrollHeight;
       } catch (e) {
         msgs.innerHTML = '<div class="msg ai">Hi! I\'m your WishPath Coach. Select a roadmap above and let\'s get to work.</div>';
       }
+    }
+
+    // Render saved chats in sidebar
+    async function renderSavedChatsSidebar() {
+      if (!currentUserId) return;
+      var sb = getSupabase();
+      try {
+        var { data } = await sb
+          .from('coach_conversations')
+          .select('id, wish_id, updated_at, messages')
+          .eq('user_id', currentUserId)
+          .order('updated_at', { ascending: false });
+
+        var container = document.getElementById('savedChatsList');
+        var label = document.getElementById('savedChatsLabel');
+        if (!data || data.length === 0) { container.innerHTML = ''; label.style.display = 'none'; return; }
+        label.style.display = 'block';
+
+        // Group by wish
+        var groups = {};
+        data.forEach(function(c) {
+          if (!c.messages || c.messages.length === 0) return;
+          var wish = wishes.find(function(w) { return w.id === c.wish_id; });
+          var title = wish ? (wish.wish_title || 'Untitled') : 'Unknown Roadmap';
+          if (!groups[c.wish_id]) groups[c.wish_id] = { title: title, convos: [] };
+          groups[c.wish_id].convos.push(c);
+        });
+
+        var html = '';
+        Object.keys(groups).forEach(function(wid) {
+          var g = groups[wid];
+          var shortTitle = g.title.length > 22 ? g.title.substring(0, 22) + '...' : g.title;
+          var msgCount = g.convos[0].messages ? g.convos[0].messages.length : 0;
+          var date = new Date(g.convos[0].updated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          html += '<div class="sidebar-folder"><div class="sidebar-chat-item" onclick="loadSavedChat(\'' + wid + '\')" title="' + g.title + '">&#x1F4AC; ' + shortTitle + ' <span style="color:var(--text-dim);font-size:0.7rem;margin-left:auto;">' + msgCount + ' msgs &bull; ' + date + '</span></div></div>';
+        });
+        container.innerHTML = html;
+      } catch (e) { console.error('Sidebar render error:', e); }
+    }
+
+    async function loadSavedChat(wishId) {
+      // Find the wish index and switch to it
+      var idx = wishes.findIndex(function(w) { return w.id === wishId; });
+      if (idx === -1) return;
+      var sel = document.getElementById('coachSelect');
+      sel.value = idx;
+      // Auto-save current before switching
+      if (currentWishId && coachHistory.length > 0) {
+        await saveConversation(currentWishId);
+      }
+      currentWishId = wishId;
+      await loadConversation(wishId);
+      openRoadmapTab(idx);
+      showView('coach');
     }
 
     async function saveConversation(wishId) {
