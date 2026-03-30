@@ -96,9 +96,13 @@
     .msg { max-width: 90%; padding: 12px 16px; border-radius: 14px; font-size: 0.88rem; line-height: 1.6; }
     .msg.user { align-self: flex-end; background: var(--accent); color: var(--bg); border-bottom-right-radius: 4px; }
     .msg.ai { align-self: flex-start; background: var(--card); border: 1px solid var(--border); color: var(--text); border-bottom-left-radius: 4px; }
-    .msg.ai .typing { display: inline-block; }
-    .msg.ai .typing::after { content: '...'; animation: dots 1.5s infinite; }
-    @keyframes dots { 0% { content: '.'; } 33% { content: '..'; } 66% { content: '...'; } }
+    .msg.ai .thinking-status { display: flex; align-items: center; gap: 8px; }
+    .msg.ai .thinking-label { color: var(--accent); font-weight: 500; }
+    .msg.ai .thinking-dots { display: flex; gap: 4px; }
+    .msg.ai .thinking-dots span { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: dotPulse 1.4s infinite ease-in-out; }
+    .msg.ai .thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .msg.ai .thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes dotPulse { 0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); } 40% { opacity: 1; transform: scale(1.1); } }
     .coach-input-row { display: flex; gap: 8px; flex-shrink: 0; align-items: flex-end; }
     .coach-input { flex: 1; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; color: var(--text); font: inherit; font-size: 0.9rem; outline: none; resize: none; min-height: 48px; max-height: 240px; overflow-y: auto; }
     .coach-input:focus { border-color: var(--accent); }
@@ -363,6 +367,74 @@
       var collapsed = sidebar.classList.toggle('collapsed');
       main.classList.toggle('expanded', collapsed);
       expandBtn.classList.toggle('visible', collapsed);
+    }
+
+    // ── Thinking indicator + typewriter ──
+    var thinkingPhrases = ['Thinking', 'Processing', 'Analyzing', 'Researching', 'Connecting the dots'];
+    var thinkingIntervals = {};
+
+    function showThinking(containerId, typingId) {
+      var idx = 0;
+      var el = document.getElementById(typingId);
+      if (!el) return;
+      el.innerHTML = '<div class="thinking-status"><span class="thinking-label">' + thinkingPhrases[0] + '</span><div class="thinking-dots"><span></span><span></span><span></span></div></div>';
+      thinkingIntervals[typingId] = setInterval(function() {
+        idx = (idx + 1) % thinkingPhrases.length;
+        var label = el.querySelector('.thinking-label');
+        if (label) label.textContent = thinkingPhrases[idx];
+      }, 2500);
+    }
+
+    function stopThinking(typingId) {
+      if (thinkingIntervals[typingId]) {
+        clearInterval(thinkingIntervals[typingId]);
+        delete thinkingIntervals[typingId];
+      }
+      var el = document.getElementById(typingId);
+      if (el) el.remove();
+    }
+
+    function typewriterEffect(container, text, callback) {
+      var msgDiv = document.createElement('div');
+      msgDiv.className = 'msg ai';
+      container.appendChild(msgDiv);
+
+      // Convert markdown-ish text to HTML chunks
+      var htmlText = text.replace(/\n/g, '<br>').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/##\s*(.+?)(<br>|$)/g, '<strong style="font-size:1.05em;">$1</strong>$2');
+
+      var i = 0;
+      var speed = 8;
+      var buffer = '';
+      var chars = htmlText.split('');
+
+      function typeChar() {
+        if (i >= chars.length) {
+          msgDiv.innerHTML = buffer;
+          container.scrollTop = container.scrollHeight;
+          if (callback) callback();
+          return;
+        }
+        // Handle HTML tags — add whole tag at once
+        if (chars[i] === '<') {
+          var tagEnd = htmlText.indexOf('>', i);
+          if (tagEnd !== -1) {
+            buffer += htmlText.substring(i, tagEnd + 1);
+            i = tagEnd + 1;
+          } else {
+            buffer += chars[i];
+            i++;
+          }
+        } else {
+          buffer += chars[i];
+          i++;
+        }
+        msgDiv.innerHTML = buffer;
+        // Scroll every 5 chars to reduce jank
+        if (i % 5 === 0) container.scrollTop = container.scrollHeight;
+        requestAnimationFrame(function() { setTimeout(typeChar, speed); });
+      }
+      typeChar();
+      return msgDiv;
     }
 
     var wishes = [];
@@ -806,22 +878,19 @@
       var wishTitle = wish.wish_title;
       var wishId = wish.id;
 
-      // Add user message to UI
       var msgs = document.getElementById('coachMessages');
       msgs.innerHTML += '<div class="msg user">' + msg.replace(/</g,'&lt;') + '</div>';
-      msgs.innerHTML += '<div class="msg ai" id="coachTyping"><span class="typing">Thinking</span></div>';
+      msgs.innerHTML += '<div class="msg ai" id="coachTyping"></div>';
+      showThinking('coachMessages', 'coachTyping');
       msgs.scrollTop = msgs.scrollHeight;
 
       var btn = document.getElementById('coachSendBtn');
       btn.disabled = true;
-
       coachHistory.push({ role: 'user', content: msg });
 
       try {
-        // Build system prompt with conversation memory
         var memoryContext = '';
         if (coachHistory.length > 10) {
-          // Summarize older messages so Claude has context without hitting token limits
           memoryContext = '\n\nPrevious conversation summary (older messages):\n';
           coachHistory.slice(0, -10).forEach(function(m) {
             memoryContext += m.role + ': ' + m.content.substring(0, 150) + '...\n';
@@ -833,33 +902,22 @@
         var res = await fetch(EDGE_FN, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            coachMode: true,
-            systemPrompt: systemPrompt,
-            messages: coachHistory.slice(-10),
-          }),
+          body: JSON.stringify({ coachMode: true, systemPrompt: systemPrompt, messages: coachHistory.slice(-10) }),
         });
 
         var data = await res.json();
         var reply = data.reply || 'I couldn\'t process that. Try again.';
-
         coachHistory.push({ role: 'assistant', content: reply });
 
-        var typing = document.getElementById('coachTyping');
-        if (typing) typing.remove();
-        msgs.innerHTML += '<div class="msg ai">' + reply.replace(/\n/g, '<br>').replace(/</g,'&lt;').replace(/&lt;br>/g,'<br>') + '</div>';
-
-        // Save conversation to Supabase after every exchange
-        await saveConversation(wishId);
+        stopThinking('coachTyping');
+        typewriterEffect(msgs, reply, function() { saveConversation(wishId); });
 
       } catch (e) {
-        var typing = document.getElementById('coachTyping');
-        if (typing) typing.remove();
+        stopThinking('coachTyping');
         msgs.innerHTML += '<div class="msg ai" style="color:#f85149;">Connection error. Please try again.</div>';
       }
 
       btn.disabled = false;
-      msgs.scrollTop = msgs.scrollHeight;
     }
 
     // ── Library ──
@@ -1026,14 +1084,14 @@
 
       var msgs = document.getElementById('noteCoachMessages');
       msgs.innerHTML += '<div class="msg user">' + msg.replace(/</g,'&lt;') + '</div>';
-      msgs.innerHTML += '<div class="msg ai" id="noteCoachTyping"><span class="typing">Thinking</span></div>';
+      msgs.innerHTML += '<div class="msg ai" id="noteCoachTyping"></div>';
+      showThinking('noteCoachMessages', 'noteCoachTyping');
       msgs.scrollTop = msgs.scrollHeight;
 
       var btn = document.getElementById('noteCoachSendBtn');
       btn.disabled = true;
       noteCoachHistory.push({ role: 'user', content: msg });
 
-      // Get current note content for context
       var noteCtx = '';
       var titleEl = document.getElementById('noteTitleInput');
       var bodyEl = document.getElementById('noteBodyInput');
@@ -1051,12 +1109,10 @@
         var data = await res.json();
         var reply = data.reply || 'I couldn\'t process that. Try again.';
         noteCoachHistory.push({ role: 'assistant', content: reply });
-        var typing = document.getElementById('noteCoachTyping');
-        if (typing) typing.remove();
-        msgs.innerHTML += '<div class="msg ai">' + reply.replace(/\n/g, '<br>').replace(/</g,'&lt;').replace(/&lt;br>/g,'<br>') + '</div>';
+        stopThinking('noteCoachTyping');
+        typewriterEffect(msgs, reply);
       } catch(e) {
-        var typing = document.getElementById('noteCoachTyping');
-        if (typing) typing.remove();
+        stopThinking('noteCoachTyping');
         msgs.innerHTML += '<div class="msg ai" style="color:#f85149;">Connection error. Please try again.</div>';
       }
       btn.disabled = false;
@@ -1279,7 +1335,8 @@
 
       var msgs = document.getElementById('todoCoachMessages');
       msgs.innerHTML += '<div class="msg user">' + msg.replace(/</g,'&lt;') + '</div>';
-      msgs.innerHTML += '<div class="msg ai" id="todoCoachTyping"><span class="typing">Thinking</span></div>';
+      msgs.innerHTML += '<div class="msg ai" id="todoCoachTyping"></div>';
+      showThinking('todoCoachMessages', 'todoCoachTyping');
       msgs.scrollTop = msgs.scrollHeight;
 
       var btn = document.getElementById('todoCoachSendBtn');
@@ -1298,18 +1355,13 @@
         var reply = data.reply || 'I couldn\'t process that. Try again.';
         todoCoachHistory.push({ role: 'assistant', content: reply });
 
-        var typing = document.getElementById('todoCoachTyping');
-        if (typing) typing.remove();
-        msgs.innerHTML += '<div class="msg ai">' + reply.replace(/\n/g, '<br>').replace(/</g,'&lt;').replace(/&lt;br>/g,'<br>') + '</div>';
-
-        // Auto-detect and render structured content on right panel
-        var parsed = parseAndRenderStructured(reply);
-        if (parsed) {
-          await autoSaveStructuredContent(parsed);
-        }
+        stopThinking('todoCoachTyping');
+        typewriterEffect(msgs, reply, async function() {
+          var parsed = parseAndRenderStructured(reply);
+          if (parsed) await autoSaveStructuredContent(parsed);
+        });
       } catch(e) {
-        var typing = document.getElementById('todoCoachTyping');
-        if (typing) typing.remove();
+        stopThinking('todoCoachTyping');
         msgs.innerHTML += '<div class="msg ai" style="color:#f85149;">Connection error. Please try again.</div>';
       }
       btn.disabled = false;
