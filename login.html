@@ -79,9 +79,24 @@
           <button type="button" class="pw-toggle" onclick="togglePw('signupPw', this)">Show</button>
         </div>
       </div>
+      <div class="form-group">
+        <label for="signupPwConfirm">Confirm Password</label>
+        <div class="pw-wrap">
+          <input id="signupPwConfirm" type="password" placeholder="Re-enter your password" minlength="8" required />
+          <button type="button" class="pw-toggle" onclick="togglePw('signupPwConfirm', this)">Show</button>
+        </div>
+      </div>
       <div class="error" id="signupError"></div>
       <button class="btn" type="submit" id="signupBtn">Create Free Account</button>
     </form>
+
+    <!-- Confirm Email State -->
+    <div id="confirmState" class="hidden" style="text-align: center; padding: 20px 0;">
+      <div style="font-size: 2.5rem; margin-bottom: 16px;">&#x2709;&#xfe0f;</div>
+      <h2 style="font-size: 1.2rem; margin-bottom: 8px;">Check your email</h2>
+      <p style="color: #8b949e; font-size: 0.9rem; margin-bottom: 20px;" id="confirmMsg">We sent a confirmation link. Click it to activate your account, then come back and log in.</p>
+      <button class="btn" onclick="switchTab('login')" style="background: transparent; border: 1px solid #30363d; color: #e6edf3;">Back to Log In</button>
+    </div>
 
     <div class="switch" id="switchText">
       Don't have an account? <a href="#" onclick="switchTab('signup'); return false;">Sign up free</a>
@@ -103,9 +118,12 @@
     function switchTab(tab) {
       document.getElementById('loginForm').classList.toggle('hidden', tab !== 'login');
       document.getElementById('signupForm').classList.toggle('hidden', tab !== 'signup');
+      document.getElementById('confirmState').classList.add('hidden');
       document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
       document.getElementById('tabSignup').classList.toggle('active', tab === 'signup');
-      document.getElementById('switchText').innerHTML = tab === 'login'
+      var sw = document.getElementById('switchText');
+      sw.classList.remove('hidden');
+      sw.innerHTML = tab === 'login'
         ? 'Don\'t have an account? <a href="#" onclick="switchTab(\'signup\'); return false;">Sign up free</a>'
         : 'Already have an account? <a href="#" onclick="switchTab(\'login\'); return false;">Log in</a>';
     }
@@ -136,15 +154,28 @@
       var btn = document.getElementById('signupBtn');
       var err = document.getElementById('signupError');
       err.textContent = '';
+
+      var pw = document.getElementById('signupPw').value;
+      var pwConfirm = document.getElementById('signupPwConfirm').value;
+      var email = document.getElementById('signupEmail').value;
+
+      if (pw !== pwConfirm) {
+        err.textContent = 'Passwords do not match.';
+        return;
+      }
+      if (pw.length < 8) {
+        err.textContent = 'Password must be at least 8 characters.';
+        return;
+      }
+
       btn.disabled = true; btn.textContent = 'Creating account...';
       try {
-        await signUp(
-          document.getElementById('signupEmail').value,
-          document.getElementById('signupPw').value,
-          document.getElementById('signupName').value
-        );
-        showToast('Account created! Redirecting...');
-        setTimeout(function() { window.location.href = redirect; }, 1000);
+        await signUp(email, pw, document.getElementById('signupName').value);
+        // Show confirm email state
+        document.getElementById('signupForm').classList.add('hidden');
+        document.getElementById('switchText').classList.add('hidden');
+        document.getElementById('confirmState').classList.remove('hidden');
+        document.getElementById('confirmMsg').textContent = 'We sent a confirmation link to ' + email + '. Click it to activate your account, then come back and log in.';
       } catch (ex) {
         err.textContent = ex.message || 'Sign up failed';
         btn.disabled = false; btn.textContent = 'Create Free Account';
