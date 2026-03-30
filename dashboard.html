@@ -160,7 +160,7 @@
 
     /* New Wish */
     .wish-form-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 28px; }
-    .wish-label { font-size: 0.78rem; font-weight: 700; color: var(--purple); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
+    .wish-label { font-size: 0.78rem; font-weight: 700; color: var(--purple); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 18px; display: flex; align-items: center; gap: 10px; }
     .wish-textarea { width: 100%; min-height: 140px; padding: 16px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font: inherit; font-size: 0.95rem; line-height: 1.6; outline: none; resize: none; }
     .wish-textarea:focus { border-color: var(--accent); }
     .wish-textarea::placeholder { color: var(--text-dim); }
@@ -236,8 +236,8 @@
       <div class="sidebar-section" id="savedChatsLabel" style="display:none;">Saved Chats</div>
       <div id="savedChatsList"></div>
       <a class="nav-item" data-view="newwish" onclick="showView('newwish')" style="margin-top: 12px;">
-        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 3l2 4 4.5 0.5-3.3 3 1 4.5L10 13l-4.2 2 1-4.5-3.3-3L8 8z"/></svg>
-        Your Wish
+        <span style="font-size:1.1rem;flex-shrink:0;">&#x1FA84;</span>
+        <span style="margin-left:2px;">Your Wish</span>
       </a>
       <a class="nav-item" onclick="signOut()" style="margin-top: auto; color: var(--red);">
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7 4H4v12h3M10 10h7m0 0l-3-3m3 3l-3 3"/></svg>
@@ -377,7 +377,7 @@
         <div class="coach-layout">
           <div class="coach-left" style="overflow-y:auto;">
             <div class="wish-form-card">
-              <div class="wish-label">&#x2728; Your Wish</div>
+              <div class="wish-label"><span style="font-size:1.3rem;">&#x1FA84;</span> Your Wish</div>
               <textarea class="wish-textarea" id="wishInput" placeholder="I want to start a side hustle with only 5 hours/week and $500 to invest. I have a background in marketing..." maxlength="800" oninput="document.getElementById('wishCharCount').textContent=this.value.length+' / 800'"></textarea>
               <div class="wish-char-count" id="wishCharCount">0 / 800</div>
               <div class="wish-context-label">Add optional context for a more personalized roadmap:</div>
