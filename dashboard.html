@@ -2109,13 +2109,8 @@
       if (window.innerWidth <= 768) renderMobileRecents();
     };
 
-    // On mobile: swap sidebar toggle to a home button and show home screen
+    // On mobile: show home screen on load (sidebar toggle stays as panel icon)
     if (window.innerWidth <= 768) {
-      var _mobileToggle = document.querySelector('.mobile-sidebar-toggle');
-      if (_mobileToggle) {
-        _mobileToggle.innerHTML = '<svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 10L10 3l7 7"/><path d="M5 8v8h4v-5h2v5h4V8"/></svg>';
-        _mobileToggle.onclick = function() { showMobileHome(); };
-      }
       showMobileHome();
     }
 
