@@ -15,8 +15,16 @@
     body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; }
 
     /* Sidebar */
-    .sidebar { width: 240px; background: var(--bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 50; }
-    .sidebar-logo { padding: 20px 20px 16px; font-size: 1.1rem; font-weight: 800; }
+    .sidebar { width: 240px; background: var(--bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 50; transition: transform 0.2s ease, width 0.2s ease; }
+    .sidebar.collapsed { transform: translateX(-240px); }
+    .sidebar-logo { padding: 20px 20px 16px; font-size: 1.1rem; font-weight: 800; display: flex; align-items: center; justify-content: space-between; }
+    .sidebar-collapse-btn { background: none; border: none; color: var(--text-dim); cursor: pointer; padding: 4px 6px; border-radius: 4px; font-size: 1rem; line-height: 1; transition: all 0.15s; }
+    .sidebar-collapse-btn:hover { background: rgba(255,255,255,0.06); color: var(--text-muted); }
+    /* Floating expand button — Notion style */
+    .sidebar-expand-btn { position: fixed; top: 16px; left: 12px; z-index: 60; background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; color: var(--text-dim); cursor: pointer; font-size: 1.1rem; line-height: 1; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+    .sidebar-expand-btn.visible { opacity: 1; pointer-events: auto; }
+    .sidebar-expand-btn:hover { background: rgba(255,255,255,0.06); color: var(--text-muted); }
+    .main.expanded { margin-left: 0; }
     .sidebar-logo a { text-decoration: none; background: linear-gradient(135deg, #00c9a7, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
     .sidebar-nav { flex: 1; padding: 8px 12px; display: flex; flex-direction: column; gap: 2px; }
     .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; font-size: 0.88rem; font-weight: 500; color: var(--text-muted); cursor: pointer; transition: all 0.15s; text-decoration: none; }
@@ -134,10 +142,14 @@
 </head>
 <body>
   <button class="menu-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">&#9776;</button>
+  <button class="sidebar-expand-btn" id="sidebarExpandBtn" onclick="toggleSidebar()" title="Open sidebar">&#x00BB;</button>
 
   <!-- Sidebar -->
   <aside class="sidebar">
-    <div class="sidebar-logo"><a href="/">&#x2728; WishPath.ai</a></div>
+    <div class="sidebar-logo">
+      <a href="/">&#x2728; WishPath.ai</a>
+      <button class="sidebar-collapse-btn" onclick="toggleSidebar()" title="Collapse sidebar">&#x00AB;</button>
+    </div>
     <nav class="sidebar-nav">
       <a class="nav-item active" data-view="wishes" onclick="showView('wishes')">
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h12v12H4z" rx="2"/><path d="M8 8h4M8 11h2"/></svg>
@@ -217,6 +229,15 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="/auth.js"></script>
   <script>
+    function toggleSidebar() {
+      var sidebar = document.querySelector('.sidebar');
+      var main = document.querySelector('.main');
+      var expandBtn = document.getElementById('sidebarExpandBtn');
+      var collapsed = sidebar.classList.toggle('collapsed');
+      main.classList.toggle('expanded', collapsed);
+      expandBtn.classList.toggle('visible', collapsed);
+    }
+
     var wishes = [];
     var coachHistory = [];
     var currentConvoId = null;
