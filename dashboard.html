@@ -57,21 +57,31 @@
     .viewer-back { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 8px; color: var(--text-muted); font-size: 0.85rem; cursor: pointer; margin-bottom: 24px; text-decoration: none; }
     .viewer-back:hover { color: var(--text); }
 
-    /* Coach */
-    .coach-container { max-width: 720px; }
-    .coach-select { width: 100%; padding: 10px 14px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font: inherit; font-size: 0.9rem; margin-bottom: 20px; }
-    .coach-messages { min-height: 400px; max-height: 60vh; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; padding: 16px 0; margin-bottom: 16px; }
-    .msg { max-width: 85%; padding: 14px 18px; border-radius: 14px; font-size: 0.9rem; line-height: 1.6; }
+    /* Coach — split panel */
+    .coach-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; height: calc(100vh - 120px); }
+    .coach-left { display: flex; flex-direction: column; min-height: 0; }
+    .coach-right { overflow-y: auto; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 24px; }
+    .coach-right-empty { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-dim); font-size: 0.9rem; text-align: center; }
+    .coach-select { width: 100%; padding: 10px 14px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font: inherit; font-size: 0.9rem; margin-bottom: 12px; flex-shrink: 0; }
+    .coach-messages { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 8px 0; margin-bottom: 12px; }
+    .msg { max-width: 90%; padding: 12px 16px; border-radius: 14px; font-size: 0.88rem; line-height: 1.6; }
     .msg.user { align-self: flex-end; background: var(--accent); color: var(--bg); border-bottom-right-radius: 4px; }
     .msg.ai { align-self: flex-start; background: var(--card); border: 1px solid var(--border); color: var(--text); border-bottom-left-radius: 4px; }
     .msg.ai .typing { display: inline-block; }
     .msg.ai .typing::after { content: '...'; animation: dots 1.5s infinite; }
     @keyframes dots { 0% { content: '.'; } 33% { content: '..'; } 66% { content: '...'; } }
-    .coach-input-row { display: flex; gap: 10px; }
-    .coach-input { flex: 1; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; color: var(--text); font: inherit; font-size: 0.95rem; outline: none; resize: none; min-height: 48px; max-height: 120px; }
+    .coach-input-row { display: flex; gap: 8px; flex-shrink: 0; }
+    .coach-input { flex: 1; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; color: var(--text); font: inherit; font-size: 0.9rem; outline: none; resize: none; min-height: 48px; max-height: 100px; }
     .coach-input:focus { border-color: var(--accent); }
     .coach-send { padding: 12px 20px; background: var(--accent); color: var(--bg); border: none; border-radius: 12px; font: inherit; font-weight: 700; cursor: pointer; flex-shrink: 0; }
     .coach-send:disabled { opacity: 0.5; }
+    /* Coach roadmap panel styles */
+    .coach-roadmap h2 { font-size: 1.2rem; font-weight: 800; color: #fff; margin-bottom: 6px; }
+    .coach-roadmap p { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 16px; }
+    @media (max-width: 768px) {
+      .coach-layout { grid-template-columns: 1fr; height: auto; }
+      .coach-right { max-height: 50vh; }
+    }
 
     /* Mobile */
     .menu-toggle { display: none; position: fixed; top: 16px; left: 16px; z-index: 60; background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; color: var(--text); cursor: pointer; }
@@ -138,17 +148,21 @@
         </div>
       </div>
 
-      <!-- Coach View -->
+      <!-- Coach View — Split Panel -->
       <div class="view" id="coachView">
-        <div class="coach-container">
-          <p style="color: var(--text-muted); margin-bottom: 12px; font-size: 0.88rem;">Select a roadmap to coach on:</p>
-          <select class="coach-select" id="coachSelect"><option value="">Loading wishes...</option></select>
-          <div class="coach-messages" id="coachMessages">
-            <div class="msg ai">Hi! I'm your WishPath Coach. Select a roadmap above and I'll help you execute it step by step. Ask me anything about your plan.</div>
+        <div class="coach-layout">
+          <div class="coach-left">
+            <select class="coach-select" id="coachSelect"><option value="">Loading wishes...</option></select>
+            <div class="coach-messages" id="coachMessages">
+              <div class="msg ai">Hi! I'm your WishPath Coach. Select a roadmap above and I'll help you execute it step by step. Ask me anything about your plan.</div>
+            </div>
+            <div class="coach-input-row">
+              <textarea class="coach-input" id="coachInput" placeholder="Ask your coach anything..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendCoachMsg();}"></textarea>
+              <button class="coach-send" id="coachSendBtn" onclick="sendCoachMsg()">Send</button>
+            </div>
           </div>
-          <div class="coach-input-row">
-            <textarea class="coach-input" id="coachInput" placeholder="Ask your coach anything..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendCoachMsg();}"></textarea>
-            <button class="coach-send" id="coachSendBtn" onclick="sendCoachMsg()">Send</button>
+          <div class="coach-right" id="coachRoadmapPanel">
+            <div class="coach-right-empty">Select a roadmap to view it here while you chat with your coach.</div>
           </div>
         </div>
       </div>
@@ -310,14 +324,29 @@
       var sel = document.getElementById('coachSelect');
       if (!wishes.length) { sel.innerHTML = '<option value="">No saved roadmaps yet</option>'; return; }
       sel.innerHTML = wishes.map(function(w, i) { return '<option value="' + i + '" data-wish-id="' + w.id + '">' + (w.wish_title || 'Untitled') + '</option>'; }).join('');
-      // Load conversation for first wish
+      // Load conversation + roadmap for first wish
       loadConversation(wishes[0].id);
+      renderCoachRoadmap(0);
+    }
+
+    function renderCoachRoadmap(idx) {
+      var panel = document.getElementById('coachRoadmapPanel');
+      var w = wishes[idx];
+      if (!w || !w.roadmap_data) {
+        panel.innerHTML = '<div class="coach-right-empty">No roadmap data available.</div>';
+        return;
+      }
+      panel.innerHTML = '<div class="coach-roadmap">' + renderNotionRoadmap(w.roadmap_data, w.wish_summary || w.wish_title) + '</div>';
+      panel.scrollTop = 0;
     }
 
     // When user switches wish in dropdown
     document.getElementById('coachSelect').addEventListener('change', function() {
       var idx = this.value;
-      if (wishes[idx]) loadConversation(wishes[idx].id);
+      if (wishes[idx]) {
+        loadConversation(wishes[idx].id);
+        renderCoachRoadmap(idx);
+      }
     });
 
     async function loadConversation(wishId) {
