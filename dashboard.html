@@ -872,6 +872,8 @@
       var msgDiv = document.createElement('div');
       msgDiv.className = 'msg ai';
       container.appendChild(msgDiv);
+      // Scroll to show TOP of new message so user reads from the beginning
+      container.scrollTop = msgDiv.offsetTop - 8;
 
       // Rich markdown → HTML conversion
       var htmlText = text
@@ -2204,8 +2206,12 @@
           .replace(/##\s*(.+?)(<br>|$)/g, '<div style="font-weight:700;color:#00c9a7;font-size:1.05em;margin:14px 0 8px;border-bottom:1px solid rgba(0,201,167,0.2);padding-bottom:6px;">$1</div>')
           .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#e6edf3;">$1</strong>')
           .replace(/^- (.+?)(<br>|$)/gm, '<div style="padding:4px 0 4px 16px;position:relative;"><span style="position:absolute;left:0;color:#00c9a7;">•</span>$1</div>');
-        msgs.innerHTML += '<div style="margin-bottom:16px;"><div style="display:inline-block;max-width:90%;background:#202020;padding:12px 16px;border-radius:16px 16px 16px 4px;color:rgba(255,255,255,0.85);font-size:15px;line-height:1.6;">' + htmlReply + '</div></div>';
-        msgs.scrollTop = msgs.scrollHeight;
+        var aiMsgWrap = document.createElement('div');
+        aiMsgWrap.style.marginBottom = '16px';
+        aiMsgWrap.innerHTML = '<div style="display:inline-block;max-width:90%;background:#202020;padding:12px 16px;border-radius:16px 16px 16px 4px;color:rgba(255,255,255,0.85);font-size:15px;line-height:1.6;">' + htmlReply + '</div>';
+        msgs.appendChild(aiMsgWrap);
+        // Scroll to TOP of new message so user reads from the beginning
+        msgs.scrollTop = aiMsgWrap.offsetTop - 8;
         incrementAgentUsage();
       } catch(e) {
         var thinking = document.getElementById('mobileHomeThinking');
@@ -2218,8 +2224,9 @@
     function closeMobileChat() {
       document.getElementById('mobileChat').style.display = 'none';
       document.getElementById('mobileHomeContent').style.display = '';
-      document.getElementById('mobileChatMessages').innerHTML = '';
-      mobileHomeChatHistory = [];
+      // Conversation preserved — tapping Back no longer erases chat history.
+      // mobileHomeChatHistory and mobileChatMessages are kept intact so the
+      // user can return to the same conversation by tapping any chip or submitting again.
     }
     function prefillMobileHomeInput(text) {
       var input = document.getElementById('mobileHomeInput');
