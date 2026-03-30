@@ -1428,9 +1428,24 @@
     }
 
     async function manualSaveNoteConvo() {
-      // Notes coach conversations are lightweight — no persistent save needed for now
-      document.getElementById('noteCoachSaveBtn').style.color = 'var(--accent)';
-      setTimeout(function() { document.getElementById('noteCoachSaveBtn').style.color = ''; }, 1500);
+      if (!currentUserId || noteCoachHistory.length === 0) return;
+      var btn = document.getElementById('noteCoachSaveBtn');
+      btn.disabled = true;
+      try {
+        var sb = getSupabase();
+        var wishId = 'note-' + (currentNoteId || 'general');
+        var summary = noteCoachHistory.slice(-6).map(function(m) { return m.role + ': ' + m.content.substring(0, 100); }).join('\n');
+        var { data: existing } = await sb.from('coach_conversations').select('id').eq('user_id', currentUserId).eq('wish_id', wishId).limit(1);
+        if (existing && existing.length > 0) {
+          await sb.from('coach_conversations').update({ messages: noteCoachHistory, summary: summary, updated_at: new Date().toISOString() }).eq('id', existing[0].id);
+        } else {
+          await sb.from('coach_conversations').insert({ user_id: currentUserId, wish_id: wishId, messages: noteCoachHistory, summary: summary });
+        }
+        btn.style.color = 'var(--accent)';
+        setTimeout(function() { btn.style.color = ''; }, 1500);
+        renderSavedChatsSidebar();
+      } catch(e) { console.error('Save note convo error:', e); }
+      btn.disabled = false;
     }
 
     async function deleteCurrentNote() {
@@ -1678,7 +1693,25 @@
       msgs.scrollTop = msgs.scrollHeight;
     }
 
-    async function manualSaveTodoConvo() {}
+    async function manualSaveTodoConvo() {
+      if (!currentUserId || todoCoachHistory.length === 0) return;
+      var btn = event && event.target ? event.target : null;
+      if (btn) btn.disabled = true;
+      try {
+        var sb = getSupabase();
+        var wishId = 'todo-' + (currentTodoId || 'general');
+        var summary = todoCoachHistory.slice(-6).map(function(m) { return m.role + ': ' + m.content.substring(0, 100); }).join('\n');
+        var { data: existing } = await sb.from('coach_conversations').select('id').eq('user_id', currentUserId).eq('wish_id', wishId).limit(1);
+        if (existing && existing.length > 0) {
+          await sb.from('coach_conversations').update({ messages: todoCoachHistory, summary: summary, updated_at: new Date().toISOString() }).eq('id', existing[0].id);
+        } else {
+          await sb.from('coach_conversations').insert({ user_id: currentUserId, wish_id: wishId, messages: todoCoachHistory, summary: summary });
+        }
+        if (btn) { btn.style.color = 'var(--accent)'; setTimeout(function() { btn.style.color = ''; }, 1500); }
+        renderSavedChatsSidebar();
+      } catch(e) { console.error('Save todo convo error:', e); }
+      if (btn) btn.disabled = false;
+    }
 
     // ── Save & Email new wish ──
     async function saveNewWishToVault() {
