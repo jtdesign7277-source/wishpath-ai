@@ -92,6 +92,7 @@
     .tab-content.active { display: block; }
 
     .coach-select { width: 100%; padding: 10px 36px 10px 14px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font: inherit; font-size: 0.9rem; margin-bottom: 12px; flex-shrink: 0; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='rgba(255,255,255,0.5)' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
+    select { appearance: none !important; -webkit-appearance: none !important; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='rgba(255,255,255,0.6)' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E") !important; background-repeat: no-repeat !important; background-position: right 12px center !important; padding-right: 36px !important; }
     .coach-messages { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 8px 0; margin-bottom: 12px; }
     .msg { max-width: 90%; padding: 12px 16px; border-radius: 14px; font-size: 0.88rem; line-height: 1.6; }
     .msg.user { align-self: flex-end; background: var(--accent); color: var(--bg); border-bottom-right-radius: 4px; }
@@ -228,10 +229,13 @@
       .menu-toggle { display: none !important; }
       .sidebar-expand-btn { display: none !important; }
       .sidebar-collapse-btn { display: none; }
-      .main-header { padding-left: 60px !important; padding-top: 56px !important; }
-      .main-header h1 { font-size: 1.1rem; }
+      .main-header { padding-left: 56px !important; padding-top: 60px !important; padding-bottom: 12px !important; margin-bottom: 8px !important; }
+      .main-header h1, .main-header h2 { font-size: 1.1rem; margin-bottom: 4px !important; }
       .mobile-home.active { padding-top: 56px !important; }
       .main-content { padding: 12px; }
+      .tab-bar { margin-top: 8px !important; padding: 4px 8px !important; }
+      .coach-select { margin-bottom: 12px !important; }
+      .view { padding: 8px 12px !important; padding-top: 60px !important; }
 
       /* Wish grid */
       .wish-grid { grid-template-columns: 1fr; gap: 12px; }
@@ -313,6 +317,8 @@
       /* Overlay background when sidebar is open */
       .sidebar-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 599; }
       .sidebar.open ~ .sidebar-backdrop { display: block; }
+      /* Hide bottom bar when sidebar is open */
+      .sidebar.open ~ .mobile-bottom-bar { display: none !important; }
 
       /* ── Notion-style bottom bar ── */
       .mobile-bottom-bar {
@@ -347,6 +353,10 @@
         width: 100%; animation: slideUpSheet 0.25s ease;
       }
       @keyframes slideUpSheet { from { transform: translateY(100%); } to { transform: translateY(0); } }
+      @keyframes float {
+        0%, 100% { transform: translateY(0) rotate(-3deg); }
+        50% { transform: translateY(-12px) rotate(3deg); }
+      }
       .ask-ai-handle { width: 36px; height: 4px; background: rgba(255,255,255,0.15); border-radius: 2px; margin: 0 auto 16px; }
       .ask-ai-sheet-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
       .ask-ai-sheet-hdr span { font-size: 15px; font-weight: 600; color: rgba(255,255,255,0.9); }
@@ -738,7 +748,7 @@
       <!-- Top bar: spacer aligns with fixed sidebar toggle, centered logo, info -->
       <div class="mobile-home-topbar">
         <div style="width:34px;height:34px;flex-shrink:0;"></div>
-        <span class="mobile-home-topbar-logo">✨</span>
+        <div style="font-size:48px;margin-bottom:16px;animation:float 4s ease-in-out infinite;filter:drop-shadow(0 0 24px rgba(124,58,237,0.6));">🪄</div>
         <button class="mobile-info-btn" title="About WishPath">ⓘ</button>
       </div>
       <div class="mobile-home-inner">
