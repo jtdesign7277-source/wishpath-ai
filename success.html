@@ -42,8 +42,11 @@
 
     /* Loading */
     .loading { text-align: center; padding: 100px 24px; }
-    .loading-orb { width: 80px; height: 80px; margin: 0 auto 32px; border-radius: 50%; background: radial-gradient(circle, rgba(124,58,237,0.6), rgba(59,130,246,0.3), transparent); animation: pulse 2s ease-in-out infinite; box-shadow: 0 0 60px rgba(124,58,237,0.3); }
-    @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.15); opacity: 1; } }
+    .loading-orb { width: 100px; height: 100px; margin: 0 auto 32px; position: relative; animation: orb-spin 6s linear infinite; }
+    .loading-orb::before { content: ''; position: absolute; inset: 0; background: conic-gradient(from 0deg, rgba(124,58,237,0.0), rgba(124,58,237,0.6), rgba(59,130,246,0.4), rgba(124,58,237,0.0)); clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%); filter: blur(1px); }
+    .loading-orb::after { content: ''; position: absolute; inset: 12px; background: conic-gradient(from 180deg, rgba(124,58,237,0.0), rgba(167,139,250,0.5), rgba(59,130,246,0.3), rgba(124,58,237,0.0)); clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%); animation: orb-spin-reverse 4s linear infinite; }
+    @keyframes orb-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @keyframes orb-spin-reverse { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
     .loading h2 { font-size: 1.4rem; color: var(--text); margin-bottom: 12px; }
     .loading p { color: var(--text-muted); }
     .loading-steps { display: flex; flex-direction: column; gap: 12px; max-width: 320px; margin: 32px auto 0; text-align: left; }
@@ -181,8 +184,8 @@
             <div>&#x2728; Unlock unlimited wishes later</div>
           </div>
           <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px;">
-            <input id="saveEmail" type="email" placeholder="Email" style="padding: 11px 14px; background: #0d1117; border: 1px solid #30363d; border-radius: 8px; color: #e6edf3; font: inherit; font-size: 0.9rem; outline: none;" />
-            <input id="savePw" type="password" placeholder="Password (min 8 chars)" minlength="8" style="padding: 11px 14px; background: #0d1117; border: 1px solid #30363d; border-radius: 8px; color: #e6edf3; font: inherit; font-size: 0.9rem; outline: none;" />
+            <input id="saveEmail" type="email" placeholder="Email" autocomplete="off" name="wishpath-save-email" style="padding: 11px 14px; background: #0d1117; border: 1px solid #30363d; border-radius: 8px; color: #e6edf3; font: inherit; font-size: 0.9rem; outline: none;" />
+            <input id="savePw" type="password" placeholder="Password (min 8 chars)" minlength="8" autocomplete="new-password" name="wishpath-save-pw" style="padding: 11px 14px; background: #0d1117; border: 1px solid #30363d; border-radius: 8px; color: #e6edf3; font: inherit; font-size: 0.9rem; outline: none;" />
             <button onclick="handleSaveSignup()" id="saveBtn" style="padding: 12px; background: #00c9a7; color: #0d1117; border: none; border-radius: 8px; font: inherit; font-weight: 700; cursor: pointer;">Create Free Account &amp; Save</button>
           </div>
           <div id="saveError" style="color: #f85149; font-size: 0.82rem; min-height: 18px;"></div>
