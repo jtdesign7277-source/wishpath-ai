@@ -116,6 +116,10 @@
     .save-btn { padding: 8px 14px; background: rgba(0,201,167,0.15); color: var(--accent); border: 1px solid rgba(0,201,167,0.3); border-radius: 12px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.15s; flex-shrink: 0; white-space: nowrap; font-family: inherit; }
     .save-btn:hover { background: rgba(0,201,167,0.25); }
     .save-status { font-size: 0.7rem; color: var(--accent); flex-shrink: 0; min-width: 0; }
+    /* Chat view toggle — hidden on desktop */
+    .chat-view-toggle { display: none; width: 28px; height: 28px; flex-shrink: 0; background: rgba(255,255,255,0.06); border: 1px solid var(--border); border-radius: 7px; color: var(--text-dim); cursor: pointer; align-items: center; justify-content: center; padding: 0; transition: all 0.15s; }
+    .chat-view-toggle:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+    .chat-view-toggle svg { width: 15px; height: 15px; }
 
     /* Sidebar saved chats */
     .sidebar-section { padding: 8px 12px 4px; font-size: 0.7rem; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 8px; }
@@ -235,6 +239,19 @@
       .coach-right-wrapper { border-left: none !important; border-top: 1px solid var(--border); min-height: 40vh; }
       .coach-right { padding: 14px; }
       .coach-messages { min-height: 180px; max-height: 35vh; }
+
+      /* Chat view toggle — show on mobile */
+      .chat-view-toggle { display: flex; }
+
+      /* Fullscreen chat mode */
+      #coachView.fullscreen-chat .coach-layout { height: calc(100dvh - 120px) !important; display: flex !important; flex-direction: column; }
+      #coachView.fullscreen-chat .coach-left { flex: 1; min-height: 0; padding-bottom: 8px; }
+      #coachView.fullscreen-chat .coach-messages { max-height: none; flex: 1; }
+      #coachView.fullscreen-chat .coach-right-wrapper { display: none !important; }
+
+      /* Split view mode (explicit) */
+      #coachView.split-view .coach-messages { max-height: 35vh; }
+      #coachView.split-view .coach-right-wrapper { display: flex !important; min-height: 40vh; }
 
       /* Tab bar — horizontal scroll */
       .tab-bar { overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -382,7 +399,12 @@
         <div class="tab-bar" id="tabBar"></div>
         <div class="coach-layout">
           <div class="coach-left">
-            <select class="coach-select" id="coachSelect"><option value="">Loading wishes...</option></select>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-shrink:0;">
+              <select class="coach-select" id="coachSelect" style="margin-bottom:0;flex:1;"><option value="">Loading wishes...</option></select>
+              <button class="chat-view-toggle" id="chatViewToggle" onclick="toggleChatView()" title="Toggle fullscreen/split view">
+                <svg id="chatViewIcon" viewBox="0 0 20 20" fill="currentColor"><rect x="2" y="2" width="16" height="7" rx="1.5"/><rect x="2" y="11" width="16" height="7" rx="1.5"/></svg>
+              </button>
+            </div>
             <div class="coach-messages" id="coachMessages">
               <div class="msg ai">Hi! I'm your WishPath Coach. Select a roadmap above and I'll help you execute it step by step. Ask me anything about your plan.</div>
             </div>
@@ -781,6 +803,44 @@
 
     // View switching
     var viewTitles = { wishes: 'My Wishes', coach: 'AI Coach', library: 'Library', notes: 'Notes', todos: 'To-Dos', newwish: 'Your Wish' };
+    // Chat fullscreen/split toggle
+    var SPLIT_ICON = '<svg viewBox="0 0 20 20" fill="currentColor"><rect x="2" y="2" width="16" height="7" rx="1.5"/><rect x="2" y="11" width="16" height="7" rx="1.5"/></svg>';
+    var FULLSCREEN_ICON = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 8 3 3 8 3"/><polyline points="17 8 17 3 12 3"/><polyline points="3 12 3 17 8 17"/><polyline points="17 12 17 17 12 17"/></svg>';
+
+    function toggleChatView() {
+      var coachView = document.getElementById('coachView');
+      var btn = document.getElementById('chatViewToggle');
+      if (coachView.classList.contains('fullscreen-chat')) {
+        coachView.classList.remove('fullscreen-chat');
+        coachView.classList.add('split-view');
+        btn.innerHTML = FULLSCREEN_ICON;
+        btn.title = 'Fullscreen chat';
+        localStorage.setItem('chatViewMode', 'split');
+      } else {
+        coachView.classList.remove('split-view');
+        coachView.classList.add('fullscreen-chat');
+        btn.innerHTML = SPLIT_ICON;
+        btn.title = 'Split view';
+        localStorage.setItem('chatViewMode', 'fullscreen');
+      }
+    }
+
+    (function initChatViewMode() {
+      if (window.innerWidth > 768) return;
+      var saved = localStorage.getItem('chatViewMode') || 'fullscreen';
+      var coachView = document.getElementById('coachView');
+      var btn = document.getElementById('chatViewToggle');
+      if (saved === 'split') {
+        coachView.classList.add('split-view');
+        if (btn) btn.innerHTML = FULLSCREEN_ICON;
+        if (btn) btn.title = 'Fullscreen chat';
+      } else {
+        coachView.classList.add('fullscreen-chat');
+        if (btn) btn.innerHTML = SPLIT_ICON;
+        if (btn) btn.title = 'Split view';
+      }
+    })();
+
     function showView(view) {
       document.querySelectorAll('.view').forEach(function(v) { v.classList.remove('active'); });
       document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
