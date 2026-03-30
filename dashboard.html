@@ -315,12 +315,12 @@
     function openWish(idx) {
       var w = wishes[idx];
       if (!w || !w.roadmap_data) return;
-      document.getElementById('wishGrid').style.display = 'none';
-      document.getElementById('emptyState').style.display = 'none';
-      var viewer = document.getElementById('roadmapViewer');
-      viewer.classList.add('active');
-      document.getElementById('viewerContent').innerHTML = renderNotionRoadmap(w.roadmap_data, w.wish_summary || w.wish_title);
-      document.getElementById('viewTitle').textContent = w.wish_title;
+      // Switch to Coach view with this roadmap
+      document.getElementById('coachSelect').value = idx;
+      currentWishId = w.id;
+      loadConversation(w.id);
+      openRoadmapTab(idx);
+      showView('coach');
     }
 
     function closeViewer() {
