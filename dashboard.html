@@ -183,16 +183,28 @@
         // Get explicitly saved wishes
         var savedWishes = await getUserWishes();
 
-        // Also get all completed orders by this user's email
+        // Also get all completed orders by this user's email (including +alias variants)
         var session = await getSession();
         var userEmail = session ? session.user.email : '';
         var orderWishes = [];
         if (userEmail) {
           var sb = getSupabase();
+          // Build email variants: base email + strip Gmail +alias
+          var baseEmail = userEmail;
+          var emailFilter = 'customer_email.eq.' + userEmail + ',email.eq.' + userEmail;
+          var plusMatch = userEmail.match(/^([^+]+)\+[^@]*(@.+)$/);
+          if (plusMatch) {
+            baseEmail = plusMatch[1] + plusMatch[2];
+            emailFilter += ',customer_email.eq.' + baseEmail + ',email.eq.' + baseEmail;
+          } else if (userEmail.includes('@gmail.com') || userEmail.includes('@googlemail.com')) {
+            // Also match +alias versions: use ilike with wildcard before @
+            var localPart = userEmail.split('@')[0];
+            emailFilter += ',customer_email.ilike.' + localPart + '+%@gmail.com';
+          }
           var { data: orders } = await sb
             .from('wishpath_orders')
             .select('id, wish, roadmap, customer_email, created_at, status')
-            .or('customer_email.eq.' + userEmail + ',email.eq.' + userEmail)
+            .or(emailFilter)
             .eq('status', 'completed')
             .not('roadmap', 'is', null)
             .order('created_at', { ascending: false });
