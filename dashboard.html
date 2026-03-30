@@ -74,7 +74,7 @@
     .coach-right-wrapper { display: flex; flex-direction: column; min-height: 0; border-left: 1px solid var(--border); }
 
     /* Notion-style tab bar */
-    .tab-bar { display: flex; align-items: center; gap: 0; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border); flex-shrink: 0; overflow-x: auto; padding: 0 4px; }
+    .tab-bar { display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border); flex-shrink: 0; overflow-x: auto; padding: 0 4px; }
     .tab-bar::-webkit-scrollbar { height: 0; }
     .tab-item { display: flex; align-items: center; gap: 6px; padding: 8px 14px; font-size: 0.78rem; font-weight: 500; color: var(--text-dim); cursor: pointer; white-space: nowrap; border-bottom: 2px solid transparent; transition: all 0.15s; position: relative; max-width: 200px; }
     .tab-item:hover { color: var(--text-muted); background: rgba(255,255,255,0.03); }
@@ -91,7 +91,7 @@
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
-    .coach-select { width: 100%; padding: 10px 36px 10px 14px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font: inherit; font-size: 0.9rem; margin-bottom: 12px; flex-shrink: 0; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none' stroke='%238b949e' stroke-width='1.5'%3E%3Cpath d='M3 4.5L6 7.5L9 4.5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; }
+    .coach-select { width: 100%; padding: 10px 36px 10px 14px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font: inherit; font-size: 0.9rem; margin-bottom: 12px; flex-shrink: 0; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='rgba(255,255,255,0.5)' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
     .coach-messages { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 8px 0; margin-bottom: 12px; }
     .msg { max-width: 90%; padding: 12px 16px; border-radius: 14px; font-size: 0.88rem; line-height: 1.6; }
     .msg.user { align-self: flex-end; background: var(--accent); color: var(--bg); border-bottom-right-radius: 4px; }
@@ -218,7 +218,7 @@
 
     @media (max-width: 768px) {
       /* Sidebar — hidden by default, slide-in overlay */
-      .sidebar { transform: translateX(-100%); transition: transform 0.2s; width: 280px; z-index: 100; }
+      .sidebar { transform: translateX(-100%); transition: transform 0.2s; width: 280px; z-index: 600; }
       .sidebar.open { transform: translateX(0); }
       .sidebar.collapsed { transform: translateX(-100%); }
       .main { margin-left: 0 !important; }
@@ -310,7 +310,7 @@
       .sidebar-bottom { padding: 12px 16px; }
 
       /* Overlay background when sidebar is open */
-      .sidebar-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; }
+      .sidebar-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 599; }
       .sidebar.open ~ .sidebar-backdrop { display: block; }
 
       /* ── Notion-style bottom bar ── */
@@ -717,7 +717,7 @@
   <div class="mobile-home" id="mobileHome">
     <!-- Top bar: spacer aligns with fixed sidebar toggle, centered logo, info -->
     <div class="mobile-home-topbar">
-      <div style="width:34px;"></div>
+      <button onclick="toggleMobileSidebar()" style="background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;width:34px;height:34px;display:flex;align-items:center;justify-content:center;padding:0;flex-shrink:0;"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="16" height="14" rx="2"/><line x1="7" y1="3" x2="7" y2="17"/></svg></button>
       <span class="mobile-home-topbar-logo">✨</span>
       <button class="mobile-info-btn" title="About WishPath">ⓘ</button>
     </div>
