@@ -106,7 +106,8 @@
     .coach-input-row { display: flex; gap: 8px; flex-shrink: 0; align-items: flex-end; }
     .coach-input { flex: 1; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; color: var(--text); font: inherit; font-size: 0.9rem; outline: none; resize: none; min-height: 48px; max-height: 240px; overflow-y: auto; }
     .coach-input:focus { border-color: var(--accent); }
-    .coach-send { padding: 12px 20px; background: var(--accent); color: var(--bg); border: none; border-radius: 12px; font: inherit; font-weight: 700; cursor: pointer; flex-shrink: 0; }
+    .coach-send { padding: 10px 12px; background: var(--accent); color: var(--bg); border: none; border-radius: 10px; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; }
+    .coach-send svg { width: 20px; height: 20px; }
     .coach-send:disabled { opacity: 0.5; }
     /* Coach roadmap panel styles */
     .coach-roadmap h2 { font-size: 1.2rem; font-weight: 800; color: #fff; margin-bottom: 6px; }
@@ -386,10 +387,12 @@
               <div class="msg ai">Hi! I'm your WishPath Coach. Select a roadmap above and I'll help you execute it step by step. Ask me anything about your plan.</div>
             </div>
             <div class="coach-input-row">
+              <textarea class="coach-input" id="coachInput" placeholder="Ask your coach anything..." rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendCoachMsg();}"></textarea>
+              <button class="coach-send" id="coachSendBtn" onclick="sendCoachMsg()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:6px;flex-shrink:0;">
               <button class="save-btn" id="saveConvoBtn" onclick="manualSaveConversation()" title="Save conversation">&#x1F4BE; Save Chat</button>
               <span class="save-status" id="saveStatus"></span>
-              <textarea class="coach-input" id="coachInput" placeholder="Ask your coach anything..." rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendCoachMsg();}"></textarea>
-              <button class="coach-send" id="coachSendBtn" onclick="sendCoachMsg()">Send</button>
             </div>
           </div>
           <div class="coach-right-wrapper">
@@ -440,7 +443,7 @@
             <div class="coach-input-row">
               <button class="save-btn" id="noteCoachSaveBtn" onclick="manualSaveNoteConvo()" title="Save conversation">&#x1F4BE;</button>
               <textarea class="coach-input" id="noteCoachInput" placeholder="Ask for help with your note..." rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendNoteCoachMsg();}"></textarea>
-              <button class="coach-send" id="noteCoachSendBtn" onclick="sendNoteCoachMsg()">Send</button>
+              <button class="coach-send" id="noteCoachSendBtn" onclick="sendNoteCoachMsg()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
             </div>
           </div>
           <div class="coach-right-wrapper">
@@ -465,7 +468,7 @@
             <div class="coach-input-row">
               <button class="save-btn" onclick="manualSaveTodoConvo()" title="Save chat">&#x1F4BE; Save Chat</button>
               <textarea class="coach-input" id="todoCoachInput" placeholder="Ask me to create lists, tables, checklists..." rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendTodoCoachMsg();}"></textarea>
-              <button class="coach-send" id="todoCoachSendBtn" onclick="sendTodoCoachMsg()">Send</button>
+              <button class="coach-send" id="todoCoachSendBtn" onclick="sendTodoCoachMsg()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
             </div>
           </div>
           <div class="coach-right-wrapper">
