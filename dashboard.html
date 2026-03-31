@@ -3742,34 +3742,42 @@
     async function refreshPortfolioPrices() {
       if (!portfolioHoldings.length) { renderHoldings(); return; }
       var symbols = portfolioHoldings.map(function(h) { return h.symbol; });
-      // Reuse any cached markets data
-      var missing = symbols.filter(function(s) { return !marketsCache[s]; });
-      // Copy from marketsCache to portfolioPrices
+
+      // Copy any existing marketsCache data as initial values
       symbols.forEach(function(s) { if (marketsCache[s]) portfolioPrices[s] = marketsCache[s]; });
 
-      if (missing.length > 0) {
+      // Always fetch fresh prices for all portfolio symbols
+      var toFetch = symbols.filter(function(s) { return !portfolioPrices[s] || !portfolioPrices[s].price; });
+      // If all have cached prices, still re-render but skip fetch
+      if (toFetch.length === 0) { renderHoldings(); return; }
+
+      // Attempt up to 2 tries
+      for (var attempt = 0; attempt < 2; attempt++) {
         try {
           var res = await fetch(EDGE_FN, {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               coachMode: true,
-              systemPrompt: 'You are a market data API. Fetch real-time quotes from Alpaca. Return ONLY valid JSON, no markdown. Format: {"quotes": [{"symbol": "AAPL", "price": 150.00, "change": 2.50, "changePercent": 1.5}]}',
-              messages: [{ role: 'user', content: 'Get live quotes for: ' + missing.join(', ') + '. Return only JSON.' }]
+              systemPrompt: 'You are a market data API. Fetch real-time quotes from Alpaca. Return ONLY valid JSON, no markdown, no code fences. Format: {"quotes": [{"symbol": "AAPL", "price": 150.00, "change": 2.50, "changePercent": 1.5}]}',
+              messages: [{ role: 'user', content: 'Get live quotes for these exact symbols: ' + toFetch.join(', ') + '. Return ONLY the JSON object with quotes array, nothing else.' }]
             })
           });
           var data = await res.json();
           var reply = data.reply || '';
+          // Strip markdown code fences if present
+          reply = reply.replace(/```json\s*/gi, '').replace(/```\s*/g, '');
           var jsonMatch = reply.match(/\{[\s\S]*"quotes"[\s\S]*\}/);
           if (jsonMatch) {
             var parsed = JSON.parse(jsonMatch[0]);
-            if (parsed.quotes) {
+            if (parsed.quotes && parsed.quotes.length > 0) {
               parsed.quotes.forEach(function(q) {
                 portfolioPrices[q.symbol] = q;
                 marketsCache[q.symbol] = q;
               });
+              break; // Success — exit retry loop
             }
           }
-        } catch(e) { console.error('Portfolio price fetch error:', e); }
+        } catch(e) { console.error('Portfolio price fetch error (attempt ' + (attempt+1) + '):', e); }
       }
       renderHoldings();
     }
@@ -4326,7 +4334,7 @@
       if (content) content.classList.add('active');
       // Lazy-load widgets on first visit
       if (tabId === 'fmMarkets' && !window._fmMarketsLoaded) { refreshFMMarkets(); window._fmMarketsLoaded = true; }
-      if (tabId === 'fmPortfolio') { if (!_portfolioLoaded) loadPortfolioFromDB().then(function() { renderHoldings(); refreshPortfolioPrices(); }); }
+      if (tabId === 'fmPortfolio') { if (!_portfolioLoaded) { loadPortfolioFromDB().then(function() { renderHoldings(); refreshPortfolioPrices(); }); } else { refreshPortfolioPrices(); } }
       if (tabId === 'fmWatchlists') renderWatchlistSelector();
       if (tabId === 'fmNewsFeed' && !window._newsFeedLoaded) { refreshNewsFeed(); window._newsFeedLoaded = true; }
       if (tabId === 'fmTVCharts' && !window._tvChartLoaded) { loadTVChart(); window._tvChartLoaded = true; }
@@ -5138,6 +5146,7 @@
       // Load portfolio and watchlists from Supabase
       await Promise.all([loadPortfolioFromDB(), loadWatchlistsFromDB(), loadCommandCenters()]);
       renderHoldings();
+      refreshPortfolioPrices();
       renderSidebarWatchlists();
       renderSidebarCCList();
     };
@@ -5149,6 +5158,12 @@
       if ((marketsActive && marketsActive.classList.contains('active')) || (fmActive && fmActive.classList.contains('active'))) {
         if (window._marketsLoaded) refreshMarkets();
         if (window._fmMarketsLoaded) refreshFMMarkets();
+      }
+      // Auto-refresh portfolio prices if portfolio tab is visible
+      var portfolioActive = document.getElementById('homePortfolioTab');
+      var fmPortfolioActive = document.getElementById('fmPortfolioContent');
+      if ((portfolioActive && portfolioActive.classList.contains('active')) || (fmPortfolioActive && fmPortfolioActive.classList.contains('active'))) {
+        if (portfolioHoldings.length) { portfolioHoldings.forEach(function(h) { delete portfolioPrices[h.symbol]; }); refreshPortfolioPrices(); }
       }
     }, 60000);
 
