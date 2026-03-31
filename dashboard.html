@@ -224,6 +224,17 @@
     #tableFullscreenContent th { text-align: left; padding: 7px 12px; background: rgba(255,255,255,0.04); border-bottom: 1px solid rgba(48,54,61,0.8); font-weight: 600; color: #e6edf3; font-size: 0.72rem; text-transform: uppercase; white-space: nowrap; }
     #tableFullscreenContent td { padding: 7px 12px; border-bottom: 1px solid rgba(48,54,61,0.3); color: #8b949e; white-space: nowrap; }
 
+    /* Chart fullscreen */
+    .chart-fs-wrap { position: relative; }
+    .chart-fs-btn { position: absolute; top: 8px; right: 8px; z-index: 10; width: 32px; height: 32px; background: rgba(22,27,34,0.85); border: 1px solid rgba(255,255,255,0.12); border-radius: 6px; color: rgba(255,255,255,0.7); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px; transition: all 0.15s; backdrop-filter: blur(4px); }
+    .chart-fs-btn:hover { background: rgba(0,201,167,0.2); color: #00c9a7; border-color: rgba(0,201,167,0.3); }
+    .chart-fs-overlay { display: none; position: fixed; inset: 0; background: #0d1117; z-index: 99999; flex-direction: column; }
+    .chart-fs-overlay.active { display: flex !important; }
+    .chart-fs-overlay .chart-fs-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .chart-fs-overlay .chart-fs-close { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: var(--text-muted); padding: 6px 14px; cursor: pointer; font: inherit; font-size: 0.82rem; }
+    .chart-fs-overlay .chart-fs-close:hover { color: var(--text); }
+    .chart-fs-overlay .chart-fs-body { flex: 1; overflow: auto; }
+
     /* Paywall modal */
     .paywall-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
     .paywall-overlay.active { display: flex; }
@@ -638,8 +649,12 @@
     .sidebar-fm-sub.active { color: var(--accent); }
 
     /* ── News Feed ── */
-    .news-feed-item { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; transition: border-color 0.2s; }
-    .news-feed-item:hover { border-color: rgba(0,201,167,0.2); }
+    .news-feed-item { background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin-bottom: 16px; transition: all 0.2s; cursor: pointer; }
+    .news-feed-item:hover { border-color: rgba(0,201,167,0.3); transform: translateY(-2px); }
+    .news-feed-item:active { transform: scale(0.98); }
+    .news-feed-img { width: 100%; height: 200px; object-fit: cover; display: block; }
+    .news-feed-img-placeholder { width: 100%; height: 200px; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 600; color: rgba(255,255,255,0.5); }
+    .news-feed-body { padding: 14px 16px 16px; }
     .news-feed-badges { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
     .news-badge { font-size: 0.65rem; font-weight: 700; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
     .news-badge.breaking { background: rgba(239,68,68,0.15); color: #ef4444; }
@@ -648,12 +663,37 @@
     .news-badge.bearish { background: rgba(239,68,68,0.15); color: #ef4444; }
     .news-badge.neutral { background: rgba(139,148,158,0.15); color: #8b949e; }
     .news-badge.holding { background: rgba(167,139,250,0.15); color: #a78bfa; }
-    .news-feed-title { font-size: 0.92rem; font-weight: 600; color: var(--text); line-height: 1.4; margin-bottom: 6px; }
-    .news-feed-summary { font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 8px; }
-    .news-feed-meta { font-size: 0.7rem; color: var(--text-dim); display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+    .news-feed-title { font-size: 1rem; font-weight: 700; color: #fff; line-height: 1.4; margin-bottom: 6px; }
+    .news-feed-summary { font-size: 0.82rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 8px; }
+    .news-feed-meta { font-size: 0.72rem; color: var(--text-dim); display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
     .news-feed-actions { display: flex; gap: 6px; flex-wrap: wrap; }
-    .news-feed-action { padding: 5px 10px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; color: var(--text-dim); font: inherit; font-size: 0.7rem; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 4px; }
+    .news-feed-action { padding: 6px 12px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; color: var(--text-dim); font: inherit; font-size: 0.72rem; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 4px; min-height: 36px; }
     .news-feed-action:hover { border-color: var(--accent); color: var(--accent); }
+    .news-carousel { display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; padding: 4px 0 12px; }
+    .news-carousel::-webkit-scrollbar { display: none; }
+    .news-carousel .news-feed-item { min-width: 300px; max-width: 340px; scroll-snap-align: start; flex-shrink: 0; margin-bottom: 0; }
+    .news-section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; margin-top: 24px; }
+    .news-section-header:first-child { margin-top: 0; }
+    .news-section-title { font-size: 1.05rem; font-weight: 700; color: #fff; }
+    .news-section-more { font-size: 0.78rem; color: var(--accent); cursor: pointer; font-weight: 600; }
+    .news-section-more:hover { text-decoration: underline; }
+    .news-detail-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 99998; align-items: flex-end; justify-content: center; }
+    .news-detail-overlay.active { display: flex; }
+    .news-detail-panel { background: #161b22; border-radius: 20px 20px 0 0; width: 100%; max-width: 640px; max-height: 85vh; overflow-y: auto; padding: 24px; animation: slideUpSheet 0.3s ease; }
+    .news-detail-panel img { width: 100%; border-radius: 12px; margin-bottom: 16px; }
+    .news-detail-panel h2 { font-size: 1.2rem; font-weight: 700; margin-bottom: 8px; color: #fff; }
+    .news-detail-panel .meta { font-size: 0.78rem; color: var(--text-dim); margin-bottom: 16px; }
+    .news-detail-panel .body { font-size: 0.9rem; color: var(--text-muted); line-height: 1.7; }
+
+    /* ── Native app polish ── */
+    .view { animation: viewFadeIn 0.25s ease; }
+    @keyframes viewFadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .wish-card, .cc-card, .news-feed-item, .stock-card { transition: all 0.2s cubic-bezier(0.32,0.72,0,1); }
+    .wish-card:active, .cc-card:active, .stock-card:active { transform: scale(0.97); }
+    .skeleton { background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    .nav-item { transition: all 0.15s cubic-bezier(0.32,0.72,0,1); }
+    .nav-item:active { transform: scale(0.96); }
 
     /* ── Command Center ── */
     .cc-empty-state { text-align: center; padding: 60px 24px; }
@@ -769,8 +809,11 @@
       /* News filter mobile — full width */
       .news-filter-bar { flex-direction: column; gap: 8px; }
       .news-filter-select { width: 100%; font-size: 16px !important; min-height: 44px; padding: 12px; }
-      .news-feed-item { padding: 14px; }
+      .news-feed-item { margin-bottom: 12px; }
+      .news-feed-img, .news-feed-img-placeholder { height: 160px; }
+      .news-carousel .news-feed-item { min-width: 260px; max-width: 300px; }
       .news-feed-action { min-height: 44px; padding: 8px 12px; }
+      .news-detail-panel { max-width: 100%; border-radius: 16px 16px 0 0; padding: 20px 16px; }
       /* Watchlist mobile */
       .watchlist-item { min-height: 44px; }
       .watchlist-add-input { font-size: 16px !important; min-height: 44px; }
@@ -862,8 +905,8 @@
           <span class="sidebar-cc-arrow" id="sidebarCCArrow">&#x25B6;</span>
         </div>
         <div class="sidebar-cc-items" id="sidebarCCItems">
-          <div class="sidebar-cc-sub" onclick="openCCFromSidebar('new')">+ New Command Center</div>
           <div id="sidebarCCList"></div>
+          <div class="sidebar-cc-sub" onclick="openCCFromSidebar('new')" style="border-top:1px solid rgba(255,255,255,0.06);margin-top:4px;padding-top:4px;color:var(--accent);">+ New Command Center</div>
         </div>
       </div>
       <!-- Financial Markets expandable section -->
@@ -2255,12 +2298,12 @@
           });
         }
 
-        var systemPrompt = 'You are WishPath Coach, an encouraging, strategic executive coach. The user has a saved roadmap titled "' + wishTitle + '". Reference the full roadmap JSON below. Guide them step-by-step through execution. Ask clarifying questions, celebrate wins, suggest daily actions, and keep them accountable. Never hallucinate steps. Remember everything from previous conversations — the user expects continuity. Current date is ' + new Date().toLocaleDateString() + '.\n\nRoadmap data:\n' + roadmapContext + memoryContext;
+        var systemPrompt = 'You are WishPath Coach, an encouraging, strategic executive coach. The user has a saved roadmap titled "' + wishTitle + '". Reference the full roadmap JSON below. Guide them step-by-step through execution. Ask clarifying questions, celebrate wins, suggest daily actions, and keep them accountable. Never hallucinate steps. Remember everything from previous conversations — the user expects continuity. Current date is ' + new Date().toLocaleDateString() + '.\n\nRoadmap data:\n' + roadmapContext + memoryContext + ' Keep your responses concise and actionable. Use 2-3 short paragraphs maximum. Only provide longer responses when the user explicitly asks for more detail or a comprehensive analysis.';
 
         var res = await fetch(EDGE_FN, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ coachMode: true, systemPrompt: systemPrompt, messages: coachHistory.slice(-10) }),
+          body: JSON.stringify({ coachMode: true, model: 'claude-sonnet-4-20250514', systemPrompt: systemPrompt, messages: coachHistory.slice(-10) }),
         });
 
         var data = await res.json();
@@ -2481,7 +2524,7 @@
         var res = await fetch(EDGE_FN, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ coachMode: true, systemPrompt: systemPrompt, messages: noteCoachHistory.slice(-10) }),
+          body: JSON.stringify({ coachMode: true, model: 'claude-sonnet-4-20250514', systemPrompt: systemPrompt, messages: noteCoachHistory.slice(-10) }),
         });
         var data = await res.json();
         var reply = data.reply || 'I couldn\'t process that. Try again.';
@@ -2753,7 +2796,7 @@
         var res = await fetch(EDGE_FN, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ coachMode: true, systemPrompt: systemPrompt, messages: todoCoachHistory.slice(-10) }),
+          body: JSON.stringify({ coachMode: true, model: 'claude-sonnet-4-20250514', systemPrompt: systemPrompt, messages: todoCoachHistory.slice(-10) }),
         });
         var data = await res.json();
         var reply = data.reply || 'I couldn\'t process that. Try again.';
@@ -2983,11 +3026,11 @@
     async function sendToCoachFromHome(msg) {
       mobileHomeChatHistory.push({ role: 'user', content: msg });
       try {
-        var systemPrompt = 'You are WishPath Coach, an encouraging, strategic executive coach. Help the user with their goal or question. Be practical, actionable, and motivating. Use clear formatting with headers and bullet points where helpful. Current date is ' + new Date().toLocaleDateString() + '.';
+        var systemPrompt = 'You are WishPath Coach, an encouraging, strategic executive coach. Help the user with their goal or question. Be practical, actionable, and motivating. Use clear formatting with headers and bullet points where helpful. Current date is ' + new Date().toLocaleDateString() + '. Keep your responses concise and actionable. Use 2-3 short paragraphs maximum. Only provide longer responses when the user explicitly asks for more detail or a comprehensive analysis.';
         var res = await fetch(EDGE_FN, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ coachMode: true, systemPrompt: systemPrompt, messages: mobileHomeChatHistory.slice(-10) }),
+          body: JSON.stringify({ coachMode: true, model: 'claude-sonnet-4-20250514', systemPrompt: systemPrompt, messages: mobileHomeChatHistory.slice(-10) }),
         });
         var data = await res.json();
         var reply = data.reply || "I couldn't process that. Please try again.";
@@ -3483,6 +3526,7 @@
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             coachMode: true,
+            model: 'claude-sonnet-4-20250514',
             systemPrompt: 'You are a market data API. When asked for stock/crypto quotes, use the Alpaca API tools available to you to fetch real-time data. Return ONLY valid JSON, no markdown, no explanation. Return the data in the exact format requested.',
             messages: [{ role: 'user', content: prompt }]
           })
@@ -3570,6 +3614,7 @@
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             coachMode: true,
+            model: 'claude-sonnet-4-20250514',
             systemPrompt: 'You are a market news aggregator. Fetch the latest market news using MarketAux. Return ONLY a JSON array of the top 6 news items in this format: [{"title": "...", "source": "...", "snippet": "...", "url": "...", "published": "..."}]. No markdown, no explanation.',
             messages: [{ role: 'user', content: 'Get the latest market news headlines. Return only JSON.' }]
           })
@@ -3758,6 +3803,7 @@
             method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               coachMode: true,
+              model: 'claude-sonnet-4-20250514',
               systemPrompt: 'You are a market data API. Fetch real-time quotes from Alpaca. Return ONLY valid JSON, no markdown, no code fences. Format: {"quotes": [{"symbol": "AAPL", "price": 150.00, "change": 2.50, "changePercent": 1.5}]}',
               messages: [{ role: 'user', content: 'Get live quotes for these exact symbols: ' + toFetch.join(', ') + '. Return ONLY the JSON object with quotes array, nothing else.' }]
             })
@@ -3816,12 +3862,12 @@
         return h.symbol + ': ' + h.qty + ' shares @ $' + formatNum(p.price) + ' (avg cost: $' + formatNum(h.avgCost) + ', day change: ' + formatNum(p.changePercent) + '%)';
       }).join('\n');
 
-      var systemPrompt = 'You are the WishPath Portfolio AI Coach — an expert investment advisor. The user\'s current portfolio:\n\n' + (holdingsCtx || 'No holdings yet.') + '\n\nProvide insightful, data-driven advice. Be specific with numbers. When showing allocation breakdowns, sector analysis, or performance data, include percentage figures so charts can be auto-generated. For visual data, you can use these markers to render Highcharts:\n- [CHARTDATA]{ ...highcharts config JSON... }[/CHARTDATA] for custom charts\n- Or just list items with percentages and a pie chart will auto-render\nKeep advice actionable. Current date: ' + new Date().toLocaleDateString() + '.';
+      var systemPrompt = 'You are the WishPath Portfolio AI Coach — an expert investment advisor. The user\'s current portfolio:\n\n' + (holdingsCtx || 'No holdings yet.') + '\n\nProvide insightful, data-driven advice. Be specific with numbers. When showing allocation breakdowns, sector analysis, or performance data, include percentage figures so charts can be auto-generated. For visual data, you can use these markers to render Highcharts:\n- [CHARTDATA]{ ...highcharts config JSON... }[/CHARTDATA] for custom charts\n- Or just list items with percentages and a pie chart will auto-render\nKeep advice actionable. Current date: ' + new Date().toLocaleDateString() + '. Keep your responses concise and actionable. Use 2-3 short paragraphs maximum. Only provide longer responses when the user explicitly asks for more detail or a comprehensive analysis.';
 
       try {
         var res = await fetch(EDGE_FN, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ coachMode: true, systemPrompt: systemPrompt, messages: portfolioCoachHistory.slice(-10) })
+          body: JSON.stringify({ coachMode: true, model: 'claude-sonnet-4-20250514', systemPrompt: systemPrompt, messages: portfolioCoachHistory.slice(-10) })
         });
         var data = await res.json();
         var reply = data.reply || "I couldn't process that. Try again.";
@@ -4280,7 +4326,7 @@
       if (toFetch.length > 0) {
         try {
           var res = await fetch(EDGE_FN, { method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ coachMode: true, systemPrompt: 'You are a market data API. Fetch real-time quotes from Alpaca. Return ONLY valid JSON: {"quotes": [{"symbol": "AAPL", "price": 150.00, "change": 2.50, "changePercent": 1.5}]}',
+            body: JSON.stringify({ coachMode: true, model: 'claude-sonnet-4-20250514', systemPrompt: 'You are a market data API. Fetch real-time quotes from Alpaca. Return ONLY valid JSON: {"quotes": [{"symbol": "AAPL", "price": 150.00, "change": 2.50, "changePercent": 1.5}]}',
               messages: [{ role: 'user', content: 'Get live quotes for: ' + toFetch.join(', ') + '. Return only JSON.' }] }) });
           var data = await res.json(); var reply = data.reply || '';
           var jsonMatch = reply.match(/\{[\s\S]*"quotes"[\s\S]*\}/);
@@ -4491,11 +4537,11 @@
         return h.symbol + ': ' + h.qty + ' shares, price $' + formatNum(p.price) + ', avg cost $' + formatNum(h.avgCost);
       }).join('\n');
 
-      var systemPrompt = 'You are Chart Studio, a premium Highcharts-powered visualization engine in WishPath. Create beautiful, insightful financial charts. The user\'s portfolio:\n' + (holdingsCtx || 'No holdings.') + '\n\nWhen creating charts, output a [CHARTDATA] block with valid Highcharts config JSON. Example:\n[CHARTDATA]\n{"chart":{"type":"pie"},"title":{"text":"Allocation"},"series":[{"name":"Value","data":[{"name":"AAPL","y":5000},{"name":"MSFT","y":3000}]}]}\n[/CHARTDATA]\n\nAlways include a brief text explanation before the chart data. Use real data when available.';
+      var systemPrompt = 'You are Chart Studio, a premium Highcharts-powered visualization engine in WishPath. Create beautiful, insightful financial charts. The user\'s portfolio:\n' + (holdingsCtx || 'No holdings.') + '\n\nWhen creating charts, output a [CHARTDATA] block with valid Highcharts config JSON. Example:\n[CHARTDATA]\n{"chart":{"type":"pie"},"title":{"text":"Allocation"},"series":[{"name":"Value","data":[{"name":"AAPL","y":5000},{"name":"MSFT","y":3000}]}]}\n[/CHARTDATA]\n\nAlways include a brief text explanation before the chart data. Use real data when available. Keep your responses concise and actionable. Use 2-3 short paragraphs maximum. Only provide longer responses when the user explicitly asks for more detail or a comprehensive analysis.';
 
       try {
         var res = await fetch(EDGE_FN, { method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ coachMode: true, systemPrompt: systemPrompt, messages: chartStudioHistory.slice(-10) }) });
+          body: JSON.stringify({ coachMode: true, model: 'claude-sonnet-4-20250514', systemPrompt: systemPrompt, messages: chartStudioHistory.slice(-10) }) });
         var data = await res.json();
         var reply = data.reply || "Couldn't process that. Try again.";
         chartStudioHistory.push({ role: 'assistant', content: reply });
@@ -4548,7 +4594,8 @@
         var res = await fetch(EDGE_FN, { method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             coachMode: true,
-            systemPrompt: 'You are a financial news aggregator. Use MarketAux to fetch the latest news for these tickers: ' + tickerStr + '.' + filterContext + ' Return ONLY a JSON array: [{"title":"...","source":"...","snippet":"...","url":"...","published":"...","tickers":["AAPL"],"sentiment":"bullish|bearish|neutral","isBreaking":false,"isEarnings":false,"aiSummary":"One-line AI summary of how this affects the portfolio"}]. Return 10-15 articles. Mark articles from the last hour as isBreaking. Mark earnings-related articles as isEarnings. Set sentiment based on content. For aiSummary, relate it to portfolio holdings if applicable.' + (country ? ' Focus on ' + country + ' market news.' : '') + (industry ? ' Focus on ' + industry + ' sector news.' : ''),
+            model: 'claude-sonnet-4-20250514',
+            systemPrompt: 'You are a financial news aggregator. Use MarketAux to fetch the latest news for these tickers: ' + tickerStr + '.' + filterContext + ' Return ONLY a JSON array: [{"title":"...","source":"...","snippet":"...","url":"...","published":"...","tickers":["AAPL"],"sentiment":"bullish|bearish|neutral","isBreaking":false,"isEarnings":false,"aiSummary":"One-line AI summary of how this affects the portfolio","image_url":"URL of article image if available"}]. Return 10-15 articles. Mark articles from the last hour as isBreaking. Mark earnings-related articles as isEarnings. Set sentiment based on content. For aiSummary, relate it to portfolio holdings if applicable. Keep your responses concise and actionable. Use 2-3 short paragraphs maximum. Only provide longer responses when the user explicitly asks for more detail or a comprehensive analysis.' + (country ? ' Focus on ' + country + ' market news.' : '') + (industry ? ' Focus on ' + industry + ' sector news.' : ''),
             messages: [{ role: 'user', content: 'Get personalized market news for: ' + tickerStr + (filterContext ? '. ' + filterContext : '') + '. Return only JSON array.' }]
           }) });
         var data = await res.json();
@@ -4572,7 +4619,8 @@
         container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-dim);">No news found.</div>';
         return;
       }
-      // Sort: breaking first, then earnings for held stocks, then rest
+      window._newsFeedArticles = articles;
+      // Sort: breaking first, then held stocks, then rest
       articles.sort(function(a, b) {
         if (a.isBreaking && !b.isBreaking) return -1;
         if (!a.isBreaking && b.isBreaking) return 1;
@@ -4583,27 +4631,84 @@
         return 0;
       });
 
-      container.innerHTML = articles.map(function(a, idx) {
+      // Split into sections
+      var breaking = articles.filter(function(a) { return a.isBreaking; });
+      var portfolio = articles.filter(function(a) { return !a.isBreaking && (a.tickers || []).some(function(t) { return userTickers.indexOf(t) !== -1; }); });
+      var rest = articles.filter(function(a) { return !a.isBreaking && !(a.tickers || []).some(function(t) { return userTickers.indexOf(t) !== -1; }); });
+
+      function cardHtml(a, idx) {
         var badges = '';
         if (a.isBreaking) badges += '<span class="news-badge breaking">Breaking</span>';
         if (a.isEarnings) badges += '<span class="news-badge earnings">Earnings</span>';
         var sentClass = a.sentiment === 'bullish' ? 'bullish' : a.sentiment === 'bearish' ? 'bearish' : 'neutral';
         badges += '<span class="news-badge ' + sentClass + '">' + (a.sentiment || 'Neutral') + '</span>';
         var heldTickers = (a.tickers || []).filter(function(t) { return userTickers.indexOf(t) !== -1; });
-        heldTickers.forEach(function(t) { badges += '<span class="news-badge holding">' + t + ' (held)</span>'; });
+        heldTickers.forEach(function(t) { badges += '<span class="news-badge holding">' + t + '</span>'; });
 
-        return '<div class="news-feed-item">' +
-          '<div class="news-feed-badges">' + badges + '</div>' +
-          '<div class="news-feed-title">' + (a.title || '').replace(/</g,'&lt;') + '</div>' +
-          (a.aiSummary ? '<div class="news-feed-summary">&#x1F916; ' + a.aiSummary.replace(/</g,'&lt;') + '</div>' : '') +
-          '<div class="news-feed-meta"><span class="news-source" style="color:var(--accent);font-weight:500;">' + (a.source || '') + '</span><span>' + (a.published || '') + '</span></div>' +
-          '<div class="news-feed-actions">' +
-            '<button class="news-feed-action" onclick="askAIAboutArticle(' + idx + ')">&#x1F916; Ask AI about this</button>' +
-            '<button class="news-feed-action" onclick="saveArticleToNotes(' + idx + ')">&#x1F4BE; Save to Notes</button>' +
-            (a.url ? '<a class="news-feed-action" href="' + a.url + '" target="_blank" rel="noopener" style="text-decoration:none;">&#x1F517; Read full article</a>' : '') +
+        var imgHtml = '';
+        if (a.image_url || a.imageUrl) {
+          imgHtml = '<img class="news-feed-img" src="' + (a.image_url || a.imageUrl) + '" alt="" onerror="this.outerHTML=\'<div class=news-feed-img-placeholder style=background:linear-gradient(135deg,rgba(0,201,167,0.2),rgba(59,130,246,0.2))>' + (a.source || 'News').replace(/'/g,'') + '</div>\'" loading="lazy" />';
+        } else {
+          var gradients = ['linear-gradient(135deg,#1a1a2e,#16213e)','linear-gradient(135deg,#0f3443,#34e89e20)','linear-gradient(135deg,#2d1b69,#6c63ff20)','linear-gradient(135deg,#1b2838,#00c9a720)'];
+          var grad = gradients[idx % gradients.length];
+          imgHtml = '<div class="news-feed-img-placeholder" style="background:' + grad + ';">' + (a.source || 'Market News') + '</div>';
+        }
+
+        return '<div class="news-feed-item" onclick="openNewsDetail(' + idx + ')">' +
+          imgHtml +
+          '<div class="news-feed-body">' +
+            '<div class="news-feed-badges">' + badges + '</div>' +
+            '<div class="news-feed-title">' + (a.title || '').replace(/</g,'&lt;') + '</div>' +
+            (a.aiSummary ? '<div class="news-feed-summary">' + a.aiSummary.replace(/</g,'&lt;') + '</div>' : '') +
+            '<div class="news-feed-meta"><span style="color:var(--accent);font-weight:500;">' + (a.source || '') + '</span><span>' + (a.published || '') + '</span></div>' +
           '</div></div>';
-      }).join('');
-      window._newsFeedArticles = articles;
+      }
+
+      function sectionHtml(title, items, isCarousel) {
+        if (!items.length) return '';
+        var html = '<div class="news-section-header"><span class="news-section-title">' + title + '</span></div>';
+        if (isCarousel) {
+          html += '<div class="news-carousel">';
+          items.forEach(function(a) { html += cardHtml(a, articles.indexOf(a)); });
+          html += '</div>';
+        } else {
+          items.forEach(function(a) { html += cardHtml(a, articles.indexOf(a)); });
+        }
+        return html;
+      }
+
+      var out = '';
+      if (breaking.length) out += sectionHtml('🔴 Breaking News', breaking, true);
+      if (portfolio.length) out += sectionHtml('💼 Your Portfolio', portfolio, true);
+      out += sectionHtml('📰 Latest Stories', rest.length ? rest : articles, false);
+      container.innerHTML = out;
+    }
+
+    // News detail slide-up panel
+    function openNewsDetail(idx) {
+      var articles = window._newsFeedArticles || [];
+      var a = articles[idx];
+      if (!a) return;
+      var existing = document.getElementById('newsDetailOverlay');
+      if (existing) existing.remove();
+      var overlay = document.createElement('div');
+      overlay.className = 'news-detail-overlay active';
+      overlay.id = 'newsDetailOverlay';
+      overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+      var imgHtml = (a.image_url || a.imageUrl) ? '<img src="' + (a.image_url || a.imageUrl) + '" alt="" onerror="this.style.display=\'none\'" />' : '';
+      overlay.innerHTML = '<div class="news-detail-panel">' +
+        '<div style="display:flex;justify-content:flex-end;margin-bottom:12px;"><button onclick="document.getElementById(\'newsDetailOverlay\').remove()" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text-muted);padding:6px 14px;cursor:pointer;font:inherit;font-size:0.82rem;">✕ Close</button></div>' +
+        imgHtml +
+        '<h2>' + (a.title || '').replace(/</g,'&lt;') + '</h2>' +
+        '<div class="meta"><span style="color:var(--accent);font-weight:600;">' + (a.source || '') + '</span> · ' + (a.published || '') + '</div>' +
+        '<div class="body">' + (a.aiSummary ? '<p style="color:var(--accent);font-weight:500;margin-bottom:12px;">AI Summary: ' + a.aiSummary.replace(/</g,'&lt;') + '</p>' : '') +
+        (a.snippet ? '<p>' + a.snippet.replace(/</g,'&lt;') + '</p>' : '') + '</div>' +
+        '<div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;">' +
+          '<button class="news-feed-action" onclick="event.stopPropagation();askAIAboutArticle(' + idx + ');document.getElementById(\'newsDetailOverlay\').remove();">🤖 Ask AI</button>' +
+          '<button class="news-feed-action" onclick="event.stopPropagation();saveArticleToNotes(' + idx + ');">💾 Save</button>' +
+          (a.url ? '<a class="news-feed-action" href="' + a.url + '" target="_blank" rel="noopener" style="text-decoration:none;" onclick="event.stopPropagation();">🔗 Full Article</a>' : '') +
+        '</div></div>';
+      document.body.appendChild(overlay);
     }
 
     function askAIAboutArticle(idx) {
@@ -4633,7 +4738,7 @@
       if (marketsCache[symbol]) return marketsCache[symbol];
       try {
         var res = await fetch(EDGE_FN, { method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ coachMode: true, systemPrompt: 'Return ONLY JSON: {"quotes":[{"symbol":"' + symbol + '","price":0,"change":0,"changePercent":0}]}. Use Alpaca to get the real-time quote for ' + symbol + '.', messages: [{ role: 'user', content: 'Get quote for ' + symbol }] }) });
+          body: JSON.stringify({ coachMode: true, model: 'claude-sonnet-4-20250514', systemPrompt: 'Return ONLY JSON: {"quotes":[{"symbol":"' + symbol + '","price":0,"change":0,"changePercent":0}]}. Use Alpaca to get the real-time quote for ' + symbol + '.', messages: [{ role: 'user', content: 'Get quote for ' + symbol }] }) });
         var data = await res.json();
         var reply = data.reply || '';
         var m = reply.match(/\{[\s\S]*"quotes"[\s\S]*\}/);
@@ -4730,8 +4835,12 @@
     function renderSidebarCCList() {
       var el = document.getElementById('sidebarCCList');
       if (!el) return;
+      if (!commandCenters.length) {
+        el.innerHTML = '<div style="padding:8px 12px;font-size:0.75rem;color:var(--text-dim);">No saved dashboards yet</div>';
+        return;
+      }
       el.innerHTML = commandCenters.map(function(cc) {
-        return '<div class="sidebar-cc-sub" onclick="openCCFromSidebar(\'' + cc.id + '\')">\u{1F3AF} ' + cc.name.replace(/</g,'&lt;') + '</div>';
+        return '<div class="sidebar-cc-sub" onclick="openCCFromSidebar(\'' + cc.id + '\')" style="display:flex;align-items:center;gap:6px;"><span>\u{1F3AF}</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + cc.name.replace(/</g,'&lt;') + '</span></div>';
       }).join('');
     }
 
@@ -5005,8 +5114,8 @@
       if (industry) filterCtx += ' Industry: ' + industry + '.';
       try {
         var res = await fetch(EDGE_FN, { method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ coachMode: true,
-            systemPrompt: 'Financial news aggregator. Tickers: ' + tickerStr + '.' + filterCtx + ' Return ONLY JSON array: [{"title":"...","source":"...","sentiment":"bullish|bearish|neutral","aiSummary":"..."}]. Return 5 articles.',
+          body: JSON.stringify({ coachMode: true, model: 'claude-sonnet-4-20250514',
+            systemPrompt: 'Financial news aggregator. Tickers: ' + tickerStr + '.' + filterCtx + ' Return ONLY JSON array: [{"title":"...","source":"...","sentiment":"bullish|bearish|neutral","aiSummary":"..."}]. Return 5 articles. Keep your responses concise and actionable. Use 2-3 short paragraphs maximum. Only provide longer responses when the user explicitly asks for more detail or a comprehensive analysis.',
             messages: [{ role: 'user', content: 'Get top 5 market news.' + filterCtx }] }) });
         var data = await res.json();
         var reply = data.reply || '';
@@ -5034,7 +5143,7 @@
       msgsEl.scrollTop = msgsEl.scrollHeight;
       try {
         var res = await fetch(EDGE_FN, { method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ coachMode: true, systemPrompt: 'You are the WishPath AI Coach — expert financial advisor. Be helpful, concise, data-driven.', messages: [{ role: 'user', content: msg }] }) });
+          body: JSON.stringify({ coachMode: true, model: 'claude-sonnet-4-20250514', systemPrompt: 'You are the WishPath AI Coach — expert financial advisor. Be helpful, concise, data-driven. Keep your responses concise and actionable. Use 2-3 short paragraphs maximum. Only provide longer responses when the user explicitly asks for more detail or a comprehensive analysis.', messages: [{ role: 'user', content: msg }] }) });
         var data = await res.json();
         var reply = data.reply || "Couldn't process that.";
         var typing = document.getElementById('ccCoachTyping-' + idx);
@@ -5176,6 +5285,70 @@
         }
       }
     }, 30000);
+
+    // ── Chart Fullscreen ──
+(function initChartFullscreen() {
+  var overlay = document.createElement('div');
+  overlay.className = 'chart-fs-overlay';
+  overlay.id = 'chartFsOverlay';
+  overlay.innerHTML = '<div class="chart-fs-header"><span style="font-size:0.9rem;font-weight:600;color:var(--text);">Full Screen</span><button class="chart-fs-close" onclick="closeChartFullscreen()">✕ Close</button></div><div class="chart-fs-body" id="chartFsBody"></div>';
+  document.body.appendChild(overlay);
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && overlay.classList.contains('active')) closeChartFullscreen();
+  });
+})();
+
+var _chartFsOrigParent = null;
+var _chartFsOrigNext = null;
+var _chartFsEl = null;
+
+function openChartFullscreen(el) {
+  var container = el.closest('.fm-widget-container') || el.closest('.chart-container') || el.closest('.cc-widget-body') || el.parentElement;
+  if (!container) return;
+  _chartFsOrigParent = container.parentElement;
+  _chartFsOrigNext = container.nextSibling;
+  _chartFsEl = container;
+  var body = document.getElementById('chartFsBody');
+  body.innerHTML = '';
+  body.appendChild(container);
+  container.style.width = '100%';
+  container.style.height = '100%';
+  document.getElementById('chartFsOverlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeChartFullscreen() {
+  var overlay = document.getElementById('chartFsOverlay');
+  overlay.classList.remove('active');
+  document.body.style.overflow = '';
+  if (_chartFsEl && _chartFsOrigParent) {
+    _chartFsEl.style.width = '';
+    _chartFsEl.style.height = '';
+    if (_chartFsOrigNext) _chartFsOrigParent.insertBefore(_chartFsEl, _chartFsOrigNext);
+    else _chartFsOrigParent.appendChild(_chartFsEl);
+  }
+  _chartFsEl = null; _chartFsOrigParent = null; _chartFsOrigNext = null;
+}
+
+// Add fullscreen buttons to all chart containers
+function addChartFsButtons() {
+  document.querySelectorAll('.fm-widget-container, .chart-container, .cc-widget-body').forEach(function(el) {
+    if (el.querySelector('.chart-fs-btn')) return;
+    el.style.position = 'relative';
+    var btn = document.createElement('button');
+    btn.className = 'chart-fs-btn';
+    btn.title = 'Full screen';
+    btn.innerHTML = '⛶';
+    btn.onclick = function(e) { e.stopPropagation(); openChartFullscreen(this); };
+    el.appendChild(btn);
+  });
+}
+
+// Run on load and after dynamic content
+setInterval(addChartFsButtons, 3000);
+setTimeout(addChartFsButtons, 1500);
+
   </script>
 
   <!-- Fullscreen table overlay -->
