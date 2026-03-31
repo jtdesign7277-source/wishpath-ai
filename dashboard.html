@@ -669,6 +669,72 @@
     .news-sentiment.bullish { color: #22c55e; background: rgba(34,197,94,0.1); }
     .news-sentiment.bearish { color: #ef4444; background: rgba(239,68,68,0.1); }
     .news-sentiment.neutral { color: var(--text-dim); background: rgba(255,255,255,0.05); }
+
+    /* ── In-App Article Reader ── */
+    .article-reader-overlay {
+      display: none; position: fixed; inset: 0; z-index: 10001;
+      background: var(--bg, #191919); overflow-y: auto; -webkit-overflow-scrolling: touch;
+    }
+    .article-reader-overlay.active { display: block; }
+    .article-reader-header {
+      position: sticky; top: 0; z-index: 2;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px; padding-top: calc(12px + env(safe-area-inset-top));
+      background: var(--bg, #191919);
+    }
+    .article-reader-back {
+      background: none; border: none; color: rgba(255,255,255,0.8); cursor: pointer;
+      padding: 6px; display: flex; align-items: center;
+    }
+    .article-reader-back svg { width: 24px; height: 24px; }
+    .article-reader-source-name {
+      font-size: 17px; font-weight: 700; color: rgba(255,255,255,0.95);
+      letter-spacing: -0.01em;
+    }
+    .article-reader-actions { display: flex; gap: 16px; }
+    .article-reader-actions button {
+      background: none; border: none; color: rgba(255,255,255,0.5); cursor: pointer; padding: 4px;
+    }
+    .article-reader-actions svg { width: 20px; height: 20px; }
+    .article-reader-hero {
+      width: 100%; max-height: 280px; object-fit: cover; display: block;
+    }
+    .article-reader-body { padding: 20px 18px 40px; }
+    .article-reader-title {
+      font-size: 26px; font-weight: 800; color: rgba(255,255,255,0.95);
+      line-height: 1.2; margin-bottom: 8px; letter-spacing: -0.02em;
+    }
+    .article-reader-meta {
+      font-size: 13px; color: rgba(255,255,255,0.4); margin-bottom: 20px;
+    }
+    .article-reader-meta .ar-source { color: var(--accent); font-weight: 500; }
+    .article-reader-tickers { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+    .article-reader-tickers .ar-ticker {
+      font-size: 12px; font-weight: 600; color: var(--accent);
+      background: rgba(0,201,167,0.1); border-radius: 4px; padding: 3px 8px;
+    }
+    .article-reader-tickers .ar-sentiment {
+      font-size: 12px; font-weight: 600; border-radius: 4px; padding: 3px 8px;
+    }
+    .ar-sentiment.bullish { color: #22c55e; background: rgba(34,197,94,0.1); }
+    .ar-sentiment.bearish { color: #ef4444; background: rgba(239,68,68,0.1); }
+    .article-reader-text {
+      font-size: 17px; color: rgba(255,255,255,0.8); line-height: 1.65;
+    }
+    .article-reader-text p { margin-bottom: 16px; }
+    .article-reader-divider {
+      border: none; border-top: 1px solid rgba(255,255,255,0.08); margin: 24px 0;
+    }
+    .article-reader-fulllink {
+      display: block; text-align: center; color: var(--accent); font-size: 14px;
+      font-weight: 500; text-decoration: none; padding: 14px; margin-top: 8px;
+      border: 1px solid rgba(0,201,167,0.2); border-radius: 12px;
+      background: rgba(0,201,167,0.05);
+    }
+    .article-reader-loading {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      color: rgba(255,255,255,0.4); font-size: 14px; padding: 20px 0;
+    }
     .news-title { font-size: 0.88rem; font-weight: 600; color: var(--text); line-height: 1.4; margin-bottom: 4px; }
     .news-meta { font-size: 0.7rem; color: var(--text-dim); display: flex; gap: 8px; }
     .news-source { color: var(--accent); font-weight: 500; }
@@ -1724,6 +1790,28 @@
       <span class="nav-ask-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></span>
     </button>
   </nav>
+
+  <!-- In-App Article Reader -->
+  <div class="article-reader-overlay" id="articleReaderOverlay">
+    <div class="article-reader-header">
+      <button class="article-reader-back" onclick="closeArticleReader()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </button>
+      <span class="article-reader-source-name" id="arSourceName"></span>
+      <div class="article-reader-actions">
+        <button onclick="shareArticle()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg></button>
+      </div>
+    </div>
+    <img class="article-reader-hero" id="arHeroImg" src="" alt="" />
+    <div class="article-reader-body">
+      <h1 class="article-reader-title" id="arTitle"></h1>
+      <div class="article-reader-meta"><span class="ar-source" id="arSource"></span> <span id="arDate"></span></div>
+      <div class="article-reader-tickers" id="arTickers"></div>
+      <div class="article-reader-text" id="arText"></div>
+      <hr class="article-reader-divider" />
+      <a class="article-reader-fulllink" id="arFullLink" href="#" target="_blank" rel="noopener">Read full article at source</a>
+    </div>
+  </div>
 
   <!-- Mobile Ask AI Bottom Sheet -->
   <div class="mobile-ask-ai-overlay" id="mobileAskAIOverlay" onclick="if(event.target===this)closeMobileAskAI()">
@@ -3898,18 +3986,19 @@
         var res = await fetch(SUPABASE_FN + '/news?limit=8&symbols=' + encodeURIComponent(newsSymbols));
         var data = await res.json();
         if (data && Array.isArray(data.articles) && data.articles.length > 0) {
-          var html = data.articles.map(function(a) {
+          window._marketNewsArticles = data.articles;
+          var html = data.articles.map(function(a, idx) {
             var imgHtml = a.image ? '<img class="news-item-img" src="' + a.image + '" alt="" onerror="this.style.display=\'none\'" loading="lazy" />' : '';
             var tickerHtml = (a.tickers && a.tickers.length > 0) ? '<div class="news-tickers">' + a.tickers.map(function(t) { return '<span class="news-ticker-pill">' + t + '</span>'; }).join('') + (a.sentiment && a.sentiment !== 'neutral' ? '<span class="news-sentiment ' + a.sentiment + '">' + a.sentiment + '</span>' : '') + '</div>' : '';
             var descHtml = a.description ? '<div style="font-size:0.78rem;color:var(--text-dim);margin-top:4px;line-height:1.4;">' + String(a.description).replace(/</g,'&lt;').substring(0, 140) + '</div>' : '';
-            return '<a class="news-item" href="' + (a.url || '#') + '" target="_blank" rel="noopener">' +
+            return '<div class="news-item" onclick="openArticleReader(window._marketNewsArticles[' + idx + '])" style="cursor:pointer;">' +
               imgHtml +
               '<div class="news-item-body">' +
               tickerHtml +
               '<div class="news-title">' + String(a.title || '').replace(/</g,'&lt;') + '</div>' +
               '<div class="news-meta"><span class="news-source">' + (a.source || '') + '</span><span>' + (a.timeAgo || '') + '</span></div>' +
               descHtml +
-              '</div></a>';
+              '</div></div>';
           }).join('');
           if (newsList) newsList.innerHTML = html;
           if (fmNewsList) fmNewsList.innerHTML = html;
@@ -3923,6 +4012,99 @@
         var errHtml = '<div class="news-item"><div class="news-item-body"><div class="news-title" style="color:var(--text-dim);">Connection error loading news.</div></div></div>';
         if (newsList) newsList.innerHTML = errHtml;
         if (fmNewsList) fmNewsList.innerHTML = errHtml;
+      }
+    }
+
+    // ════════════════════════════════
+    // ── IN-APP ARTICLE READER ──
+    var _currentArticle = null;
+
+    function openArticleReader(articleData) {
+      _currentArticle = articleData;
+      var overlay = document.getElementById('articleReaderOverlay');
+      var heroImg = document.getElementById('arHeroImg');
+      var title = document.getElementById('arTitle');
+      var source = document.getElementById('arSource');
+      var date = document.getElementById('arDate');
+      var tickers = document.getElementById('arTickers');
+      var text = document.getElementById('arText');
+      var fullLink = document.getElementById('arFullLink');
+      var sourceName = document.getElementById('arSourceName');
+
+      title.textContent = articleData.title || '';
+      source.textContent = articleData.source || '';
+      date.textContent = articleData.timeAgo ? ' \u00B7 ' + articleData.timeAgo : (articleData.published ? ' \u00B7 ' + articleData.published : '');
+      sourceName.textContent = articleData.source || 'Article';
+
+      if (articleData.image) {
+        heroImg.src = articleData.image;
+        heroImg.style.display = 'block';
+        heroImg.onerror = function() { this.style.display = 'none'; };
+      } else {
+        heroImg.style.display = 'none';
+      }
+
+      // Tickers + sentiment
+      var tickerHtml = '';
+      if (articleData.tickers && articleData.tickers.length > 0) {
+        tickerHtml = articleData.tickers.map(function(t) { return '<span class="ar-ticker">' + t + '</span>'; }).join('');
+      }
+      if (articleData.sentiment && articleData.sentiment !== 'neutral') {
+        tickerHtml += '<span class="ar-sentiment ' + articleData.sentiment + '">' + articleData.sentiment + '</span>';
+      }
+      tickers.innerHTML = tickerHtml;
+
+      // Show description and loading state for AI summary
+      var desc = articleData.description || articleData.snippet || '';
+      text.innerHTML = '<p>' + desc.replace(/</g, '&lt;') + '</p>' +
+        '<div class="article-reader-loading" id="arLoadingAI"><span style="animation:spin 1s linear infinite;display:inline-block;">&#x21BB;</span> Loading AI analysis...</div>';
+
+      fullLink.href = articleData.url || '#';
+      fullLink.textContent = 'Read full article at ' + (articleData.source || 'source');
+
+      overlay.classList.add('active');
+      overlay.scrollTop = 0;
+
+      // Fetch AI summary/analysis
+      fetchArticleAnalysis(articleData);
+    }
+
+    function closeArticleReader() {
+      document.getElementById('articleReaderOverlay').classList.remove('active');
+      _currentArticle = null;
+    }
+
+    function shareArticle() {
+      if (_currentArticle && navigator.share) {
+        navigator.share({ title: _currentArticle.title, url: _currentArticle.url }).catch(function(){});
+      } else if (_currentArticle) {
+        navigator.clipboard.writeText(_currentArticle.url || '').then(function() {
+          alert('Link copied!');
+        });
+      }
+    }
+
+    async function fetchArticleAnalysis(article) {
+      var text = document.getElementById('arText');
+      var loading = document.getElementById('arLoadingAI');
+      try {
+        var res = await fetch(EDGE_FN, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            coachMode: true,
+            model: 'claude-sonnet-4-20250514',
+            systemPrompt: 'You are a financial journalist. Write a 3-4 paragraph article analysis based on the headline and context provided. Write in a professional but engaging tone. Include market impact analysis. Do NOT use markdown formatting — write plain text paragraphs only. Do not wrap in quotes.',
+            messages: [{ role: 'user', content: 'Write a brief article analysis for this news:\n\nHeadline: ' + article.title + '\nSource: ' + (article.source || '') + '\nDescription: ' + (article.description || article.snippet || '') + '\nTickers: ' + (article.tickers || []).join(', ') + '\nSentiment: ' + (article.sentiment || 'neutral') }]
+          })
+        });
+        var data = await res.json();
+        var reply = data.reply || '';
+        if (reply && text) {
+          var paragraphs = reply.split(/\n\n+/).filter(function(p) { return p.trim(); });
+          text.innerHTML = paragraphs.map(function(p) { return '<p>' + p.replace(/</g, '&lt;').replace(/\*\*/g, '') + '</p>'; }).join('');
+        }
+      } catch(e) {
+        if (loading) loading.style.display = 'none';
       }
     }
 
@@ -5023,26 +5205,17 @@
       var articles = window._newsFeedArticles || [];
       var a = articles[idx];
       if (!a) return;
-      var existing = document.getElementById('newsDetailOverlay');
-      if (existing) existing.remove();
-      var overlay = document.createElement('div');
-      overlay.className = 'news-detail-overlay active';
-      overlay.id = 'newsDetailOverlay';
-      overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
-      var imgHtml = (a.image_url || a.imageUrl) ? '<img src="' + (a.image_url || a.imageUrl) + '" alt="" onerror="this.style.display=\'none\'" />' : '';
-      overlay.innerHTML = '<div class="news-detail-panel">' +
-        '<div style="display:flex;justify-content:flex-end;margin-bottom:12px;"><button onclick="document.getElementById(\'newsDetailOverlay\').remove()" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text-muted);padding:6px 14px;cursor:pointer;font:inherit;font-size:0.82rem;">✕ Close</button></div>' +
-        imgHtml +
-        '<h2>' + (a.title || '').replace(/</g,'&lt;') + '</h2>' +
-        '<div class="meta"><span style="color:var(--accent);font-weight:600;">' + (a.source || '') + '</span> · ' + (a.published || '') + '</div>' +
-        '<div class="body">' + (a.aiSummary ? '<p style="color:var(--accent);font-weight:500;margin-bottom:12px;">AI Summary: ' + a.aiSummary.replace(/</g,'&lt;') + '</p>' : '') +
-        (a.snippet ? '<p>' + a.snippet.replace(/</g,'&lt;') + '</p>' : '') + '</div>' +
-        '<div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;">' +
-          '<button class="news-feed-action" onclick="event.stopPropagation();askAIAboutArticle(' + idx + ');document.getElementById(\'newsDetailOverlay\').remove();">🤖 Ask AI</button>' +
-          '<button class="news-feed-action" onclick="event.stopPropagation();saveArticleToNotes(' + idx + ');">💾 Save</button>' +
-          (a.url ? '<a class="news-feed-action" href="' + a.url + '" target="_blank" rel="noopener" style="text-decoration:none;" onclick="event.stopPropagation();">🔗 Full Article</a>' : '') +
-        '</div></div>';
-      document.body.appendChild(overlay);
+      // Use the unified article reader
+      openArticleReader({
+        title: a.title,
+        source: a.source,
+        description: a.snippet || a.aiSummary || '',
+        url: a.url,
+        image: a.image_url || a.imageUrl || null,
+        tickers: a.tickers || [],
+        sentiment: a.sentiment || 'neutral',
+        timeAgo: a.published || ''
+      });
     }
 
     function askAIAboutArticle(idx) {
