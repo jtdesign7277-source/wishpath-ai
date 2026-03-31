@@ -201,6 +201,29 @@
     .auto-table td { padding: 8px 12px; border-bottom: 1px solid rgba(48,54,61,0.3); color: var(--text-muted); }
     .auto-table tr:hover td { background: rgba(255,255,255,0.02); }
 
+    /* AI-generated table: scrollable wrapper + action bar */
+    .table-scroll-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 8px 0 2px; border-radius: 8px; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
+    .table-scroll-wrap::-webkit-scrollbar { height: 3px; }
+    .table-scroll-wrap::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+    .table-scroll-wrap::-webkit-scrollbar-track { background: transparent; }
+    .table-scroll-hint { font-size: 0.66rem; color: rgba(255,255,255,0.22); text-align: center; padding: 1px 0 3px; letter-spacing: 0.04em; }
+    .table-action-bar { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 6px; }
+    .table-action-btn { display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; background: #202020; border: 1px solid rgba(255,255,255,0.1); border-radius: 99px; color: rgba(255,255,255,0.55); font-size: 0.7rem; font-weight: 500; cursor: pointer; font-family: inherit; transition: all 0.15s; white-space: nowrap; line-height: 1.4; }
+    .table-action-btn:hover { background: rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.18); color: rgba(255,255,255,0.85); }
+    .table-action-btn:disabled { opacity: 0.5; cursor: default; }
+
+    /* Fullscreen table overlay */
+    #tableFullscreenOverlay { display: none; position: fixed; inset: 0; background: rgba(13,17,23,0.98); z-index: 9999; flex-direction: column; }
+    #tableFullscreenOverlay.active { display: flex; }
+    .tfs-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.08); flex-shrink: 0; }
+    .tfs-title { font-size: 0.85rem; font-weight: 600; color: rgba(255,255,255,0.5); }
+    .tfs-close { padding: 7px 16px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: rgba(255,255,255,0.65); font: inherit; font-size: 0.82rem; cursor: pointer; transition: all 0.15s; }
+    .tfs-close:hover { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.9); }
+    #tableFullscreenContent { flex: 1; overflow: auto; padding: 16px; -webkit-overflow-scrolling: touch; }
+    #tableFullscreenContent table { font-size: 12px; min-width: max-content; border-collapse: collapse; }
+    #tableFullscreenContent th { text-align: left; padding: 7px 12px; background: rgba(255,255,255,0.04); border-bottom: 1px solid rgba(48,54,61,0.8); font-weight: 600; color: #e6edf3; font-size: 0.72rem; text-transform: uppercase; white-space: nowrap; }
+    #tableFullscreenContent td { padding: 7px 12px; border-bottom: 1px solid rgba(48,54,61,0.3); color: #8b949e; white-space: nowrap; }
+
     /* Paywall modal */
     .paywall-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
     .paywall-overlay.active { display: flex; }
@@ -862,8 +885,8 @@
       // Scroll to show TOP of new message so user reads from the beginning
       container.scrollTop = msgDiv.offsetTop - 8;
 
-      // Rich markdown → HTML conversion
-      var htmlText = text
+      // Rich markdown → HTML conversion (tables first, before \n→<br>)
+      var htmlText = convertMarkdownTables(text)
         .replace(/\n/g, '<br>')
         .replace(/###\s*(.+?)(<br>|$)/g, '<div style="font-weight:700;color:#e6edf3;font-size:0.95em;margin:12px 0 6px;">$1</div>')
         .replace(/##\s*(.+?)(<br>|$)/g, '<div style="font-weight:700;color:#00c9a7;font-size:1.05em;margin:14px 0 8px;border-bottom:1px solid rgba(0,201,167,0.2);padding-bottom:6px;">$1</div>')
@@ -880,7 +903,7 @@
         if (i >= chars.length) {
           msgDiv.innerHTML = buffer;
           container.scrollTop = container.scrollHeight;
-          if (callback) callback();
+          if (callback) callback(msgDiv);
           return;
         }
         // Handle HTML tags — add whole tag at once
@@ -1528,7 +1551,7 @@
         coachHistory.push({ role: 'assistant', content: reply });
 
         stopThinking('coachTyping');
-        typewriterEffect(msgs, reply, function() { saveConversation(wishId); incrementAgentUsage(); });
+        typewriterEffect(msgs, reply, function(msgDiv) { wrapAiTables(msgDiv); saveConversation(wishId); incrementAgentUsage(); });
 
       } catch (e) {
         stopThinking('coachTyping');
@@ -1747,7 +1770,7 @@
         var reply = data.reply || 'I couldn\'t process that. Try again.';
         noteCoachHistory.push({ role: 'assistant', content: reply });
         stopThinking('noteCoachTyping');
-        typewriterEffect(msgs, reply, function() { incrementAgentUsage(); });
+        typewriterEffect(msgs, reply, function(msgDiv) { wrapAiTables(msgDiv); incrementAgentUsage(); });
       } catch(e) {
         stopThinking('noteCoachTyping');
         msgs.innerHTML += '<div class="msg ai" style="color:#f85149;">Connection error. Please try again.</div>';
@@ -2020,7 +2043,8 @@
         todoCoachHistory.push({ role: 'assistant', content: reply });
 
         stopThinking('todoCoachTyping');
-        typewriterEffect(msgs, reply, async function() {
+        typewriterEffect(msgs, reply, async function(msgDiv) {
+          wrapAiTables(msgDiv);
           var parsed = parseAndRenderStructured(reply);
           if (parsed) await autoSaveStructuredContent(parsed);
           incrementAgentUsage();
@@ -2254,7 +2278,7 @@
         var thinking = document.getElementById('mobileHomeThinking');
         if (thinking) thinking.remove();
         var msgs = document.getElementById('mobileChatMessages');
-        var htmlReply = reply
+        var htmlReply = convertMarkdownTables(reply)
           .replace(/\n/g, '<br>')
           .replace(/###\s*(.+?)(<br>|$)/g, '<div style="font-weight:700;color:#e6edf3;font-size:0.95em;margin:12px 0 6px;">$1</div>')
           .replace(/##\s*(.+?)(<br>|$)/g, '<div style="font-weight:700;color:#00c9a7;font-size:1.05em;margin:14px 0 8px;border-bottom:1px solid rgba(0,201,167,0.2);padding-bottom:6px;">$1</div>')
@@ -2264,6 +2288,7 @@
         aiMsgWrap.style.marginBottom = '16px';
         aiMsgWrap.innerHTML = '<div style="display:inline-block;max-width:90%;background:#202020;padding:12px 16px;border-radius:16px 16px 16px 4px;color:rgba(255,255,255,0.85);font-size:15px;line-height:1.6;">' + htmlReply + '</div>';
         msgs.appendChild(aiMsgWrap);
+        wrapAiTables(aiMsgWrap);
         // Scroll to TOP of new message so user reads from the beginning
         msgs.scrollTop = aiMsgWrap.offsetTop - 8;
         incrementAgentUsage();
@@ -2362,6 +2387,153 @@
       }
     }
 
+    // ── Table scroll wrapping + action bar ──
+
+    // Convert markdown table syntax to HTML (applied before \n→<br> in chat renderers)
+    function convertMarkdownTables(text) {
+      return text.replace(/(\|.+\|\n)(\|[-:\s|]+\|\n)((?:\|.+\|\n?)*)/g, function(match) {
+        var lines = match.trim().split('\n');
+        if (lines.length < 3) return match;
+        var headers = lines[0].split('|').map(function(c){ return c.trim(); }).filter(Boolean);
+        var html = '<table class="auto-table"><thead><tr>';
+        headers.forEach(function(h){ html += '<th>' + h + '</th>'; });
+        html += '</tr></thead><tbody>';
+        for (var i = 2; i < lines.length; i++) {
+          if (!lines[i] || !lines[i].trim()) continue;
+          var cells = lines[i].split('|').map(function(c){ return c.trim(); }).filter(Boolean);
+          if (!cells.length) continue;
+          html += '<tr>';
+          cells.forEach(function(c){ html += '<td>' + c + '</td>'; });
+          html += '</tr>';
+        }
+        html += '</tbody></table>';
+        return html;
+      });
+    }
+
+    // Find the table associated with an action bar button
+    function getTableFromBtn(btn) {
+      var bar = btn.closest('.table-action-bar');
+      if (!bar) return null;
+      var sibling = bar.previousElementSibling; // hint
+      if (sibling) sibling = sibling.previousElementSibling; // wrap
+      return (sibling && sibling.classList.contains('table-scroll-wrap')) ? sibling.querySelector('table') : null;
+    }
+
+    // Wrap all tables inside a container with scroll wrapper + hint + action bar
+    function wrapAiTables(container) {
+      container.querySelectorAll('table').forEach(function(table) {
+        if (table.closest('.table-scroll-wrap') || table.closest('#tableFullscreenContent')) return;
+        var wrap = document.createElement('div');
+        wrap.className = 'table-scroll-wrap';
+        table.parentNode.insertBefore(wrap, table);
+        wrap.appendChild(table);
+
+        var hint = document.createElement('div');
+        hint.className = 'table-scroll-hint';
+        hint.textContent = '← Scroll →';
+        wrap.insertAdjacentElement('afterend', hint);
+
+        var bar = document.createElement('div');
+        bar.className = 'table-action-bar';
+        bar.innerHTML =
+          '<button class="table-action-btn" onclick="saveTableToNotes(this)">&#x1F4BE; Save to Notes</button>' +
+          '<button class="table-action-btn" onclick="downloadTableCsv(this)">&#x1F4E5; Download CSV</button>' +
+          '<button class="table-action-btn" onclick="emailTableToMe(this)">&#x1F4E7; Email to Me</button>' +
+          '<button class="table-action-btn" onclick="openTableFullscreen(this)">&#x26F6; Full View</button>';
+        hint.insertAdjacentElement('afterend', bar);
+
+        // Only show scroll hint when table overflows
+        setTimeout(function() {
+          if (wrap.scrollWidth <= wrap.clientWidth) hint.style.display = 'none';
+        }, 100);
+      });
+    }
+
+    // Save conversation containing this table to coach_conversations
+    async function saveTableToNotes(btn) {
+      var table = getTableFromBtn(btn);
+      if (!table) return;
+      btn.disabled = true;
+      btn.textContent = '⏳ Saving…';
+      try {
+        var sb = getSupabase();
+        var user = await getUser();
+        if (!user) { alert('Please log in first.'); btn.disabled = false; btn.textContent = '💾 Save to Notes'; return; }
+        // Collect messages from nearest message container
+        var msgsContainer = btn.closest('[id$="Messages"]') || btn.closest('.coach-messages') || btn.closest('#mobileChatMessages');
+        var history = [];
+        if (msgsContainer) {
+          msgsContainer.querySelectorAll('.msg.user, .msg.ai').forEach(function(m) {
+            history.push({ role: m.classList.contains('user') ? 'user' : 'assistant', content: m.innerText });
+          });
+        }
+        var firstUser = history.find(function(m){ return m.role === 'user'; });
+        var title = firstUser ? firstUser.content.substring(0, 60) : 'Table Chat';
+        var wishId = 'table-' + Date.now();
+        await sb.from('coach_conversations').insert({ user_id: user.id, wish_id: wishId, messages: history, summary: title, title: title });
+        btn.textContent = '✅ Saved!';
+        setTimeout(function(){ btn.disabled = false; btn.textContent = '💾 Save to Notes'; }, 2500);
+        renderSavedChatsSidebar();
+      } catch(e) {
+        btn.textContent = '❌ Failed';
+        setTimeout(function(){ btn.disabled = false; btn.textContent = '💾 Save to Notes'; }, 2000);
+      }
+    }
+
+    // Download the table as a CSV file
+    function downloadTableCsv(btn) {
+      var table = getTableFromBtn(btn);
+      if (!table) return;
+      var rows = [];
+      table.querySelectorAll('tr').forEach(function(tr) {
+        var cells = [];
+        tr.querySelectorAll('th, td').forEach(function(cell) {
+          cells.push('"' + cell.innerText.replace(/"/g, '""') + '"');
+        });
+        rows.push(cells.join(','));
+      });
+      var csv = rows.join('\n');
+      var blob = new Blob([csv], { type: 'text/csv' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url; a.download = 'wishpath-table-' + Date.now() + '.csv';
+      document.body.appendChild(a); a.click();
+      document.body.removeChild(a); URL.revokeObjectURL(url);
+    }
+
+    // Open mailto with table as tab-separated plain text
+    async function emailTableToMe(btn) {
+      var table = getTableFromBtn(btn);
+      if (!table) return;
+      var lines = [];
+      table.querySelectorAll('tr').forEach(function(tr) {
+        var cells = [];
+        tr.querySelectorAll('th, td').forEach(function(cell){ cells.push(cell.innerText.trim()); });
+        lines.push(cells.join('\t'));
+      });
+      var body = 'Your WishPath Table\n\n' + lines.join('\n') + '\n\n— Sent from WishPath.ai';
+      var email = '';
+      try { var sess = await getSession(); if (sess) email = sess.user.email || ''; } catch(e) {}
+      window.location.href = 'mailto:' + encodeURIComponent(email) + '?subject=' + encodeURIComponent('Your WishPath Table') + '&body=' + encodeURIComponent(body);
+    }
+
+    // Open table in fullscreen scrollable overlay
+    function openTableFullscreen(btn) {
+      var table = getTableFromBtn(btn);
+      if (!table) return;
+      var content = document.getElementById('tableFullscreenContent');
+      content.innerHTML = '';
+      content.appendChild(table.cloneNode(true));
+      document.getElementById('tableFullscreenOverlay').classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeTableFullscreen() {
+      document.getElementById('tableFullscreenOverlay').classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
     // ── Mobile bottom bar actions ──
     function mobileBottomSave() {
       var activeView = document.querySelector('.view.active');
@@ -2378,5 +2550,14 @@
       else { hideMobileHome(); showView('newwish'); }
     }
   </script>
+
+  <!-- Fullscreen table overlay -->
+  <div id="tableFullscreenOverlay">
+    <div class="tfs-header">
+      <span class="tfs-title">⛶ Full View</span>
+      <button class="tfs-close" onclick="closeTableFullscreen()">✕ Close</button>
+    </div>
+    <div id="tableFullscreenContent"></div>
+  </div>
 </body>
 </html>
