@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Dashboard — WishPath.ai</title>
-  <meta name="theme-color" content="#0d1117" />
+  <meta name="theme-color" content="#191919" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="WishPath" />
@@ -17,8 +17,8 @@
     *::-webkit-scrollbar { display: none; }
     :root {
       /* Core palette — every color references a variable */
-      --bg: #0d1117; --background: #0d1117;
-      --card: #161b22; --card-border: rgba(255,255,255,0.06);
+      --bg: #191919; --background: #191919;
+      --card: #252525; --card-border: rgba(255,255,255,0.08);
       --border: #30363d;
       --accent: #00c9a7; --accent-foreground: #0d1117;
       --accent-dim: rgba(0,201,167,0.12);
@@ -37,7 +37,7 @@
     body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; overflow-x: hidden !important; overscroll-behavior-x: none !important; max-width: 100vw !important; }
 
     /* Sidebar */
-    .sidebar { width: 240px; background: linear-gradient(180deg, rgba(13,17,23,0.95) 0%, rgba(10,10,15,0.98) 100%); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-right: 1px solid rgba(255,255,255,0.06); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 50; transition: transform 0.3s ease, width 0.3s ease; overflow: hidden; box-shadow: 4px 0 24px rgba(0,0,0,0.4); }
+    .sidebar { width: 240px; background: linear-gradient(180deg, rgba(25,25,25,0.97) 0%, rgba(20,20,20,0.99) 100%); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-right: 1px solid rgba(255,255,255,0.06); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 50; transition: transform 0.3s ease, width 0.3s ease; overflow: hidden; box-shadow: 4px 0 24px rgba(0,0,0,0.4); }
     .sidebar.collapsed { transform: translateX(-240px); }
     .sidebar-logo { padding: 20px 20px 16px; font-size: 1.1rem; font-weight: 800; display: flex; align-items: center; justify-content: space-between; min-height: 44px; }
     .sidebar-collapse-btn { background: none; border: none; color: var(--text-dim); cursor: pointer; padding: 4px 6px; border-radius: 4px; font-size: 1rem; line-height: 1; transition: all 0.15s; }
@@ -97,7 +97,7 @@
     .coach-right-wrapper { display: flex; flex-direction: column; min-height: 0; border-left: 1px solid var(--border); }
 
     /* Notion-style tab bar */
-    .tab-bar { display: flex; align-items: center; gap: 8px; background: linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.3) 100%); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-bottom: 1px solid rgba(255,255,255,0.06); flex-shrink: 0; overflow-x: auto; padding: 0 4px; }
+    .tab-bar { display: flex; align-items: center; gap: 8px; background: linear-gradient(180deg, rgba(25,25,25,0.97) 0%, rgba(22,22,22,0.97) 100%); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-bottom: 1px solid rgba(255,255,255,0.06); flex-shrink: 0; overflow-x: auto; padding: 0 4px; }
     .tab-bar::-webkit-scrollbar { height: 0; }
     .tab-item { display: flex; align-items: center; gap: 6px; padding: 8px 14px; font-size: 0.78rem; font-weight: 500; color: var(--text-dim); cursor: pointer; white-space: nowrap; border-bottom: 2px solid transparent; transition: all 0.15s; position: relative; max-width: 200px; }
     .tab-item:hover { color: var(--text-muted); background: rgba(255,255,255,0.03); }
@@ -387,22 +387,25 @@
       /* Hide bottom nav when sidebar is open */
       .sidebar.open ~ .mobile-nav-bar { display: none !important; }
 
-      /* ── Native bottom tab navigation ── */
+      /* ── Notion-style bottom bar ── */
       .mobile-nav-bar {
         display: flex !important;
         position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important;
-        background: rgba(13,17,23,0.92);
-        backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-        border-top: 1px solid rgba(255,255,255,0.07);
+        background: #1c1c1c;
+        backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+        border-top: 1px solid rgba(255,255,255,0.08);
         z-index: 9998;
-        box-shadow: 0 -2px 20px rgba(0,0,0,0.5);
+        box-shadow: 0 -1px 0 rgba(255,255,255,0.06), 0 -8px 24px rgba(0,0,0,0.4);
         padding-bottom: env(safe-area-inset-bottom);
-        align-items: stretch;
+        align-items: center;
+        padding-left: 20px;
+        padding-right: 20px;
+        height: calc(56px + env(safe-area-inset-bottom));
       }
       .mobile-nav-item {
         flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-        gap: 3px; padding: 8px 4px; min-height: 56px;
-        background: none; border: none; color: rgba(255,255,255,0.38);
+        gap: 3px; padding: 8px 4px;
+        background: none; border: none; color: rgba(255,255,255,0.45);
         font-family: inherit; font-size: 10px; font-weight: 500; letter-spacing: 0.01em;
         cursor: pointer; -webkit-tap-highlight-color: transparent;
         transition: color 0.15s ease, transform 0.1s ease;
@@ -411,6 +414,25 @@
       .mobile-nav-item.active { color: var(--accent); }
       .mobile-nav-item.active svg { filter: drop-shadow(0 0 4px rgba(0,201,167,0.4)); }
       .mobile-nav-item:active { transform: scale(0.88); opacity: 0.7; }
+      /* Center Ask AI pill */
+      .mobile-nav-item[data-nav="coach"] {
+        flex: 0 0 auto;
+        flex-direction: row;
+        gap: 7px;
+        background: rgba(255,255,255,0.07);
+        border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 22px;
+        padding: 9px 22px;
+        color: rgba(255,255,255,0.9);
+        font-size: 14px;
+        font-weight: 600;
+        min-width: 118px;
+        margin: 0 8px;
+        letter-spacing: 0;
+      }
+      .mobile-nav-item[data-nav="coach"] svg { width: 18px; height: 18px; margin-bottom: 0; }
+      .mobile-nav-item[data-nav="coach"].active,
+      .mobile-nav-item[data-nav="coach"]:hover { background: rgba(0,201,167,0.12); border-color: rgba(0,201,167,0.25); color: var(--accent); }
 
       /* ── Ask AI bottom sheet ── */
       .mobile-ask-ai-overlay.active {
@@ -489,28 +511,28 @@
       .mobile-home-topbar { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px 8px; height: 56px; }
       .mobile-home-topbar-logo { font-size: 22px; line-height: 1; }
       .mobile-info-btn { background: none; border: none; color: rgba(255,255,255,0.3); font-size: 18px; cursor: pointer; padding: 4px; line-height: 1; }
-      .mobile-home-inner { padding: 8px 20px 0; }
+      .mobile-home-inner { padding: 12px 20px 0; }
       .mobile-home-title { font-size: 26px; font-weight: 700; color: rgba(255,255,255,0.9); line-height: 1.3; margin-bottom: 24px; text-align: center; }
       .mobile-home-input-wrap { position: relative; margin-bottom: 14px; }
-      .mobile-home-input { width: 100%; padding: 14px 50px 14px 18px; background: #0a0a0f; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; color: rgba(255,255,255,0.9); font: inherit; font-size: 15px; outline: none; resize: none; min-height: 52px; max-height: 120px; overflow-y: auto; display: block; box-shadow: 8px 8px 16px rgba(0,0,0,0.6), -4px -4px 12px rgba(255,255,255,0.03); transition: all 0.2s ease; }
+      .mobile-home-input { width: 100%; padding: 14px 50px 14px 18px; background: #242424; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; color: rgba(255,255,255,0.9); font: inherit; font-size: 15px; outline: none; resize: none; min-height: 52px; max-height: 120px; overflow-y: auto; display: block; box-shadow: 8px 8px 16px rgba(0,0,0,0.6), -4px -4px 12px rgba(255,255,255,0.03); transition: all 0.2s ease; }
       .mobile-home-input::placeholder { color: rgba(255,255,255,0.3); }
       .mobile-home-input:focus { border-color: rgba(0,201,167,0.25); box-shadow: 8px 8px 16px rgba(0,0,0,0.6), -4px -4px 12px rgba(255,255,255,0.03), 0 0 0 1px rgba(0,201,167,0.15); }
       .mobile-home-input-send { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: rgba(0,201,167,0.6); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px; transition: color 0.2s ease; }
       .mobile-home-input-send:active { color: var(--accent); }
       .mobile-chips-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 32px; }
-      .mobile-chip { display: inline-flex; align-items: center; gap: 6px; background: #0a0a0f; border: 1px solid rgba(255,255,255,0.06); border-radius: 20px; padding: 8px 14px; font-size: 13px; color: rgba(255,255,255,0.7); cursor: pointer; white-space: nowrap; box-shadow: 4px 4px 8px rgba(0,0,0,0.5), -2px -2px 6px rgba(255,255,255,0.02); transition: all 0.2s ease; -webkit-tap-highlight-color: transparent; }
+      .mobile-chip { display: inline-flex; align-items: center; gap: 6px; background: #252525; border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 8px 14px; font-size: 13px; color: rgba(255,255,255,0.7); cursor: pointer; white-space: nowrap; box-shadow: 4px 4px 8px rgba(0,0,0,0.5), -2px -2px 6px rgba(255,255,255,0.02); transition: all 0.2s ease; -webkit-tap-highlight-color: transparent; }
       .mobile-chip span { font-size: 13px; line-height: 1; }
       .mobile-chip:active { border-color: rgba(0,201,167,0.2); color: rgba(255,255,255,0.95); box-shadow: 2px 2px 4px rgba(0,0,0,0.5), -1px -1px 3px rgba(255,255,255,0.02), 0 0 10px rgba(0,201,167,0.1); transform: scale(0.97); }
-      .mobile-sec-label { font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 10px; }
+      .mobile-sec-label { font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 12px; }
       .mobile-recents-row { display: flex; gap: 12px; overflow-x: auto; -webkit-overflow-scrolling: touch; scroll-snap-type: x mandatory; padding-bottom: 8px; margin-bottom: 24px; }
       .mobile-recents-row::-webkit-scrollbar { display: none; }
-      .mobile-recent-card { min-width: 155px; background: #0a0a0f; border: 1px solid rgba(255,255,255,0.04); border-radius: 16px; padding: 16px; scroll-snap-align: start; cursor: pointer; flex-shrink: 0; box-shadow: 8px 8px 16px rgba(0,0,0,0.6), -4px -4px 12px rgba(255,255,255,0.03); transition: all 0.3s ease; }
+      .mobile-recent-card { min-width: 155px; background: #252525; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 16px; scroll-snap-align: start; cursor: pointer; flex-shrink: 0; box-shadow: 8px 8px 16px rgba(0,0,0,0.6), -4px -4px 12px rgba(255,255,255,0.03); transition: all 0.3s ease; }
       .mobile-recent-card:active { border-color: rgba(0,201,167,0.2); box-shadow: 4px 4px 8px rgba(0,0,0,0.5), -2px -2px 6px rgba(255,255,255,0.02); transform: scale(0.97); }
       .mobile-recent-icon { font-size: 22px; margin-bottom: 8px; }
       .mobile-recent-title { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.85); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; max-width: 123px; }
       .mobile-recent-meta { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 4px; }
       .mobile-nav-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-      .mobile-nav-tile { background: #0a0a0f; border: 1px solid rgba(255,255,255,0.04); border-radius: 16px; padding: 18px 16px; cursor: pointer; display: flex; align-items: center; gap: 10px; box-shadow: 8px 8px 16px rgba(0,0,0,0.6), -4px -4px 12px rgba(255,255,255,0.03); transition: all 0.3s ease; }
+      .mobile-nav-tile { background: #252525; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 18px 16px; cursor: pointer; display: flex; align-items: center; gap: 10px; box-shadow: 8px 8px 16px rgba(0,0,0,0.6), -4px -4px 12px rgba(255,255,255,0.03); transition: all 0.3s ease; }
       .mobile-nav-tile:active { border-color: rgba(0,201,167,0.2); box-shadow: 4px 4px 8px rgba(0,0,0,0.5), -2px -2px 6px rgba(255,255,255,0.02); transform: scale(0.97); }
       .mobile-nav-tile-icon { font-size: 20px; }
       .mobile-nav-tile-label { font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.85); }
@@ -518,6 +540,49 @@
       /* ── Green Notion-style checkboxes ── */
       .todo-check { border-radius: 5px !important; width: 20px !important; height: 20px !important; }
       .todo-check.done { background: #22c55e !important; border-color: #22c55e !important; }
+
+      /* ── Notion-style Templates Browser ── */
+      .mobile-templates-overlay { display: none; position: fixed; inset: 0; background: #191919; z-index: 510; flex-direction: column; overflow: hidden; }
+      .mobile-templates-overlay.active { display: flex; animation: slideUpSheet 0.25s ease; }
+      .tmpl-topbar { display: flex; align-items: center; justify-content: space-between; padding: 16px 16px 12px; padding-top: max(16px, env(safe-area-inset-top)); border-bottom: 1px solid rgba(255,255,255,0.08); flex-shrink: 0; }
+      .tmpl-topbar-title { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); }
+      .tmpl-topbar-btn { background: none; border: none; color: rgba(255,255,255,0.5); font-size: 20px; cursor: pointer; padding: 4px 8px; line-height: 1; font-family: inherit; -webkit-tap-highlight-color: transparent; }
+      .tmpl-topbar-btn:active { color: rgba(255,255,255,0.9); }
+      .tmpl-search-wrap { padding: 12px 16px 0; flex-shrink: 0; }
+      .tmpl-search { width: 100%; padding: 11px 16px 11px 40px; background: #252525; border: 1px solid rgba(255,255,255,0.09); border-radius: 12px; color: rgba(255,255,255,0.9); font: inherit; font-size: 15px; outline: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='rgba(255,255,255,0.35)' stroke-width='2' viewBox='0 0 24 24'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: 12px center; }
+      .tmpl-search::placeholder { color: rgba(255,255,255,0.3); }
+      .tmpl-cats-wrap { padding: 12px 16px 0; flex-shrink: 0; overflow-x: auto; -webkit-overflow-scrolling: touch; display: flex; gap: 8px; }
+      .tmpl-cats-wrap::-webkit-scrollbar { display: none; }
+      .tmpl-cat { display: inline-flex; align-items: center; gap: 5px; padding: 7px 14px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); background: #252525; color: rgba(255,255,255,0.6); font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; white-space: nowrap; flex-shrink: 0; transition: all 0.15s; -webkit-tap-highlight-color: transparent; }
+      .tmpl-cat.active { background: var(--accent); border-color: var(--accent); color: #0d1117; font-weight: 700; }
+      .tmpl-cat:active { transform: scale(0.95); }
+      .tmpl-section-hdr { padding: 20px 16px 8px; font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.5); display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+      .tmpl-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 0 16px calc(var(--nav-h) + env(safe-area-inset-bottom) + 20px); }
+      .tmpl-card { display: flex; align-items: center; gap: 14px; background: #252525; border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 14px; margin-bottom: 10px; cursor: pointer; transition: all 0.15s; -webkit-tap-highlight-color: transparent; }
+      .tmpl-card:active { transform: scale(0.97); border-color: rgba(0,201,167,0.2); }
+      .tmpl-thumb { width: 56px; height: 56px; border-radius: 10px; background: linear-gradient(135deg, #1a2a1a, #1a2020); display: flex; align-items: center; justify-content: center; font-size: 26px; flex-shrink: 0; }
+      .tmpl-info { flex: 1; min-width: 0; }
+      .tmpl-name { font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.9); margin-bottom: 4px; }
+      .tmpl-meta { font-size: 12px; color: rgba(255,255,255,0.4); display: flex; gap: 8px; align-items: center; }
+      .tmpl-badge { background: rgba(0,201,167,0.1); color: var(--accent); border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 600; }
+      .tmpl-arrow { color: rgba(255,255,255,0.25); font-size: 18px; flex-shrink: 0; }
+
+      /* ── Notion-style AI chat empty state ── */
+      .coach-notion-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; padding: 40px 28px 20px; text-align: center; }
+      .coach-notion-empty.hidden { display: none !important; }
+      .coach-notion-wand { font-size: 56px; margin-bottom: 20px; filter: drop-shadow(0 0 24px rgba(0,201,167,0.35)); animation: float 4s ease-in-out infinite; }
+      .coach-notion-heading { font-size: 22px; font-weight: 700; color: rgba(255,255,255,0.92); margin-bottom: 32px; line-height: 1.3; }
+      .coach-notion-suggestions { width: 100%; display: flex; flex-direction: column; gap: 2px; }
+      .coach-notion-suggestion { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 12px; cursor: pointer; transition: background 0.15s; -webkit-tap-highlight-color: transparent; border: none; background: none; width: 100%; font-family: inherit; text-align: left; }
+      .coach-notion-suggestion:active { background: rgba(255,255,255,0.06); transform: scale(0.98); }
+      .coach-notion-suggestion-icon { font-size: 22px; flex-shrink: 0; width: 32px; text-align: center; }
+      .coach-notion-suggestion-text { font-size: 15px; color: rgba(255,255,255,0.72); line-height: 1.4; }
+
+      /* ── Notion-style coach input bar ── */
+      .coach-input-row { background: #1c1c1c !important; border-top: 1px solid rgba(255,255,255,0.07) !important; padding: 10px 16px calc(10px + env(safe-area-inset-bottom)) !important; margin: 0 !important; align-items: center !important; gap: 10px !important; }
+      .coach-input { background: #282828 !important; border: 1px solid rgba(255,255,255,0.09) !important; border-radius: 22px !important; padding: 12px 16px !important; }
+      .coach-input::placeholder { color: rgba(255,255,255,0.3) !important; }
+      .coach-send { border-radius: 50% !important; width: 38px !important; height: 38px !important; box-shadow: none !important; }
 
       /* ── Content padding so nothing hides behind nav bar ── */
       .main-content { padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 16px) !important; }
@@ -611,7 +676,7 @@
 
     /* ── Portfolio Tab ── */
     .portfolio-summary { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin-bottom: 24px; }
-    .portfolio-stat { background: #0a0a0f; border: 1px solid rgba(255,255,255,0.04); border-radius: 16px; padding: 16px; box-shadow: 8px 8px 16px rgba(0,0,0,0.6), -4px -4px 12px rgba(255,255,255,0.03); transition: all 0.3s ease; }
+    .portfolio-stat { background: #252525; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 16px; box-shadow: 8px 8px 16px rgba(0,0,0,0.6), -4px -4px 12px rgba(255,255,255,0.03); transition: all 0.3s ease; }
     .portfolio-stat-label { font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; font-weight: 600; letter-spacing: 0.04em; margin-bottom: 6px; }
     .portfolio-stat-value { font-size: 1.2rem; font-weight: 800; color: #fff; font-variant-numeric: tabular-nums; }
     .portfolio-stat-change { font-size: 0.78rem; font-weight: 600; margin-top: 2px; }
@@ -744,6 +809,9 @@
     .news-detail-panel h2 { font-size: 1.2rem; font-weight: 700; margin-bottom: 8px; color: #fff; }
     .news-detail-panel .meta { font-size: 0.78rem; color: var(--text-dim); margin-bottom: 16px; }
     .news-detail-panel .body { font-size: 0.9rem; color: var(--text-muted); line-height: 1.7; }
+
+    /* Notion AI empty state — hidden on desktop, shown on mobile via media query */
+    .coach-notion-empty { display: none; }
 
     /* ── Native app polish ── */
     .view { animation: viewFadeIn 0.2s ease-out; }
@@ -1472,12 +1540,33 @@
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-shrink:0;">
               <select class="coach-select" id="coachSelect" style="margin-bottom:0;flex:1;"><option value="">Loading wishes...</option></select>
             </div>
-            <div class="coach-messages" id="coachMessages">
-              <div class="msg ai">Hi! I'm your WishPath Coach. Select a roadmap above and I'll help you execute it step by step. Ask me anything about your plan.</div>
+            <!-- Notion-style empty state (mobile only, hidden when messages exist) -->
+            <div class="coach-notion-empty" id="coachNotionEmpty">
+              <div class="coach-notion-wand">🪄</div>
+              <div class="coach-notion-heading">How can I help you today?</div>
+              <div class="coach-notion-suggestions">
+                <button class="coach-notion-suggestion" onclick="prefillCoachSuggestion('Build a financial roadmap for me')">
+                  <span class="coach-notion-suggestion-icon">📈</span>
+                  <span class="coach-notion-suggestion-text">Build a financial roadmap</span>
+                </button>
+                <button class="coach-notion-suggestion" onclick="prefillCoachSuggestion('Help me track my spending and create a budget')">
+                  <span class="coach-notion-suggestion-icon">💰</span>
+                  <span class="coach-notion-suggestion-text">Track my spending &amp; budget</span>
+                </button>
+                <button class="coach-notion-suggestion" onclick="prefillCoachSuggestion('Help me plan my savings goals step by step')">
+                  <span class="coach-notion-suggestion-icon">🎯</span>
+                  <span class="coach-notion-suggestion-text">Plan my savings goals</span>
+                </button>
+                <button class="coach-notion-suggestion" onclick="prefillCoachSuggestion('Analyze my investment portfolio and give advice')">
+                  <span class="coach-notion-suggestion-icon">📊</span>
+                  <span class="coach-notion-suggestion-text">Analyze my investments</span>
+                </button>
+              </div>
             </div>
+            <div class="coach-messages" id="coachMessages"></div>
             <div class="coach-input-row">
               <span style="font-size:16px;flex-shrink:0;padding-left:4px;">✨</span>
-              <textarea class="coach-input" id="coachInput" placeholder="Ask AI" rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendCoachMsg();}"></textarea>
+              <textarea class="coach-input" id="coachInput" placeholder="Ask, search, or plan anything…" rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendCoachMsg();}"></textarea>
               <button class="coach-send" id="coachSendBtn" onclick="sendCoachMsg()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
             </div>
             <div style="display:flex;align-items:center;gap:8px;margin-top:6px;flex-shrink:0;">
@@ -1610,23 +1699,37 @@
   <!-- Hidden input kept for legacy JS compat -->
   <input type="text" id="mobileAIInput" style="display:none;" />
 
-  <!-- Mobile Native Bottom Tab Nav -->
+  <!-- Templates Browser Overlay -->
+  <div class="mobile-templates-overlay" id="mobileTemplatesOverlay">
+    <div class="tmpl-topbar">
+      <button class="tmpl-topbar-btn" onclick="closeMobileTemplates()">←</button>
+      <span class="tmpl-topbar-title">Templates</span>
+      <button class="tmpl-topbar-btn" onclick="closeMobileTemplates()">✕</button>
+    </div>
+    <div class="tmpl-search-wrap">
+      <input class="tmpl-search" id="tmplSearch" placeholder="Search templates…" oninput="filterTemplates()" />
+    </div>
+    <div class="tmpl-cats-wrap" id="tmplCats">
+      <button class="tmpl-cat active" onclick="setTmplCat('All',this)">All</button>
+      <button class="tmpl-cat" onclick="setTmplCat('Finance',this)">💵 Finance</button>
+      <button class="tmpl-cat" onclick="setTmplCat('Investing',this)">📈 Investing</button>
+      <button class="tmpl-cat" onclick="setTmplCat('Budgeting',this)">📊 Budgeting</button>
+      <button class="tmpl-cat" onclick="setTmplCat('Goals',this)">🎯 Goals</button>
+      <button class="tmpl-cat" onclick="setTmplCat('Business',this)">🚀 Business</button>
+    </div>
+    <div class="tmpl-section-hdr">📱 Mobile-friendly chart templates</div>
+    <div class="tmpl-scroll" id="tmplList"></div>
+  </div>
+
+  <!-- Mobile Native Bottom Tab Nav — Notion style: 3 items -->
   <nav class="mobile-nav-bar" id="mobileNavBar">
     <button class="mobile-nav-item active" data-nav="home" onclick="mobileNavTo('home')" aria-label="Home">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
       <span>Home</span>
     </button>
-    <button class="mobile-nav-item" data-nav="coach" onclick="mobileNavTo('coach')" aria-label="AI Coach">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-      <span>Coach</span>
-    </button>
-    <button class="mobile-nav-item" data-nav="wishes" onclick="mobileNavTo('wishes')" aria-label="My Wishes">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-      <span>Wishes</span>
-    </button>
-    <button class="mobile-nav-item" data-nav="fm" onclick="mobileNavTo('fm')" aria-label="Markets">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
-      <span>Markets</span>
+    <button class="mobile-nav-item" data-nav="coach" onclick="mobileNavTo('coach')" aria-label="Ask AI">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.3L12 17l-6.2 4.2 2.4-7.3L2 9.4h7.6z"/></svg>
+      <span>Ask AI</span>
     </button>
     <button class="mobile-nav-item" data-nav="more" onclick="toggleMobileSidebar()" aria-label="More">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
@@ -1675,6 +1778,7 @@
           <div class="mobile-chip" onclick="prefillMobileHomeInput('Give me advice on achieving my goal')"><span>💡</span>Get advice</div>
           <div class="mobile-chip" onclick="prefillMobileHomeInput('Help me track my progress')"><span>📊</span>Track progress</div>
           <div class="mobile-chip" onclick="prefillMobileHomeInput('Help me start a side hustle')"><span>🚀</span>Start a side hustle</div>
+          <div class="mobile-chip" onclick="openMobileTemplates()"><span>🗂️</span>Browse Templates</div>
         </div>
         <!-- Recents -->
         <div class="mobile-sec-label">Recents</div>
@@ -2272,6 +2376,7 @@
     }
 
     async function loadConversation(wishId) {
+      showCoachChat();
       coachHistory = [];
       currentConvoId = null;
       currentWishId = wishId;
@@ -2393,6 +2498,26 @@
       }
     }
 
+    function prefillCoachSuggestion(text) {
+      var input = document.getElementById('coachInput');
+      if (input) { input.value = text; input.focus(); input.style.height = 'auto'; input.style.height = input.scrollHeight + 'px'; }
+    }
+
+    function showCoachChat() {
+      var empty = document.getElementById('coachNotionEmpty');
+      var msgs = document.getElementById('coachMessages');
+      if (empty) empty.classList.add('hidden');
+      if (msgs) { msgs.style.display = ''; }
+    }
+
+    function showCoachEmpty() {
+      var empty = document.getElementById('coachNotionEmpty');
+      var msgs = document.getElementById('coachMessages');
+      if (window.innerWidth > 768) return;
+      if (empty) empty.classList.remove('hidden');
+      if (msgs) msgs.style.display = 'none';
+    }
+
     async function sendCoachMsg() {
       if (!checkAgentLimit()) return;
       var input = document.getElementById('coachInput');
@@ -2409,6 +2534,7 @@
       var wishTitle = wish.wish_title;
       var wishId = wish.id;
 
+      showCoachChat();
       var msgs = document.getElementById('coachMessages');
       msgs.innerHTML += '<div class="msg user">' + msg.replace(/</g,'&lt;') + '</div>';
       msgs.innerHTML += '<div class="msg ai" id="coachTyping"></div>';
@@ -4211,6 +4337,60 @@
       inner.insertAdjacentHTML('beforeend', marketsContent);
       inner.insertAdjacentHTML('beforeend', portfolioContent);
     })();
+
+    // ── Templates Browser ──
+    var TEMPLATES = [
+      { name: 'Candlestick Chart', cat: 'Investing', icon: '🕯️', rating: '4.9' },
+      { name: 'Portfolio Performance', cat: 'Investing', icon: '📈', rating: '4.8' },
+      { name: 'Asset Allocation Pie', cat: 'Investing', icon: '🥧', rating: '4.7' },
+      { name: 'Monthly Spending Breakdown', cat: 'Budgeting', icon: '💸', rating: '4.9' },
+      { name: 'Budget vs Actual', cat: 'Budgeting', icon: '📊', rating: '4.6' },
+      { name: 'Expense Waterfall', cat: 'Budgeting', icon: '🌊', rating: '4.5' },
+      { name: 'Net Worth Tracker', cat: 'Finance', icon: '💰', rating: '4.9' },
+      { name: 'Cash Flow Timeline', cat: 'Finance', icon: '💵', rating: '4.7' },
+      { name: 'Savings Goal Progress', cat: 'Goals', icon: '🎯', rating: '4.8' },
+      { name: 'Debt Payoff Plan', cat: 'Goals', icon: '🏁', rating: '4.6' },
+      { name: 'Revenue Dashboard', cat: 'Business', icon: '🚀', rating: '4.8' },
+      { name: 'P&L Statement', cat: 'Business', icon: '📋', rating: '4.7' },
+    ];
+    var _tmplCat = 'All';
+    function openMobileTemplates() {
+      var el = document.getElementById('mobileTemplatesOverlay');
+      if (el) { el.classList.add('active'); renderTemplates(); }
+    }
+    function closeMobileTemplates() {
+      var el = document.getElementById('mobileTemplatesOverlay');
+      if (el) el.classList.remove('active');
+    }
+    function setTmplCat(cat, btn) {
+      _tmplCat = cat;
+      document.querySelectorAll('.tmpl-cat').forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      renderTemplates();
+    }
+    function filterTemplates() { renderTemplates(); }
+    function renderTemplates() {
+      var q = (document.getElementById('tmplSearch') || {}).value || '';
+      q = q.toLowerCase();
+      var list = document.getElementById('tmplList');
+      if (!list) return;
+      var filtered = TEMPLATES.filter(function(t) {
+        return (_tmplCat === 'All' || t.cat === _tmplCat) && (!q || t.name.toLowerCase().includes(q) || t.cat.toLowerCase().includes(q));
+      });
+      if (!filtered.length) { list.innerHTML = '<div style="padding:40px 0;text-align:center;color:rgba(255,255,255,0.3);font-size:14px;">No templates found</div>'; return; }
+      list.innerHTML = filtered.map(function(t) {
+        return '<div class="tmpl-card" onclick="useTemplate(\'' + t.name.replace(/'/g,"\\'") + '\')">' +
+          '<div class="tmpl-thumb">' + t.icon + '</div>' +
+          '<div class="tmpl-info"><div class="tmpl-name">' + t.name + '</div>' +
+          '<div class="tmpl-meta">⭐ ' + t.rating + ' &nbsp;<span class="tmpl-badge">Free</span></div></div>' +
+          '<div class="tmpl-arrow">›</div></div>';
+      }).join('');
+    }
+    function useTemplate(name) {
+      closeMobileTemplates();
+      var input = document.getElementById('mobileHomeInput');
+      if (input) { input.value = 'Create a ' + name + ' for my financial goals'; input.focus(); }
+    }
 
     function switchMobileHomeTab(tab, btn) {
       // Toggle tabs
