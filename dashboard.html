@@ -2055,6 +2055,9 @@
       await loadUserPlan();
       if (userIsPro) document.getElementById('planBadge').textContent = 'Pro';
       loadWishes();
+      // Auto-load markets data so it's ready when user taps Markets tab
+      refreshMarkets();
+      window._marketsLoaded = true;
     })();
 
     async function loadWishes() {
