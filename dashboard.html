@@ -389,18 +389,14 @@
 
       /* ── Notion-style bottom bar ── */
       .mobile-nav-bar {
-        display: flex !important;
-        position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important;
-        background: #1c1c1c;
-        backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
-        border-top: 1px solid rgba(255,255,255,0.08);
+        position: fixed; bottom: 0; left: 0; right: 0;
+        background: var(--bg, #191919);
         z-index: 9998;
-        box-shadow: 0 -1px 0 rgba(255,255,255,0.06), 0 -8px 24px rgba(0,0,0,0.4);
-        padding-bottom: env(safe-area-inset-bottom);
+        padding: 10px 16px calc(12px + env(safe-area-inset-bottom)) 16px;
         align-items: center;
-        padding-left: 20px;
-        padding-right: 20px;
-        height: calc(56px + env(safe-area-inset-bottom));
+        border-top: none;
+        box-shadow: none;
+        display: none;
       }
       .mobile-nav-item {
         flex: 1 1 auto; display: flex; flex-direction: row; align-items: center;
@@ -1803,7 +1799,9 @@
       var navBar = document.getElementById('mobileNavBar');
       var isOpen = sidebar.classList.toggle('open');
       backdrop.style.display = isOpen ? 'block' : 'none';
-      if (navBar) navBar.style.display = isOpen ? 'none' : '';
+      var isHome = document.getElementById('mobileHome') && document.getElementById('mobileHome').classList.contains('active');
+      var isCoach = document.querySelector('.view[id="coachView"].active');
+      if (navBar) navBar.style.display = (isOpen || isHome || isCoach) ? 'none' : 'flex';
     }
 
     // ── Mobile bottom nav ──
@@ -2218,9 +2216,9 @@
         document.getElementById('sidebarBackdrop').style.display = 'none';
         hideMobileHome();
         setMobileNavActive(view);
-        // Hide bottom nav when coach is active (prevents double Ask AI bar)
+        // Show Ask AI bar on all views except coach (has own input) and home (has own input)
         var navBar = document.getElementById('mobileNavBar');
-        if (navBar) navBar.style.display = (view === 'coach') ? 'none' : '';
+        if (navBar) navBar.style.display = (view === 'coach') ? 'none' : 'flex';
       }
     }
 
@@ -3222,9 +3220,9 @@
       document.getElementById('mobileHome').classList.add('active');
       renderMobileRecents();
       setMobileNavActive('home');
-      // Restore bottom nav when going home
+      // Hide Ask AI bar on home (home has its own input at top)
       var navBar = document.getElementById('mobileNavBar');
-      if (navBar) navBar.style.display = '';
+      if (navBar) navBar.style.display = 'none';
     }
     function hideMobileHome() {
       document.getElementById('mobileHome').classList.remove('active');
