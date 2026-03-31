@@ -492,13 +492,15 @@
       .mobile-home-inner { padding: 8px 20px 0; }
       .mobile-home-title { font-size: 26px; font-weight: 700; color: rgba(255,255,255,0.9); line-height: 1.3; margin-bottom: 24px; text-align: center; }
       .mobile-home-input-wrap { position: relative; margin-bottom: 14px; }
-      .mobile-home-input { width: 100%; padding: 14px 50px 14px 18px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.04); border-radius: 16px; color: rgba(255,255,255,0.9); font: inherit; font-size: 15px; outline: none; resize: none; min-height: 52px; max-height: 120px; overflow-y: auto; display: block; box-shadow: inset 4px 4px 8px rgba(0,0,0,0.5), inset -2px -2px 6px rgba(255,255,255,0.02); transition: all 0.3s ease; }
+      .mobile-home-input { width: 100%; padding: 14px 50px 14px 18px; background: #0a0a0f; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; color: rgba(255,255,255,0.9); font: inherit; font-size: 15px; outline: none; resize: none; min-height: 52px; max-height: 120px; overflow-y: auto; display: block; box-shadow: 8px 8px 16px rgba(0,0,0,0.6), -4px -4px 12px rgba(255,255,255,0.03); transition: all 0.2s ease; }
       .mobile-home-input::placeholder { color: rgba(255,255,255,0.3); }
-      .mobile-home-input:focus { border-color: rgba(0,201,167,0.3); box-shadow: inset 4px 4px 8px rgba(0,0,0,0.5), inset -2px -2px 6px rgba(255,255,255,0.02), 0 0 12px rgba(0,201,167,0.1); }
-      .mobile-home-input-send { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: rgba(255,255,255,0.4); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px; }
+      .mobile-home-input:focus { border-color: rgba(0,201,167,0.25); box-shadow: 8px 8px 16px rgba(0,0,0,0.6), -4px -4px 12px rgba(255,255,255,0.03), 0 0 0 1px rgba(0,201,167,0.15); }
+      .mobile-home-input-send { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: rgba(0,201,167,0.6); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px; transition: color 0.2s ease; }
+      .mobile-home-input-send:active { color: var(--accent); }
       .mobile-chips-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 32px; }
-      .mobile-chip { display: inline-flex; align-items: center; gap: 6px; background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%); border: 1px solid rgba(255,255,255,0.06); border-radius: 20px; padding: 8px 14px; font-size: 13px; color: rgba(255,255,255,0.75); cursor: pointer; white-space: nowrap; box-shadow: 0 4px 12px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05); transition: all 0.3s ease; }
-      .mobile-chip:active { border-color: rgba(0,201,167,0.2); color: rgba(255,255,255,0.95); background: linear-gradient(135deg, rgba(0,201,167,0.08) 0%, rgba(255,255,255,0.02) 100%); box-shadow: 0 2px 8px rgba(0,0,0,0.3), 0 0 12px rgba(0,201,167,0.1); }
+      .mobile-chip { display: inline-flex; align-items: center; gap: 6px; background: #0a0a0f; border: 1px solid rgba(255,255,255,0.06); border-radius: 20px; padding: 8px 14px; font-size: 13px; color: rgba(255,255,255,0.7); cursor: pointer; white-space: nowrap; box-shadow: 4px 4px 8px rgba(0,0,0,0.5), -2px -2px 6px rgba(255,255,255,0.02); transition: all 0.2s ease; -webkit-tap-highlight-color: transparent; }
+      .mobile-chip span { font-size: 13px; line-height: 1; }
+      .mobile-chip:active { border-color: rgba(0,201,167,0.2); color: rgba(255,255,255,0.95); box-shadow: 2px 2px 4px rgba(0,0,0,0.5), -1px -1px 3px rgba(255,255,255,0.02), 0 0 10px rgba(0,201,167,0.1); transform: scale(0.97); }
       .mobile-sec-label { font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 10px; }
       .mobile-recents-row { display: flex; gap: 12px; overflow-x: auto; -webkit-overflow-scrolling: touch; scroll-snap-type: x mandatory; padding-bottom: 8px; margin-bottom: 24px; }
       .mobile-recents-row::-webkit-scrollbar { display: none; }
@@ -569,12 +571,13 @@
       }
     }
 
-    /* ── Home Screen Tabs ── */
-    .home-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
-    .home-tab { padding: 12px 24px; font-size: 0.88rem; font-weight: 600; color: var(--text-dim); cursor: pointer; border: none; border-bottom: 2px solid transparent; transition: all 0.15s; background: none; font-family: inherit; display: flex; align-items: center; gap: 8px; }
-    .home-tab:hover { color: var(--text-muted); background: rgba(255,255,255,0.02); }
-    .home-tab.active { color: var(--accent); border-bottom-color: var(--accent); background: linear-gradient(135deg, rgba(0,201,167,0.08) 0%, rgba(255,255,255,0.02) 100%); box-shadow: 0 0 12px rgba(0,201,167,0.08); }
-    .home-tab-icon { font-size: 1rem; }
+    /* ── Home Screen Tabs — iOS Segmented Control ── */
+    .home-tabs { display: flex; background: rgba(255,255,255,0.06); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 3px; gap: 2px; margin-bottom: 24px; }
+    .home-tab { flex: 1; padding: 9px 12px; font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.45); cursor: pointer; border: none; border-radius: 9px; background: transparent; font-family: inherit; text-align: center; white-space: nowrap; min-height: 36px; display: flex; align-items: center; justify-content: center; transition: color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease; -webkit-tap-highlight-color: transparent; line-height: 1; }
+    .home-tab:hover { color: rgba(255,255,255,0.65); }
+    .home-tab:active { transform: scale(0.97); }
+    .home-tab.active { color: #fff; background: var(--accent); box-shadow: 0 2px 8px rgba(0,201,167,0.4), 0 1px 3px rgba(0,0,0,0.3); }
+    .home-tab-icon { display: none; }
     .home-tab-content { display: none; }
     .home-tab-content.active { display: block; }
 
@@ -857,14 +860,14 @@
       .todo-text { font-size: 0.9rem !important; }
       /* Scroll momentum everywhere */
       .library-table { -webkit-overflow-scrolling: touch; }
-      .fm-sub-tabs, .home-tabs, .library-filters { -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
+      .fm-sub-tabs, .library-filters { -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
       /* Touch target enforcement */
-      .home-tab, .library-filter, .fm-sub-tab { min-height: 44px !important; display: inline-flex !important; align-items: center !important; }
+      .library-filter, .fm-sub-tab { min-height: 44px !important; display: inline-flex !important; align-items: center !important; }
       .wish-card-btn { min-height: 44px !important; }
       /* Library table scrollable */
       .library-header { flex-wrap: wrap; gap: 8px; }
-      .home-tabs { margin: 0 -20px 20px; padding: 0 16px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-      .home-tab { padding: 10px 16px; font-size: 0.82rem; white-space: nowrap; }
+      .home-tabs { margin: 0 0 20px; overflow: visible; }
+      .home-tab { padding: 9px 8px; font-size: 13px; min-height: 38px !important; }
       .stock-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
       .stock-card { padding: 12px; }
       .stock-price { font-size: 1rem; }
@@ -1048,9 +1051,9 @@
       <!-- Home View — Tabbed Interface -->
       <div class="view active" id="homeView">
         <div class="home-tabs">
-          <button class="home-tab active" onclick="switchHomeTab('roadmap', this)"><span class="home-tab-icon">&#x1F9ED;</span> Roadmap</button>
-          <button class="home-tab" onclick="switchHomeTab('markets', this)"><span class="home-tab-icon">&#x1F4C8;</span> Markets</button>
-          <button class="home-tab" onclick="switchHomeTab('portfolio', this)"><span class="home-tab-icon">&#x1F4BC;</span> Portfolio</button>
+          <button class="home-tab active" onclick="switchHomeTab('roadmap', this)">Roadmap</button>
+          <button class="home-tab" onclick="switchHomeTab('markets', this)">Markets</button>
+          <button class="home-tab" onclick="switchHomeTab('portfolio', this)">Portfolio</button>
         </div>
 
         <!-- Roadmap Tab -->
@@ -4151,10 +4154,10 @@
       // Insert tabs before the title
       var title = inner.querySelector('.mobile-home-title');
       if (!title) return;
-      var tabsHtml = '<div class="home-tabs" style="margin:0 -20px 16px;padding:0 16px;">' +
-        '<button class="home-tab active" onclick="switchMobileHomeTab(\'roadmap\', this)"><span class="home-tab-icon">&#x1F9ED;</span> Roadmap</button>' +
-        '<button class="home-tab" onclick="switchMobileHomeTab(\'markets\', this)"><span class="home-tab-icon">&#x1F4C8;</span> Markets</button>' +
-        '<button class="home-tab" onclick="switchMobileHomeTab(\'portfolio\', this)"><span class="home-tab-icon">&#x1F4BC;</span> Portfolio</button>' +
+      var tabsHtml = '<div class="home-tabs" style="margin:0 0 16px;">' +
+        '<button class="home-tab active" onclick="switchMobileHomeTab(\'roadmap\', this)">Roadmap</button>' +
+        '<button class="home-tab" onclick="switchMobileHomeTab(\'markets\', this)">Markets</button>' +
+        '<button class="home-tab" onclick="switchMobileHomeTab(\'portfolio\', this)">Portfolio</button>' +
       '</div>';
 
       var marketsContent = '<div id="mobileMarketsTab" style="display:none;">' +
