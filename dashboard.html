@@ -567,8 +567,12 @@
       .tmpl-badge { background: rgba(0,201,167,0.1); color: var(--accent); border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 600; }
       .tmpl-arrow { color: rgba(255,255,255,0.25); font-size: 18px; flex-shrink: 0; }
 
+      /* Hide coach dropdown selector on mobile when empty state is showing */
+      .coach-left > div:first-child { display: none !important; }
+      .coach-notion-empty:not(.hidden) ~ .coach-messages:empty ~ .coach-input-row .coach-select { display: none !important; }
+
       /* ── Notion-style AI chat empty state ── */
-      .coach-notion-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; padding: 40px 28px 20px; text-align: center; }
+      .coach-notion-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; padding: 60px 28px 20px; text-align: center; }
       .coach-notion-empty.hidden { display: none !important; }
       .coach-notion-wand { font-size: 56px; margin-bottom: 20px; filter: drop-shadow(0 0 24px rgba(0,201,167,0.35)); animation: float 4s ease-in-out infinite; }
       .coach-notion-heading { font-size: 22px; font-weight: 700; color: rgba(255,255,255,0.92); margin-bottom: 32px; line-height: 1.3; }
@@ -579,10 +583,14 @@
       .coach-notion-suggestion-text { font-size: 15px; color: rgba(255,255,255,0.72); line-height: 1.4; }
 
       /* ── Notion-style coach input bar ── */
-      .coach-input-row { background: #1c1c1c !important; border-top: 1px solid rgba(255,255,255,0.07) !important; padding: 10px 16px calc(10px + env(safe-area-inset-bottom)) !important; margin: 0 !important; align-items: center !important; gap: 10px !important; }
+      .coach-input-row { background: #1c1c1c !important; border-top: 1px solid rgba(255,255,255,0.07) !important; padding: 10px 16px calc(10px + env(safe-area-inset-bottom)) !important; margin: 0 !important; align-items: center !important; gap: 10px !important; position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important; z-index: 9999 !important; }
       .coach-input { background: #282828 !important; border: 1px solid rgba(255,255,255,0.09) !important; border-radius: 22px !important; padding: 12px 16px !important; }
       .coach-input::placeholder { color: rgba(255,255,255,0.3) !important; }
       .coach-send { border-radius: 50% !important; width: 38px !important; height: 38px !important; box-shadow: none !important; }
+
+      /* Hide bottom nav when coach/AI view is active — prevents double Ask AI */
+      .view[id="coachView"].active ~ .mobile-nav-bar,
+      body.coach-active .mobile-nav-bar { display: none !important; }
 
       /* ── Content padding so nothing hides behind nav bar ── */
       .main-content { padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 16px) !important; }
@@ -1545,21 +1553,17 @@
               <div class="coach-notion-wand">🪄</div>
               <div class="coach-notion-heading">How can I help you today?</div>
               <div class="coach-notion-suggestions">
-                <button class="coach-notion-suggestion" onclick="prefillCoachSuggestion('Build a financial roadmap for me')">
-                  <span class="coach-notion-suggestion-icon">📈</span>
-                  <span class="coach-notion-suggestion-text">Build a financial roadmap</span>
+                <button class="coach-notion-suggestion" onclick="prefillCoachSuggestion('Search for the best investment strategies for beginners')">
+                  <span class="coach-notion-suggestion-icon" style="font-size:18px;">🔍</span>
+                  <span class="coach-notion-suggestion-text">Search for anything</span>
                 </button>
-                <button class="coach-notion-suggestion" onclick="prefillCoachSuggestion('Help me track my spending and create a budget')">
-                  <span class="coach-notion-suggestion-icon">💰</span>
-                  <span class="coach-notion-suggestion-text">Track my spending &amp; budget</span>
+                <button class="coach-notion-suggestion" onclick="prefillCoachSuggestion('Brainstorm creative ways to grow my wealth and reach my financial goals')">
+                  <span class="coach-notion-suggestion-icon" style="font-size:18px;">✦</span>
+                  <span class="coach-notion-suggestion-text">Brainstorm financial ideas</span>
                 </button>
-                <button class="coach-notion-suggestion" onclick="prefillCoachSuggestion('Help me plan my savings goals step by step')">
-                  <span class="coach-notion-suggestion-icon">🎯</span>
-                  <span class="coach-notion-suggestion-text">Plan my savings goals</span>
-                </button>
-                <button class="coach-notion-suggestion" onclick="prefillCoachSuggestion('Analyze my investment portfolio and give advice')">
-                  <span class="coach-notion-suggestion-icon">📊</span>
-                  <span class="coach-notion-suggestion-text">Analyze my investments</span>
+                <button class="coach-notion-suggestion" onclick="prefillCoachSuggestion('Draft a detailed financial plan to save $50k in the next 12 months')">
+                  <span class="coach-notion-suggestion-icon" style="font-size:18px;">✏️</span>
+                  <span class="coach-notion-suggestion-text">Draft a project plan</span>
                 </button>
               </div>
             </div>
@@ -1875,6 +1879,12 @@
 
       // Rich markdown → HTML conversion (tables first, before \n→<br>)
       var htmlText = convertMarkdownTables(text)
+        // Convert standalone pipe-delimited lines (no header separator) into styled rows
+        .replace(/^\|(.+)\|$/gm, function(line) {
+          var cells = line.split('|').map(function(c){ return c.trim(); }).filter(Boolean);
+          if (cells.length < 2) return line;
+          return '<div style="display:flex;gap:8px;padding:4px 0;font-size:0.9em;flex-wrap:wrap;">' + cells.map(function(c){ return '<span>' + c + '</span>'; }).join('') + '</div>';
+        })
         .replace(/\n/g, '<br>')
         .replace(/###\s*(.+?)(<br>|$)/g, '<div style="font-weight:700;color:#e6edf3;font-size:0.95em;margin:12px 0 6px;">$1</div>')
         .replace(/##\s*(.+?)(<br>|$)/g, '<div style="font-weight:700;color:#00c9a7;font-size:1.05em;margin:14px 0 8px;border-bottom:1px solid rgba(0,201,167,0.2);padding-bottom:6px;">$1</div>')
@@ -2220,6 +2230,9 @@
         document.getElementById('sidebarBackdrop').style.display = 'none';
         hideMobileHome();
         setMobileNavActive(view);
+        // Hide bottom nav when coach is active (prevents double Ask AI bar)
+        var navBar = document.getElementById('mobileNavBar');
+        if (navBar) navBar.style.display = (view === 'coach') ? 'none' : '';
       }
     }
 
@@ -3221,6 +3234,9 @@
       document.getElementById('mobileHome').classList.add('active');
       renderMobileRecents();
       setMobileNavActive('home');
+      // Restore bottom nav when going home
+      var navBar = document.getElementById('mobileNavBar');
+      if (navBar) navBar.style.display = '';
     }
     function hideMobileHome() {
       document.getElementById('mobileHome').classList.remove('active');
