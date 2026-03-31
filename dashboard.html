@@ -4058,19 +4058,27 @@
       }
       tickers.innerHTML = tickerHtml;
 
-      // Show description and loading state for AI summary
+      // Show description instantly — no AI loading
       var desc = articleData.description || articleData.snippet || '';
-      text.innerHTML = '<p>' + desc.replace(/</g, '&lt;') + '</p>' +
-        '<div class="article-reader-loading" id="arLoadingAI"><span style="animation:spin 1s linear infinite;display:inline-block;">&#x21BB;</span> Loading AI analysis...</div>';
+      if (desc) {
+        // Split into paragraphs if possible
+        var paragraphs = desc.split(/\n\n+/).filter(function(p) { return p.trim(); });
+        if (paragraphs.length <= 1 && desc.length > 200) {
+          // Break long single block into sentences for readability
+          var sentences = desc.match(/[^.!?]+[.!?]+/g) || [desc];
+          var mid = Math.ceil(sentences.length / 2);
+          paragraphs = [sentences.slice(0, mid).join(' '), sentences.slice(mid).join(' ')].filter(function(p) { return p.trim(); });
+        }
+        text.innerHTML = paragraphs.map(function(p) { return '<p>' + p.replace(/</g, '&lt;').trim() + '</p>'; }).join('');
+      } else {
+        text.innerHTML = '';
+      }
 
       fullLink.href = articleData.url || '#';
       fullLink.textContent = 'Read full article at ' + (articleData.source || 'source');
 
       overlay.classList.add('active');
       overlay.scrollTop = 0;
-
-      // Fetch AI summary/analysis
-      fetchArticleAnalysis(articleData);
     }
 
     function closeArticleReader() {
@@ -4085,30 +4093,6 @@
         navigator.clipboard.writeText(_currentArticle.url || '').then(function() {
           alert('Link copied!');
         });
-      }
-    }
-
-    async function fetchArticleAnalysis(article) {
-      var text = document.getElementById('arText');
-      var loading = document.getElementById('arLoadingAI');
-      try {
-        var res = await fetch(EDGE_FN, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            coachMode: true,
-            model: 'claude-sonnet-4-20250514',
-            systemPrompt: 'You are a financial journalist. Write a 3-4 paragraph article analysis based on the headline and context provided. Write in a professional but engaging tone. Include market impact analysis. Do NOT use markdown formatting — write plain text paragraphs only. Do not wrap in quotes.',
-            messages: [{ role: 'user', content: 'Write a brief article analysis for this news:\n\nHeadline: ' + article.title + '\nSource: ' + (article.source || '') + '\nDescription: ' + (article.description || article.snippet || '') + '\nTickers: ' + (article.tickers || []).join(', ') + '\nSentiment: ' + (article.sentiment || 'neutral') }]
-          })
-        });
-        var data = await res.json();
-        var reply = data.reply || '';
-        if (reply && text) {
-          var paragraphs = reply.split(/\n\n+/).filter(function(p) { return p.trim(); });
-          text.innerHTML = paragraphs.map(function(p) { return '<p>' + p.replace(/</g, '&lt;').replace(/\*\*/g, '') + '</p>'; }).join('');
-        }
-      } catch(e) {
-        if (loading) loading.style.display = 'none';
       }
     }
 
