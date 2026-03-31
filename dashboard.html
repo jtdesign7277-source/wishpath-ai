@@ -583,10 +583,10 @@
       .coach-notion-suggestion-text { font-size: 15px; color: rgba(255,255,255,0.72); line-height: 1.4; }
 
       /* ── Notion-style coach input bar ── */
-      .coach-input-row { background: #1c1c1c !important; border-top: 1px solid rgba(255,255,255,0.07) !important; padding: 10px 16px calc(10px + env(safe-area-inset-bottom)) !important; margin: 0 !important; align-items: center !important; gap: 10px !important; position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important; z-index: 9999 !important; }
-      .coach-input { background: #282828 !important; border: 1px solid rgba(255,255,255,0.09) !important; border-radius: 22px !important; padding: 12px 16px !important; }
+      .coach-input-row { background: #191919 !important; border-top: none !important; padding: 10px 16px calc(10px + env(safe-area-inset-bottom)) !important; margin: 0 !important; align-items: center !important; gap: 8px !important; position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important; z-index: 9999 !important; }
+      .coach-input { background: #2a2a2a !important; border: 1px solid rgba(255,255,255,0.12) !important; border-radius: 24px !important; padding: 14px 18px !important; font-size: 16px !important; color: rgba(255,255,255,0.85) !important; }
       .coach-input::placeholder { color: rgba(255,255,255,0.3) !important; }
-      .coach-send { border-radius: 50% !important; width: 38px !important; height: 38px !important; box-shadow: none !important; }
+      .coach-send { border-radius: 50% !important; width: 38px !important; height: 38px !important; box-shadow: none !important; background: none !important; color: rgba(255,255,255,0.4) !important; padding: 0 !important; }
 
       /* Hide bottom nav when coach/AI view is active — prevents double Ask AI */
       .view[id="coachView"].active ~ .mobile-nav-bar,
@@ -675,9 +675,17 @@
     .stock-shimmer { background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.03) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px; height: 14px; margin-bottom: 6px; }
     @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
     .markets-updated { font-size: 0.68rem; color: var(--text-dim); margin-bottom: 20px; }
-    .news-list { display: flex; flex-direction: column; gap: 10px; }
-    .news-item { background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 14px 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.3), 0 1px 4px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.05); transition: all 0.3s ease; text-decoration: none; display: block; }
+    .news-list { display: flex; flex-direction: column; gap: 14px; }
+    .news-item { background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 0; box-shadow: 0 4px 16px rgba(0,0,0,0.3), 0 1px 4px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.05); transition: all 0.3s ease; text-decoration: none; display: block; overflow: hidden; }
     .news-item:hover { border-color: rgba(255,255,255,0.1); box-shadow: 0 8px 24px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.2); }
+    .news-item-img { width: 100%; height: 140px; object-fit: cover; display: block; }
+    .news-item-body { padding: 12px 16px 14px; }
+    .news-tickers { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 6px; }
+    .news-ticker-pill { font-size: 0.65rem; font-weight: 600; color: var(--accent); background: rgba(0,201,167,0.1); border-radius: 4px; padding: 2px 6px; }
+    .news-sentiment { font-size: 0.65rem; font-weight: 600; border-radius: 4px; padding: 2px 6px; margin-left: auto; }
+    .news-sentiment.bullish { color: #22c55e; background: rgba(34,197,94,0.1); }
+    .news-sentiment.bearish { color: #ef4444; background: rgba(239,68,68,0.1); }
+    .news-sentiment.neutral { color: var(--text-dim); background: rgba(255,255,255,0.05); }
     .news-title { font-size: 0.88rem; font-weight: 600; color: var(--text); line-height: 1.4; margin-bottom: 4px; }
     .news-meta { font-size: 0.7rem; color: var(--text-dim); display: flex; gap: 8px; }
     .news-source { color: var(--accent); font-weight: 500; }
@@ -1570,8 +1578,8 @@
             <div class="coach-messages" id="coachMessages"></div>
             <div class="coach-input-row">
               <span style="font-size:16px;flex-shrink:0;padding-left:4px;">✨</span>
-              <textarea class="coach-input" id="coachInput" placeholder="Ask, search, or plan anything…" rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendCoachMsg();}"></textarea>
-              <button class="coach-send" id="coachSendBtn" onclick="sendCoachMsg()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
+              <textarea class="coach-input" id="coachInput" placeholder="Ask AI" rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendCoachMsg();}"></textarea>
+              <button class="coach-send" id="coachSendBtn" onclick="sendCoachMsg()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
             </div>
             <div style="display:flex;align-items:center;gap:8px;margin-top:6px;flex-shrink:0;">
               <button class="save-btn" id="saveConvoBtn" onclick="manualSaveConversation()" title="Save conversation">&#x1F4BE; Save Chat</button>
@@ -1751,7 +1759,7 @@
       </div>
       <div class="ask-ai-input-row">
         <textarea class="ask-ai-textarea" id="mobileAskAIInput" placeholder="Ask AI" rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMobileAskAI();}"></textarea>
-        <button class="ask-ai-send-btn" onclick="sendMobileAskAI()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
+        <button class="ask-ai-send-btn" onclick="sendMobileAskAI()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
       </div>
     </div>
   </div>
@@ -1772,7 +1780,7 @@
         <div class="mobile-home-input-wrap">
           <textarea class="mobile-home-input" id="mobileHomeInput" placeholder="Describe your goal, dream, or problem..." rows="2" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMobileHomeInput();}"></textarea>
           <button class="mobile-home-input-send" onclick="sendMobileHomeInput()">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 16V8M8 12l4-4 4 4"/></svg>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
           </button>
         </div>
         <!-- Suggestion chips -->
@@ -3801,34 +3809,30 @@
     ];
 
     var marketsCache = {};
+    var SUPABASE_FN = 'https://mszilrexlupzthauoaxb.supabase.co/functions/v1';
 
     async function refreshMarkets() {
       var btn = document.getElementById('marketsRefreshBtn');
+      var fmBtn = document.getElementById('fmRefreshBtn');
       if (btn) btn.classList.add('spinning');
+      if (fmBtn) fmBtn.classList.add('spinning');
 
-      // Fetch all quotes via the AI coach (which calls Alpaca)
+      // Fetch all quotes via dedicated watchlist-quotes edge function (one batch call)
       var allSymbols = MAG7.map(function(s) { return s.symbol; }).concat(CRYPTO.map(function(c) { return c.symbol; }));
-      var prompt = 'Get me live stock quotes for: ' + allSymbols.join(', ') + '. Return ONLY a JSON object in this exact format, no other text: {"quotes": [{"symbol": "AAPL", "price": 150.00, "change": 2.50, "changePercent": 1.5}, ...]}. Use real current market data from Alpaca. For crypto use the /USD pairs.';
 
       try {
-        var res = await fetch(EDGE_FN, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            coachMode: true,
-            model: 'claude-sonnet-4-20250514',
-            systemPrompt: 'You are a market data API. When asked for stock/crypto quotes, use the Alpaca API tools available to you to fetch real-time data. Return ONLY valid JSON, no markdown, no explanation. Return the data in the exact format requested.',
-            messages: [{ role: 'user', content: prompt }]
-          })
-        });
+        var res = await fetch(SUPABASE_FN + '/watchlist-quotes?symbols=' + encodeURIComponent(allSymbols.join(',')));
         var data = await res.json();
-        var reply = data.reply || '';
-        // Try to extract JSON from reply
-        var jsonMatch = reply.match(/\{[\s\S]*"quotes"[\s\S]*\}/);
-        if (jsonMatch) {
-          var parsed = JSON.parse(jsonMatch[0]);
-          if (parsed.quotes) {
-            parsed.quotes.forEach(function(q) { marketsCache[q.symbol] = q; });
-          }
+        if (data && Array.isArray(data.data)) {
+          data.data.forEach(function(q) {
+            marketsCache[q.symbol] = {
+              symbol: q.symbol,
+              name: q.name,
+              price: q.price,
+              change: q.change,
+              changePercent: q.percentChange
+            };
+          });
         }
       } catch(e) {
         console.error('Markets fetch error:', e);
@@ -3839,13 +3843,16 @@
 
       // Update timestamp
       var ts = document.getElementById('marketsUpdatedTime');
-      if (ts) ts.textContent = 'Last updated: ' + new Date().toLocaleTimeString();
+      var fmTs = document.getElementById('fmMarketsUpdatedTime');
+      var timeStr = 'Last updated: ' + new Date().toLocaleTimeString();
+      if (ts) ts.textContent = timeStr;
+      if (fmTs) fmTs.textContent = timeStr;
       if (btn) btn.classList.remove('spinning');
+      if (fmBtn) fmBtn.classList.remove('spinning');
     }
 
     function renderMarketCards() {
-      var mag7Grid = document.getElementById('mag7Grid');
-      mag7Grid.innerHTML = MAG7.map(function(stock) {
+      var mag7Html = MAG7.map(function(stock) {
         var q = marketsCache[stock.symbol];
         if (!q) return '<div class="stock-card"><div class="stock-symbol">' + stock.symbol + '</div><div class="stock-name">' + stock.name + '</div><div class="stock-price" style="color:var(--text-dim);">--</div><div class="stock-change flat">Loading...</div></div>';
         var changeClass = q.change > 0 ? 'up' : q.change < 0 ? 'down' : 'flat';
@@ -3856,8 +3863,7 @@
           '<div class="stock-change ' + changeClass + '">' + arrow + ' ' + sign + formatNum(q.change) + ' (' + sign + formatNum(q.changePercent) + '%)</div></div>';
       }).join('');
 
-      var cryptoGrid = document.getElementById('cryptoGrid');
-      cryptoGrid.innerHTML = CRYPTO.map(function(coin) {
+      var cryptoHtml = CRYPTO.map(function(coin) {
         var q = marketsCache[coin.symbol];
         if (!q) return '<div class="stock-card"><div class="stock-symbol">' + coin.display + '</div><div class="stock-name">' + coin.name + '</div><div class="stock-price" style="color:var(--text-dim);">--</div><div class="stock-change flat">Loading...</div></div>';
         var changeClass = q.change > 0 ? 'up' : q.change < 0 ? 'down' : 'flat';
@@ -3867,6 +3873,16 @@
           '<div class="stock-price">$' + formatNum(q.price) + '</div>' +
           '<div class="stock-change ' + changeClass + '">' + arrow + ' ' + sign + formatNum(q.change) + ' (' + sign + formatNum(q.changePercent) + '%)</div></div>';
       }).join('');
+
+      // Populate both Home Markets tab and FM Markets tab
+      var mag7Grid = document.getElementById('mag7Grid');
+      var fmMag7Grid = document.getElementById('fmMag7Grid');
+      var cryptoGrid = document.getElementById('cryptoGrid');
+      var fmCryptoGrid = document.getElementById('fmCryptoGrid');
+      if (mag7Grid) mag7Grid.innerHTML = mag7Html;
+      if (fmMag7Grid) fmMag7Grid.innerHTML = mag7Html;
+      if (cryptoGrid) cryptoGrid.innerHTML = cryptoHtml;
+      if (fmCryptoGrid) fmCryptoGrid.innerHTML = cryptoHtml;
 
       // Render Mag7 comparison chart
       renderMag7Chart();
@@ -3898,33 +3914,36 @@
 
     async function fetchMarketNews() {
       var newsList = document.getElementById('marketNewsList');
+      var fmNewsList = document.getElementById('fmMarketNewsList');
       try {
-        var res = await fetch(EDGE_FN, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            coachMode: true,
-            model: 'claude-sonnet-4-20250514',
-            systemPrompt: 'You are a market news aggregator. Fetch the latest market news using MarketAux. Return ONLY a JSON array of the top 6 news items in this format: [{"title": "...", "source": "...", "snippet": "...", "url": "...", "published": "..."}]. No markdown, no explanation.',
-            messages: [{ role: 'user', content: 'Get the latest market news headlines. Return only JSON.' }]
-          })
-        });
+        var res = await fetch(SUPABASE_FN + '/news?limit=8');
         var data = await res.json();
-        var reply = data.reply || '';
-        var jsonMatch = reply.match(/\[[\s\S]*\]/);
-        if (jsonMatch) {
-          var news = JSON.parse(jsonMatch[0]);
-          newsList.innerHTML = news.map(function(n) {
-            return '<a class="news-item" href="' + (n.url || '#') + '" target="_blank" rel="noopener">' +
-              '<div class="news-title">' + (n.title || '').replace(/</g,'&lt;') + '</div>' +
-              '<div class="news-meta"><span class="news-source">' + (n.source || '') + '</span><span>' + (n.published || '') + '</span></div>' +
-              (n.snippet ? '<div style="font-size:0.78rem;color:var(--text-dim);margin-top:4px;line-height:1.4;">' + n.snippet.replace(/</g,'&lt;').substring(0, 120) + '</div>' : '') +
-            '</a>';
+        if (data && Array.isArray(data.articles) && data.articles.length > 0) {
+          var html = data.articles.map(function(a) {
+            var imgHtml = a.image ? '<img class="news-item-img" src="' + a.image + '" alt="" onerror="this.style.display=\'none\'" loading="lazy" />' : '';
+            var tickerHtml = (a.tickers && a.tickers.length > 0) ? '<div class="news-tickers">' + a.tickers.map(function(t) { return '<span class="news-ticker-pill">' + t + '</span>'; }).join('') + (a.sentiment && a.sentiment !== 'neutral' ? '<span class="news-sentiment ' + a.sentiment + '">' + a.sentiment + '</span>' : '') + '</div>' : '';
+            var descHtml = a.description ? '<div style="font-size:0.78rem;color:var(--text-dim);margin-top:4px;line-height:1.4;">' + String(a.description).replace(/</g,'&lt;').substring(0, 140) + '</div>' : '';
+            return '<a class="news-item" href="' + (a.url || '#') + '" target="_blank" rel="noopener">' +
+              imgHtml +
+              '<div class="news-item-body">' +
+              tickerHtml +
+              '<div class="news-title">' + String(a.title || '').replace(/</g,'&lt;') + '</div>' +
+              '<div class="news-meta"><span class="news-source">' + (a.source || '') + '</span><span>' + (a.timeAgo || '') + '</span></div>' +
+              descHtml +
+              '</div></a>';
           }).join('');
+          if (newsList) newsList.innerHTML = html;
+          if (fmNewsList) fmNewsList.innerHTML = html;
         } else {
-          newsList.innerHTML = '<div class="news-item"><div class="news-title" style="color:var(--text-dim);">Unable to load news. Try refreshing.</div></div>';
+          var fallback = '<div class="news-item"><div class="news-item-body"><div class="news-title" style="color:var(--text-dim);">Unable to load news. Try refreshing.</div></div></div>';
+          if (newsList) newsList.innerHTML = fallback;
+          if (fmNewsList) fmNewsList.innerHTML = fallback;
         }
       } catch(e) {
-        newsList.innerHTML = '<div class="news-item"><div class="news-title" style="color:var(--text-dim);">Connection error loading news.</div></div>';
+        console.error('News fetch error:', e);
+        var errHtml = '<div class="news-item"><div class="news-item-body"><div class="news-title" style="color:var(--text-dim);">Connection error loading news.</div></div></div>';
+        if (newsList) newsList.innerHTML = errHtml;
+        if (fmNewsList) fmNewsList.innerHTML = errHtml;
       }
     }
 
@@ -4083,26 +4102,14 @@
 
       if (missing.length > 0) {
         try {
-          var res = await fetch(EDGE_FN, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              coachMode: true,
-              model: 'claude-sonnet-4-20250514',
-              systemPrompt: 'You are a market data API. Fetch real-time quotes from Alpaca. Return ONLY valid JSON, no markdown. Format: {"quotes": [{"symbol": "AAPL", "price": 150.00, "change": 2.50, "changePercent": 1.5}]}',
-              messages: [{ role: 'user', content: 'Get live quotes for: ' + missing.join(', ') + '. Return only JSON.' }]
-            })
-          });
+          var res = await fetch(SUPABASE_FN + '/watchlist-quotes?symbols=' + encodeURIComponent(missing.join(',')));
           var data = await res.json();
-          var reply = data.reply || '';
-          var jsonMatch = reply.match(/\{[\s\S]*"quotes"[\s\S]*\}/);
-          if (jsonMatch) {
-            var parsed = JSON.parse(jsonMatch[0]);
-            if (parsed.quotes) {
-              parsed.quotes.forEach(function(q) {
-                portfolioPrices[q.symbol] = q;
-                marketsCache[q.symbol] = q;
-              });
-            }
+          if (data && Array.isArray(data.data)) {
+            data.data.forEach(function(q) {
+              var entry = { symbol: q.symbol, name: q.name, price: q.price, change: q.change, changePercent: q.percentChange };
+              portfolioPrices[q.symbol] = entry;
+              marketsCache[q.symbol] = entry;
+            });
           }
         } catch(e) { console.error('Portfolio price fetch error:', e); }
       }
@@ -4926,23 +4933,36 @@
       if (industry) filterContext += ' Filter by industry: ' + industry + '.';
 
       try {
-        var res = await fetch(EDGE_FN, { method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            coachMode: true,
-            model: 'claude-sonnet-4-20250514',
-            systemPrompt: 'You are a financial news aggregator. Use MarketAux to fetch the latest news for these tickers: ' + tickerStr + '.' + filterContext + ' Return ONLY a JSON array: [{"title":"...","source":"...","snippet":"...","url":"...","published":"...","tickers":["AAPL"],"sentiment":"bullish|bearish|neutral","isBreaking":false,"isEarnings":false,"aiSummary":"One-line AI summary of how this affects the portfolio","image_url":"URL of article image if available"}]. Return 10-15 articles. Mark articles from the last hour as isBreaking. Mark earnings-related articles as isEarnings. Set sentiment based on content. For aiSummary, relate it to portfolio holdings if applicable. Keep your responses concise and actionable. Use 2-3 short paragraphs maximum. Only provide longer responses when the user explicitly asks for more detail or a comprehensive analysis.' + (country ? ' Focus on ' + country + ' market news.' : '') + (industry ? ' Focus on ' + industry + ' sector news.' : ''),
-            messages: [{ role: 'user', content: 'Get personalized market news for: ' + tickerStr + (filterContext ? '. ' + filterContext : '') + '. Return only JSON array.' }]
-          }) });
+        var queryParams = 'limit=12';
+        if (tickerStr) queryParams += '&symbols=' + encodeURIComponent(tickerStr);
+        if (country || industry) queryParams += '&q=' + encodeURIComponent((country || '') + ' ' + (industry || '')).trim();
+        var res = await fetch(SUPABASE_FN + '/news?' + queryParams);
         var data = await res.json();
-        var reply = data.reply || '';
-        var jsonMatch = reply.match(/\[[\s\S]*\]/);
-        if (jsonMatch) {
-          var articles = JSON.parse(jsonMatch[0]);
+        if (data && Array.isArray(data.articles) && data.articles.length > 0) {
+          // Map to the format renderNewsFeed expects
+          var articles = data.articles.map(function(a) {
+            var isRecent = a.publishedAt && (Date.now() - new Date(a.publishedAt).getTime()) < 3600000;
+            var isEarnings = /earnings|revenue|quarterly|profit|EPS/i.test(a.title || '');
+            return {
+              title: a.title,
+              source: a.source,
+              snippet: a.description,
+              url: a.url,
+              published: a.timeAgo || '',
+              tickers: a.tickers || [],
+              sentiment: a.sentiment || 'neutral',
+              isBreaking: isRecent,
+              isEarnings: isEarnings,
+              aiSummary: a.description ? a.description.substring(0, 100) : '',
+              image_url: a.image || null
+            };
+          });
           renderNewsFeed(articles, userTickers);
         } else {
           container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-dim);">Unable to load news. Try refreshing.</div>';
         }
       } catch(e) {
+        console.error('News feed error:', e);
         container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-dim);">Connection error loading news.</div>';
       }
       if (btn) btn.classList.remove('spinning');
