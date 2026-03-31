@@ -3923,7 +3923,8 @@
       var newsList = document.getElementById('marketNewsList');
       var fmNewsList = document.getElementById('fmMarketNewsList');
       try {
-        var res = await fetch(SUPABASE_FN + '/news?limit=8');
+        var newsSymbols = MAG7.map(function(s) { return s.symbol; }).join(',');
+        var res = await fetch(SUPABASE_FN + '/news?limit=8&symbols=' + encodeURIComponent(newsSymbols));
         var data = await res.json();
         if (data && Array.isArray(data.articles) && data.articles.length > 0) {
           var html = data.articles.map(function(a) {
