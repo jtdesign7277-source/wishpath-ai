@@ -655,6 +655,84 @@
     .news-feed-action { padding: 5px 10px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; color: var(--text-dim); font: inherit; font-size: 0.7rem; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 4px; }
     .news-feed-action:hover { border-color: var(--accent); color: var(--accent); }
 
+    /* ── Command Center ── */
+    .cc-empty-state { text-align: center; padding: 60px 24px; }
+    .cc-empty-icon { font-size: 3rem; margin-bottom: 16px; }
+    .cc-empty-title { font-size: 1.3rem; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+    .cc-empty-sub { font-size: 0.88rem; color: var(--text-dim); margin-bottom: 28px; line-height: 1.5; }
+    .cc-create-btn { display: inline-flex; align-items: center; gap: 8px; padding: 14px 28px; background: linear-gradient(135deg, var(--accent), #a78bfa); color: #0d1117; border: none; border-radius: 12px; font: inherit; font-size: 1rem; font-weight: 700; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; }
+    .cc-create-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(0,201,167,0.3); }
+    .cc-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-bottom: 20px; }
+    .cc-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; cursor: pointer; transition: border-color 0.2s, transform 0.15s; position: relative; }
+    .cc-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .cc-card-name { font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .cc-card-meta { font-size: 0.75rem; color: var(--text-dim); display: flex; gap: 8px; }
+    .cc-card-widgets { font-size: 0.78rem; color: var(--text-muted); margin-top: 8px; display: flex; gap: 4px; flex-wrap: wrap; }
+    .cc-card-widget-tag { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); padding: 2px 8px; border-radius: 4px; font-size: 0.68rem; }
+    .cc-card-actions { position: absolute; top: 12px; right: 12px; display: flex; gap: 4px; opacity: 0; transition: opacity 0.15s; }
+    .cc-card:hover .cc-card-actions { opacity: 1; }
+    .cc-card-action { background: rgba(255,255,255,0.06); border: none; border-radius: 6px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-dim); font-size: 0.75rem; transition: all 0.15s; }
+    .cc-card-action:hover { color: var(--text); background: rgba(255,255,255,0.1); }
+    .cc-card-action.delete:hover { color: var(--red); background: rgba(248,81,73,0.1); }
+    /* CC Builder */
+    .cc-builder { display: none; }
+    .cc-builder.active { display: block; }
+    .cc-builder-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+    .cc-builder-name { flex: 1; min-width: 200px; padding: 10px 16px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font: inherit; font-size: 1rem; font-weight: 600; outline: none; }
+    .cc-builder-name:focus { border-color: var(--accent); }
+    .cc-builder-back { padding: 10px 16px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 10px; color: var(--text-muted); font: inherit; font-size: 0.85rem; cursor: pointer; transition: all 0.15s; }
+    .cc-builder-back:hover { border-color: var(--accent); color: var(--accent); }
+    .cc-builder-save { padding: 10px 20px; background: var(--accent); color: var(--bg); border: none; border-radius: 10px; font: inherit; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
+    .cc-widget-picker { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; padding: 16px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; }
+    .cc-widget-pick { padding: 8px 14px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; color: var(--text-muted); font: inherit; font-size: 0.78rem; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 6px; }
+    .cc-widget-pick:hover { border-color: var(--accent); color: var(--accent); background: rgba(0,201,167,0.05); }
+    /* CC Grid */
+    .cc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
+    .cc-widget { background: rgba(22,27,34,0.8); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; position: relative; min-height: 200px; }
+    .cc-widget-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border); }
+    .cc-widget-title { font-size: 0.8rem; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 6px; }
+    .cc-widget-controls { display: flex; gap: 4px; }
+    .cc-widget-ctrl { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 0.75rem; padding: 4px; border-radius: 4px; transition: all 0.15s; }
+    .cc-widget-ctrl:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+    .cc-widget-ctrl.delete:hover { color: var(--red); }
+    .cc-widget-body { padding: 12px 16px; overflow: auto; max-height: 400px; }
+    .cc-widget-body .stock-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+    .cc-widget-body .holdings-table { font-size: 0.78rem; }
+    .cc-widget-body .watchlist-item { padding: 8px 10px; }
+    .cc-widget-body .news-feed-item { padding: 12px; margin-bottom: 8px; }
+    .cc-widget-body .fm-widget-container { min-height: 350px; border: none; border-radius: 0; }
+    /* CC widget settings modal */
+    .cc-settings-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9000; justify-content: center; align-items: center; }
+    .cc-settings-overlay.active { display: flex; }
+    .cc-settings-modal { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 24px; max-width: 480px; width: 90%; max-height: 80vh; overflow-y: auto; }
+    .cc-settings-title { font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 16px; }
+    .cc-settings-field { margin-bottom: 14px; }
+    .cc-settings-label { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 6px; display: block; font-weight: 600; }
+    .cc-settings-input { width: 100%; padding: 10px 14px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font: inherit; font-size: 0.88rem; outline: none; box-sizing: border-box; }
+    .cc-settings-input:focus { border-color: var(--accent); }
+    .cc-settings-select { width: 100%; padding: 10px 14px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font: inherit; font-size: 0.88rem; outline: none; appearance: none; -webkit-appearance: none; box-sizing: border-box; }
+    .cc-settings-btns { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+    .cc-settings-cancel { padding: 10px 20px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 10px; color: var(--text-muted); font: inherit; font-size: 0.85rem; cursor: pointer; }
+    .cc-settings-save { padding: 10px 20px; background: var(--accent); color: var(--bg); border: none; border-radius: 10px; font: inherit; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
+    /* Sidebar CC section */
+    .sidebar-cc-section { padding: 0 8px; }
+    .sidebar-cc-toggle { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 8px; font-size: 0.88rem; font-weight: 500; color: var(--text-muted); cursor: pointer; transition: all 0.15s; width: 100%; }
+    .sidebar-cc-toggle:hover { background: rgba(255,255,255,0.04); color: var(--text); }
+    .sidebar-cc-toggle.active { background: var(--accent-dim); color: var(--accent); }
+    .sidebar-cc-toggle svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .sidebar-cc-arrow { font-size: 0.6rem; margin-left: auto; transition: transform 0.2s; color: var(--text-dim); }
+    .sidebar-cc-arrow.open { transform: rotate(90deg); }
+    .sidebar-cc-items { display: none; padding-left: 14px; }
+    .sidebar-cc-items.open { display: block; }
+    .sidebar-cc-sub { display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 6px; font-size: 0.78rem; color: var(--text-dim); cursor: pointer; transition: all 0.15s; }
+    .sidebar-cc-sub:hover { background: rgba(255,255,255,0.04); color: var(--text-muted); }
+    /* News Feed filters */
+    .news-filter-bar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+    .news-filter-bar .news-filter-label { font-size: 0.78rem; color: var(--text-dim); font-weight: 600; display: flex; align-items: center; gap: 6px; }
+    .news-filter-select { padding: 8px 12px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font: inherit; font-size: 0.8rem; outline: none; min-width: 140px; appearance: none; -webkit-appearance: none; }
+    .news-filter-select:focus { border-color: var(--accent); }
+    .news-filter-landing { text-align: center; padding: 20px; color: var(--text-dim); font-size: 0.82rem; margin-bottom: 12px; }
+
     /* ── Mobile home tabs ── */
     @media (max-width: 768px) {
       .home-tabs { margin: 0 -20px 20px; padding: 0 16px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -668,6 +746,37 @@
       .portfolio-coach-input { font-size: 16px !important; }
       .portfolio-coach-suggestions { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
       .portfolio-coach-chip { white-space: nowrap; flex-shrink: 0; }
+      /* CC mobile */
+      .cc-list { grid-template-columns: 1fr; gap: 12px; }
+      .cc-card-actions { opacity: 1; }
+      .cc-grid { grid-template-columns: 1fr; gap: 12px; }
+      .cc-widget { min-height: 160px; }
+      .cc-widget-body { max-height: 350px; }
+      .cc-widget-picker { gap: 6px; padding: 12px; }
+      .cc-widget-pick { padding: 10px 12px; font-size: 0.8rem; min-height: 44px; }
+      .cc-builder-header { flex-direction: column; gap: 8px; }
+      .cc-builder-name { width: 100%; font-size: 16px !important; }
+      .cc-builder-back, .cc-builder-save { min-height: 44px; }
+      .cc-settings-modal { width: 95%; max-width: none; margin: 12px; }
+      /* FM sub-tabs mobile — horizontal scrollable pills */
+      .fm-sub-tabs { gap: 0; padding: 0 12px; }
+      .fm-sub-tab { padding: 10px 14px; font-size: 0.78rem; min-height: 44px; }
+      .fm-widget-container { min-height: 400px; border-radius: 8px; }
+      .fm-widget-container iframe { width: 100% !important; }
+      .fm-ticker-input-row { flex-direction: column; }
+      .fm-ticker-input { width: 100%; font-size: 16px !important; min-height: 44px; }
+      .fm-ticker-btn { width: 100%; min-height: 44px; }
+      /* News filter mobile — full width */
+      .news-filter-bar { flex-direction: column; gap: 8px; }
+      .news-filter-select { width: 100%; font-size: 16px !important; min-height: 44px; padding: 12px; }
+      .news-feed-item { padding: 14px; }
+      .news-feed-action { min-height: 44px; padding: 8px 12px; }
+      /* Watchlist mobile */
+      .watchlist-item { min-height: 44px; }
+      .watchlist-add-input { font-size: 16px !important; min-height: 44px; }
+      .watchlist-add-btn { min-height: 44px; }
+      /* Safe areas */
+      .cc-widget-picker { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
     }
   </style>
   <!-- Meta Pixel Code -->
@@ -745,6 +854,18 @@
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 5h12M4 10h12M4 15h8"/><path d="M2 5l1 1 2-2M2 10l1 1 2-2"/></svg>
         To-Dos
       </a>
+      <!-- Command Center expandable section -->
+      <div class="sidebar-cc-section">
+        <div class="sidebar-cc-toggle" id="sidebarCCToggle" onclick="toggleCCSidebar()">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="7" height="7" rx="1.5"/><rect x="11" y="2" width="7" height="7" rx="1.5"/><rect x="2" y="11" width="7" height="7" rx="1.5"/><rect x="11" y="11" width="7" height="7" rx="1.5"/></svg>
+          Command Center
+          <span class="sidebar-cc-arrow" id="sidebarCCArrow">&#x25B6;</span>
+        </div>
+        <div class="sidebar-cc-items" id="sidebarCCItems">
+          <div class="sidebar-cc-sub" onclick="openCCFromSidebar('new')">+ New Command Center</div>
+          <div id="sidebarCCList"></div>
+        </div>
+      </div>
       <!-- Financial Markets expandable section -->
       <div class="sidebar-fm-section">
         <div class="sidebar-fm-toggle" id="sidebarFMToggle" onclick="toggleFMSidebar()">
@@ -1083,6 +1204,18 @@
           <div class="markets-section-label"><span>&#x1F4F0; Personalized News Feed</span>
             <button class="markets-refresh-btn" id="newsFeedRefreshBtn" onclick="refreshNewsFeed()"><span class="refresh-icon" style="display:inline-block;">&#x21BB;</span> Refresh</button>
           </div>
+          <div class="news-filter-bar" id="newsFilterBar">
+            <div class="news-filter-label">&#x1F30D; Filter:</div>
+            <select class="news-filter-select" id="newsCountryFilter" onchange="refreshNewsFeed()">
+              <option value="">All Countries</option>
+              <option value="ar">&#x1F1E6;&#x1F1F7; Argentina</option><option value="au">&#x1F1E6;&#x1F1FA; Australia</option><option value="be">&#x1F1E7;&#x1F1EA; Belgium</option><option value="br">&#x1F1E7;&#x1F1F7; Brazil</option><option value="ca">&#x1F1E8;&#x1F1E6; Canada</option><option value="cn">&#x1F1E8;&#x1F1F3; China</option><option value="cz">&#x1F1E8;&#x1F1FF; Czech Republic</option><option value="eg">&#x1F1EA;&#x1F1EC; Egypt</option><option value="fr">&#x1F1EB;&#x1F1F7; France</option><option value="de">&#x1F1E9;&#x1F1EA; Germany</option><option value="gr">&#x1F1EC;&#x1F1F7; Greece</option><option value="hk">&#x1F1ED;&#x1F1F0; Hong Kong</option><option value="hu">&#x1F1ED;&#x1F1FA; Hungary</option><option value="in">&#x1F1EE;&#x1F1F3; India</option><option value="ie">&#x1F1EE;&#x1F1EA; Ireland</option><option value="il">&#x1F1EE;&#x1F1F1; Israel</option><option value="it">&#x1F1EE;&#x1F1F9; Italy</option><option value="jp">&#x1F1EF;&#x1F1F5; Japan</option><option value="kr">&#x1F1F0;&#x1F1F7; Korea</option><option value="es">&#x1F1EA;&#x1F1F8; Spain</option><option value="ch">&#x1F1E8;&#x1F1ED; Switzerland</option><option value="gb">&#x1F1EC;&#x1F1E7; United Kingdom</option><option value="us">&#x1F1FA;&#x1F1F8; United States</option>
+            </select>
+            <select class="news-filter-select" id="newsIndustryFilter" onchange="refreshNewsFeed()">
+              <option value="">All Industries</option>
+              <option value="Basic Materials">Basic Materials</option><option value="Communication Services">Communication Services</option><option value="Consumer Cyclical">Consumer Cyclical</option><option value="Consumer Defensive">Consumer Defensive</option><option value="Energy">Energy</option><option value="Financial">Financial</option><option value="Healthcare">Healthcare</option><option value="Industrial Goods">Industrial Goods</option><option value="Industrials">Industrials</option><option value="Real Estate">Real Estate</option><option value="Materials">Materials</option><option value="Technology">Technology</option><option value="Utilities">Utilities</option>
+            </select>
+          </div>
+          <div class="news-filter-landing" id="newsFilterLanding">&#x1F30D; Global Markets — 50+ countries &middot; 12 industries &middot; Real-time news</div>
           <div id="newsFeedContainer"><div style="text-align:center;padding:40px;color:var(--text-dim);">Loading your personalized news...</div></div>
         </div>
 
@@ -1122,6 +1255,60 @@
             <button class="fm-ticker-btn" onclick="loadTVTechAnalysis()">Analyze</button>
           </div>
           <div class="fm-widget-container" id="tvTechWidget" style="height:500px;"></div>
+        </div>
+      </div>
+
+      <!-- Command Center View -->
+      <div class="view" id="ccView">
+        <!-- CC List (shows saved command centers) -->
+        <div id="ccListView">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+            <div style="font-size:1.1rem;font-weight:700;color:var(--text);">My Command Centers</div>
+            <button class="cc-create-btn" onclick="createNewCC()" style="font-size:0.85rem;padding:10px 20px;">+ New Command Center</button>
+          </div>
+          <div id="ccCardList" class="cc-list"></div>
+          <div id="ccEmptyState" class="cc-empty-state">
+            <div class="cc-empty-icon">&#x1F3AF;</div>
+            <div class="cc-empty-title">Build Your Command Center</div>
+            <div class="cc-empty-sub">Your personal financial headquarters — customize with live prices, news, charts, and AI insights.</div>
+            <button class="cc-create-btn" onclick="createNewCC()">+ Build Your Command Center</button>
+          </div>
+        </div>
+        <!-- CC Builder (edit/view a single command center) -->
+        <div id="ccBuilderView" class="cc-builder">
+          <div class="cc-builder-header">
+            <button class="cc-builder-back" onclick="closeCCBuilder()">&larr; Back</button>
+            <input class="cc-builder-name" id="ccBuilderName" placeholder="Command Center name..." value="My Command Center" />
+            <button class="cc-builder-save" onclick="saveCCFromBuilder()">Save</button>
+          </div>
+          <div class="cc-widget-picker" id="ccWidgetPicker">
+            <span style="font-size:0.75rem;color:var(--text-dim);font-weight:600;width:100%;margin-bottom:4px;">Add Widget:</span>
+            <button class="cc-widget-pick" onclick="addCCWidget('watchlist')">&#x1F4CB; Watchlist</button>
+            <button class="cc-widget-pick" onclick="addCCWidget('ticker')">&#x1F4B9; Price Ticker</button>
+            <button class="cc-widget-pick" onclick="addCCWidget('news')">&#x1F4F0; News Feed</button>
+            <button class="cc-widget-pick" onclick="addCCWidget('chart_studio')">&#x1F4CA; Chart Studio</button>
+            <button class="cc-widget-pick" onclick="addCCWidget('tv_chart')">&#x1F5A5; TradingView Chart</button>
+            <button class="cc-widget-pick" onclick="addCCWidget('tv_heatmap')">&#x1F525; Heat Map</button>
+            <button class="cc-widget-pick" onclick="addCCWidget('portfolio')">&#x1F4BC; Portfolio</button>
+            <button class="cc-widget-pick" onclick="addCCWidget('calendar')">&#x1F4C5; Calendar</button>
+            <button class="cc-widget-pick" onclick="addCCWidget('ai_coach')">&#x1F916; AI Coach</button>
+            <button class="cc-widget-pick" onclick="addCCWidget('tech_analysis')">&#x1F4C8; Technical Analysis</button>
+            <button class="cc-widget-pick" onclick="addCCWidget('market_overview')">&#x1F30D; Market Overview</button>
+            <button class="cc-widget-pick" onclick="addCCWidget('notes')">&#x1F4DD; Notes</button>
+          </div>
+          <div class="cc-grid" id="ccGrid"></div>
+        </div>
+      </div>
+
+      <!-- Widget Settings Modal -->
+      <div class="cc-settings-overlay" id="ccSettingsOverlay" onclick="if(event.target===this)closeCCSettings()">
+        <div class="cc-settings-modal">
+          <div class="cc-settings-title" id="ccSettingsTitle">Widget Settings</div>
+          <div id="ccSettingsBody"></div>
+          <div class="cc-settings-btns">
+            <button class="cc-settings-cancel" onclick="closeCCSettings()">Cancel</button>
+            <button class="cc-settings-save" onclick="applyCCSettings()">Apply</button>
+          </div>
         </div>
       </div>
 
@@ -1633,7 +1820,7 @@
     }
 
     // View switching
-    var viewTitles = { home: 'Home', fm: 'Financial Markets', wishes: 'My Wishes', coach: 'AI Coach', library: 'Library', notes: 'Notes', todos: 'To-Dos', newwish: 'Your Wish' };
+    var viewTitles = { home: 'Home', fm: 'Financial Markets', cc: 'Command Center', wishes: 'My Wishes', coach: 'AI Coach', library: 'Library', notes: 'Notes', todos: 'To-Dos', newwish: 'Your Wish' };
     // ── iOS-style drag handle for chat/content split ──
     (function initDragHandles() {
       if (window.innerWidth > 768) return;
@@ -1750,6 +1937,7 @@
       if (view === 'library') renderLibrary();
       if (view === 'notes') renderNotesList();
       if (view === 'todos') renderTodoSelect();
+      if (view === 'cc') loadCommandCenters();
       // Close sidebar on mobile after navigation
       if (window.innerWidth <= 768) {
         document.querySelector('.sidebar').classList.remove('open');
@@ -4324,23 +4512,36 @@
     // ── NEWS FEED (MarketAux + AI)
     // ════════════════════════════════
 
-    async function refreshNewsFeed() {
+    async function refreshNewsFeed(overrideCountry, overrideIndustry) {
       var container = document.getElementById('newsFeedContainer');
       var btn = document.getElementById('newsFeedRefreshBtn');
       if (btn) btn.classList.add('spinning');
       container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-dim);">Loading personalized news...</div>';
+
+      // Get filter values
+      var countryEl = document.getElementById('newsCountryFilter');
+      var industryEl = document.getElementById('newsIndustryFilter');
+      var country = overrideCountry || (countryEl ? countryEl.value : '');
+      var industry = overrideIndustry || (industryEl ? industryEl.value : '');
+      // Hide landing text once filters are used or news loads
+      var landing = document.getElementById('newsFilterLanding');
+      if (landing) landing.style.display = 'none';
 
       // Build tickers from portfolio + watchlists for personalization
       var userTickers = portfolioHoldings.map(function(h) { return h.symbol; });
       watchlists.forEach(function(wl) { wl.symbols.forEach(function(s) { if (userTickers.indexOf(s) === -1) userTickers.push(s); }); });
       var tickerStr = userTickers.length > 0 ? userTickers.slice(0, 15).join(',') : 'AAPL,MSFT,GOOGL,AMZN,NVDA,META,TSLA';
 
+      var filterContext = '';
+      if (country) filterContext += ' Filter by country: ' + country + '.';
+      if (industry) filterContext += ' Filter by industry: ' + industry + '.';
+
       try {
         var res = await fetch(EDGE_FN, { method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             coachMode: true,
-            systemPrompt: 'You are a financial news aggregator. Use MarketAux to fetch the latest news for these tickers: ' + tickerStr + '. Return ONLY a JSON array: [{"title":"...","source":"...","snippet":"...","url":"...","published":"...","tickers":["AAPL"],"sentiment":"bullish|bearish|neutral","isBreaking":false,"isEarnings":false,"aiSummary":"One-line AI summary of how this affects the portfolio"}]. Return 10-15 articles. Mark articles from the last hour as isBreaking. Mark earnings-related articles as isEarnings. Set sentiment based on content. For aiSummary, relate it to portfolio holdings if applicable.',
-            messages: [{ role: 'user', content: 'Get personalized market news for: ' + tickerStr + '. Return only JSON array.' }]
+            systemPrompt: 'You are a financial news aggregator. Use MarketAux to fetch the latest news for these tickers: ' + tickerStr + '.' + filterContext + ' Return ONLY a JSON array: [{"title":"...","source":"...","snippet":"...","url":"...","published":"...","tickers":["AAPL"],"sentiment":"bullish|bearish|neutral","isBreaking":false,"isEarnings":false,"aiSummary":"One-line AI summary of how this affects the portfolio"}]. Return 10-15 articles. Mark articles from the last hour as isBreaking. Mark earnings-related articles as isEarnings. Set sentiment based on content. For aiSummary, relate it to portfolio holdings if applicable.' + (country ? ' Focus on ' + country + ' market news.' : '') + (industry ? ' Focus on ' + industry + ' sector news.' : ''),
+            messages: [{ role: 'user', content: 'Get personalized market news for: ' + tickerStr + (filterContext ? '. ' + filterContext : '') + '. Return only JSON array.' }]
           }) });
         var data = await res.json();
         var reply = data.reply || '';
@@ -4419,6 +4620,513 @@
       } catch(e) { showToast('Save failed', 'error'); }
     }
 
+    // ── Single quote fetch helper ──
+    async function fetchQuote(symbol) {
+      if (marketsCache[symbol]) return marketsCache[symbol];
+      try {
+        var res = await fetch(EDGE_FN, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ coachMode: true, systemPrompt: 'Return ONLY JSON: {"quotes":[{"symbol":"' + symbol + '","price":0,"change":0,"changePercent":0}]}. Use Alpaca to get the real-time quote for ' + symbol + '.', messages: [{ role: 'user', content: 'Get quote for ' + symbol }] }) });
+        var data = await res.json();
+        var reply = data.reply || '';
+        var m = reply.match(/\{[\s\S]*"quotes"[\s\S]*\}/);
+        if (m) { var p = JSON.parse(m[0]); if (p.quotes) p.quotes.forEach(function(q) { marketsCache[q.symbol] = q; }); }
+      } catch(e) {}
+      return marketsCache[symbol] || {};
+    }
+
+    // ════════════════════════════════════
+    // ── COMMAND CENTER
+    // ════════════════════════════════════
+
+    var commandCenters = [];
+    var _activeCCId = null;
+    var _ccWidgets = []; // widgets for current builder session
+    var _ccSettingsWidgetIdx = -1;
+    var _ccLoaded = false;
+
+    var CC_WIDGET_TYPES = {
+      watchlist: { icon: '\u{1F4CB}', label: 'Watchlist' },
+      ticker: { icon: '\u{1F4B9}', label: 'Price Ticker' },
+      news: { icon: '\u{1F4F0}', label: 'News Feed' },
+      chart_studio: { icon: '\u{1F4CA}', label: 'Chart Studio' },
+      tv_chart: { icon: '\u{1F5A5}', label: 'TradingView Chart' },
+      tv_heatmap: { icon: '\u{1F525}', label: 'Heat Map' },
+      portfolio: { icon: '\u{1F4BC}', label: 'Portfolio' },
+      calendar: { icon: '\u{1F4C5}', label: 'Calendar' },
+      ai_coach: { icon: '\u{1F916}', label: 'AI Coach' },
+      tech_analysis: { icon: '\u{1F4C8}', label: 'Technical Analysis' },
+      market_overview: { icon: '\u{1F30D}', label: 'Market Overview' },
+      notes: { icon: '\u{1F4DD}', label: 'Notes' }
+    };
+
+    function toggleCCSidebar() {
+      var items = document.getElementById('sidebarCCItems');
+      var arrow = document.getElementById('sidebarCCArrow');
+      items.classList.toggle('open');
+      arrow.classList.toggle('open');
+    }
+
+    function openCCFromSidebar(ccId) {
+      showView('cc');
+      if (ccId === 'new') { createNewCC(); }
+      else { openCCBuilder(ccId); }
+      if (window.innerWidth <= 768) {
+        document.querySelector('.sidebar').classList.remove('open');
+        document.getElementById('sidebarBackdrop').style.display = 'none';
+      }
+    }
+
+    async function loadCommandCenters() {
+      try {
+        var sb = getSupabase(); var user = await getUser();
+        if (!user) return;
+        var { data } = await sb.from('user_notes').select('*').eq('user_id', user.id).like('title', '__WP_CC__%').order('created_at', { ascending: false });
+        commandCenters = (data || []).map(function(row) {
+          var parsed = {};
+          try { parsed = JSON.parse(row.content); } catch(e) {}
+          return { id: row.id, name: parsed.name || 'Untitled', widgets: parsed.widgets || [], created_at: row.created_at };
+        });
+      } catch(e) { commandCenters = []; }
+      _ccLoaded = true;
+      renderCCList();
+      renderSidebarCCList();
+    }
+
+    function renderCCList() {
+      var list = document.getElementById('ccCardList');
+      var empty = document.getElementById('ccEmptyState');
+      if (!commandCenters.length) {
+        list.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+      list.innerHTML = commandCenters.map(function(cc) {
+        var widgetTags = (cc.widgets || []).slice(0, 5).map(function(w) {
+          var t = CC_WIDGET_TYPES[w.type] || {};
+          return '<span class="cc-card-widget-tag">' + (t.icon || '') + ' ' + (t.label || w.type) + '</span>';
+        }).join('');
+        if (cc.widgets.length > 5) widgetTags += '<span class="cc-card-widget-tag">+' + (cc.widgets.length - 5) + ' more</span>';
+        return '<div class="cc-card" onclick="openCCBuilder(\'' + cc.id + '\')">' +
+          '<div class="cc-card-actions">' +
+            '<button class="cc-card-action" onclick="event.stopPropagation();duplicateCC(\'' + cc.id + '\')" title="Duplicate">&#x1F4CB;</button>' +
+            '<button class="cc-card-action delete" onclick="event.stopPropagation();deleteCC(\'' + cc.id + '\')" title="Delete">&#x1F5D1;</button>' +
+          '</div>' +
+          '<div class="cc-card-name">' + cc.name.replace(/</g,'&lt;') + '</div>' +
+          '<div class="cc-card-meta"><span>' + (cc.widgets || []).length + ' widgets</span></div>' +
+          '<div class="cc-card-widgets">' + widgetTags + '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    function renderSidebarCCList() {
+      var el = document.getElementById('sidebarCCList');
+      if (!el) return;
+      el.innerHTML = commandCenters.map(function(cc) {
+        return '<div class="sidebar-cc-sub" onclick="openCCFromSidebar(\'' + cc.id + '\')">\u{1F3AF} ' + cc.name.replace(/</g,'&lt;') + '</div>';
+      }).join('');
+    }
+
+    function createNewCC() {
+      _activeCCId = null;
+      _ccWidgets = [];
+      document.getElementById('ccBuilderName').value = 'My Command Center';
+      document.getElementById('ccListView').style.display = 'none';
+      document.getElementById('ccBuilderView').classList.add('active');
+      renderCCGrid();
+    }
+
+    function openCCBuilder(ccId) {
+      var cc = commandCenters.find(function(c) { return c.id === ccId; });
+      if (!cc) return;
+      _activeCCId = ccId;
+      _ccWidgets = JSON.parse(JSON.stringify(cc.widgets || []));
+      document.getElementById('ccBuilderName').value = cc.name;
+      document.getElementById('ccListView').style.display = 'none';
+      document.getElementById('ccBuilderView').classList.add('active');
+      renderCCGrid();
+    }
+
+    function closeCCBuilder() {
+      document.getElementById('ccBuilderView').classList.remove('active');
+      document.getElementById('ccListView').style.display = 'block';
+      _activeCCId = null;
+      _ccWidgets = [];
+    }
+
+    async function saveCCFromBuilder() {
+      var name = document.getElementById('ccBuilderName').value.trim() || 'My Command Center';
+      var payload = JSON.stringify({ name: name, widgets: _ccWidgets });
+      try {
+        var sb = getSupabase(); var user = await getUser();
+        if (!user) { alert('Log in first.'); return; }
+        if (_activeCCId) {
+          await sb.from('user_notes').update({ content: payload, title: '__WP_CC__' + _activeCCId }).eq('id', _activeCCId);
+        } else {
+          var { data } = await sb.from('user_notes').insert({ user_id: user.id, title: '__WP_CC__new', content: payload }).select();
+          if (data && data[0]) {
+            _activeCCId = data[0].id;
+            await sb.from('user_notes').update({ title: '__WP_CC__' + data[0].id }).eq('id', data[0].id);
+          }
+        }
+        showToast('Command Center saved!');
+        await loadCommandCenters();
+      } catch(e) { showToast('Save failed', 'error'); }
+    }
+
+    async function deleteCC(ccId) {
+      if (!confirm('Delete this Command Center?')) return;
+      try {
+        var sb = getSupabase();
+        await sb.from('user_notes').delete().eq('id', ccId);
+        await loadCommandCenters();
+        showToast('Deleted.');
+      } catch(e) { showToast('Delete failed', 'error'); }
+    }
+
+    async function duplicateCC(ccId) {
+      var cc = commandCenters.find(function(c) { return c.id === ccId; });
+      if (!cc) return;
+      try {
+        var sb = getSupabase(); var user = await getUser();
+        if (!user) return;
+        var payload = JSON.stringify({ name: cc.name + ' (Copy)', widgets: cc.widgets });
+        await sb.from('user_notes').insert({ user_id: user.id, title: '__WP_CC__copy', content: payload });
+        await loadCommandCenters();
+        showToast('Duplicated!');
+      } catch(e) { showToast('Failed', 'error'); }
+    }
+
+    function addCCWidget(type) {
+      var w = { type: type, settings: {} };
+      if (type === 'tv_chart') w.settings.symbol = 'AAPL';
+      if (type === 'tech_analysis') w.settings.symbol = 'AAPL';
+      if (type === 'news') { w.settings.country = ''; w.settings.industry = ''; }
+      if (type === 'watchlist') w.settings.watchlistId = '';
+      if (type === 'ticker') w.settings.symbols = 'AAPL,MSFT,GOOGL,AMZN,NVDA,META,TSLA,BTC/USD,ETH/USD';
+      if (type === 'notes') w.settings.text = '';
+      _ccWidgets.push(w);
+      renderCCGrid();
+      // Auto-open settings for widgets that need config
+      if (['watchlist','tv_chart','tech_analysis','news','ticker','notes'].indexOf(type) !== -1) {
+        openCCWidgetSettings(_ccWidgets.length - 1);
+      }
+    }
+
+    function removeCCWidget(idx) {
+      _ccWidgets.splice(idx, 1);
+      renderCCGrid();
+    }
+
+    function moveCCWidget(idx, dir) {
+      var newIdx = idx + dir;
+      if (newIdx < 0 || newIdx >= _ccWidgets.length) return;
+      var tmp = _ccWidgets[idx];
+      _ccWidgets[idx] = _ccWidgets[newIdx];
+      _ccWidgets[newIdx] = tmp;
+      renderCCGrid();
+    }
+
+    function renderCCGrid() {
+      var grid = document.getElementById('ccGrid');
+      if (!_ccWidgets.length) {
+        grid.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-dim);grid-column:1/-1;">Add widgets above to build your dashboard.</div>';
+        return;
+      }
+      grid.innerHTML = _ccWidgets.map(function(w, idx) {
+        var t = CC_WIDGET_TYPES[w.type] || {};
+        return '<div class="cc-widget" id="ccw-' + idx + '">' +
+          '<div class="cc-widget-header">' +
+            '<div class="cc-widget-title">' + (t.icon || '') + ' ' + (t.label || w.type) + '</div>' +
+            '<div class="cc-widget-controls">' +
+              '<button class="cc-widget-ctrl" onclick="moveCCWidget(' + idx + ',-1)" title="Move up">&uarr;</button>' +
+              '<button class="cc-widget-ctrl" onclick="moveCCWidget(' + idx + ',1)" title="Move down">&darr;</button>' +
+              '<button class="cc-widget-ctrl" onclick="openCCWidgetSettings(' + idx + ')" title="Settings">&#x2699;</button>' +
+              '<button class="cc-widget-ctrl delete" onclick="removeCCWidget(' + idx + ')" title="Remove">&#x2715;</button>' +
+            '</div>' +
+          '</div>' +
+          '<div class="cc-widget-body" id="ccwb-' + idx + '"></div>' +
+        '</div>';
+      }).join('');
+      // Render each widget body
+      _ccWidgets.forEach(function(w, idx) { renderCCWidgetBody(w, idx); });
+    }
+
+    function renderCCWidgetBody(w, idx) {
+      var body = document.getElementById('ccwb-' + idx);
+      if (!body) return;
+      var s = w.settings || {};
+      switch(w.type) {
+        case 'watchlist':
+          if (!s.watchlistId) { body.innerHTML = '<div style="padding:20px;color:var(--text-dim);text-align:center;">Click &#x2699; to select a watchlist.</div>'; return; }
+          var wl = watchlists.find(function(ww) { return ww.id === s.watchlistId; });
+          if (!wl) { body.innerHTML = '<div style="padding:20px;color:var(--text-dim);">Watchlist not found.</div>'; return; }
+          body.innerHTML = '<div style="font-weight:600;margin-bottom:8px;color:var(--text);">' + wl.name.replace(/</g,'&lt;') + '</div>' +
+            '<div class="watchlist-items">' + wl.symbols.map(function(sym) {
+              var p = marketsCache[sym] || {};
+              var chgClass = (p.changePercent || 0) >= 0 ? 'up' : 'down';
+              return '<div class="watchlist-item"><span class="watchlist-symbol">' + sym + '</span><span class="stock-price">$' + formatNum(p.price) + '</span><span class="stock-change ' + chgClass + '">' + formatNum(p.changePercent) + '%</span></div>';
+            }).join('') + '</div>';
+          // Fetch prices for symbols not cached
+          wl.symbols.forEach(function(sym) { if (!marketsCache[sym]) fetchQuote(sym).then(function() { renderCCWidgetBody(w, idx); }); });
+          break;
+        case 'ticker':
+          var syms = (s.symbols || 'AAPL,MSFT,GOOGL').split(',').map(function(x) { return x.trim(); }).filter(Boolean);
+          body.innerHTML = '<div style="display:flex;gap:12px;overflow-x:auto;padding:4px 0;-webkit-overflow-scrolling:touch;">' +
+            syms.map(function(sym) {
+              var p = marketsCache[sym] || {};
+              var chgClass = (p.changePercent || 0) >= 0 ? 'up' : 'down';
+              return '<div style="flex-shrink:0;text-align:center;min-width:70px;"><div style="font-size:0.72rem;font-weight:700;color:var(--text);">' + sym + '</div><div style="font-size:0.85rem;color:var(--text-muted);">$' + formatNum(p.price) + '</div><div class="stock-change ' + chgClass + '" style="font-size:0.72rem;">' + formatNum(p.changePercent) + '%</div></div>';
+            }).join('') + '</div>';
+          syms.forEach(function(sym) { if (!marketsCache[sym]) fetchQuote(sym).then(function() { renderCCWidgetBody(w, idx); }); });
+          break;
+        case 'news':
+          var filterInfo = '';
+          if (s.country) filterInfo += s.country + ' ';
+          if (s.industry) filterInfo += s.industry + ' ';
+          body.innerHTML = '<div style="padding:12px;color:var(--text-dim);text-align:center;">Loading ' + (filterInfo || 'global') + 'news...</div>';
+          loadCCNewsWidget(idx, s.country || '', s.industry || '');
+          break;
+        case 'portfolio':
+          var totalVal = 0, totalPL = 0;
+          portfolioHoldings.forEach(function(h) {
+            var p = portfolioPrices[h.symbol] || {};
+            totalVal += (p.price || 0) * h.qty;
+            totalPL += ((p.price || 0) - h.avgCost) * h.qty;
+          });
+          body.innerHTML = '<div class="portfolio-summary" style="grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px;">' +
+            '<div class="portfolio-stat"><div class="portfolio-stat-label">Total Value</div><div class="portfolio-stat-value">$' + formatNum(totalVal) + '</div></div>' +
+            '<div class="portfolio-stat"><div class="portfolio-stat-label">Total P&L</div><div class="portfolio-stat-value" style="color:' + (totalPL >= 0 ? 'var(--green)' : 'var(--red)') + '">$' + formatNum(totalPL) + '</div></div>' +
+            '<div class="portfolio-stat"><div class="portfolio-stat-label">Positions</div><div class="portfolio-stat-value">' + portfolioHoldings.length + '</div></div>' +
+          '</div>' +
+          '<div id="ccPortfolioChart-' + idx + '" style="min-height:180px;"></div>';
+          // Render pie chart
+          setTimeout(function() {
+            if (portfolioHoldings.length > 0 && typeof Highcharts !== 'undefined') {
+              var chartData = portfolioHoldings.map(function(h) { var p = portfolioPrices[h.symbol] || {}; return { name: h.symbol, y: (p.price || h.avgCost) * h.qty }; });
+              Highcharts.chart('ccPortfolioChart-' + idx, { chart: { type: 'pie', backgroundColor: 'transparent', height: 180 }, title: { text: '' }, credits: { enabled: false }, plotOptions: { pie: { dataLabels: { enabled: true, format: '{point.name}: {point.percentage:.0f}%', style: { color: '#c9d1d9', fontSize: '10px' } }, borderWidth: 0 } }, series: [{ data: chartData }] });
+            }
+          }, 100);
+          break;
+        case 'tv_chart':
+          var sym = s.symbol || 'AAPL';
+          body.innerHTML = '<div class="fm-widget-container" style="min-height:350px;border:none;"><div id="ccTVChart-' + idx + '" style="height:350px;"></div></div>';
+          setTimeout(function() {
+            var el = document.getElementById('ccTVChart-' + idx);
+            if (!el) return;
+            var script = document.createElement('script');
+            script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
+            script.type = 'text/javascript'; script.async = true;
+            script.textContent = JSON.stringify({ autosize: true, symbol: sym, interval: 'D', timezone: 'Etc/UTC', theme: 'dark', style: '1', locale: 'en', allow_symbol_change: true, support_host: 'https://www.tradingview.com' });
+            el.appendChild(script);
+          }, 100);
+          break;
+        case 'tv_heatmap':
+          body.innerHTML = '<div class="fm-widget-container" style="min-height:350px;border:none;"><div id="ccTVHeatmap-' + idx + '" style="height:350px;"></div></div>';
+          setTimeout(function() {
+            var el = document.getElementById('ccTVHeatmap-' + idx);
+            if (!el) return;
+            var script = document.createElement('script');
+            script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-stock-heatmap.js';
+            script.type = 'text/javascript'; script.async = true;
+            script.textContent = JSON.stringify({ exchanges: [], dataSource: 'SPX500', grouping: 'sector', blockSize: 'market_cap_basic', blockColor: 'change', locale: 'en', colorTheme: 'dark', hasTopBar: false, isDataSetEnabled: false, isZoomEnabled: true, hasSymbolTooltip: true, width: '100%', height: '100%' });
+            el.appendChild(script);
+          }, 100);
+          break;
+        case 'calendar':
+          body.innerHTML = '<div class="fm-widget-container" style="min-height:350px;border:none;"><div id="ccTVCal-' + idx + '" style="height:350px;"></div></div>';
+          setTimeout(function() {
+            var el = document.getElementById('ccTVCal-' + idx);
+            if (!el) return;
+            var script = document.createElement('script');
+            script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-events.js';
+            script.type = 'text/javascript'; script.async = true;
+            script.textContent = JSON.stringify({ colorTheme: 'dark', isTransparent: true, width: '100%', height: '100%', locale: 'en' });
+            el.appendChild(script);
+          }, 100);
+          break;
+        case 'market_overview':
+          body.innerHTML = '<div class="fm-widget-container" style="min-height:350px;border:none;"><div id="ccTVOverview-' + idx + '" style="height:350px;"></div></div>';
+          setTimeout(function() {
+            var el = document.getElementById('ccTVOverview-' + idx);
+            if (!el) return;
+            var script = document.createElement('script');
+            script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js';
+            script.type = 'text/javascript'; script.async = true;
+            script.textContent = JSON.stringify({ colorTheme: 'dark', dateRange: '1D', showChart: true, locale: 'en', width: '100%', height: '100%', largeChartUrl: '', isTransparent: true, showSymbolLogo: true, showFloatingTooltip: false, plotLineColorGrowing: '#00c9a7', plotLineColorFalling: '#ef4444', gridLineColor: 'rgba(255,255,255,0.06)', scaleFontColor: '#8b949e', belowLineFillColorGrowing: 'rgba(0,201,167,0.05)', belowLineFillColorFalling: 'rgba(239,68,68,0.05)' });
+            el.appendChild(script);
+          }, 100);
+          break;
+        case 'tech_analysis':
+          var sym = s.symbol || 'AAPL';
+          body.innerHTML = '<div class="fm-widget-container" style="min-height:350px;border:none;"><div id="ccTVTech-' + idx + '" style="height:350px;"></div></div>';
+          setTimeout(function() {
+            var el = document.getElementById('ccTVTech-' + idx);
+            if (!el) return;
+            var script = document.createElement('script');
+            script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js';
+            script.type = 'text/javascript'; script.async = true;
+            script.textContent = JSON.stringify({ interval: '1D', width: '100%', isTransparent: true, height: '100%', symbol: sym, showIntervalTabs: true, locale: 'en', colorTheme: 'dark' });
+            el.appendChild(script);
+          }, 100);
+          break;
+        case 'ai_coach':
+          var coachId = 'ccCoach-' + idx;
+          body.innerHTML = '<div class="portfolio-coach-messages" id="' + coachId + 'Msgs" style="max-height:250px;overflow-y:auto;margin-bottom:8px;"><div class="msg ai">Hi! Ask me anything about markets, your portfolio, or trading strategies.</div></div>' +
+            '<div class="portfolio-coach-input-row"><textarea class="portfolio-coach-input" id="' + coachId + 'Input" placeholder="Ask AI Coach..." rows="1" style="font-size:16px;" onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();sendCCCoachMsg(' + idx + ');}"></textarea><button class="coach-send" onclick="sendCCCoachMsg(' + idx + ')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button></div>';
+          break;
+        case 'chart_studio':
+          body.innerHTML = '<div style="padding:16px;color:var(--text-dim);text-align:center;font-size:0.85rem;">Open <a href="javascript:void(0)" onclick="openFMTab(\'fmChartStudio\')" style="color:var(--accent);">Chart Studio</a> to create and manage charts.</div>';
+          break;
+        case 'notes':
+          var txt = s.text || '';
+          body.innerHTML = '<textarea id="ccNotes-' + idx + '" style="width:100%;min-height:120px;background:transparent;border:none;color:var(--text);font:inherit;font-size:0.85rem;resize:vertical;outline:none;box-sizing:border-box;" placeholder="Type your notes here..." onblur="saveCCNoteText(' + idx + ')">' + txt.replace(/</g,'&lt;') + '</textarea>';
+          break;
+        default:
+          body.innerHTML = '<div style="padding:20px;color:var(--text-dim);text-align:center;">Widget: ' + w.type + '</div>';
+      }
+    }
+
+    async function loadCCNewsWidget(idx, country, industry) {
+      var body = document.getElementById('ccwb-' + idx);
+      if (!body) return;
+      var userTickers = portfolioHoldings.map(function(h) { return h.symbol; });
+      var tickerStr = userTickers.length > 0 ? userTickers.slice(0, 10).join(',') : 'AAPL,MSFT,GOOGL';
+      var filterCtx = '';
+      if (country) filterCtx += ' Country: ' + country + '.';
+      if (industry) filterCtx += ' Industry: ' + industry + '.';
+      try {
+        var res = await fetch(EDGE_FN, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ coachMode: true,
+            systemPrompt: 'Financial news aggregator. Tickers: ' + tickerStr + '.' + filterCtx + ' Return ONLY JSON array: [{"title":"...","source":"...","sentiment":"bullish|bearish|neutral","aiSummary":"..."}]. Return 5 articles.',
+            messages: [{ role: 'user', content: 'Get top 5 market news.' + filterCtx }] }) });
+        var data = await res.json();
+        var reply = data.reply || '';
+        var jsonMatch = reply.match(/\[[\s\S]*\]/);
+        if (jsonMatch) {
+          var articles = JSON.parse(jsonMatch[0]);
+          body.innerHTML = articles.map(function(a) {
+            var sentClass = a.sentiment === 'bullish' ? 'bullish' : a.sentiment === 'bearish' ? 'bearish' : 'neutral';
+            return '<div class="news-feed-item" style="padding:10px;margin-bottom:6px;"><div class="news-feed-badges"><span class="news-badge ' + sentClass + '">' + (a.sentiment || 'Neutral') + '</span></div><div class="news-feed-title" style="font-size:0.82rem;">' + (a.title || '').replace(/</g,'&lt;') + '</div>' + (a.aiSummary ? '<div class="news-feed-summary" style="font-size:0.75rem;">' + a.aiSummary.replace(/</g,'&lt;') + '</div>' : '') + '</div>';
+          }).join('');
+        } else { body.innerHTML = '<div style="padding:12px;color:var(--text-dim);text-align:center;">Unable to load news.</div>'; }
+      } catch(e) { body.innerHTML = '<div style="padding:12px;color:var(--text-dim);text-align:center;">News load failed.</div>'; }
+    }
+
+    async function sendCCCoachMsg(idx) {
+      if (!checkAgentLimit()) return;
+      var inputEl = document.getElementById('ccCoach-' + idx + 'Input');
+      var msgsEl = document.getElementById('ccCoach-' + idx + 'Msgs');
+      if (!inputEl || !msgsEl) return;
+      var msg = inputEl.value.trim();
+      if (!msg) return;
+      inputEl.value = '';
+      msgsEl.innerHTML += '<div class="msg user">' + msg.replace(/</g,'&lt;') + '</div>';
+      msgsEl.innerHTML += '<div class="msg ai" id="ccCoachTyping-' + idx + '"><span class="thinking-dots"><span></span><span></span><span></span></span></div>';
+      msgsEl.scrollTop = msgsEl.scrollHeight;
+      try {
+        var res = await fetch(EDGE_FN, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ coachMode: true, systemPrompt: 'You are the WishPath AI Coach — expert financial advisor. Be helpful, concise, data-driven.', messages: [{ role: 'user', content: msg }] }) });
+        var data = await res.json();
+        var reply = data.reply || "Couldn't process that.";
+        var typing = document.getElementById('ccCoachTyping-' + idx);
+        if (typing) typing.remove();
+        msgsEl.innerHTML += '<div class="msg ai">' + reply.replace(/</g,'&lt;').replace(/\n/g,'<br>') + '</div>';
+        incrementAgentUsage();
+      } catch(e) {
+        var typing = document.getElementById('ccCoachTyping-' + idx);
+        if (typing) typing.remove();
+        msgsEl.innerHTML += '<div class="msg ai" style="color:#f85149;">Connection error.</div>';
+      }
+      msgsEl.scrollTop = msgsEl.scrollHeight;
+    }
+
+    function saveCCNoteText(idx) {
+      var el = document.getElementById('ccNotes-' + idx);
+      if (!el || !_ccWidgets[idx]) return;
+      _ccWidgets[idx].settings.text = el.value;
+    }
+
+    // Widget settings modal
+    function openCCWidgetSettings(idx) {
+      _ccSettingsWidgetIdx = idx;
+      var w = _ccWidgets[idx];
+      if (!w) return;
+      var s = w.settings || {};
+      var html = '';
+      var title = (CC_WIDGET_TYPES[w.type] || {}).label || w.type;
+      document.getElementById('ccSettingsTitle').textContent = title + ' Settings';
+
+      switch(w.type) {
+        case 'watchlist':
+          html = '<div class="cc-settings-field"><label class="cc-settings-label">Select Watchlist</label><select class="cc-settings-select" id="ccSetWatchlist">' +
+            '<option value="">-- Choose --</option>' +
+            watchlists.map(function(wl) { return '<option value="' + wl.id + '"' + (s.watchlistId === wl.id ? ' selected' : '') + '>' + wl.name.replace(/</g,'&lt;') + ' (' + wl.symbols.length + ' symbols)</option>'; }).join('') +
+            '</select></div>';
+          break;
+        case 'tv_chart':
+        case 'tech_analysis':
+          html = '<div class="cc-settings-field"><label class="cc-settings-label">Symbol</label><input class="cc-settings-input" id="ccSetSymbol" value="' + (s.symbol || 'AAPL') + '" placeholder="e.g. AAPL" style="text-transform:uppercase;" /></div>';
+          break;
+        case 'news':
+          html = '<div class="cc-settings-field"><label class="cc-settings-label">Country</label><select class="cc-settings-select" id="ccSetCountry"><option value="">All Countries</option>' +
+            '<option value="ar"' + (s.country==='ar'?' selected':'') + '>Argentina</option><option value="au"' + (s.country==='au'?' selected':'') + '>Australia</option><option value="br"' + (s.country==='br'?' selected':'') + '>Brazil</option><option value="ca"' + (s.country==='ca'?' selected':'') + '>Canada</option><option value="cn"' + (s.country==='cn'?' selected':'') + '>China</option><option value="fr"' + (s.country==='fr'?' selected':'') + '>France</option><option value="de"' + (s.country==='de'?' selected':'') + '>Germany</option><option value="hk"' + (s.country==='hk'?' selected':'') + '>Hong Kong</option><option value="in"' + (s.country==='in'?' selected':'') + '>India</option><option value="jp"' + (s.country==='jp'?' selected':'') + '>Japan</option><option value="kr"' + (s.country==='kr'?' selected':'') + '>Korea</option><option value="gb"' + (s.country==='gb'?' selected':'') + '>UK</option><option value="us"' + (s.country==='us'?' selected':'') + '>USA</option>' +
+            '</select></div>' +
+            '<div class="cc-settings-field"><label class="cc-settings-label">Industry</label><select class="cc-settings-select" id="ccSetIndustry"><option value="">All Industries</option>' +
+            '<option value="Technology"' + (s.industry==='Technology'?' selected':'') + '>Technology</option><option value="Healthcare"' + (s.industry==='Healthcare'?' selected':'') + '>Healthcare</option><option value="Financial"' + (s.industry==='Financial'?' selected':'') + '>Financial</option><option value="Energy"' + (s.industry==='Energy'?' selected':'') + '>Energy</option><option value="Consumer Cyclical"' + (s.industry==='Consumer Cyclical'?' selected':'') + '>Consumer Cyclical</option><option value="Industrials"' + (s.industry==='Industrials'?' selected':'') + '>Industrials</option><option value="Real Estate"' + (s.industry==='Real Estate'?' selected':'') + '>Real Estate</option><option value="Utilities"' + (s.industry==='Utilities'?' selected':'') + '>Utilities</option><option value="Communication Services"' + (s.industry==='Communication Services'?' selected':'') + '>Communication Services</option><option value="Basic Materials"' + (s.industry==='Basic Materials'?' selected':'') + '>Basic Materials</option>' +
+            '</select></div>';
+          break;
+        case 'ticker':
+          html = '<div class="cc-settings-field"><label class="cc-settings-label">Symbols (comma-separated)</label><input class="cc-settings-input" id="ccSetSymbols" value="' + (s.symbols || '') + '" placeholder="AAPL,MSFT,GOOGL" style="text-transform:uppercase;" /></div>';
+          break;
+        case 'notes':
+          html = '<div class="cc-settings-field"><label class="cc-settings-label">Note Text</label><textarea class="cc-settings-input" id="ccSetNoteText" rows="5" placeholder="Your notes...">' + (s.text || '').replace(/</g,'&lt;') + '</textarea></div>';
+          break;
+        default:
+          html = '<p style="color:var(--text-dim);">No settings available for this widget.</p>';
+      }
+      document.getElementById('ccSettingsBody').innerHTML = html;
+      document.getElementById('ccSettingsOverlay').classList.add('active');
+    }
+
+    function closeCCSettings() {
+      document.getElementById('ccSettingsOverlay').classList.remove('active');
+      _ccSettingsWidgetIdx = -1;
+    }
+
+    function applyCCSettings() {
+      var idx = _ccSettingsWidgetIdx;
+      if (idx < 0 || !_ccWidgets[idx]) { closeCCSettings(); return; }
+      var w = _ccWidgets[idx];
+      switch(w.type) {
+        case 'watchlist':
+          var sel = document.getElementById('ccSetWatchlist');
+          if (sel) w.settings.watchlistId = sel.value;
+          break;
+        case 'tv_chart':
+        case 'tech_analysis':
+          var inp = document.getElementById('ccSetSymbol');
+          if (inp) w.settings.symbol = inp.value.trim().toUpperCase() || 'AAPL';
+          break;
+        case 'news':
+          var c = document.getElementById('ccSetCountry');
+          var i = document.getElementById('ccSetIndustry');
+          if (c) w.settings.country = c.value;
+          if (i) w.settings.industry = i.value;
+          break;
+        case 'ticker':
+          var inp = document.getElementById('ccSetSymbols');
+          if (inp) w.settings.symbols = inp.value.trim().toUpperCase();
+          break;
+        case 'notes':
+          var t = document.getElementById('ccSetNoteText');
+          if (t) w.settings.text = t.value;
+          break;
+      }
+      closeCCSettings();
+      renderCCGrid();
+    }
+
     // ════════════════════════════════
     // ── INIT: Load data from Supabase on auth
     // ════════════════════════════════
@@ -4428,9 +5136,10 @@
     loadWishes = async function() {
       await _origLoadWishes();
       // Load portfolio and watchlists from Supabase
-      await Promise.all([loadPortfolioFromDB(), loadWatchlistsFromDB()]);
+      await Promise.all([loadPortfolioFromDB(), loadWatchlistsFromDB(), loadCommandCenters()]);
       renderHoldings();
       renderSidebarWatchlists();
+      renderSidebarCCList();
     };
 
     // ── Auto-refresh: markets every 60s, watchlist every 30s ──
