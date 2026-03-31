@@ -501,6 +501,128 @@
         align-items: center;
       }
     }
+
+    /* ── Home Screen Tabs ── */
+    .home-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
+    .home-tab { padding: 12px 24px; font-size: 0.88rem; font-weight: 600; color: var(--text-dim); cursor: pointer; border: none; border-bottom: 2px solid transparent; transition: all 0.15s; background: none; font-family: inherit; display: flex; align-items: center; gap: 8px; }
+    .home-tab:hover { color: var(--text-muted); background: rgba(255,255,255,0.02); }
+    .home-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .home-tab-icon { font-size: 1rem; }
+    .home-tab-content { display: none; }
+    .home-tab-content.active { display: block; }
+
+    /* ── Markets Tab ── */
+    .markets-section-label { font-size: 0.72rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
+    .markets-refresh-btn { background: none; border: 1px solid var(--border); border-radius: 6px; padding: 4px 12px; color: var(--text-dim); font-size: 0.72rem; cursor: pointer; font-family: inherit; transition: all 0.15s; display: flex; align-items: center; gap: 4px; }
+    .markets-refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .markets-refresh-btn.spinning .refresh-icon { animation: spin 0.8s linear infinite; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .stock-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; margin-bottom: 28px; }
+    .stock-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; transition: all 0.2s; position: relative; overflow: hidden; }
+    .stock-card:hover { border-color: rgba(0,201,167,0.3); transform: translateY(-1px); }
+    .stock-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--accent), #3b82f6); opacity: 0; transition: opacity 0.2s; }
+    .stock-card:hover::before { opacity: 1; }
+    .stock-symbol { font-size: 0.85rem; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+    .stock-name { font-size: 0.68rem; color: var(--text-dim); margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .stock-price { font-size: 1.15rem; font-weight: 800; color: #fff; margin-bottom: 4px; font-variant-numeric: tabular-nums; }
+    .stock-change { font-size: 0.78rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .stock-change.up { color: #22c55e; }
+    .stock-change.down { color: #ef4444; }
+    .stock-change.flat { color: var(--text-dim); }
+    .stock-shimmer { background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.03) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px; height: 14px; margin-bottom: 6px; }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    .markets-updated { font-size: 0.68rem; color: var(--text-dim); margin-bottom: 20px; }
+    .news-list { display: flex; flex-direction: column; gap: 10px; }
+    .news-item { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; transition: border-color 0.2s; text-decoration: none; display: block; }
+    .news-item:hover { border-color: rgba(0,201,167,0.3); }
+    .news-title { font-size: 0.88rem; font-weight: 600; color: var(--text); line-height: 1.4; margin-bottom: 4px; }
+    .news-meta { font-size: 0.7rem; color: var(--text-dim); display: flex; gap: 8px; }
+    .news-source { color: var(--accent); font-weight: 500; }
+
+    /* ── Portfolio Tab ── */
+    .portfolio-summary { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin-bottom: 24px; }
+    .portfolio-stat { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+    .portfolio-stat-label { font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; font-weight: 600; letter-spacing: 0.04em; margin-bottom: 6px; }
+    .portfolio-stat-value { font-size: 1.2rem; font-weight: 800; color: #fff; font-variant-numeric: tabular-nums; }
+    .portfolio-stat-change { font-size: 0.78rem; font-weight: 600; margin-top: 2px; }
+    .add-holding-row { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; align-items: flex-end; }
+    .add-holding-input { padding: 10px 14px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font: inherit; font-size: 0.88rem; outline: none; width: 140px; }
+    .add-holding-input:focus { border-color: var(--accent); }
+    .add-holding-input::placeholder { color: var(--text-dim); }
+    .add-holding-btn { padding: 10px 18px; background: var(--accent); color: var(--bg); border: none; border-radius: 8px; font: inherit; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: opacity 0.15s; }
+    .add-holding-btn:hover { opacity: 0.9; }
+    .holdings-table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+    .holdings-table th { text-align: left; font-size: 0.7rem; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.04em; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+    .holdings-table td { padding: 10px; border-bottom: 1px solid rgba(48,54,61,0.4); font-size: 0.85rem; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+    .holdings-table tbody tr:hover { background: rgba(255,255,255,0.02); }
+    .holdings-remove-btn { background: none; border: none; color: var(--red); cursor: pointer; font-size: 0.85rem; padding: 2px 6px; border-radius: 4px; }
+    .holdings-remove-btn:hover { background: rgba(248,81,73,0.1); }
+    .portfolio-coach-section { border-top: 1px solid var(--border); padding-top: 20px; margin-top: 8px; }
+    .portfolio-coach-header { font-size: 0.95rem; font-weight: 700; color: var(--text); margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+    .portfolio-coach-sub { font-size: 0.78rem; color: var(--text-dim); margin-bottom: 14px; }
+    .portfolio-coach-messages { max-height: 400px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; padding: 4px 0; }
+    .portfolio-coach-input-row { display: flex; gap: 8px; align-items: flex-end; }
+    .portfolio-coach-input { flex: 1; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; color: var(--text); font: inherit; font-size: 0.9rem; outline: none; resize: none; min-height: 44px; max-height: 160px; }
+    .portfolio-coach-input:focus { border-color: var(--accent); }
+    .portfolio-coach-suggestions { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+    .portfolio-coach-chip { padding: 6px 12px; border: 1px solid var(--border); border-radius: 99px; color: var(--text-dim); font-size: 0.75rem; cursor: pointer; background: none; font-family: inherit; transition: all 0.15s; }
+    .portfolio-coach-chip:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── Chart Containers ── */
+    .chart-container { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin: 16px 0; }
+    .chart-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+    .chart-action-btn { display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 99px; color: rgba(255,255,255,0.55); font-size: 0.7rem; font-weight: 500; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+    .chart-action-btn:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.85); }
+
+    /* ── Watchlist ── */
+    .watchlist-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .watchlist-title-input { font-size: 1.1rem; font-weight: 700; background: none; border: none; color: var(--text); outline: none; font-family: inherit; flex: 1; min-width: 0; }
+    .watchlist-title-input::placeholder { color: var(--text-dim); }
+    .watchlist-actions { display: flex; gap: 6px; }
+    .watchlist-action-btn { padding: 6px 12px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 6px; color: var(--text-dim); font: inherit; font-size: 0.75rem; cursor: pointer; transition: all 0.15s; }
+    .watchlist-action-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .watchlist-action-btn.delete:hover { border-color: var(--red); color: var(--red); }
+    .watchlist-add-row { display: flex; gap: 8px; margin-bottom: 16px; }
+    .watchlist-add-input { flex: 1; padding: 10px 14px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font: inherit; font-size: 0.88rem; outline: none; text-transform: uppercase; }
+    .watchlist-add-input:focus { border-color: var(--accent); }
+    .watchlist-add-input::placeholder { color: var(--text-dim); text-transform: none; }
+    .watchlist-add-btn { padding: 10px 18px; background: var(--accent); color: var(--bg); border: none; border-radius: 8px; font: inherit; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
+    .watchlist-items { display: flex; flex-direction: column; gap: 2px; }
+    .watchlist-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; transition: all 0.2s; }
+    .watchlist-item:hover { border-color: rgba(0,201,167,0.2); }
+    .watchlist-item-left { display: flex; flex-direction: column; gap: 2px; }
+    .watchlist-item-symbol { font-size: 0.88rem; font-weight: 700; color: var(--text); }
+    .watchlist-item-name { font-size: 0.7rem; color: var(--text-dim); }
+    .watchlist-item-right { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+    .watchlist-item-price { font-size: 1rem; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; }
+    .watchlist-item-change { font-size: 0.75rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .watchlist-item-remove { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 0.85rem; padding: 4px 6px; border-radius: 4px; opacity: 0; transition: opacity 0.15s; margin-left: 8px; }
+    .watchlist-item:hover .watchlist-item-remove { opacity: 1; }
+    .watchlist-item-remove:hover { color: var(--red); background: rgba(248,81,73,0.1); }
+    @keyframes pricePulse { 0% { background: rgba(0,201,167,0.15); } 100% { background: transparent; } }
+    @keyframes pricePulseDown { 0% { background: rgba(239,68,68,0.15); } 100% { background: transparent; } }
+    .watchlist-item.price-up { animation: pricePulse 1s ease-out; }
+    .watchlist-item.price-down { animation: pricePulseDown 1s ease-out; }
+    .sidebar-watchlist-item { display: flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 6px; font-size: 0.8rem; color: var(--text-muted); cursor: pointer; transition: all 0.15s; }
+    .sidebar-watchlist-item:hover { background: rgba(255,255,255,0.04); color: var(--text); }
+    .sidebar-watchlist-item .wl-count { font-size: 0.68rem; color: var(--text-dim); margin-left: auto; }
+    .watchlist-create-card { text-align: center; padding: 40px 20px; }
+    .watchlist-create-card p { color: var(--text-dim); font-size: 0.88rem; margin-bottom: 16px; }
+
+    /* ── Mobile home tabs ── */
+    @media (max-width: 768px) {
+      .home-tabs { margin: 0 -20px 20px; padding: 0 16px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .home-tab { padding: 10px 16px; font-size: 0.82rem; white-space: nowrap; }
+      .stock-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+      .stock-card { padding: 12px; }
+      .stock-price { font-size: 1rem; }
+      .portfolio-summary { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+      .add-holding-row { flex-direction: column; }
+      .add-holding-input { width: 100%; font-size: 16px !important; }
+      .portfolio-coach-input { font-size: 16px !important; }
+      .portfolio-coach-suggestions { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+      .portfolio-coach-chip { white-space: nowrap; flex-shrink: 0; }
+    }
   </style>
   <!-- Meta Pixel Code -->
   <script>
@@ -514,6 +636,11 @@
   </script>
   <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=953934817395153&ev=PageView&noscript=1"/></noscript>
   <!-- End Meta Pixel Code -->
+  <!-- Highcharts -->
+  <script src="https://code.highcharts.com/highcharts.js"></script>
+  <script src="https://code.highcharts.com/modules/exporting.js"></script>
+  <script src="https://code.highcharts.com/modules/export-data.js"></script>
+  <script src="https://code.highcharts.com/modules/accessibility.js"></script>
 </head>
 <body>
   <!-- Paywall Modal -->
@@ -548,11 +675,11 @@
       <button class="sidebar-collapse-btn" onclick="toggleSidebar()" title="Collapse sidebar"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="16" height="14" rx="2"/><line x1="7" y1="3" x2="7" y2="17"/></svg></button>
     </div>
     <nav class="sidebar-nav">
-      <a class="nav-item" onclick="showMobileHome(); toggleMobileSidebar();">
+      <a class="nav-item active" data-view="home" onclick="if(window.innerWidth<=768){showMobileHome();toggleMobileSidebar();}else{showView('home');}">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
         Home
       </a>
-      <a class="nav-item active" data-view="wishes" onclick="showView('wishes')">
+      <a class="nav-item" data-view="wishes" onclick="showView('wishes')">
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h12v12H4z" rx="2"/><path d="M8 8h4M8 11h2"/></svg>
         My Wishes
       </a>
@@ -572,6 +699,8 @@
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 5h12M4 10h12M4 15h8"/><path d="M2 5l1 1 2-2M2 10l1 1 2-2"/></svg>
         To-Dos
       </a>
+      <div class="sidebar-section" id="sidebarWatchlistLabel" style="display:none;">Watchlists</div>
+      <div id="sidebarWatchlists"></div>
       <div class="sidebar-section" id="savedChatsLabel" style="display:none;">Saved Chats</div>
       <div id="savedChatsList"></div>
       <a class="nav-item" data-view="newwish" onclick="showView('newwish')" style="margin-top: 12px;">
@@ -592,12 +721,177 @@
   <!-- Main -->
   <main class="main">
     <div class="main-header">
-      <h1 id="viewTitle">My Wishes</h1>
+      <h1 id="viewTitle">Home</h1>
     </div>
     <div class="main-content">
 
+      <!-- Home View — Tabbed Interface -->
+      <div class="view active" id="homeView">
+        <div class="home-tabs">
+          <button class="home-tab active" onclick="switchHomeTab('roadmap', this)"><span class="home-tab-icon">&#x1F9ED;</span> Roadmap</button>
+          <button class="home-tab" onclick="switchHomeTab('markets', this)"><span class="home-tab-icon">&#x1F4C8;</span> Markets</button>
+          <button class="home-tab" onclick="switchHomeTab('portfolio', this)"><span class="home-tab-icon">&#x1F4BC;</span> Portfolio</button>
+        </div>
+
+        <!-- Roadmap Tab -->
+        <div class="home-tab-content active" id="homeRoadmapTab">
+          <div class="wish-form-card">
+            <div class="wish-label"><span style="font-size:1.3rem;">&#x1FA84;</span> Your Wish</div>
+            <textarea class="wish-textarea" id="homeWishInput" placeholder="Describe your goal, dream, or problem... e.g. 'Build a $10k/mo portfolio with tech stocks' or 'Start a side hustle with $500'" maxlength="800" oninput="document.getElementById('homeWishCharCount').textContent=this.value.length+' / 800'"></textarea>
+            <div class="wish-char-count" id="homeWishCharCount">0 / 800</div>
+            <div class="wish-context-label">Add optional context for a more personalized roadmap:</div>
+            <div class="wish-context-chips">
+              <button class="wish-chip" onclick="toggleHomeWishContext('age', this)">+ Age</button>
+              <button class="wish-chip" onclick="toggleHomeWishContext('location', this)">+ Location</button>
+              <button class="wish-chip" onclick="toggleHomeWishContext('budget', this)">+ Budget</button>
+              <button class="wish-chip" onclick="toggleHomeWishContext('time', this)">+ Time Available</button>
+            </div>
+            <input class="wish-context-input" id="homeWishAge" placeholder="Your age..." />
+            <input class="wish-context-input" id="homeWishLocation" placeholder="City, State or Country..." />
+            <input class="wish-context-input" id="homeWishBudget" placeholder="e.g. $500, $5000..." />
+            <input class="wish-context-input" id="homeWishTime" placeholder="e.g. 5 hours/week, evenings only..." />
+            <button class="wish-submit" id="homeWishSubmitBtn" onclick="submitHomeWish()">&#x2728; Generate My Roadmap</button>
+          </div>
+          <div id="homeWishResultPanel" style="margin-top:20px;"></div>
+        </div>
+
+        <!-- Markets Tab -->
+        <div class="home-tab-content" id="homeMarketsTab">
+          <div class="markets-section-label">
+            <span>&#x1F7E2; Magnificent 7 Tracker</span>
+            <button class="markets-refresh-btn" id="marketsRefreshBtn" onclick="refreshMarkets()"><span class="refresh-icon" style="display:inline-block;">&#x21BB;</span> Refresh</button>
+          </div>
+          <div class="markets-updated" id="marketsUpdatedTime"></div>
+          <div class="stock-grid" id="mag7Grid">
+            <div class="stock-card"><div class="stock-shimmer" style="width:50px;"></div><div class="stock-shimmer" style="width:80px;"></div><div class="stock-shimmer" style="width:60px;height:20px;"></div></div>
+            <div class="stock-card"><div class="stock-shimmer" style="width:50px;"></div><div class="stock-shimmer" style="width:80px;"></div><div class="stock-shimmer" style="width:60px;height:20px;"></div></div>
+            <div class="stock-card"><div class="stock-shimmer" style="width:50px;"></div><div class="stock-shimmer" style="width:80px;"></div><div class="stock-shimmer" style="width:60px;height:20px;"></div></div>
+            <div class="stock-card"><div class="stock-shimmer" style="width:50px;"></div><div class="stock-shimmer" style="width:80px;"></div><div class="stock-shimmer" style="width:60px;height:20px;"></div></div>
+            <div class="stock-card"><div class="stock-shimmer" style="width:50px;"></div><div class="stock-shimmer" style="width:80px;"></div><div class="stock-shimmer" style="width:60px;height:20px;"></div></div>
+            <div class="stock-card"><div class="stock-shimmer" style="width:50px;"></div><div class="stock-shimmer" style="width:80px;"></div><div class="stock-shimmer" style="width:60px;height:20px;"></div></div>
+            <div class="stock-card"><div class="stock-shimmer" style="width:50px;"></div><div class="stock-shimmer" style="width:80px;"></div><div class="stock-shimmer" style="width:60px;height:20px;"></div></div>
+          </div>
+
+          <div class="markets-section-label"><span>&#x1FA99; Crypto</span></div>
+          <div class="stock-grid" id="cryptoGrid">
+            <div class="stock-card"><div class="stock-shimmer" style="width:40px;"></div><div class="stock-shimmer" style="width:70px;"></div><div class="stock-shimmer" style="width:60px;height:20px;"></div></div>
+            <div class="stock-card"><div class="stock-shimmer" style="width:40px;"></div><div class="stock-shimmer" style="width:70px;"></div><div class="stock-shimmer" style="width:60px;height:20px;"></div></div>
+            <div class="stock-card"><div class="stock-shimmer" style="width:40px;"></div><div class="stock-shimmer" style="width:70px;"></div><div class="stock-shimmer" style="width:60px;height:20px;"></div></div>
+          </div>
+
+          <div id="marketsChartContainer" class="chart-container" style="display:none;"></div>
+
+          <!-- Watchlists -->
+          <div class="markets-section-label" style="margin-top:28px;">
+            <span>&#x1F4CB; My Watchlists</span>
+            <button class="markets-refresh-btn" onclick="createNewWatchlist()">+ New Watchlist</button>
+          </div>
+          <div id="watchlistContainer">
+            <div id="activeWatchlistView" style="display:none;">
+              <div class="watchlist-header">
+                <input class="watchlist-title-input" id="watchlistTitleInput" placeholder="Watchlist name..." onblur="saveWatchlistTitle()" />
+                <div class="watchlist-actions">
+                  <button class="watchlist-action-btn" onclick="refreshActiveWatchlist()">&#x21BB; Refresh</button>
+                  <button class="watchlist-action-btn delete" onclick="deleteActiveWatchlist()">&#x1F5D1; Delete</button>
+                </div>
+              </div>
+              <div class="watchlist-add-row">
+                <input class="watchlist-add-input" id="watchlistAddInput" placeholder="Add symbol (e.g. AAPL)" onkeydown="if(event.key==='Enter')addWatchlistSymbol();" />
+                <button class="watchlist-add-btn" onclick="addWatchlistSymbol()">+ Add</button>
+              </div>
+              <div class="watchlist-items" id="watchlistItems"></div>
+            </div>
+            <div id="watchlistEmptyState" class="watchlist-create-card">
+              <p>Create a watchlist to track your favorite stocks and crypto with live prices.</p>
+              <button class="add-holding-btn" onclick="createNewWatchlist()">&#x1F4CB; Create Watchlist</button>
+            </div>
+          </div>
+
+          <div class="markets-section-label" style="margin-top:28px;"><span>&#x1F4F0; Market News</span></div>
+          <div class="news-list" id="marketNewsList">
+            <div class="news-item"><div class="stock-shimmer" style="width:80%;height:16px;"></div><div class="stock-shimmer" style="width:40%;height:12px;margin-top:8px;"></div></div>
+            <div class="news-item"><div class="stock-shimmer" style="width:70%;height:16px;"></div><div class="stock-shimmer" style="width:35%;height:12px;margin-top:8px;"></div></div>
+            <div class="news-item"><div class="stock-shimmer" style="width:75%;height:16px;"></div><div class="stock-shimmer" style="width:45%;height:12px;margin-top:8px;"></div></div>
+          </div>
+        </div>
+
+        <!-- Portfolio Tab -->
+        <div class="home-tab-content" id="homePortfolioTab">
+          <div class="portfolio-summary" id="portfolioSummary">
+            <div class="portfolio-stat">
+              <div class="portfolio-stat-label">Total Value</div>
+              <div class="portfolio-stat-value" id="portfolioTotalValue">$0.00</div>
+            </div>
+            <div class="portfolio-stat">
+              <div class="portfolio-stat-label">Day P&L</div>
+              <div class="portfolio-stat-value" id="portfolioDayPL">$0.00</div>
+              <div class="portfolio-stat-change" id="portfolioDayPLPct"></div>
+            </div>
+            <div class="portfolio-stat">
+              <div class="portfolio-stat-label">Total P&L</div>
+              <div class="portfolio-stat-value" id="portfolioTotalPL">$0.00</div>
+              <div class="portfolio-stat-change" id="portfolioTotalPLPct"></div>
+            </div>
+            <div class="portfolio-stat">
+              <div class="portfolio-stat-label">Positions</div>
+              <div class="portfolio-stat-value" id="portfolioPositionCount">0</div>
+            </div>
+          </div>
+
+          <div class="markets-section-label"><span>Add Holding</span></div>
+          <div class="add-holding-row">
+            <input class="add-holding-input" id="holdingSymbolInput" placeholder="Symbol (e.g. AAPL)" style="text-transform:uppercase;" />
+            <input class="add-holding-input" id="holdingQtyInput" placeholder="Quantity" type="number" step="any" min="0" />
+            <input class="add-holding-input" id="holdingCostInput" placeholder="Avg cost (optional)" type="number" step="any" min="0" />
+            <button class="add-holding-btn" onclick="addHolding()">+ Add</button>
+          </div>
+
+          <div id="holdingsTableWrap">
+            <table class="holdings-table" id="holdingsTable" style="display:none;">
+              <thead>
+                <tr>
+                  <th>Symbol</th>
+                  <th>Qty</th>
+                  <th>Price</th>
+                  <th>Value</th>
+                  <th>Day P&L</th>
+                  <th>Total P&L</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="holdingsBody"></tbody>
+            </table>
+            <div id="holdingsEmpty" style="text-align:center;padding:32px;color:var(--text-dim);font-size:0.88rem;">
+              No holdings yet. Add a stock or crypto symbol above to start tracking your portfolio.
+            </div>
+          </div>
+
+          <div id="portfolioChartContainer" class="chart-container" style="display:none;"></div>
+
+          <!-- Portfolio AI Coach -->
+          <div class="portfolio-coach-section">
+            <div class="portfolio-coach-header">&#x1F916; Portfolio AI Coach</div>
+            <div class="portfolio-coach-sub">Ask about your portfolio — rebalancing, risk, sector exposure, and more.</div>
+            <div class="portfolio-coach-suggestions">
+              <button class="portfolio-coach-chip" onclick="askPortfolioCoach('What is my sector breakdown?')">Sector breakdown</button>
+              <button class="portfolio-coach-chip" onclick="askPortfolioCoach('Should I rebalance my portfolio?')">Rebalance advice</button>
+              <button class="portfolio-coach-chip" onclick="askPortfolioCoach('How exposed am I to tech?')">Tech exposure</button>
+              <button class="portfolio-coach-chip" onclick="askPortfolioCoach('What is my risk profile?')">Risk profile</button>
+              <button class="portfolio-coach-chip" onclick="askPortfolioCoach('Suggest improvements to my portfolio')">Suggestions</button>
+            </div>
+            <div class="portfolio-coach-messages" id="portfolioCoachMessages">
+              <div class="msg ai">Hi! I'm your Portfolio AI Coach. Add some holdings above and I can analyze your portfolio, suggest improvements, and help you make better investment decisions.</div>
+            </div>
+            <div class="portfolio-coach-input-row">
+              <textarea class="portfolio-coach-input" id="portfolioCoachInput" placeholder="Ask about your portfolio..." rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendPortfolioCoachMsg();}"></textarea>
+              <button class="coach-send" onclick="sendPortfolioCoachMsg()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Wishes View -->
-      <div class="view active" id="wishesView">
+      <div class="view" id="wishesView">
         <div class="wish-grid" id="wishGrid"></div>
         <div class="empty" id="emptyState" style="display:none;">
           <div class="empty-icon">&#x2728;</div>
@@ -1104,7 +1398,7 @@
     }
 
     // View switching
-    var viewTitles = { wishes: 'My Wishes', coach: 'AI Coach', library: 'Library', notes: 'Notes', todos: 'To-Dos', newwish: 'Your Wish' };
+    var viewTitles = { home: 'Home', wishes: 'My Wishes', coach: 'AI Coach', library: 'Library', notes: 'Notes', todos: 'To-Dos', newwish: 'Your Wish' };
     // ── iOS-style drag handle for chat/content split ──
     (function initDragHandles() {
       if (window.innerWidth > 768) return;
@@ -2549,6 +2843,1031 @@
       else if (viewId === 'todosView') { createNewTodoList(); }
       else { hideMobileHome(); showView('newwish'); }
     }
+
+    // ════════════════════════════════════════════════════
+    // ── HOME SCREEN TABS (Roadmap / Markets / Portfolio)
+    // ════════════════════════════════════════════════════
+
+    function switchHomeTab(tab, btn) {
+      document.querySelectorAll('.home-tab').forEach(function(t) { t.classList.remove('active'); });
+      document.querySelectorAll('.home-tab-content').forEach(function(c) { c.classList.remove('active'); });
+      if (btn) btn.classList.add('active');
+      var tabEl = document.getElementById('home' + tab.charAt(0).toUpperCase() + tab.slice(1) + 'Tab');
+      if (tabEl) tabEl.classList.add('active');
+      // Auto-load markets data on first visit
+      if (tab === 'markets' && !window._marketsLoaded) { refreshMarkets(); window._marketsLoaded = true; }
+      // Auto-refresh portfolio prices
+      if (tab === 'portfolio') refreshPortfolioPrices();
+    }
+
+    // Home wish form helpers (mirrors the existing newwish form)
+    function toggleHomeWishContext(field, btn) {
+      var input = document.getElementById('homeWish' + field.charAt(0).toUpperCase() + field.slice(1));
+      btn.classList.toggle('active');
+      input.classList.toggle('visible');
+      if (input.classList.contains('visible')) input.focus();
+    }
+
+    async function submitHomeWish() {
+      var wish = document.getElementById('homeWishInput').value.trim();
+      if (!wish || wish.length < 10) { alert('Please describe your wish in more detail.'); return; }
+      var btn = document.getElementById('homeWishSubmitBtn');
+      btn.disabled = true; btn.textContent = 'Generating...';
+      var panel = document.getElementById('homeWishResultPanel');
+      panel.innerHTML = '<div style="text-align:center;padding:40px;"><div class="thinking-status" style="justify-content:center;"><span class="thinking-label" style="color:var(--accent);font-weight:500;">Generating your roadmap</span><div class="thinking-dots"><span></span><span></span><span></span></div></div></div>';
+      var age = document.getElementById('homeWishAge').value.trim();
+      var location = document.getElementById('homeWishLocation').value.trim();
+      var budget = document.getElementById('homeWishBudget').value.trim();
+      var time = document.getElementById('homeWishTime').value.trim();
+      var session = await getSession();
+      var email = session ? session.user.email : '';
+      try {
+        var res = await fetch(EDGE_FN, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ wish: wish, age: age||null, location: location||null, budget: budget||null, time: time||null, email: email }),
+        });
+        var data = await res.json();
+        if (data.roadmap) {
+          window._lastGeneratedRoadmap = data.roadmap;
+          window._lastGeneratedWish = wish;
+          panel.innerHTML = '<div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;">' +
+            '<button onclick="saveNewWishToVault()" id="saveWishBtn" style="padding:10px 22px;background:var(--accent);color:var(--bg);border:none;border-radius:8px;font:inherit;font-size:0.85rem;font-weight:700;cursor:pointer;">&#x1F4BE; Save to My Wishes</button>' +
+            '<button onclick="emailNewWish()" id="emailWishBtn" style="padding:10px 22px;background:rgba(255,255,255,0.06);color:var(--text);border:1px solid var(--border);border-radius:8px;font:inherit;font-size:0.85rem;font-weight:600;cursor:pointer;">&#x2709;&#xFE0F; Email to Me</button>' +
+            '<span id="wishActionStatus" style="font-size:0.78rem;color:var(--accent);align-self:center;"></span></div>' +
+            '<div class="coach-roadmap">' + renderNotionRoadmap(data.roadmap, wish) + '</div>';
+          await loadWishes();
+        } else {
+          panel.innerHTML = '<div style="text-align:center;padding:40px;color:var(--red);">Failed to generate. Please try again.</div>';
+        }
+      } catch(e) {
+        panel.innerHTML = '<div style="text-align:center;padding:40px;color:var(--red);">Connection error. Please try again.</div>';
+      }
+      btn.disabled = false; btn.textContent = '\u2728 Generate My Roadmap';
+    }
+
+    // ════════════════════════════════════════
+    // ── HIGHCHARTS DARK THEME + CHART STUDIO
+    // ════════════════════════════════════════
+
+    (function initHighchartsDarkTheme() {
+      if (typeof Highcharts === 'undefined') return;
+      Highcharts.setOptions({
+        colors: ['#a78bfa','#00c9a7','#3b82f6','#f59e0b','#ef4444','#ec4899','#06b6d4','#84cc16','#f97316','#8b5cf6'],
+        chart: { backgroundColor: '#161b22', style: { fontFamily: 'Inter, system-ui, sans-serif' }, borderRadius: 8 },
+        title: { style: { color: '#e6edf3', fontSize: '14px', fontWeight: '700' } },
+        subtitle: { style: { color: '#8b949e', fontSize: '12px' } },
+        xAxis: { gridLineColor: 'rgba(48,54,61,0.5)', lineColor: '#30363d', tickColor: '#30363d', labels: { style: { color: '#8b949e', fontSize: '11px' } }, title: { style: { color: '#8b949e' } } },
+        yAxis: { gridLineColor: 'rgba(48,54,61,0.5)', lineColor: '#30363d', tickColor: '#30363d', labels: { style: { color: '#8b949e', fontSize: '11px' } }, title: { style: { color: '#8b949e' } } },
+        legend: { itemStyle: { color: '#e6edf3', fontSize: '12px' }, itemHoverStyle: { color: '#00c9a7' }, itemHiddenStyle: { color: '#484f58' } },
+        tooltip: { backgroundColor: '#1c2128', borderColor: '#30363d', style: { color: '#e6edf3', fontSize: '12px' } },
+        plotOptions: { series: { borderWidth: 0 }, pie: { borderWidth: 0, dataLabels: { color: '#e6edf3', style: { fontSize: '11px', textOutline: 'none' } } } },
+        navigation: { buttonOptions: { symbolStroke: '#8b949e', theme: { fill: '#161b22', stroke: '#30363d', states: { hover: { fill: '#1c2128' }, select: { fill: '#1c2128' } } } } },
+        exporting: { buttons: { contextButton: { menuItems: ['downloadPNG','downloadSVG','downloadPDF','downloadCSV','separator','viewFullscreen'] } } },
+        credits: { enabled: false }
+      });
+    })();
+
+    // Render a Highchart from structured data — used by all AI coaches
+    function renderHighchart(containerId, chartConfig) {
+      var el = document.getElementById(containerId);
+      if (!el || typeof Highcharts === 'undefined') return null;
+      el.style.display = 'block';
+      el.innerHTML = '<div id="' + containerId + '-chart" style="min-height:300px;"></div>';
+      var chartActions = document.createElement('div');
+      chartActions.className = 'chart-actions';
+      chartActions.innerHTML =
+        '<button class="chart-action-btn" onclick="downloadChartPng(\'' + containerId + '-chart\')">&#x1F4E5; Download PNG</button>' +
+        '<button class="chart-action-btn" onclick="saveChartToNotes(\'' + containerId + '-chart\')">&#x1F4BE; Save to Notes</button>' +
+        '<button class="chart-action-btn" onclick="emailChartToMe(\'' + containerId + '-chart\')">&#x1F4E7; Email to Me</button>';
+      el.appendChild(chartActions);
+      return Highcharts.chart(containerId + '-chart', chartConfig);
+    }
+
+    // Chart action helpers
+    function downloadChartPng(chartId) {
+      var el = document.getElementById(chartId);
+      if (!el) return;
+      var chart = Highcharts.charts.find(function(c) { return c && c.renderTo && c.renderTo.id === chartId; });
+      if (chart) chart.exportChart({ type: 'image/png', filename: 'wishpath-chart-studio' });
+    }
+    async function saveChartToNotes(chartId) {
+      var chart = Highcharts.charts.find(function(c) { return c && c.renderTo && c.renderTo.id === chartId; });
+      if (!chart) return;
+      try {
+        var sb = getSupabase(); var user = await getUser();
+        if (!user) { alert('Please log in first.'); return; }
+        var title = chart.title ? chart.title.textStr : 'Chart Studio Export';
+        var svgStr = chart.getSVG();
+        await sb.from('user_notes').insert({ user_id: user.id, title: 'Chart Studio: ' + title, content: 'Chart exported from WishPath Chart Studio.\n\nData: ' + JSON.stringify(chart.series.map(function(s) { return { name: s.name, data: s.options.data }; })) });
+        alert('Saved to Notes!');
+      } catch(e) { alert('Save failed: ' + e.message); }
+    }
+    async function emailChartToMe(chartId) {
+      var chart = Highcharts.charts.find(function(c) { return c && c.renderTo && c.renderTo.id === chartId; });
+      if (!chart) return;
+      try {
+        var session = await getSession(); var email = session ? session.user.email : '';
+        if (!email) { alert('No email found.'); return; }
+        var title = chart.title ? chart.title.textStr : 'Chart Studio Export';
+        var csvData = '';
+        chart.series.forEach(function(s) {
+          csvData += s.name + ':\n';
+          (s.options.data || []).forEach(function(d) {
+            if (typeof d === 'object' && d.name) csvData += d.name + ': ' + d.y + '\n';
+            else csvData += d + '\n';
+          });
+          csvData += '\n';
+        });
+        await fetch(EDGE_FN, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ emailOnly: true, email: email, wish: title, roadmap: { title: 'Chart Studio: ' + title, summary: csvData } }) });
+        alert('Email sent to ' + email + '!');
+      } catch(e) { alert('Email failed.'); }
+    }
+
+    // Detect chart-worthy data in AI responses and render Highcharts
+    function detectAndRenderCharts(reply, containerId) {
+      if (typeof Highcharts === 'undefined') return false;
+      // Pattern 1: [CHART:pie] or [CHART:bar] or [CHART:line] markers
+      var chartMarker = reply.match(/\[CHART:(pie|bar|line|column)\]([\s\S]*?)\[\/CHART\]/i);
+      if (chartMarker) {
+        try {
+          var chartType = chartMarker[1].toLowerCase();
+          var chartData = JSON.parse(chartMarker[2].trim());
+          renderHighchart(containerId, Object.assign({ chart: { type: chartType } }, chartData));
+          return true;
+        } catch(e) {}
+      }
+      // Pattern 2: [CHARTDATA] JSON block
+      var dataBlock = reply.match(/\[CHARTDATA\]([\s\S]*?)\[\/CHARTDATA\]/i);
+      if (dataBlock) {
+        try {
+          var config = JSON.parse(dataBlock[1].trim());
+          renderHighchart(containerId, config);
+          return true;
+        } catch(e) {}
+      }
+      // Pattern 3: Auto-detect sector/allocation data (e.g. "Technology: 45%, Healthcare: 20%")
+      var sectorMatches = reply.match(/(?:^|\n)\s*[-•]?\s*([A-Za-z\s&]+?):\s*(\d+(?:\.\d+)?)\s*%/gm);
+      if (sectorMatches && sectorMatches.length >= 3) {
+        var pieData = [];
+        sectorMatches.forEach(function(m) {
+          var parts = m.match(/([A-Za-z\s&]+?):\s*(\d+(?:\.\d+)?)\s*%/);
+          if (parts) pieData.push({ name: parts[1].trim(), y: parseFloat(parts[2]) });
+        });
+        if (pieData.length >= 3) {
+          renderHighchart(containerId, {
+            chart: { type: 'pie' },
+            title: { text: 'Allocation Breakdown' },
+            subtitle: { text: 'Chart Studio' },
+            series: [{ name: 'Allocation', data: pieData, innerSize: '50%' }],
+            tooltip: { pointFormat: '<b>{point.percentage:.1f}%</b>' }
+          });
+          return true;
+        }
+      }
+      return false;
+    }
+
+    // ════════════════════════════════
+    // ── MARKETS TAB
+    // ════════════════════════════════
+
+    var MAG7 = [
+      { symbol: 'AAPL', name: 'Apple' },
+      { symbol: 'MSFT', name: 'Microsoft' },
+      { symbol: 'GOOGL', name: 'Alphabet' },
+      { symbol: 'AMZN', name: 'Amazon' },
+      { symbol: 'NVDA', name: 'NVIDIA' },
+      { symbol: 'META', name: 'Meta' },
+      { symbol: 'TSLA', name: 'Tesla' }
+    ];
+    var CRYPTO = [
+      { symbol: 'BTC/USD', name: 'Bitcoin', display: 'BTC' },
+      { symbol: 'ETH/USD', name: 'Ethereum', display: 'ETH' },
+      { symbol: 'SOL/USD', name: 'Solana', display: 'SOL' }
+    ];
+
+    var marketsCache = {};
+
+    async function refreshMarkets() {
+      var btn = document.getElementById('marketsRefreshBtn');
+      if (btn) btn.classList.add('spinning');
+
+      // Fetch all quotes via the AI coach (which calls Alpaca)
+      var allSymbols = MAG7.map(function(s) { return s.symbol; }).concat(CRYPTO.map(function(c) { return c.symbol; }));
+      var prompt = 'Get me live stock quotes for: ' + allSymbols.join(', ') + '. Return ONLY a JSON object in this exact format, no other text: {"quotes": [{"symbol": "AAPL", "price": 150.00, "change": 2.50, "changePercent": 1.5}, ...]}. Use real current market data from Alpaca. For crypto use the /USD pairs.';
+
+      try {
+        var res = await fetch(EDGE_FN, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            coachMode: true,
+            systemPrompt: 'You are a market data API. When asked for stock/crypto quotes, use the Alpaca API tools available to you to fetch real-time data. Return ONLY valid JSON, no markdown, no explanation. Return the data in the exact format requested.',
+            messages: [{ role: 'user', content: prompt }]
+          })
+        });
+        var data = await res.json();
+        var reply = data.reply || '';
+        // Try to extract JSON from reply
+        var jsonMatch = reply.match(/\{[\s\S]*"quotes"[\s\S]*\}/);
+        if (jsonMatch) {
+          var parsed = JSON.parse(jsonMatch[0]);
+          if (parsed.quotes) {
+            parsed.quotes.forEach(function(q) { marketsCache[q.symbol] = q; });
+          }
+        }
+      } catch(e) {
+        console.error('Markets fetch error:', e);
+      }
+
+      renderMarketCards();
+      fetchMarketNews();
+
+      // Update timestamp
+      var ts = document.getElementById('marketsUpdatedTime');
+      if (ts) ts.textContent = 'Last updated: ' + new Date().toLocaleTimeString();
+      if (btn) btn.classList.remove('spinning');
+    }
+
+    function renderMarketCards() {
+      var mag7Grid = document.getElementById('mag7Grid');
+      mag7Grid.innerHTML = MAG7.map(function(stock) {
+        var q = marketsCache[stock.symbol];
+        if (!q) return '<div class="stock-card"><div class="stock-symbol">' + stock.symbol + '</div><div class="stock-name">' + stock.name + '</div><div class="stock-price" style="color:var(--text-dim);">--</div><div class="stock-change flat">Loading...</div></div>';
+        var changeClass = q.change > 0 ? 'up' : q.change < 0 ? 'down' : 'flat';
+        var arrow = q.change > 0 ? '&#x25B2;' : q.change < 0 ? '&#x25BC;' : '';
+        var sign = q.change > 0 ? '+' : '';
+        return '<div class="stock-card"><div class="stock-symbol">' + stock.symbol + '</div><div class="stock-name">' + stock.name + '</div>' +
+          '<div class="stock-price">$' + formatNum(q.price) + '</div>' +
+          '<div class="stock-change ' + changeClass + '">' + arrow + ' ' + sign + formatNum(q.change) + ' (' + sign + formatNum(q.changePercent) + '%)</div></div>';
+      }).join('');
+
+      var cryptoGrid = document.getElementById('cryptoGrid');
+      cryptoGrid.innerHTML = CRYPTO.map(function(coin) {
+        var q = marketsCache[coin.symbol];
+        if (!q) return '<div class="stock-card"><div class="stock-symbol">' + coin.display + '</div><div class="stock-name">' + coin.name + '</div><div class="stock-price" style="color:var(--text-dim);">--</div><div class="stock-change flat">Loading...</div></div>';
+        var changeClass = q.change > 0 ? 'up' : q.change < 0 ? 'down' : 'flat';
+        var arrow = q.change > 0 ? '&#x25B2;' : q.change < 0 ? '&#x25BC;' : '';
+        var sign = q.change > 0 ? '+' : '';
+        return '<div class="stock-card"><div class="stock-symbol">' + coin.display + '</div><div class="stock-name">' + coin.name + '</div>' +
+          '<div class="stock-price">$' + formatNum(q.price) + '</div>' +
+          '<div class="stock-change ' + changeClass + '">' + arrow + ' ' + sign + formatNum(q.change) + ' (' + sign + formatNum(q.changePercent) + '%)</div></div>';
+      }).join('');
+
+      // Render Mag7 comparison chart
+      renderMag7Chart();
+    }
+
+    function formatNum(n) {
+      if (n === undefined || n === null) return '--';
+      if (Math.abs(n) >= 1000) return Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      return Number(n).toFixed(2);
+    }
+
+    function renderMag7Chart() {
+      if (typeof Highcharts === 'undefined') return;
+      var changes = MAG7.map(function(s) {
+        var q = marketsCache[s.symbol];
+        return { name: s.symbol, y: q ? q.changePercent : 0, color: q && q.changePercent >= 0 ? '#22c55e' : '#ef4444' };
+      }).filter(function(d) { return d.y !== 0; });
+      if (changes.length === 0) return;
+      renderHighchart('marketsChartContainer', {
+        chart: { type: 'bar', height: 260 },
+        title: { text: 'Mag 7 — Day Change %' },
+        subtitle: { text: 'Chart Studio' },
+        xAxis: { categories: changes.map(function(d) { return d.name; }), title: { text: null } },
+        yAxis: { title: { text: 'Change %' }, labels: { format: '{value}%' } },
+        series: [{ name: 'Change %', data: changes, showInLegend: false }],
+        tooltip: { valueSuffix: '%', valueDecimals: 2 }
+      });
+    }
+
+    async function fetchMarketNews() {
+      var newsList = document.getElementById('marketNewsList');
+      try {
+        var res = await fetch(EDGE_FN, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            coachMode: true,
+            systemPrompt: 'You are a market news aggregator. Fetch the latest market news using MarketAux. Return ONLY a JSON array of the top 6 news items in this format: [{"title": "...", "source": "...", "snippet": "...", "url": "...", "published": "..."}]. No markdown, no explanation.',
+            messages: [{ role: 'user', content: 'Get the latest market news headlines. Return only JSON.' }]
+          })
+        });
+        var data = await res.json();
+        var reply = data.reply || '';
+        var jsonMatch = reply.match(/\[[\s\S]*\]/);
+        if (jsonMatch) {
+          var news = JSON.parse(jsonMatch[0]);
+          newsList.innerHTML = news.map(function(n) {
+            return '<a class="news-item" href="' + (n.url || '#') + '" target="_blank" rel="noopener">' +
+              '<div class="news-title">' + (n.title || '').replace(/</g,'&lt;') + '</div>' +
+              '<div class="news-meta"><span class="news-source">' + (n.source || '') + '</span><span>' + (n.published || '') + '</span></div>' +
+              (n.snippet ? '<div style="font-size:0.78rem;color:var(--text-dim);margin-top:4px;line-height:1.4;">' + n.snippet.replace(/</g,'&lt;').substring(0, 120) + '</div>' : '') +
+            '</a>';
+          }).join('');
+        } else {
+          newsList.innerHTML = '<div class="news-item"><div class="news-title" style="color:var(--text-dim);">Unable to load news. Try refreshing.</div></div>';
+        }
+      } catch(e) {
+        newsList.innerHTML = '<div class="news-item"><div class="news-title" style="color:var(--text-dim);">Connection error loading news.</div></div>';
+      }
+    }
+
+    // ════════════════════════════════
+    // ── PORTFOLIO TAB
+    // ════════════════════════════════
+
+    var portfolioHoldings = JSON.parse(localStorage.getItem('wp_portfolio') || '[]');
+    var portfolioPrices = {};
+    var portfolioCoachHistory = [];
+
+    function savePortfolio() {
+      localStorage.setItem('wp_portfolio', JSON.stringify(portfolioHoldings));
+    }
+
+    function addHolding() {
+      var symbolInput = document.getElementById('holdingSymbolInput');
+      var qtyInput = document.getElementById('holdingQtyInput');
+      var costInput = document.getElementById('holdingCostInput');
+      var symbol = symbolInput.value.trim().toUpperCase();
+      var qty = parseFloat(qtyInput.value);
+      var cost = parseFloat(costInput.value) || 0;
+      if (!symbol) { alert('Enter a symbol.'); return; }
+      if (!qty || qty <= 0) { alert('Enter a valid quantity.'); return; }
+      // Check for existing holding
+      var existing = portfolioHoldings.find(function(h) { return h.symbol === symbol; });
+      if (existing) {
+        // Average in
+        var totalQty = existing.qty + qty;
+        existing.avgCost = cost > 0 ? ((existing.avgCost * existing.qty) + (cost * qty)) / totalQty : existing.avgCost;
+        existing.qty = totalQty;
+      } else {
+        portfolioHoldings.push({ symbol: symbol, qty: qty, avgCost: cost });
+      }
+      savePortfolio();
+      symbolInput.value = ''; qtyInput.value = ''; costInput.value = '';
+      renderHoldings();
+      refreshPortfolioPrices();
+    }
+
+    function removeHolding(idx) {
+      portfolioHoldings.splice(idx, 1);
+      savePortfolio();
+      renderHoldings();
+    }
+
+    function renderHoldings() {
+      var body = document.getElementById('holdingsBody');
+      var table = document.getElementById('holdingsTable');
+      var empty = document.getElementById('holdingsEmpty');
+      if (!portfolioHoldings.length) {
+        table.style.display = 'none'; empty.style.display = 'block';
+        document.getElementById('portfolioTotalValue').textContent = '$0.00';
+        document.getElementById('portfolioDayPL').textContent = '$0.00';
+        document.getElementById('portfolioTotalPL').textContent = '$0.00';
+        document.getElementById('portfolioPositionCount').textContent = '0';
+        return;
+      }
+      table.style.display = 'table'; empty.style.display = 'none';
+      document.getElementById('portfolioPositionCount').textContent = portfolioHoldings.length;
+
+      var totalValue = 0, totalDayPL = 0, totalPL = 0, totalCostBasis = 0;
+      body.innerHTML = portfolioHoldings.map(function(h, i) {
+        var p = portfolioPrices[h.symbol] || {};
+        var price = p.price || 0;
+        var dayChange = p.change || 0;
+        var value = price * h.qty;
+        var dayPL = dayChange * h.qty;
+        var costBasis = h.avgCost * h.qty;
+        var totalItemPL = h.avgCost > 0 ? value - costBasis : 0;
+        totalValue += value;
+        totalDayPL += dayPL;
+        if (h.avgCost > 0) { totalPL += totalItemPL; totalCostBasis += costBasis; }
+
+        var dayClass = dayPL > 0 ? 'up' : dayPL < 0 ? 'down' : 'flat';
+        var totalClass = totalItemPL > 0 ? 'up' : totalItemPL < 0 ? 'down' : 'flat';
+        var daySign = dayPL > 0 ? '+' : '';
+        var totalSign = totalItemPL > 0 ? '+' : '';
+
+        return '<tr>' +
+          '<td style="font-weight:600;color:var(--text);">' + h.symbol + '</td>' +
+          '<td>' + h.qty + '</td>' +
+          '<td>' + (price ? '$' + formatNum(price) : '--') + '</td>' +
+          '<td style="font-weight:600;color:#fff;">' + (value ? '$' + formatNum(value) : '--') + '</td>' +
+          '<td class="stock-change ' + dayClass + '">' + daySign + '$' + formatNum(dayPL) + '</td>' +
+          '<td class="stock-change ' + totalClass + '">' + (h.avgCost > 0 ? totalSign + '$' + formatNum(totalItemPL) : '--') + '</td>' +
+          '<td><button class="holdings-remove-btn" onclick="removeHolding(' + i + ')" title="Remove">&times;</button></td>' +
+        '</tr>';
+      }).join('');
+
+      document.getElementById('portfolioTotalValue').textContent = '$' + formatNum(totalValue);
+      var dayEl = document.getElementById('portfolioDayPL');
+      dayEl.textContent = (totalDayPL >= 0 ? '+' : '') + '$' + formatNum(totalDayPL);
+      dayEl.style.color = totalDayPL >= 0 ? '#22c55e' : '#ef4444';
+      var dayPctEl = document.getElementById('portfolioDayPLPct');
+      if (totalValue > 0) {
+        var dayPct = (totalDayPL / (totalValue - totalDayPL)) * 100;
+        dayPctEl.textContent = (dayPct >= 0 ? '+' : '') + dayPct.toFixed(2) + '%';
+        dayPctEl.style.color = dayPct >= 0 ? '#22c55e' : '#ef4444';
+      }
+      var totalPLEl = document.getElementById('portfolioTotalPL');
+      totalPLEl.textContent = (totalPL >= 0 ? '+' : '') + '$' + formatNum(totalPL);
+      totalPLEl.style.color = totalPL >= 0 ? '#22c55e' : '#ef4444';
+      var totalPctEl = document.getElementById('portfolioTotalPLPct');
+      if (totalCostBasis > 0) {
+        var totalPct = (totalPL / totalCostBasis) * 100;
+        totalPctEl.textContent = (totalPct >= 0 ? '+' : '') + totalPct.toFixed(2) + '%';
+        totalPctEl.style.color = totalPct >= 0 ? '#22c55e' : '#ef4444';
+      }
+
+      // Render allocation pie chart if we have enough data
+      renderPortfolioChart();
+    }
+
+    function renderPortfolioChart() {
+      if (typeof Highcharts === 'undefined' || portfolioHoldings.length < 2) {
+        document.getElementById('portfolioChartContainer').style.display = 'none';
+        return;
+      }
+      var pieData = portfolioHoldings.map(function(h) {
+        var p = portfolioPrices[h.symbol] || {};
+        return { name: h.symbol, y: (p.price || 0) * h.qty };
+      }).filter(function(d) { return d.y > 0; });
+      if (pieData.length < 2) return;
+      renderHighchart('portfolioChartContainer', {
+        chart: { type: 'pie', height: 280 },
+        title: { text: 'Portfolio Allocation' },
+        subtitle: { text: 'Chart Studio' },
+        series: [{ name: 'Value', data: pieData, innerSize: '55%' }],
+        tooltip: { pointFormat: '<b>${point.y:,.2f}</b> ({point.percentage:.1f}%)' }
+      });
+    }
+
+    async function refreshPortfolioPrices() {
+      if (!portfolioHoldings.length) { renderHoldings(); return; }
+      var symbols = portfolioHoldings.map(function(h) { return h.symbol; });
+      // Reuse any cached markets data
+      var missing = symbols.filter(function(s) { return !marketsCache[s]; });
+      // Copy from marketsCache to portfolioPrices
+      symbols.forEach(function(s) { if (marketsCache[s]) portfolioPrices[s] = marketsCache[s]; });
+
+      if (missing.length > 0) {
+        try {
+          var res = await fetch(EDGE_FN, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              coachMode: true,
+              systemPrompt: 'You are a market data API. Fetch real-time quotes from Alpaca. Return ONLY valid JSON, no markdown. Format: {"quotes": [{"symbol": "AAPL", "price": 150.00, "change": 2.50, "changePercent": 1.5}]}',
+              messages: [{ role: 'user', content: 'Get live quotes for: ' + missing.join(', ') + '. Return only JSON.' }]
+            })
+          });
+          var data = await res.json();
+          var reply = data.reply || '';
+          var jsonMatch = reply.match(/\{[\s\S]*"quotes"[\s\S]*\}/);
+          if (jsonMatch) {
+            var parsed = JSON.parse(jsonMatch[0]);
+            if (parsed.quotes) {
+              parsed.quotes.forEach(function(q) {
+                portfolioPrices[q.symbol] = q;
+                marketsCache[q.symbol] = q;
+              });
+            }
+          }
+        } catch(e) { console.error('Portfolio price fetch error:', e); }
+      }
+      renderHoldings();
+    }
+
+    // ── Portfolio AI Coach ──
+    function askPortfolioCoach(question) {
+      document.getElementById('portfolioCoachInput').value = question;
+      sendPortfolioCoachMsg();
+    }
+
+    async function sendPortfolioCoachMsg() {
+      if (!checkAgentLimit()) return;
+      var input = document.getElementById('portfolioCoachInput');
+      var msg = input.value.trim();
+      if (!msg) return;
+      input.value = ''; input.style.height = 'auto';
+      var msgs = document.getElementById('portfolioCoachMessages');
+      msgs.innerHTML += '<div class="msg user">' + msg.replace(/</g,'&lt;') + '</div>';
+      msgs.innerHTML += '<div class="msg ai" id="portfolioCoachTyping"></div>';
+      showThinking('portfolioCoachMessages', 'portfolioCoachTyping');
+      msgs.scrollTop = msgs.scrollHeight;
+      portfolioCoachHistory.push({ role: 'user', content: msg });
+
+      // Build portfolio context
+      var holdingsCtx = portfolioHoldings.map(function(h) {
+        var p = portfolioPrices[h.symbol] || {};
+        return h.symbol + ': ' + h.qty + ' shares @ $' + formatNum(p.price) + ' (avg cost: $' + formatNum(h.avgCost) + ', day change: ' + formatNum(p.changePercent) + '%)';
+      }).join('\n');
+
+      var systemPrompt = 'You are the WishPath Portfolio AI Coach — an expert investment advisor. The user\'s current portfolio:\n\n' + (holdingsCtx || 'No holdings yet.') + '\n\nProvide insightful, data-driven advice. Be specific with numbers. When showing allocation breakdowns, sector analysis, or performance data, include percentage figures so charts can be auto-generated. For visual data, you can use these markers to render Highcharts:\n- [CHARTDATA]{ ...highcharts config JSON... }[/CHARTDATA] for custom charts\n- Or just list items with percentages and a pie chart will auto-render\nKeep advice actionable. Current date: ' + new Date().toLocaleDateString() + '.';
+
+      try {
+        var res = await fetch(EDGE_FN, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ coachMode: true, systemPrompt: systemPrompt, messages: portfolioCoachHistory.slice(-10) })
+        });
+        var data = await res.json();
+        var reply = data.reply || "I couldn't process that. Try again.";
+        portfolioCoachHistory.push({ role: 'assistant', content: reply });
+        stopThinking('portfolioCoachTyping');
+
+        // Create unique chart container for this response
+        var chartDivId = 'pcoach-chart-' + Date.now();
+        var chartDiv = document.createElement('div');
+        chartDiv.id = chartDivId;
+        chartDiv.className = 'chart-container';
+        chartDiv.style.display = 'none';
+
+        typewriterEffect(msgs, reply, function(msgDiv) {
+          wrapAiTables(msgDiv);
+          // Add chart container after the message
+          msgDiv.parentNode.insertBefore(chartDiv, msgDiv.nextSibling);
+          detectAndRenderCharts(reply, chartDivId);
+          // Add export buttons below the AI message
+          addAiOutputActions(msgDiv);
+          incrementAgentUsage();
+        });
+      } catch(e) {
+        stopThinking('portfolioCoachTyping');
+        msgs.innerHTML += '<div class="msg ai" style="color:#f85149;">Connection error. Please try again.</div>';
+      }
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+
+    // ════════════════════════════════════════
+    // ── EXPORT/SHARE ACTIONS FOR AI OUTPUT
+    // ════════════════════════════════════════
+
+    function addAiOutputActions(msgDiv) {
+      // Don't double-add
+      if (msgDiv.querySelector('.ai-output-actions')) return;
+      var bar = document.createElement('div');
+      bar.className = 'ai-output-actions';
+      bar.style.cssText = 'display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.06);';
+      bar.innerHTML =
+        '<button class="table-action-btn" onclick="downloadAiOutput(this)">&#x1F4E5; Download</button>' +
+        '<button class="table-action-btn" onclick="emailAiOutput(this)">&#x1F4E7; Email to Me</button>' +
+        '<button class="table-action-btn" onclick="saveAiOutputToNotes(this)">&#x1F4BE; Save to Notes</button>';
+      msgDiv.appendChild(bar);
+    }
+
+    function downloadAiOutput(btn) {
+      var msgDiv = btn.closest('.msg');
+      if (!msgDiv) return;
+      // Check if there's a table — download CSV; otherwise download text
+      var table = msgDiv.querySelector('table');
+      if (table) {
+        var rows = [];
+        table.querySelectorAll('tr').forEach(function(tr) {
+          var cells = [];
+          tr.querySelectorAll('th, td').forEach(function(cell) { cells.push('"' + cell.innerText.replace(/"/g,'""') + '"'); });
+          rows.push(cells.join(','));
+        });
+        var blob = new Blob([rows.join('\n')], { type: 'text/csv' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a'); a.href = url; a.download = 'wishpath-export-' + Date.now() + '.csv';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+      } else {
+        var text = msgDiv.innerText;
+        var blob = new Blob([text], { type: 'text/plain' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a'); a.href = url; a.download = 'wishpath-export-' + Date.now() + '.txt';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+      }
+    }
+
+    async function emailAiOutput(btn) {
+      var msgDiv = btn.closest('.msg');
+      if (!msgDiv) return;
+      btn.disabled = true; btn.textContent = 'Sending...';
+      try {
+        var session = await getSession(); var email = session ? session.user.email : '';
+        if (!email) { alert('No email found.'); btn.disabled = false; btn.textContent = '\uD83D\uDCE7 Email to Me'; return; }
+        var content = msgDiv.innerText.substring(0, 5000);
+        await fetch(EDGE_FN, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ emailOnly: true, email: email, wish: 'AI Coach Export', roadmap: { title: 'WishPath AI Export', summary: content } }) });
+        btn.textContent = 'Sent!';
+        setTimeout(function() { btn.disabled = false; btn.textContent = '\uD83D\uDCE7 Email to Me'; }, 2000);
+      } catch(e) {
+        btn.textContent = 'Failed'; setTimeout(function() { btn.disabled = false; btn.textContent = '\uD83D\uDCE7 Email to Me'; }, 2000);
+      }
+    }
+
+    async function saveAiOutputToNotes(btn) {
+      var msgDiv = btn.closest('.msg');
+      if (!msgDiv) return;
+      btn.disabled = true; btn.textContent = 'Saving...';
+      try {
+        var sb = getSupabase(); var user = await getUser();
+        if (!user) { alert('Log in first.'); btn.disabled = false; btn.textContent = '\uD83D\uDCBE Save to Notes'; return; }
+        var content = msgDiv.innerText.substring(0, 10000);
+        await sb.from('user_notes').insert({ user_id: user.id, title: 'AI Coach: ' + content.substring(0, 60), content: content });
+        btn.textContent = 'Saved!';
+        setTimeout(function() { btn.disabled = false; btn.textContent = '\uD83D\uDCBE Save to Notes'; }, 2000);
+      } catch(e) {
+        btn.textContent = 'Failed'; setTimeout(function() { btn.disabled = false; btn.textContent = '\uD83D\uDCBE Save to Notes'; }, 2000);
+      }
+    }
+
+    // ── Patch existing coach typewriterEffect callbacks to add chart detection + export buttons ──
+    var _origSendCoachMsg = sendCoachMsg;
+    sendCoachMsg = async function() {
+      // Override temporarily to add chart detection
+      var origTypewriter = typewriterEffect;
+      var chartCounter = 0;
+      window._nextCoachChartId = 'coach-chart-' + Date.now();
+      await _origSendCoachMsg();
+    };
+
+    // ── Add chart detection to all AI coaches ──
+    // Patch typewriterEffect to also detect charts in all coaches
+    var _origTypewriterEffect = typewriterEffect;
+    typewriterEffect = function(container, text, callback) {
+      return _origTypewriterEffect(container, text, function(msgDiv) {
+        // Try to detect and render charts from the response
+        var chartDivId = 'auto-chart-' + Date.now();
+        var chartDiv = document.createElement('div');
+        chartDiv.id = chartDivId;
+        chartDiv.className = 'chart-container';
+        chartDiv.style.display = 'none';
+        if (msgDiv.parentNode) msgDiv.parentNode.insertBefore(chartDiv, msgDiv.nextSibling);
+        detectAndRenderCharts(text, chartDivId);
+        // Add export actions
+        addAiOutputActions(msgDiv);
+        if (callback) callback(msgDiv);
+      });
+    };
+
+    // ── Initialize: render holdings on load ──
+    renderHoldings();
+
+    // ════════════════════════════════
+    // ── MOBILE HOME TABS
+    // ════════════════════════════════
+
+    // Patch mobile home to include tabs
+    (function initMobileHomeTabs() {
+      var inner = document.querySelector('.mobile-home-inner');
+      if (!inner) return;
+      // Insert tabs before the title
+      var title = inner.querySelector('.mobile-home-title');
+      if (!title) return;
+      var tabsHtml = '<div class="home-tabs" style="margin:0 -20px 16px;padding:0 16px;">' +
+        '<button class="home-tab active" onclick="switchMobileHomeTab(\'roadmap\', this)"><span class="home-tab-icon">&#x1F9ED;</span> Roadmap</button>' +
+        '<button class="home-tab" onclick="switchMobileHomeTab(\'markets\', this)"><span class="home-tab-icon">&#x1F4C8;</span> Markets</button>' +
+        '<button class="home-tab" onclick="switchMobileHomeTab(\'portfolio\', this)"><span class="home-tab-icon">&#x1F4BC;</span> Portfolio</button>' +
+      '</div>';
+
+      var marketsContent = '<div id="mobileMarketsTab" style="display:none;">' +
+        '<div class="markets-section-label"><span>&#x1F7E2; Magnificent 7</span><button class="markets-refresh-btn" onclick="refreshMarkets();renderMobileMarkets()"><span class="refresh-icon" style="display:inline-block;">&#x21BB;</span> Refresh</button></div>' +
+        '<div class="stock-grid" id="mobileStockGrid" style="margin-bottom:20px;"></div>' +
+        '<div class="markets-section-label"><span>&#x1FA99; Crypto</span></div>' +
+        '<div class="stock-grid" id="mobileCryptoGrid" style="margin-bottom:20px;"></div>' +
+        '<div class="markets-section-label"><span>&#x1F4F0; News</span></div>' +
+        '<div class="news-list" id="mobileNewsList"><div class="news-item" style="color:var(--text-dim);">Tap refresh to load</div></div>' +
+      '</div>';
+
+      var portfolioContent = '<div id="mobilePortfolioTab" style="display:none;">' +
+        '<div class="portfolio-summary" id="mobilePortfolioSummary" style="margin-bottom:16px;">' +
+          '<div class="portfolio-stat"><div class="portfolio-stat-label">Total Value</div><div class="portfolio-stat-value" id="mobilePortfolioValue">$0.00</div></div>' +
+          '<div class="portfolio-stat"><div class="portfolio-stat-label">Day P&L</div><div class="portfolio-stat-value" id="mobilePortfolioPL">$0.00</div></div>' +
+        '</div>' +
+        '<div class="add-holding-row">' +
+          '<input class="add-holding-input" id="mobileHoldingSymbol" placeholder="Symbol" style="text-transform:uppercase;font-size:16px!important;" />' +
+          '<input class="add-holding-input" id="mobileHoldingQty" placeholder="Qty" type="number" step="any" style="width:80px;font-size:16px!important;" />' +
+          '<button class="add-holding-btn" onclick="addMobileHolding()">+ Add</button>' +
+        '</div>' +
+        '<div id="mobileHoldingsList" style="margin-bottom:20px;"></div>' +
+        '<div class="portfolio-coach-section" style="border-top:1px solid rgba(255,255,255,0.08);padding-top:16px;">' +
+          '<div class="portfolio-coach-header">&#x1F916; Portfolio Coach</div>' +
+          '<div class="portfolio-coach-suggestions" style="margin:10px 0;">' +
+            '<button class="portfolio-coach-chip" onclick="askPortfolioCoach(\'What is my sector breakdown?\')">Sectors</button>' +
+            '<button class="portfolio-coach-chip" onclick="askPortfolioCoach(\'Should I rebalance?\')">Rebalance</button>' +
+            '<button class="portfolio-coach-chip" onclick="askPortfolioCoach(\'What is my risk profile?\')">Risk</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+
+      var tabsDiv = document.createElement('div');
+      tabsDiv.innerHTML = tabsHtml;
+      title.parentNode.insertBefore(tabsDiv.firstElementChild, title);
+
+      // Create container for roadmap content (existing stuff)
+      var roadmapTab = document.createElement('div');
+      roadmapTab.id = 'mobileRoadmapTab';
+      // Move existing content into roadmap tab
+      var existingContent = [];
+      var node = title;
+      while (node) {
+        existingContent.push(node);
+        node = node.nextElementSibling;
+      }
+      existingContent.forEach(function(n) { roadmapTab.appendChild(n); });
+      inner.appendChild(roadmapTab);
+
+      // Add markets and portfolio tabs
+      inner.insertAdjacentHTML('beforeend', marketsContent);
+      inner.insertAdjacentHTML('beforeend', portfolioContent);
+    })();
+
+    function switchMobileHomeTab(tab, btn) {
+      // Toggle tabs
+      var tabs = btn.parentNode.querySelectorAll('.home-tab');
+      tabs.forEach(function(t) { t.classList.remove('active'); });
+      btn.classList.add('active');
+      // Toggle content
+      var roadmap = document.getElementById('mobileRoadmapTab');
+      var markets = document.getElementById('mobileMarketsTab');
+      var portfolio = document.getElementById('mobilePortfolioTab');
+      if (roadmap) roadmap.style.display = tab === 'roadmap' ? '' : 'none';
+      if (markets) markets.style.display = tab === 'markets' ? '' : 'none';
+      if (portfolio) portfolio.style.display = tab === 'portfolio' ? '' : 'none';
+      if (tab === 'markets') { if (!window._marketsLoaded) { refreshMarkets(); window._marketsLoaded = true; } renderMobileMarkets(); }
+      if (tab === 'portfolio') renderMobilePortfolio();
+    }
+
+    function renderMobileMarkets() {
+      var grid = document.getElementById('mobileStockGrid');
+      var crypto = document.getElementById('mobileCryptoGrid');
+      var news = document.getElementById('mobileNewsList');
+      if (!grid) return;
+      grid.innerHTML = MAG7.map(function(s) {
+        var q = marketsCache[s.symbol];
+        if (!q) return '<div class="stock-card"><div class="stock-symbol">' + s.symbol + '</div><div class="stock-price" style="color:var(--text-dim);">--</div></div>';
+        var cls = q.change > 0 ? 'up' : q.change < 0 ? 'down' : 'flat';
+        var sign = q.change > 0 ? '+' : '';
+        return '<div class="stock-card"><div class="stock-symbol">' + s.symbol + '</div><div class="stock-price">$' + formatNum(q.price) + '</div><div class="stock-change ' + cls + '">' + sign + formatNum(q.changePercent) + '%</div></div>';
+      }).join('');
+      crypto.innerHTML = CRYPTO.map(function(c) {
+        var q = marketsCache[c.symbol];
+        if (!q) return '<div class="stock-card"><div class="stock-symbol">' + c.display + '</div><div class="stock-price" style="color:var(--text-dim);">--</div></div>';
+        var cls = q.change > 0 ? 'up' : q.change < 0 ? 'down' : 'flat';
+        var sign = q.change > 0 ? '+' : '';
+        return '<div class="stock-card"><div class="stock-symbol">' + c.display + '</div><div class="stock-price">$' + formatNum(q.price) + '</div><div class="stock-change ' + cls + '">' + sign + formatNum(q.changePercent) + '%</div></div>';
+      }).join('');
+      // Sync news from desktop
+      var desktopNews = document.getElementById('marketNewsList');
+      if (desktopNews && news) news.innerHTML = desktopNews.innerHTML;
+    }
+
+    function renderMobilePortfolio() {
+      var list = document.getElementById('mobileHoldingsList');
+      var valueEl = document.getElementById('mobilePortfolioValue');
+      var plEl = document.getElementById('mobilePortfolioPL');
+      if (!list) return;
+      if (!portfolioHoldings.length) {
+        list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-dim);font-size:0.85rem;">No holdings yet</div>';
+        if (valueEl) valueEl.textContent = '$0.00';
+        if (plEl) plEl.textContent = '$0.00';
+        return;
+      }
+      var totalVal = 0, totalDayPL = 0;
+      list.innerHTML = portfolioHoldings.map(function(h, i) {
+        var p = portfolioPrices[h.symbol] || {};
+        var val = (p.price || 0) * h.qty;
+        var dayPL = (p.change || 0) * h.qty;
+        totalVal += val; totalDayPL += dayPL;
+        var cls = dayPL > 0 ? 'up' : dayPL < 0 ? 'down' : 'flat';
+        return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.06);">' +
+          '<div><div style="font-weight:600;color:var(--text);">' + h.symbol + '</div><div style="font-size:0.75rem;color:var(--text-dim);">' + h.qty + ' shares</div></div>' +
+          '<div style="text-align:right;"><div style="font-weight:600;color:#fff;">$' + formatNum(val) + '</div><div class="stock-change ' + cls + '" style="font-size:0.75rem;">' + (dayPL >= 0 ? '+' : '') + '$' + formatNum(dayPL) + '</div></div>' +
+        '</div>';
+      }).join('');
+      if (valueEl) valueEl.textContent = '$' + formatNum(totalVal);
+      if (plEl) { plEl.textContent = (totalDayPL >= 0 ? '+' : '') + '$' + formatNum(totalDayPL); plEl.style.color = totalDayPL >= 0 ? '#22c55e' : '#ef4444'; }
+    }
+
+    function addMobileHolding() {
+      var sym = document.getElementById('mobileHoldingSymbol');
+      var qty = document.getElementById('mobileHoldingQty');
+      var symbol = sym.value.trim().toUpperCase();
+      var quantity = parseFloat(qty.value);
+      if (!symbol || !quantity || quantity <= 0) { alert('Enter symbol and quantity.'); return; }
+      var existing = portfolioHoldings.find(function(h) { return h.symbol === symbol; });
+      if (existing) { existing.qty += quantity; } else { portfolioHoldings.push({ symbol: symbol, qty: quantity, avgCost: 0 }); }
+      savePortfolio();
+      sym.value = ''; qty.value = '';
+      refreshPortfolioPrices();
+      renderMobilePortfolio();
+      renderHoldings();
+    }
+
+    // ════════════════════════════════
+    // ── WATCHLISTS
+    // ════════════════════════════════
+
+    var watchlists = JSON.parse(localStorage.getItem('wp_watchlists') || '[]');
+    var activeWatchlistId = null;
+    var watchlistPrices = {};
+    var watchlistPrevPrices = {};
+
+    function saveWatchlists() {
+      localStorage.setItem('wp_watchlists', JSON.stringify(watchlists));
+      renderSidebarWatchlists();
+    }
+
+    function createNewWatchlist() {
+      var wl = { id: 'wl-' + Date.now(), name: 'New Watchlist', symbols: [], created: new Date().toISOString() };
+      watchlists.push(wl);
+      saveWatchlists();
+      openWatchlist(wl.id);
+      // Switch to markets tab if not there
+      var marketsTab = document.getElementById('homeMarketsTab');
+      if (marketsTab && !marketsTab.classList.contains('active')) {
+        switchHomeTab('markets', document.querySelector('.home-tab:nth-child(2)'));
+      }
+      // Focus title input
+      setTimeout(function() {
+        var input = document.getElementById('watchlistTitleInput');
+        if (input) { input.focus(); input.select(); }
+      }, 100);
+    }
+
+    function openWatchlist(id) {
+      activeWatchlistId = id;
+      var wl = watchlists.find(function(w) { return w.id === id; });
+      if (!wl) return;
+      document.getElementById('activeWatchlistView').style.display = '';
+      document.getElementById('watchlistEmptyState').style.display = 'none';
+      document.getElementById('watchlistTitleInput').value = wl.name;
+      renderWatchlistItems();
+      refreshWatchlistPrices();
+      // Ensure we're on the home/markets view
+      if (window.innerWidth <= 768) {
+        showMobileHome();
+      } else {
+        showView('home');
+        switchHomeTab('markets', document.querySelector('.home-tab:nth-child(2)'));
+      }
+    }
+
+    function saveWatchlistTitle() {
+      if (!activeWatchlistId) return;
+      var wl = watchlists.find(function(w) { return w.id === activeWatchlistId; });
+      if (!wl) return;
+      wl.name = document.getElementById('watchlistTitleInput').value.trim() || 'Untitled';
+      saveWatchlists();
+    }
+
+    function addWatchlistSymbol() {
+      if (!activeWatchlistId) return;
+      var input = document.getElementById('watchlistAddInput');
+      var symbol = input.value.trim().toUpperCase();
+      if (!symbol) return;
+      var wl = watchlists.find(function(w) { return w.id === activeWatchlistId; });
+      if (!wl) return;
+      if (wl.symbols.indexOf(symbol) !== -1) { input.value = ''; return; } // no dupes
+      wl.symbols.push(symbol);
+      saveWatchlists();
+      input.value = '';
+      renderWatchlistItems();
+      refreshWatchlistPrices();
+    }
+
+    function removeWatchlistSymbol(symbol) {
+      if (!activeWatchlistId) return;
+      var wl = watchlists.find(function(w) { return w.id === activeWatchlistId; });
+      if (!wl) return;
+      wl.symbols = wl.symbols.filter(function(s) { return s !== symbol; });
+      saveWatchlists();
+      renderWatchlistItems();
+    }
+
+    function deleteActiveWatchlist() {
+      if (!activeWatchlistId || !confirm('Delete this watchlist?')) return;
+      watchlists = watchlists.filter(function(w) { return w.id !== activeWatchlistId; });
+      activeWatchlistId = null;
+      saveWatchlists();
+      document.getElementById('activeWatchlistView').style.display = 'none';
+      document.getElementById('watchlistEmptyState').style.display = '';
+    }
+
+    // Stock name lookup (basic map for common tickers)
+    var STOCK_NAMES = { AAPL:'Apple', MSFT:'Microsoft', GOOGL:'Alphabet', AMZN:'Amazon', NVDA:'NVIDIA', META:'Meta', TSLA:'Tesla', NFLX:'Netflix', AMD:'AMD', INTC:'Intel', CRM:'Salesforce', ORCL:'Oracle', ADBE:'Adobe', PYPL:'PayPal', SQ:'Block', SHOP:'Shopify', COIN:'Coinbase', PLTR:'Palantir', UBER:'Uber', ABNB:'Airbnb', DIS:'Disney', BA:'Boeing', JPM:'JPMorgan', BAC:'Bank of America', GS:'Goldman Sachs', V:'Visa', MA:'Mastercard', WMT:'Walmart', TGT:'Target', COST:'Costco', HD:'Home Depot', NKE:'Nike', SBUX:'Starbucks', MCD:"McDonald's", KO:'Coca-Cola', PEP:'PepsiCo', JNJ:'J&J', PFE:'Pfizer', UNH:'UnitedHealth', XOM:'Exxon', CVX:'Chevron', 'BTC/USD':'Bitcoin', 'ETH/USD':'Ethereum', 'SOL/USD':'Solana', DOGE:'Dogecoin', 'DOGE/USD':'Dogecoin' };
+
+    function renderWatchlistItems() {
+      var wl = watchlists.find(function(w) { return w.id === activeWatchlistId; });
+      var container = document.getElementById('watchlistItems');
+      if (!wl || !wl.symbols.length) {
+        container.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-dim);font-size:0.85rem;">Add symbols above to start tracking.</div>';
+        return;
+      }
+      container.innerHTML = wl.symbols.map(function(sym) {
+        var q = watchlistPrices[sym];
+        var prevQ = watchlistPrevPrices[sym];
+        var pulseClass = '';
+        if (q && prevQ && q.price !== prevQ.price) {
+          pulseClass = q.price > prevQ.price ? ' price-up' : ' price-down';
+        }
+        var name = STOCK_NAMES[sym] || '';
+        if (!q) {
+          return '<div class="watchlist-item' + pulseClass + '">' +
+            '<div class="watchlist-item-left"><div class="watchlist-item-symbol">' + sym + '</div>' + (name ? '<div class="watchlist-item-name">' + name + '</div>' : '') + '</div>' +
+            '<div style="display:flex;align-items:center;"><div class="watchlist-item-right"><div class="watchlist-item-price" style="color:var(--text-dim);">--</div></div>' +
+            '<button class="watchlist-item-remove" onclick="removeWatchlistSymbol(\'' + sym + '\')">&times;</button></div></div>';
+        }
+        var changeClass = q.change > 0 ? 'up' : q.change < 0 ? 'down' : 'flat';
+        var sign = q.change > 0 ? '+' : '';
+        return '<div class="watchlist-item' + pulseClass + '">' +
+          '<div class="watchlist-item-left"><div class="watchlist-item-symbol">' + sym + '</div>' + (name ? '<div class="watchlist-item-name">' + name + '</div>' : '') + '</div>' +
+          '<div style="display:flex;align-items:center;">' +
+            '<div class="watchlist-item-right">' +
+              '<div class="watchlist-item-price">$' + formatNum(q.price) + '</div>' +
+              '<div class="watchlist-item-change stock-change ' + changeClass + '">' + sign + '$' + formatNum(q.change) + ' (' + sign + formatNum(q.changePercent) + '%)</div>' +
+            '</div>' +
+            '<button class="watchlist-item-remove" onclick="removeWatchlistSymbol(\'' + sym + '\')">&times;</button>' +
+          '</div></div>';
+      }).join('');
+    }
+
+    async function refreshWatchlistPrices() {
+      var wl = watchlists.find(function(w) { return w.id === activeWatchlistId; });
+      if (!wl || !wl.symbols.length) return;
+      // Save previous prices for pulse animation
+      watchlistPrevPrices = JSON.parse(JSON.stringify(watchlistPrices));
+      // Check which we need to fetch (not in marketsCache)
+      var toFetch = wl.symbols.filter(function(s) { return !marketsCache[s]; });
+      // Copy from cache
+      wl.symbols.forEach(function(s) { if (marketsCache[s]) watchlistPrices[s] = marketsCache[s]; });
+
+      if (toFetch.length > 0) {
+        try {
+          var res = await fetch(EDGE_FN, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              coachMode: true,
+              systemPrompt: 'You are a market data API. Fetch real-time quotes from Alpaca. Return ONLY valid JSON: {"quotes": [{"symbol": "AAPL", "price": 150.00, "change": 2.50, "changePercent": 1.5}]}',
+              messages: [{ role: 'user', content: 'Get live quotes for: ' + toFetch.join(', ') + '. Return only JSON.' }]
+            })
+          });
+          var data = await res.json();
+          var reply = data.reply || '';
+          var jsonMatch = reply.match(/\{[\s\S]*"quotes"[\s\S]*\}/);
+          if (jsonMatch) {
+            var parsed = JSON.parse(jsonMatch[0]);
+            if (parsed.quotes) {
+              parsed.quotes.forEach(function(q) {
+                watchlistPrices[q.symbol] = q;
+                marketsCache[q.symbol] = q;
+              });
+            }
+          }
+        } catch(e) { console.error('Watchlist price fetch error:', e); }
+      }
+      renderWatchlistItems();
+    }
+
+    function refreshActiveWatchlist() {
+      // Force re-fetch all symbols (clear from cache)
+      var wl = watchlists.find(function(w) { return w.id === activeWatchlistId; });
+      if (wl) wl.symbols.forEach(function(s) { delete marketsCache[s]; });
+      refreshWatchlistPrices();
+    }
+
+    function renderSidebarWatchlists() {
+      var container = document.getElementById('sidebarWatchlists');
+      var label = document.getElementById('sidebarWatchlistLabel');
+      if (!container || !label) return;
+      if (!watchlists.length) { container.innerHTML = ''; label.style.display = 'none'; return; }
+      label.style.display = 'block';
+      container.innerHTML = watchlists.map(function(wl) {
+        return '<div class="sidebar-watchlist-item" onclick="openWatchlist(\'' + wl.id + '\')" title="' + wl.name + '">' +
+          '<span style="font-size:0.85rem;">&#x1F4CB;</span> ' +
+          '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + wl.name + '</span>' +
+          '<span class="wl-count">' + wl.symbols.length + '</span>' +
+        '</div>';
+      }).join('');
+    }
+
+    // Init sidebar watchlists on load
+    renderSidebarWatchlists();
+    // Show first watchlist if exists
+    if (watchlists.length > 0) {
+      document.getElementById('watchlistEmptyState').style.display = 'none';
+    }
+
+    // ── Auto-refresh: markets every 60s, watchlist every 30s ──
+    setInterval(function() {
+      var marketsTab = document.getElementById('homeMarketsTab');
+      if (marketsTab && marketsTab.classList.contains('active') && window._marketsLoaded) {
+        refreshMarkets();
+      }
+    }, 60000);
+
+    setInterval(function() {
+      if (activeWatchlistId) {
+        var wl = watchlists.find(function(w) { return w.id === activeWatchlistId; });
+        if (wl && wl.symbols.length > 0) {
+          // Force fresh fetch
+          wl.symbols.forEach(function(s) { delete marketsCache[s]; });
+          refreshWatchlistPrices();
+        }
+      }
+    }, 30000);
   </script>
 
   <!-- Fullscreen table overlay -->
