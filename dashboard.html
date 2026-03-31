@@ -609,6 +609,52 @@
     .watchlist-create-card { text-align: center; padding: 40px 20px; }
     .watchlist-create-card p { color: var(--text-dim); font-size: 0.88rem; margin-bottom: 16px; }
 
+    /* ── Financial Markets Hub ── */
+    .fm-sub-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 20px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .fm-sub-tab { padding: 10px 16px; font-size: 0.78rem; font-weight: 600; color: var(--text-dim); cursor: pointer; border: none; border-bottom: 2px solid transparent; transition: all 0.15s; background: none; font-family: inherit; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
+    .fm-sub-tab:hover { color: var(--text-muted); background: rgba(255,255,255,0.02); }
+    .fm-sub-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .fm-sub-content { display: none; }
+    .fm-sub-content.active { display: block; }
+    .fm-widget-container { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; min-height: 500px; }
+    .fm-widget-container iframe { width: 100%; border: none; }
+    .fm-ticker-input-row { display: flex; gap: 8px; margin-bottom: 16px; }
+    .fm-ticker-input { flex: 1; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font: inherit; font-size: 0.9rem; outline: none; text-transform: uppercase; }
+    .fm-ticker-input:focus { border-color: var(--accent); }
+    .fm-ticker-input::placeholder { color: var(--text-dim); text-transform: none; }
+    .fm-ticker-btn { padding: 12px 20px; background: var(--accent); color: var(--bg); border: none; border-radius: 10px; font: inherit; font-size: 0.88rem; font-weight: 700; cursor: pointer; }
+    /* Sidebar Financial Markets section */
+    .sidebar-fm-section { padding: 0 8px; }
+    .sidebar-fm-toggle { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 8px; font-size: 0.88rem; font-weight: 500; color: var(--text-muted); cursor: pointer; transition: all 0.15s; width: 100%; }
+    .sidebar-fm-toggle:hover { background: rgba(255,255,255,0.04); color: var(--text); }
+    .sidebar-fm-toggle.active { background: var(--accent-dim); color: var(--accent); }
+    .sidebar-fm-toggle svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .sidebar-fm-arrow { font-size: 0.6rem; margin-left: auto; transition: transform 0.2s; color: var(--text-dim); }
+    .sidebar-fm-arrow.open { transform: rotate(90deg); }
+    .sidebar-fm-items { display: none; padding-left: 14px; }
+    .sidebar-fm-items.open { display: block; }
+    .sidebar-fm-sub { display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 6px; font-size: 0.78rem; color: var(--text-dim); cursor: pointer; transition: all 0.15s; }
+    .sidebar-fm-sub:hover { background: rgba(255,255,255,0.04); color: var(--text-muted); }
+    .sidebar-fm-sub.active { color: var(--accent); }
+
+    /* ── News Feed ── */
+    .news-feed-item { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; transition: border-color 0.2s; }
+    .news-feed-item:hover { border-color: rgba(0,201,167,0.2); }
+    .news-feed-badges { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+    .news-badge { font-size: 0.65rem; font-weight: 700; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .news-badge.breaking { background: rgba(239,68,68,0.15); color: #ef4444; }
+    .news-badge.earnings { background: rgba(245,158,11,0.15); color: #f59e0b; }
+    .news-badge.bullish { background: rgba(34,197,94,0.15); color: #22c55e; }
+    .news-badge.bearish { background: rgba(239,68,68,0.15); color: #ef4444; }
+    .news-badge.neutral { background: rgba(139,148,158,0.15); color: #8b949e; }
+    .news-badge.holding { background: rgba(167,139,250,0.15); color: #a78bfa; }
+    .news-feed-title { font-size: 0.92rem; font-weight: 600; color: var(--text); line-height: 1.4; margin-bottom: 6px; }
+    .news-feed-summary { font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 8px; }
+    .news-feed-meta { font-size: 0.7rem; color: var(--text-dim); display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+    .news-feed-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .news-feed-action { padding: 5px 10px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; color: var(--text-dim); font: inherit; font-size: 0.7rem; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 4px; }
+    .news-feed-action:hover { border-color: var(--accent); color: var(--accent); }
+
     /* ── Mobile home tabs ── */
     @media (max-width: 768px) {
       .home-tabs { margin: 0 -20px 20px; padding: 0 16px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -699,8 +745,28 @@
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 5h12M4 10h12M4 15h8"/><path d="M2 5l1 1 2-2M2 10l1 1 2-2"/></svg>
         To-Dos
       </a>
-      <div class="sidebar-section" id="sidebarWatchlistLabel" style="display:none;">Watchlists</div>
-      <div id="sidebarWatchlists"></div>
+      <!-- Financial Markets expandable section -->
+      <div class="sidebar-fm-section">
+        <div class="sidebar-fm-toggle" id="sidebarFMToggle" onclick="toggleFMSidebar()">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 14l4-4 3 3 7-7"/><path d="M14 6h3v3"/></svg>
+          Financial Markets
+          <span class="sidebar-fm-arrow" id="sidebarFMArrow">&#x25B6;</span>
+        </div>
+        <div class="sidebar-fm-items" id="sidebarFMItems">
+          <div class="sidebar-fm-sub" onclick="openFMTab('fmMarkets')">&#x1F4C8; Markets</div>
+          <div class="sidebar-fm-sub" onclick="openFMTab('fmPortfolio')">&#x1F4BC; Portfolio</div>
+          <div class="sidebar-fm-sub" onclick="openFMTab('fmChartStudio')">&#x1F4CA; Chart Studio</div>
+          <div class="sidebar-fm-sub" onclick="openFMTab('fmWatchlists')">&#x1F4CB; Watchlists</div>
+          <div class="sidebar-fm-sub" onclick="openFMTab('fmNewsFeed')">&#x1F4F0; News Feed</div>
+          <div class="sidebar-fm-sub" onclick="openFMTab('fmTVCharts')">&#x1F5A5; TradingView Charts</div>
+          <div class="sidebar-fm-sub" onclick="openFMTab('fmHeatMap')">&#x1F525; Heat Map</div>
+          <div class="sidebar-fm-sub" onclick="openFMTab('fmScreener')">&#x1F50D; Screener</div>
+          <div class="sidebar-fm-sub" onclick="openFMTab('fmOverview')">&#x1F30D; Market Overview</div>
+          <div class="sidebar-fm-sub" onclick="openFMTab('fmCalendar')">&#x1F4C5; Economic Calendar</div>
+          <div class="sidebar-fm-sub" onclick="openFMTab('fmTechAnalysis')">&#x1F4CA; Technical Analysis</div>
+          <div id="sidebarFMWatchlists" style="border-top:1px solid rgba(255,255,255,0.06);margin-top:6px;padding-top:6px;"></div>
+        </div>
+      </div>
       <div class="sidebar-section" id="savedChatsLabel" style="display:none;">Saved Chats</div>
       <div id="savedChatsList"></div>
       <a class="nav-item" data-view="newwish" onclick="showView('newwish')" style="margin-top: 12px;">
@@ -887,6 +953,175 @@
               <button class="coach-send" onclick="sendPortfolioCoachMsg()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- Financial Markets Hub View -->
+      <div class="view" id="fmView">
+        <div class="fm-sub-tabs" id="fmSubTabs">
+          <button class="fm-sub-tab active" onclick="switchFMTab('fmMarkets',this)">&#x1F4C8; Markets</button>
+          <button class="fm-sub-tab" onclick="switchFMTab('fmPortfolio',this)">&#x1F4BC; Portfolio</button>
+          <button class="fm-sub-tab" onclick="switchFMTab('fmChartStudio',this)">&#x1F4CA; Chart Studio</button>
+          <button class="fm-sub-tab" onclick="switchFMTab('fmWatchlists',this)">&#x1F4CB; Watchlists</button>
+          <button class="fm-sub-tab" onclick="switchFMTab('fmNewsFeed',this)">&#x1F4F0; News</button>
+          <button class="fm-sub-tab" onclick="switchFMTab('fmTVCharts',this)">&#x1F5A5; Charts</button>
+          <button class="fm-sub-tab" onclick="switchFMTab('fmHeatMap',this)">&#x1F525; Heat Map</button>
+          <button class="fm-sub-tab" onclick="switchFMTab('fmScreener',this)">&#x1F50D; Screener</button>
+          <button class="fm-sub-tab" onclick="switchFMTab('fmOverview',this)">&#x1F30D; Overview</button>
+          <button class="fm-sub-tab" onclick="switchFMTab('fmCalendar',this)">&#x1F4C5; Calendar</button>
+          <button class="fm-sub-tab" onclick="switchFMTab('fmTechAnalysis',this)">&#x1F4CA; Analysis</button>
+        </div>
+
+        <!-- FM: Markets -->
+        <div class="fm-sub-content active" id="fmMarketsContent">
+          <div class="markets-section-label"><span>&#x1F7E2; Magnificent 7 Tracker</span>
+            <button class="markets-refresh-btn" id="fmRefreshBtn" onclick="refreshMarkets()"><span class="refresh-icon" style="display:inline-block;">&#x21BB;</span> Refresh</button>
+          </div>
+          <div class="markets-updated" id="fmMarketsUpdatedTime"></div>
+          <div class="stock-grid" id="fmMag7Grid"></div>
+          <div class="markets-section-label" style="margin-top:20px;"><span>&#x1FA99; Crypto</span></div>
+          <div class="stock-grid" id="fmCryptoGrid"></div>
+          <div id="fmMarketsChartContainer" class="chart-container" style="display:none;"></div>
+          <div class="markets-section-label" style="margin-top:28px;"><span>&#x1F4F0; Market News</span></div>
+          <div class="news-list" id="fmMarketNewsList"><div class="news-item" style="color:var(--text-dim);">Loading news...</div></div>
+        </div>
+
+        <!-- FM: Portfolio -->
+        <div class="fm-sub-content" id="fmPortfolioContent">
+          <div class="portfolio-summary" id="fmPortfolioSummary">
+            <div class="portfolio-stat"><div class="portfolio-stat-label">Total Value</div><div class="portfolio-stat-value" id="fmPortfolioTotalValue">$0.00</div></div>
+            <div class="portfolio-stat"><div class="portfolio-stat-label">Day P&L</div><div class="portfolio-stat-value" id="fmPortfolioDayPL">$0.00</div><div class="portfolio-stat-change" id="fmPortfolioDayPLPct"></div></div>
+            <div class="portfolio-stat"><div class="portfolio-stat-label">Total P&L</div><div class="portfolio-stat-value" id="fmPortfolioTotalPL">$0.00</div><div class="portfolio-stat-change" id="fmPortfolioTotalPLPct"></div></div>
+            <div class="portfolio-stat"><div class="portfolio-stat-label">Positions</div><div class="portfolio-stat-value" id="fmPortfolioPositionCount">0</div></div>
+          </div>
+          <div class="markets-section-label"><span>Add Holding</span></div>
+          <div class="add-holding-row">
+            <input class="add-holding-input" id="fmHoldingSymbolInput" placeholder="Symbol (e.g. AAPL)" style="text-transform:uppercase;" />
+            <input class="add-holding-input" id="fmHoldingQtyInput" placeholder="Quantity" type="number" step="any" min="0" />
+            <input class="add-holding-input" id="fmHoldingCostInput" placeholder="Avg cost (optional)" type="number" step="any" min="0" />
+            <button class="add-holding-btn" onclick="addHoldingFM()">+ Add</button>
+          </div>
+          <table class="holdings-table" id="fmHoldingsTable" style="display:none;">
+            <thead><tr><th>Symbol</th><th>Qty</th><th>Price</th><th>Value</th><th>Day P&L</th><th>Total P&L</th><th></th></tr></thead>
+            <tbody id="fmHoldingsBody"></tbody>
+          </table>
+          <div id="fmHoldingsEmpty" style="text-align:center;padding:32px;color:var(--text-dim);font-size:0.88rem;">No holdings yet. Add a stock or crypto above.</div>
+          <div id="fmPortfolioChartContainer" class="chart-container" style="display:none;"></div>
+          <div class="portfolio-coach-section">
+            <div class="portfolio-coach-header">&#x1F916; Portfolio AI Coach</div>
+            <div class="portfolio-coach-sub">Ask about your portfolio — rebalancing, risk, sector exposure, and more.</div>
+            <div class="portfolio-coach-suggestions">
+              <button class="portfolio-coach-chip" onclick="askPortfolioCoach('What is my sector breakdown?')">Sector breakdown</button>
+              <button class="portfolio-coach-chip" onclick="askPortfolioCoach('Should I rebalance my portfolio?')">Rebalance advice</button>
+              <button class="portfolio-coach-chip" onclick="askPortfolioCoach('How exposed am I to tech?')">Tech exposure</button>
+              <button class="portfolio-coach-chip" onclick="askPortfolioCoach('What is my risk profile?')">Risk profile</button>
+            </div>
+            <div class="portfolio-coach-messages" id="fmPortfolioCoachMessages">
+              <div class="msg ai">Hi! I'm your Portfolio AI Coach. Add holdings and I can analyze your portfolio, suggest improvements, and answer investment questions.</div>
+            </div>
+            <div class="portfolio-coach-input-row">
+              <textarea class="portfolio-coach-input" id="fmPortfolioCoachInput" placeholder="Ask about your portfolio..." rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendPortfolioCoachMsg();}"></textarea>
+              <button class="coach-send" onclick="sendPortfolioCoachMsg()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
+            </div>
+          </div>
+        </div>
+
+        <!-- FM: Chart Studio -->
+        <div class="fm-sub-content" id="fmChartStudioContent">
+          <div style="margin-bottom:16px;">
+            <div class="portfolio-coach-header" style="font-size:1.1rem;">&#x1F4CA; Chart Studio</div>
+            <div class="portfolio-coach-sub">Ask the AI to create any chart — allocation, performance, comparisons, and more. Powered by Highcharts.</div>
+          </div>
+          <div class="portfolio-coach-suggestions" style="margin-bottom:16px;">
+            <button class="portfolio-coach-chip" onclick="askChartStudio('Create a pie chart of my portfolio allocation')">Portfolio allocation</button>
+            <button class="portfolio-coach-chip" onclick="askChartStudio('Compare Mag 7 stock performance this year')">Mag 7 comparison</button>
+            <button class="portfolio-coach-chip" onclick="askChartStudio('Show sector breakdown of my holdings')">Sector breakdown</button>
+            <button class="portfolio-coach-chip" onclick="askChartStudio('Create a risk vs return scatter plot for my portfolio')">Risk vs Return</button>
+          </div>
+          <div class="portfolio-coach-messages" id="chartStudioMessages">
+            <div class="msg ai">Welcome to Chart Studio! Ask me to create any financial chart and I'll build it with Highcharts. Try "Show my portfolio allocation as a pie chart" or "Compare tech stocks."</div>
+          </div>
+          <div id="chartStudioChartArea"></div>
+          <div class="portfolio-coach-input-row" style="margin-top:12px;">
+            <textarea class="portfolio-coach-input" id="chartStudioInput" placeholder="Describe a chart to create..." rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChartStudioMsg();}"></textarea>
+            <button class="coach-send" onclick="sendChartStudioMsg()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
+          </div>
+          <div class="markets-section-label" style="margin-top:24px;"><span>Saved Charts</span></div>
+          <div id="savedChartsList" style="color:var(--text-dim);font-size:0.85rem;">No saved charts yet.</div>
+        </div>
+
+        <!-- FM: Watchlists -->
+        <div class="fm-sub-content" id="fmWatchlistsContent">
+          <div class="markets-section-label"><span>&#x1F4CB; My Watchlists</span>
+            <button class="markets-refresh-btn" onclick="createNewWatchlist()">+ New Watchlist</button>
+          </div>
+          <div id="fmWatchlistSelector" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;"></div>
+          <div id="fmWatchlistContainer">
+            <div id="fmActiveWatchlistView" style="display:none;">
+              <div class="watchlist-header">
+                <input class="watchlist-title-input" id="fmWatchlistTitleInput" placeholder="Watchlist name..." onblur="saveWatchlistTitle()" />
+                <div class="watchlist-actions">
+                  <button class="watchlist-action-btn" onclick="refreshActiveWatchlist()">&#x21BB; Refresh</button>
+                  <button class="watchlist-action-btn delete" onclick="deleteActiveWatchlist()">&#x1F5D1; Delete</button>
+                </div>
+              </div>
+              <div class="watchlist-add-row">
+                <input class="watchlist-add-input" id="fmWatchlistAddInput" placeholder="Add symbol (e.g. AAPL)" onkeydown="if(event.key==='Enter')addWatchlistSymbol();" />
+                <button class="watchlist-add-btn" onclick="addWatchlistSymbol()">+ Add</button>
+              </div>
+              <div class="watchlist-items" id="fmWatchlistItems"></div>
+            </div>
+            <div id="fmWatchlistEmptyState" class="watchlist-create-card">
+              <p>Create a watchlist to track your favorite stocks and crypto with live prices.</p>
+              <button class="add-holding-btn" onclick="createNewWatchlist()">&#x1F4CB; Create Watchlist</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- FM: News Feed -->
+        <div class="fm-sub-content" id="fmNewsFeedContent">
+          <div class="markets-section-label"><span>&#x1F4F0; Personalized News Feed</span>
+            <button class="markets-refresh-btn" id="newsFeedRefreshBtn" onclick="refreshNewsFeed()"><span class="refresh-icon" style="display:inline-block;">&#x21BB;</span> Refresh</button>
+          </div>
+          <div id="newsFeedContainer"><div style="text-align:center;padding:40px;color:var(--text-dim);">Loading your personalized news...</div></div>
+        </div>
+
+        <!-- FM: TradingView Charts -->
+        <div class="fm-sub-content" id="fmTVChartsContent">
+          <div class="fm-ticker-input-row">
+            <input class="fm-ticker-input" id="tvChartTicker" placeholder="Enter ticker (e.g. AAPL, BTCUSD)" value="AAPL" />
+            <button class="fm-ticker-btn" onclick="loadTVChart()">Load Chart</button>
+          </div>
+          <div class="fm-widget-container" id="tvChartWidget" style="height:600px;"></div>
+        </div>
+
+        <!-- FM: Heat Map -->
+        <div class="fm-sub-content" id="fmHeatMapContent">
+          <div class="fm-widget-container" id="tvHeatMapWidget" style="height:600px;"></div>
+        </div>
+
+        <!-- FM: Screener -->
+        <div class="fm-sub-content" id="fmScreenerContent">
+          <div class="fm-widget-container" id="tvScreenerWidget" style="height:600px;"></div>
+        </div>
+
+        <!-- FM: Market Overview -->
+        <div class="fm-sub-content" id="fmOverviewContent">
+          <div class="fm-widget-container" id="tvOverviewWidget" style="height:600px;"></div>
+        </div>
+
+        <!-- FM: Economic Calendar -->
+        <div class="fm-sub-content" id="fmCalendarContent">
+          <div class="fm-widget-container" id="tvCalendarWidget" style="height:600px;"></div>
+        </div>
+
+        <!-- FM: Technical Analysis -->
+        <div class="fm-sub-content" id="fmTechAnalysisContent">
+          <div class="fm-ticker-input-row">
+            <input class="fm-ticker-input" id="tvTechTicker" placeholder="Enter ticker (e.g. AAPL)" value="AAPL" />
+            <button class="fm-ticker-btn" onclick="loadTVTechAnalysis()">Analyze</button>
+          </div>
+          <div class="fm-widget-container" id="tvTechWidget" style="height:500px;"></div>
         </div>
       </div>
 
@@ -1398,7 +1633,7 @@
     }
 
     // View switching
-    var viewTitles = { home: 'Home', wishes: 'My Wishes', coach: 'AI Coach', library: 'Library', notes: 'Notes', todos: 'To-Dos', newwish: 'Your Wish' };
+    var viewTitles = { home: 'Home', fm: 'Financial Markets', wishes: 'My Wishes', coach: 'AI Coach', library: 'Library', notes: 'Notes', todos: 'To-Dos', newwish: 'Your Wish' };
     // ── iOS-style drag handle for chat/content split ──
     (function initDragHandles() {
       if (window.innerWidth > 768) return;
@@ -2849,14 +3084,12 @@
     // ════════════════════════════════════════════════════
 
     function switchHomeTab(tab, btn) {
-      document.querySelectorAll('.home-tab').forEach(function(t) { t.classList.remove('active'); });
-      document.querySelectorAll('.home-tab-content').forEach(function(c) { c.classList.remove('active'); });
+      document.querySelectorAll('#homeView .home-tab').forEach(function(t) { t.classList.remove('active'); });
+      document.querySelectorAll('#homeView .home-tab-content').forEach(function(c) { c.classList.remove('active'); });
       if (btn) btn.classList.add('active');
       var tabEl = document.getElementById('home' + tab.charAt(0).toUpperCase() + tab.slice(1) + 'Tab');
       if (tabEl) tabEl.classList.add('active');
-      // Auto-load markets data on first visit
       if (tab === 'markets' && !window._marketsLoaded) { refreshMarkets(); window._marketsLoaded = true; }
-      // Auto-refresh portfolio prices
       if (tab === 'portfolio') refreshPortfolioPrices();
     }
 
@@ -3174,30 +3407,61 @@
     }
 
     // ════════════════════════════════
-    // ── PORTFOLIO TAB
+    // ── PORTFOLIO TAB (Supabase-persisted)
     // ════════════════════════════════
 
-    var portfolioHoldings = JSON.parse(localStorage.getItem('wp_portfolio') || '[]');
+    var portfolioHoldings = [];
     var portfolioPrices = {};
     var portfolioCoachHistory = [];
+    var _portfolioLoaded = false;
 
-    function savePortfolio() {
-      localStorage.setItem('wp_portfolio', JSON.stringify(portfolioHoldings));
+    // ── Supabase persistence helpers ──
+    // Uses user_notes table with JSON content and type-prefixed titles
+    // Format: title = "__WP_PORTFOLIO__", content = JSON array of holdings
+    //         title = "__WP_WATCHLIST__{id}", content = JSON {name, symbols}
+    //         title = "__WP_CHART__{id}", content = JSON {name, config, chart_type}
+
+    async function loadPortfolioFromDB() {
+      if (!currentUserId) return;
+      try {
+        var sb = getSupabase();
+        var { data } = await sb.from('user_notes').select('*').eq('user_id', currentUserId).eq('title', '__WP_PORTFOLIO__').limit(1);
+        if (data && data.length > 0 && data[0].content) {
+          try { portfolioHoldings = JSON.parse(data[0].content); } catch(e) { portfolioHoldings = []; }
+          window._portfolioNoteId = data[0].id;
+        }
+      } catch(e) { console.error('Load portfolio error:', e); }
+      _portfolioLoaded = true;
     }
 
-    function addHolding() {
-      var symbolInput = document.getElementById('holdingSymbolInput');
-      var qtyInput = document.getElementById('holdingQtyInput');
-      var costInput = document.getElementById('holdingCostInput');
+    async function savePortfolio() {
+      if (!currentUserId) return;
+      try {
+        var sb = getSupabase();
+        var content = JSON.stringify(portfolioHoldings);
+        if (window._portfolioNoteId) {
+          await sb.from('user_notes').update({ content: content, updated_at: new Date().toISOString() }).eq('id', window._portfolioNoteId);
+        } else {
+          var { data } = await sb.from('user_notes').insert({ user_id: currentUserId, title: '__WP_PORTFOLIO__', content: content }).select('id').single();
+          if (data) window._portfolioNoteId = data.id;
+        }
+      } catch(e) { console.error('Save portfolio error:', e); }
+    }
+
+    function addHolding() { _addHoldingFrom('holdingSymbolInput', 'holdingQtyInput', 'holdingCostInput'); }
+    function addHoldingFM() { _addHoldingFrom('fmHoldingSymbolInput', 'fmHoldingQtyInput', 'fmHoldingCostInput'); }
+
+    function _addHoldingFrom(symId, qtyId, costId) {
+      var symbolInput = document.getElementById(symId);
+      var qtyInput = document.getElementById(qtyId);
+      var costInput = document.getElementById(costId);
       var symbol = symbolInput.value.trim().toUpperCase();
       var qty = parseFloat(qtyInput.value);
       var cost = parseFloat(costInput.value) || 0;
       if (!symbol) { alert('Enter a symbol.'); return; }
       if (!qty || qty <= 0) { alert('Enter a valid quantity.'); return; }
-      // Check for existing holding
       var existing = portfolioHoldings.find(function(h) { return h.symbol === symbol; });
       if (existing) {
-        // Average in
         var totalQty = existing.qty + qty;
         existing.avgCost = cost > 0 ? ((existing.avgCost * existing.qty) + (cost * qty)) / totalQty : existing.avgCost;
         existing.qty = totalQty;
@@ -3216,20 +3480,28 @@
       renderHoldings();
     }
 
+    // Render holdings into both home and FM views
     function renderHoldings() {
-      var body = document.getElementById('holdingsBody');
-      var table = document.getElementById('holdingsTable');
-      var empty = document.getElementById('holdingsEmpty');
+      _renderHoldingsInto('holdingsBody', 'holdingsTable', 'holdingsEmpty', 'portfolioTotalValue', 'portfolioDayPL', 'portfolioDayPLPct', 'portfolioTotalPL', 'portfolioTotalPLPct', 'portfolioPositionCount', 'portfolioChartContainer');
+      _renderHoldingsInto('fmHoldingsBody', 'fmHoldingsTable', 'fmHoldingsEmpty', 'fmPortfolioTotalValue', 'fmPortfolioDayPL', 'fmPortfolioDayPLPct', 'fmPortfolioTotalPL', 'fmPortfolioTotalPLPct', 'fmPortfolioPositionCount', 'fmPortfolioChartContainer');
+    }
+
+    function _renderHoldingsInto(bodyId, tableId, emptyId, totalValId, dayPLId, dayPLPctId, totalPLId, totalPLPctId, posCountId, chartId) {
+      var body = document.getElementById(bodyId);
+      var table = document.getElementById(tableId);
+      var empty = document.getElementById(emptyId);
+      if (!body || !table || !empty) return;
       if (!portfolioHoldings.length) {
-        table.style.display = 'none'; empty.style.display = 'block';
-        document.getElementById('portfolioTotalValue').textContent = '$0.00';
-        document.getElementById('portfolioDayPL').textContent = '$0.00';
-        document.getElementById('portfolioTotalPL').textContent = '$0.00';
-        document.getElementById('portfolioPositionCount').textContent = '0';
+        if (table) table.style.display = 'none';
+        if (empty) empty.style.display = 'block';
+        var tv = document.getElementById(totalValId); if (tv) tv.textContent = '$0.00';
+        var dp = document.getElementById(dayPLId); if (dp) dp.textContent = '$0.00';
+        var tp = document.getElementById(totalPLId); if (tp) tp.textContent = '$0.00';
+        var pc = document.getElementById(posCountId); if (pc) pc.textContent = '0';
         return;
       }
       table.style.display = 'table'; empty.style.display = 'none';
-      document.getElementById('portfolioPositionCount').textContent = portfolioHoldings.length;
+      var pcEl = document.getElementById(posCountId); if (pcEl) pcEl.textContent = portfolioHoldings.length;
 
       var totalValue = 0, totalDayPL = 0, totalPL = 0, totalCostBasis = 0;
       body.innerHTML = portfolioHoldings.map(function(h, i) {
@@ -3237,56 +3509,32 @@
         var price = p.price || 0;
         var dayChange = p.change || 0;
         var value = price * h.qty;
-        var dayPL = dayChange * h.qty;
+        var dayPLVal = dayChange * h.qty;
         var costBasis = h.avgCost * h.qty;
         var totalItemPL = h.avgCost > 0 ? value - costBasis : 0;
-        totalValue += value;
-        totalDayPL += dayPL;
+        totalValue += value; totalDayPL += dayPLVal;
         if (h.avgCost > 0) { totalPL += totalItemPL; totalCostBasis += costBasis; }
-
-        var dayClass = dayPL > 0 ? 'up' : dayPL < 0 ? 'down' : 'flat';
+        var dayClass = dayPLVal > 0 ? 'up' : dayPLVal < 0 ? 'down' : 'flat';
         var totalClass = totalItemPL > 0 ? 'up' : totalItemPL < 0 ? 'down' : 'flat';
-        var daySign = dayPL > 0 ? '+' : '';
-        var totalSign = totalItemPL > 0 ? '+' : '';
-
-        return '<tr>' +
-          '<td style="font-weight:600;color:var(--text);">' + h.symbol + '</td>' +
-          '<td>' + h.qty + '</td>' +
-          '<td>' + (price ? '$' + formatNum(price) : '--') + '</td>' +
-          '<td style="font-weight:600;color:#fff;">' + (value ? '$' + formatNum(value) : '--') + '</td>' +
-          '<td class="stock-change ' + dayClass + '">' + daySign + '$' + formatNum(dayPL) + '</td>' +
-          '<td class="stock-change ' + totalClass + '">' + (h.avgCost > 0 ? totalSign + '$' + formatNum(totalItemPL) : '--') + '</td>' +
-          '<td><button class="holdings-remove-btn" onclick="removeHolding(' + i + ')" title="Remove">&times;</button></td>' +
-        '</tr>';
+        return '<tr><td style="font-weight:600;color:var(--text);">' + h.symbol + '</td><td>' + h.qty + '</td><td>' + (price ? '$' + formatNum(price) : '--') + '</td><td style="font-weight:600;color:#fff;">' + (value ? '$' + formatNum(value) : '--') + '</td><td class="stock-change ' + dayClass + '">' + (dayPLVal>0?'+':'') + '$' + formatNum(dayPLVal) + '</td><td class="stock-change ' + totalClass + '">' + (h.avgCost>0 ? (totalItemPL>0?'+':'') + '$' + formatNum(totalItemPL) : '--') + '</td><td><button class="holdings-remove-btn" onclick="removeHolding(' + i + ')">&times;</button></td></tr>';
       }).join('');
 
-      document.getElementById('portfolioTotalValue').textContent = '$' + formatNum(totalValue);
-      var dayEl = document.getElementById('portfolioDayPL');
-      dayEl.textContent = (totalDayPL >= 0 ? '+' : '') + '$' + formatNum(totalDayPL);
-      dayEl.style.color = totalDayPL >= 0 ? '#22c55e' : '#ef4444';
-      var dayPctEl = document.getElementById('portfolioDayPLPct');
-      if (totalValue > 0) {
-        var dayPct = (totalDayPL / (totalValue - totalDayPL)) * 100;
-        dayPctEl.textContent = (dayPct >= 0 ? '+' : '') + dayPct.toFixed(2) + '%';
-        dayPctEl.style.color = dayPct >= 0 ? '#22c55e' : '#ef4444';
-      }
-      var totalPLEl = document.getElementById('portfolioTotalPL');
-      totalPLEl.textContent = (totalPL >= 0 ? '+' : '') + '$' + formatNum(totalPL);
-      totalPLEl.style.color = totalPL >= 0 ? '#22c55e' : '#ef4444';
-      var totalPctEl = document.getElementById('portfolioTotalPLPct');
-      if (totalCostBasis > 0) {
-        var totalPct = (totalPL / totalCostBasis) * 100;
-        totalPctEl.textContent = (totalPct >= 0 ? '+' : '') + totalPct.toFixed(2) + '%';
-        totalPctEl.style.color = totalPct >= 0 ? '#22c55e' : '#ef4444';
-      }
-
-      // Render allocation pie chart if we have enough data
-      renderPortfolioChart();
+      var tvEl = document.getElementById(totalValId); if (tvEl) tvEl.textContent = '$' + formatNum(totalValue);
+      var dayEl = document.getElementById(dayPLId);
+      if (dayEl) { dayEl.textContent = (totalDayPL>=0?'+':'') + '$' + formatNum(totalDayPL); dayEl.style.color = totalDayPL>=0 ? '#22c55e' : '#ef4444'; }
+      var dayPctEl = document.getElementById(dayPLPctId);
+      if (dayPctEl && totalValue > 0) { var dayPct = (totalDayPL / (totalValue - totalDayPL)) * 100; dayPctEl.textContent = (dayPct>=0?'+':'') + dayPct.toFixed(2) + '%'; dayPctEl.style.color = dayPct>=0 ? '#22c55e' : '#ef4444'; }
+      var tpEl = document.getElementById(totalPLId);
+      if (tpEl) { tpEl.textContent = (totalPL>=0?'+':'') + '$' + formatNum(totalPL); tpEl.style.color = totalPL>=0 ? '#22c55e' : '#ef4444'; }
+      var tpPctEl = document.getElementById(totalPLPctId);
+      if (tpPctEl && totalCostBasis > 0) { var totalPct = (totalPL / totalCostBasis) * 100; tpPctEl.textContent = (totalPct>=0?'+':'') + totalPct.toFixed(2) + '%'; tpPctEl.style.color = totalPct>=0 ? '#22c55e' : '#ef4444'; }
+      renderPortfolioChart(chartId);
     }
 
-    function renderPortfolioChart() {
+    function renderPortfolioChart(containerId) {
+      var cid = containerId || 'portfolioChartContainer';
       if (typeof Highcharts === 'undefined' || portfolioHoldings.length < 2) {
-        document.getElementById('portfolioChartContainer').style.display = 'none';
+        var el = document.getElementById(cid); if (el) el.style.display = 'none';
         return;
       }
       var pieData = portfolioHoldings.map(function(h) {
@@ -3294,7 +3542,7 @@
         return { name: h.symbol, y: (p.price || 0) * h.qty };
       }).filter(function(d) { return d.y > 0; });
       if (pieData.length < 2) return;
-      renderHighchart('portfolioChartContainer', {
+      renderHighchart(cid, {
         chart: { type: 'pie', height: 280 },
         title: { text: 'Portfolio Allocation' },
         subtitle: { text: 'Chart Studio' },
@@ -3339,21 +3587,30 @@
     }
 
     // ── Portfolio AI Coach ──
+    function _getActiveCoachEls() {
+      var fmView = document.getElementById('fmView');
+      if (fmView && fmView.style.display !== 'none' && document.getElementById('fmPortfolioCoachInput')) {
+        return { input: document.getElementById('fmPortfolioCoachInput'), msgs: document.getElementById('fmPortfolioCoachMessages'), typingId: 'fmPortfolioCoachTyping', msgsId: 'fmPortfolioCoachMessages' };
+      }
+      return { input: document.getElementById('portfolioCoachInput'), msgs: document.getElementById('portfolioCoachMessages'), typingId: 'portfolioCoachTyping', msgsId: 'portfolioCoachMessages' };
+    }
     function askPortfolioCoach(question) {
-      document.getElementById('portfolioCoachInput').value = question;
+      var els = _getActiveCoachEls();
+      els.input.value = question;
       sendPortfolioCoachMsg();
     }
 
     async function sendPortfolioCoachMsg() {
       if (!checkAgentLimit()) return;
-      var input = document.getElementById('portfolioCoachInput');
+      var els = _getActiveCoachEls();
+      var input = els.input;
       var msg = input.value.trim();
       if (!msg) return;
       input.value = ''; input.style.height = 'auto';
-      var msgs = document.getElementById('portfolioCoachMessages');
+      var msgs = els.msgs;
       msgs.innerHTML += '<div class="msg user">' + msg.replace(/</g,'&lt;') + '</div>';
-      msgs.innerHTML += '<div class="msg ai" id="portfolioCoachTyping"></div>';
-      showThinking('portfolioCoachMessages', 'portfolioCoachTyping');
+      msgs.innerHTML += '<div class="msg ai" id="' + els.typingId + '"></div>';
+      showThinking(els.msgsId, els.typingId);
       msgs.scrollTop = msgs.scrollHeight;
       portfolioCoachHistory.push({ role: 'user', content: msg });
 
@@ -3373,7 +3630,7 @@
         var data = await res.json();
         var reply = data.reply || "I couldn't process that. Try again.";
         portfolioCoachHistory.push({ role: 'assistant', content: reply });
-        stopThinking('portfolioCoachTyping');
+        stopThinking(els.typingId);
 
         // Create unique chart container for this response
         var chartDivId = 'pcoach-chart-' + Date.now();
@@ -3392,7 +3649,7 @@
           incrementAgentUsage();
         });
       } catch(e) {
-        stopThinking('portfolioCoachTyping');
+        stopThinking(els.typingId);
         msgs.innerHTML += '<div class="msg ai" style="color:#f85149;">Connection error. Please try again.</div>';
       }
       msgs.scrollTop = msgs.scrollHeight;
@@ -3657,32 +3914,53 @@
     }
 
     // ════════════════════════════════
-    // ── WATCHLISTS
+    // ── WATCHLISTS (Supabase-persisted)
     // ════════════════════════════════
 
-    var watchlists = JSON.parse(localStorage.getItem('wp_watchlists') || '[]');
+    var watchlists = [];
     var activeWatchlistId = null;
     var watchlistPrices = {};
     var watchlistPrevPrices = {};
 
-    function saveWatchlists() {
-      localStorage.setItem('wp_watchlists', JSON.stringify(watchlists));
+    async function loadWatchlistsFromDB() {
+      if (!currentUserId) return;
+      try {
+        var sb = getSupabase();
+        var { data } = await sb.from('user_notes').select('*').eq('user_id', currentUserId).like('title', '__WP_WATCHLIST__%').order('created_at', { ascending: true });
+        if (data) {
+          watchlists = data.map(function(n) {
+            var parsed = {}; try { parsed = JSON.parse(n.content || '{}'); } catch(e) {}
+            return { id: n.id, name: parsed.name || 'Untitled', symbols: parsed.symbols || [], created: n.created_at, _noteId: n.id };
+          });
+        }
+      } catch(e) { console.error('Load watchlists error:', e); }
       renderSidebarWatchlists();
     }
 
-    function createNewWatchlist() {
+    async function saveWatchlists() {
+      renderSidebarWatchlists();
+    }
+
+    async function _saveWatchlist(wl) {
+      if (!currentUserId) return;
+      var sb = getSupabase();
+      var content = JSON.stringify({ name: wl.name, symbols: wl.symbols });
+      if (wl._noteId) {
+        await sb.from('user_notes').update({ content: content, updated_at: new Date().toISOString() }).eq('id', wl._noteId);
+      } else {
+        var { data } = await sb.from('user_notes').insert({ user_id: currentUserId, title: '__WP_WATCHLIST__' + wl.id, content: content }).select('id').single();
+        if (data) wl._noteId = data.id;
+      }
+    }
+
+    async function createNewWatchlist() {
       var wl = { id: 'wl-' + Date.now(), name: 'New Watchlist', symbols: [], created: new Date().toISOString() };
       watchlists.push(wl);
-      saveWatchlists();
+      await _saveWatchlist(wl);
+      renderSidebarWatchlists();
       openWatchlist(wl.id);
-      // Switch to markets tab if not there
-      var marketsTab = document.getElementById('homeMarketsTab');
-      if (marketsTab && !marketsTab.classList.contains('active')) {
-        switchHomeTab('markets', document.querySelector('.home-tab:nth-child(2)'));
-      }
-      // Focus title input
       setTimeout(function() {
-        var input = document.getElementById('watchlistTitleInput');
+        var input = document.getElementById('fmWatchlistTitleInput');
         if (input) { input.focus(); input.select(); }
       }, 100);
     }
@@ -3691,67 +3969,91 @@
       activeWatchlistId = id;
       var wl = watchlists.find(function(w) { return w.id === id; });
       if (!wl) return;
-      document.getElementById('activeWatchlistView').style.display = '';
-      document.getElementById('watchlistEmptyState').style.display = 'none';
-      document.getElementById('watchlistTitleInput').value = wl.name;
+      // Show in FM view
+      showView('fm');
+      switchFMTab('fmWatchlists', document.querySelector('[onclick*="fmWatchlists"]'));
+      var view = document.getElementById('fmActiveWatchlistView');
+      var empty = document.getElementById('fmWatchlistEmptyState');
+      if (view) view.style.display = '';
+      if (empty) empty.style.display = 'none';
+      var titleInput = document.getElementById('fmWatchlistTitleInput');
+      if (titleInput) titleInput.value = wl.name;
+      renderWatchlistSelector();
       renderWatchlistItems();
       refreshWatchlistPrices();
-      // Ensure we're on the home/markets view
-      if (window.innerWidth <= 768) {
-        showMobileHome();
-      } else {
-        showView('home');
-        switchHomeTab('markets', document.querySelector('.home-tab:nth-child(2)'));
-      }
     }
 
-    function saveWatchlistTitle() {
+    function renderWatchlistSelector() {
+      var container = document.getElementById('fmWatchlistSelector');
+      if (!container) return;
+      container.innerHTML = watchlists.map(function(wl) {
+        var cls = wl.id === activeWatchlistId ? 'portfolio-coach-chip' : 'portfolio-coach-chip';
+        var style = wl.id === activeWatchlistId ? 'border-color:var(--accent);color:var(--accent);' : '';
+        return '<button class="' + cls + '" style="' + style + '" onclick="openWatchlist(\'' + wl.id + '\')">' + wl.name + ' (' + wl.symbols.length + ')</button>';
+      }).join('');
+    }
+
+    async function saveWatchlistTitle() {
       if (!activeWatchlistId) return;
       var wl = watchlists.find(function(w) { return w.id === activeWatchlistId; });
       if (!wl) return;
-      wl.name = document.getElementById('watchlistTitleInput').value.trim() || 'Untitled';
-      saveWatchlists();
+      var titleInput = document.getElementById('fmWatchlistTitleInput');
+      wl.name = (titleInput ? titleInput.value.trim() : '') || 'Untitled';
+      await _saveWatchlist(wl);
+      renderSidebarWatchlists();
+      renderWatchlistSelector();
     }
 
-    function addWatchlistSymbol() {
+    async function addWatchlistSymbol() {
       if (!activeWatchlistId) return;
-      var input = document.getElementById('watchlistAddInput');
+      var input = document.getElementById('fmWatchlistAddInput');
       var symbol = input.value.trim().toUpperCase();
       if (!symbol) return;
       var wl = watchlists.find(function(w) { return w.id === activeWatchlistId; });
       if (!wl) return;
-      if (wl.symbols.indexOf(symbol) !== -1) { input.value = ''; return; } // no dupes
+      if (wl.symbols.indexOf(symbol) !== -1) { input.value = ''; return; }
       wl.symbols.push(symbol);
-      saveWatchlists();
+      await _saveWatchlist(wl);
+      renderSidebarWatchlists();
+      renderWatchlistSelector();
       input.value = '';
       renderWatchlistItems();
       refreshWatchlistPrices();
     }
 
-    function removeWatchlistSymbol(symbol) {
+    async function removeWatchlistSymbol(symbol) {
       if (!activeWatchlistId) return;
       var wl = watchlists.find(function(w) { return w.id === activeWatchlistId; });
       if (!wl) return;
       wl.symbols = wl.symbols.filter(function(s) { return s !== symbol; });
-      saveWatchlists();
+      await _saveWatchlist(wl);
+      renderSidebarWatchlists();
+      renderWatchlistSelector();
       renderWatchlistItems();
     }
 
-    function deleteActiveWatchlist() {
+    async function deleteActiveWatchlist() {
       if (!activeWatchlistId || !confirm('Delete this watchlist?')) return;
+      var wl = watchlists.find(function(w) { return w.id === activeWatchlistId; });
+      if (wl && wl._noteId) {
+        try { var sb = getSupabase(); await sb.from('user_notes').delete().eq('id', wl._noteId); } catch(e) {}
+      }
       watchlists = watchlists.filter(function(w) { return w.id !== activeWatchlistId; });
       activeWatchlistId = null;
-      saveWatchlists();
-      document.getElementById('activeWatchlistView').style.display = 'none';
-      document.getElementById('watchlistEmptyState').style.display = '';
+      renderSidebarWatchlists();
+      var view = document.getElementById('fmActiveWatchlistView');
+      var empty = document.getElementById('fmWatchlistEmptyState');
+      if (view) view.style.display = 'none';
+      if (empty) empty.style.display = '';
+      renderWatchlistSelector();
     }
 
-    // Stock name lookup (basic map for common tickers)
     var STOCK_NAMES = { AAPL:'Apple', MSFT:'Microsoft', GOOGL:'Alphabet', AMZN:'Amazon', NVDA:'NVIDIA', META:'Meta', TSLA:'Tesla', NFLX:'Netflix', AMD:'AMD', INTC:'Intel', CRM:'Salesforce', ORCL:'Oracle', ADBE:'Adobe', PYPL:'PayPal', SQ:'Block', SHOP:'Shopify', COIN:'Coinbase', PLTR:'Palantir', UBER:'Uber', ABNB:'Airbnb', DIS:'Disney', BA:'Boeing', JPM:'JPMorgan', BAC:'Bank of America', GS:'Goldman Sachs', V:'Visa', MA:'Mastercard', WMT:'Walmart', TGT:'Target', COST:'Costco', HD:'Home Depot', NKE:'Nike', SBUX:'Starbucks', MCD:"McDonald's", KO:'Coca-Cola', PEP:'PepsiCo', JNJ:'J&J', PFE:'Pfizer', UNH:'UnitedHealth', XOM:'Exxon', CVX:'Chevron', 'BTC/USD':'Bitcoin', 'ETH/USD':'Ethereum', 'SOL/USD':'Solana', DOGE:'Dogecoin', 'DOGE/USD':'Dogecoin' };
 
     function renderWatchlistItems() {
       var wl = watchlists.find(function(w) { return w.id === activeWatchlistId; });
-      var container = document.getElementById('watchlistItems');
+      var container = document.getElementById('fmWatchlistItems');
+      if (!container) return;
       if (!wl || !wl.symbols.length) {
         container.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-dim);font-size:0.85rem;">Add symbols above to start tracking.</div>';
         return;
@@ -3765,96 +4067,379 @@
         }
         var name = STOCK_NAMES[sym] || '';
         if (!q) {
-          return '<div class="watchlist-item' + pulseClass + '">' +
-            '<div class="watchlist-item-left"><div class="watchlist-item-symbol">' + sym + '</div>' + (name ? '<div class="watchlist-item-name">' + name + '</div>' : '') + '</div>' +
-            '<div style="display:flex;align-items:center;"><div class="watchlist-item-right"><div class="watchlist-item-price" style="color:var(--text-dim);">--</div></div>' +
-            '<button class="watchlist-item-remove" onclick="removeWatchlistSymbol(\'' + sym + '\')">&times;</button></div></div>';
+          return '<div class="watchlist-item' + pulseClass + '"><div class="watchlist-item-left"><div class="watchlist-item-symbol">' + sym + '</div>' + (name ? '<div class="watchlist-item-name">' + name + '</div>' : '') + '</div><div style="display:flex;align-items:center;"><div class="watchlist-item-right"><div class="watchlist-item-price" style="color:var(--text-dim);">--</div></div><button class="watchlist-item-remove" onclick="removeWatchlistSymbol(\'' + sym + '\')">&times;</button></div></div>';
         }
         var changeClass = q.change > 0 ? 'up' : q.change < 0 ? 'down' : 'flat';
         var sign = q.change > 0 ? '+' : '';
-        return '<div class="watchlist-item' + pulseClass + '">' +
-          '<div class="watchlist-item-left"><div class="watchlist-item-symbol">' + sym + '</div>' + (name ? '<div class="watchlist-item-name">' + name + '</div>' : '') + '</div>' +
-          '<div style="display:flex;align-items:center;">' +
-            '<div class="watchlist-item-right">' +
-              '<div class="watchlist-item-price">$' + formatNum(q.price) + '</div>' +
-              '<div class="watchlist-item-change stock-change ' + changeClass + '">' + sign + '$' + formatNum(q.change) + ' (' + sign + formatNum(q.changePercent) + '%)</div>' +
-            '</div>' +
-            '<button class="watchlist-item-remove" onclick="removeWatchlistSymbol(\'' + sym + '\')">&times;</button>' +
-          '</div></div>';
+        return '<div class="watchlist-item' + pulseClass + '"><div class="watchlist-item-left"><div class="watchlist-item-symbol">' + sym + '</div>' + (name ? '<div class="watchlist-item-name">' + name + '</div>' : '') + '</div><div style="display:flex;align-items:center;"><div class="watchlist-item-right"><div class="watchlist-item-price">$' + formatNum(q.price) + '</div><div class="watchlist-item-change stock-change ' + changeClass + '">' + sign + '$' + formatNum(q.change) + ' (' + sign + formatNum(q.changePercent) + '%)</div></div><button class="watchlist-item-remove" onclick="removeWatchlistSymbol(\'' + sym + '\')">&times;</button></div></div>';
       }).join('');
     }
 
     async function refreshWatchlistPrices() {
       var wl = watchlists.find(function(w) { return w.id === activeWatchlistId; });
       if (!wl || !wl.symbols.length) return;
-      // Save previous prices for pulse animation
       watchlistPrevPrices = JSON.parse(JSON.stringify(watchlistPrices));
-      // Check which we need to fetch (not in marketsCache)
       var toFetch = wl.symbols.filter(function(s) { return !marketsCache[s]; });
-      // Copy from cache
       wl.symbols.forEach(function(s) { if (marketsCache[s]) watchlistPrices[s] = marketsCache[s]; });
-
       if (toFetch.length > 0) {
         try {
-          var res = await fetch(EDGE_FN, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              coachMode: true,
-              systemPrompt: 'You are a market data API. Fetch real-time quotes from Alpaca. Return ONLY valid JSON: {"quotes": [{"symbol": "AAPL", "price": 150.00, "change": 2.50, "changePercent": 1.5}]}',
-              messages: [{ role: 'user', content: 'Get live quotes for: ' + toFetch.join(', ') + '. Return only JSON.' }]
-            })
-          });
-          var data = await res.json();
-          var reply = data.reply || '';
+          var res = await fetch(EDGE_FN, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ coachMode: true, systemPrompt: 'You are a market data API. Fetch real-time quotes from Alpaca. Return ONLY valid JSON: {"quotes": [{"symbol": "AAPL", "price": 150.00, "change": 2.50, "changePercent": 1.5}]}',
+              messages: [{ role: 'user', content: 'Get live quotes for: ' + toFetch.join(', ') + '. Return only JSON.' }] }) });
+          var data = await res.json(); var reply = data.reply || '';
           var jsonMatch = reply.match(/\{[\s\S]*"quotes"[\s\S]*\}/);
-          if (jsonMatch) {
-            var parsed = JSON.parse(jsonMatch[0]);
-            if (parsed.quotes) {
-              parsed.quotes.forEach(function(q) {
-                watchlistPrices[q.symbol] = q;
-                marketsCache[q.symbol] = q;
-              });
-            }
-          }
-        } catch(e) { console.error('Watchlist price fetch error:', e); }
+          if (jsonMatch) { var parsed = JSON.parse(jsonMatch[0]); if (parsed.quotes) parsed.quotes.forEach(function(q) { watchlistPrices[q.symbol] = q; marketsCache[q.symbol] = q; }); }
+        } catch(e) {}
       }
       renderWatchlistItems();
     }
 
     function refreshActiveWatchlist() {
-      // Force re-fetch all symbols (clear from cache)
       var wl = watchlists.find(function(w) { return w.id === activeWatchlistId; });
       if (wl) wl.symbols.forEach(function(s) { delete marketsCache[s]; });
       refreshWatchlistPrices();
     }
 
     function renderSidebarWatchlists() {
-      var container = document.getElementById('sidebarWatchlists');
-      var label = document.getElementById('sidebarWatchlistLabel');
-      if (!container || !label) return;
-      if (!watchlists.length) { container.innerHTML = ''; label.style.display = 'none'; return; }
-      label.style.display = 'block';
+      var container = document.getElementById('sidebarFMWatchlists');
+      if (!container) return;
+      if (!watchlists.length) { container.innerHTML = ''; return; }
       container.innerHTML = watchlists.map(function(wl) {
-        return '<div class="sidebar-watchlist-item" onclick="openWatchlist(\'' + wl.id + '\')" title="' + wl.name + '">' +
-          '<span style="font-size:0.85rem;">&#x1F4CB;</span> ' +
-          '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + wl.name + '</span>' +
-          '<span class="wl-count">' + wl.symbols.length + '</span>' +
-        '</div>';
+        return '<div class="sidebar-fm-sub" onclick="openWatchlist(\'' + wl.id + '\')" title="' + wl.name + '"><span>&#x1F4CB;</span> <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">' + wl.name + '</span><span style="font-size:0.65rem;color:var(--text-dim);">' + wl.symbols.length + '</span></div>';
       }).join('');
     }
 
-    // Init sidebar watchlists on load
-    renderSidebarWatchlists();
-    // Show first watchlist if exists
-    if (watchlists.length > 0) {
-      document.getElementById('watchlistEmptyState').style.display = 'none';
+    // ════════════════════════════════
+    // ── FINANCIAL MARKETS HUB
+    // ════════════════════════════════
+
+    function toggleFMSidebar() {
+      var items = document.getElementById('sidebarFMItems');
+      var arrow = document.getElementById('sidebarFMArrow');
+      var toggle = document.getElementById('sidebarFMToggle');
+      if (!items) return;
+      var isOpen = items.classList.toggle('open');
+      if (arrow) arrow.classList.toggle('open', isOpen);
+      if (isOpen) { showView('fm'); if (toggle) toggle.classList.add('active'); }
     }
+
+    function openFMTab(tabId) {
+      showView('fm');
+      var btn = document.querySelector('.fm-sub-tab[onclick*="' + tabId + '"]');
+      switchFMTab(tabId, btn);
+      if (window.innerWidth <= 768) toggleMobileSidebar();
+    }
+
+    function switchFMTab(tabId, btn) {
+      document.querySelectorAll('#fmView .fm-sub-tab').forEach(function(t) { t.classList.remove('active'); });
+      document.querySelectorAll('#fmView .fm-sub-content').forEach(function(c) { c.classList.remove('active'); });
+      if (btn) btn.classList.add('active');
+      var content = document.getElementById(tabId + 'Content');
+      if (content) content.classList.add('active');
+      // Lazy-load widgets on first visit
+      if (tabId === 'fmMarkets' && !window._fmMarketsLoaded) { refreshFMMarkets(); window._fmMarketsLoaded = true; }
+      if (tabId === 'fmPortfolio') { if (!_portfolioLoaded) loadPortfolioFromDB().then(function() { renderHoldings(); refreshPortfolioPrices(); }); }
+      if (tabId === 'fmWatchlists') renderWatchlistSelector();
+      if (tabId === 'fmNewsFeed' && !window._newsFeedLoaded) { refreshNewsFeed(); window._newsFeedLoaded = true; }
+      if (tabId === 'fmTVCharts' && !window._tvChartLoaded) { loadTVChart(); window._tvChartLoaded = true; }
+      if (tabId === 'fmHeatMap' && !window._tvHeatMapLoaded) { loadTVHeatMap(); window._tvHeatMapLoaded = true; }
+      if (tabId === 'fmScreener' && !window._tvScreenerLoaded) { loadTVScreener(); window._tvScreenerLoaded = true; }
+      if (tabId === 'fmOverview' && !window._tvOverviewLoaded) { loadTVOverview(); window._tvOverviewLoaded = true; }
+      if (tabId === 'fmCalendar' && !window._tvCalendarLoaded) { loadTVCalendar(); window._tvCalendarLoaded = true; }
+      if (tabId === 'fmTechAnalysis' && !window._tvTechLoaded) { loadTVTechAnalysis(); window._tvTechLoaded = true; }
+    }
+
+    // FM Markets — renders into fmView grids
+    async function refreshFMMarkets() {
+      await refreshMarkets();
+      // Copy data to FM grids
+      var mag7El = document.getElementById('fmMag7Grid');
+      var cryptoEl = document.getElementById('fmCryptoGrid');
+      var homeGrid = document.getElementById('mag7Grid');
+      var homeCrypto = document.getElementById('cryptoGrid');
+      if (mag7El && homeGrid) mag7El.innerHTML = homeGrid.innerHTML;
+      if (cryptoEl && homeCrypto) cryptoEl.innerHTML = homeCrypto.innerHTML;
+      var ts = document.getElementById('fmMarketsUpdatedTime');
+      if (ts) ts.textContent = 'Last updated: ' + new Date().toLocaleTimeString();
+      // Copy news
+      var homeNews = document.getElementById('marketNewsList');
+      var fmNews = document.getElementById('fmMarketNewsList');
+      if (homeNews && fmNews) fmNews.innerHTML = homeNews.innerHTML;
+    }
+
+    // ════════════════════════════════
+    // ── TRADINGVIEW WIDGETS
+    // ════════════════════════════════
+
+    function loadTVChart() {
+      var ticker = (document.getElementById('tvChartTicker').value || 'AAPL').toUpperCase();
+      var container = document.getElementById('tvChartWidget');
+      container.innerHTML = '';
+      var script = document.createElement('script');
+      script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
+      script.async = true;
+      script.innerHTML = JSON.stringify({
+        autosize: true, symbol: ticker, interval: 'D', timezone: 'Etc/UTC',
+        theme: 'dark', style: '1', locale: 'en', backgroundColor: 'rgba(22,27,34,1)',
+        gridColor: 'rgba(48,54,61,0.5)', allow_symbol_change: true,
+        calendar: false, support_host: 'https://www.tradingview.com'
+      });
+      container.appendChild(script);
+    }
+
+    function loadTVHeatMap() {
+      var container = document.getElementById('tvHeatMapWidget');
+      container.innerHTML = '';
+      var script = document.createElement('script');
+      script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-stock-heatmap.js';
+      script.async = true;
+      script.innerHTML = JSON.stringify({
+        exchanges: [], dataSource: 'SPX500', grouping: 'sector',
+        blockSize: 'market_cap_basic', blockColor: 'change',
+        locale: 'en', symbolUrl: '', colorTheme: 'dark',
+        hasTopBar: true, isDataSetEnabled: true, isZoomEnabled: true,
+        hasSymbolTooltip: true, isMonoSize: false,
+        width: '100%', height: '100%'
+      });
+      container.appendChild(script);
+    }
+
+    function loadTVScreener() {
+      var container = document.getElementById('tvScreenerWidget');
+      container.innerHTML = '';
+      var script = document.createElement('script');
+      script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-screener.js';
+      script.async = true;
+      script.innerHTML = JSON.stringify({
+        width: '100%', height: '100%', defaultColumn: 'overview',
+        defaultScreen: 'most_capitalized', market: 'america',
+        showToolbar: true, colorTheme: 'dark', locale: 'en'
+      });
+      container.appendChild(script);
+    }
+
+    function loadTVOverview() {
+      var container = document.getElementById('tvOverviewWidget');
+      container.innerHTML = '';
+      var script = document.createElement('script');
+      script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js';
+      script.async = true;
+      script.innerHTML = JSON.stringify({
+        colorTheme: 'dark', dateRange: '12M', showChart: true,
+        locale: 'en', largeChartUrl: '', isTransparent: false,
+        showSymbolLogo: true, showFloatingTooltip: false,
+        width: '100%', height: '100%',
+        tabs: [
+          { title: 'Indices', symbols: [{ s: 'FOREXCOM:SPXUSD', d: 'S&P 500' },{ s: 'FOREXCOM:NSXUSD', d: 'Nasdaq' },{ s: 'FOREXCOM:DJI', d: 'Dow Jones' }] },
+          { title: 'Forex', symbols: [{ s: 'FX:EURUSD', d: 'EUR/USD' },{ s: 'FX:GBPUSD', d: 'GBP/USD' },{ s: 'FX:USDJPY', d: 'USD/JPY' }] },
+          { title: 'Crypto', symbols: [{ s: 'BITSTAMP:BTCUSD', d: 'Bitcoin' },{ s: 'BITSTAMP:ETHUSD', d: 'Ethereum' },{ s: 'BINANCE:SOLUSD', d: 'Solana' }] }
+        ]
+      });
+      container.appendChild(script);
+    }
+
+    function loadTVCalendar() {
+      var container = document.getElementById('tvCalendarWidget');
+      container.innerHTML = '';
+      var script = document.createElement('script');
+      script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-events.js';
+      script.async = true;
+      script.innerHTML = JSON.stringify({
+        colorTheme: 'dark', isTransparent: false, width: '100%', height: '100%',
+        locale: 'en', importanceFilter: '-1,0,1', countryFilter: 'us'
+      });
+      container.appendChild(script);
+    }
+
+    function loadTVTechAnalysis() {
+      var ticker = (document.getElementById('tvTechTicker').value || 'AAPL').toUpperCase();
+      var container = document.getElementById('tvTechWidget');
+      container.innerHTML = '';
+      var script = document.createElement('script');
+      script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js';
+      script.async = true;
+      script.innerHTML = JSON.stringify({
+        interval: '1D', width: '100%', isTransparent: false, height: '100%',
+        symbol: ticker, showIntervalTabs: true, displayMode: 'multiple',
+        locale: 'en', colorTheme: 'dark'
+      });
+      container.appendChild(script);
+    }
+
+    // ════════════════════════════════
+    // ── CHART STUDIO (dedicated tab)
+    // ════════════════════════════════
+
+    var chartStudioHistory = [];
+
+    function askChartStudio(question) {
+      document.getElementById('chartStudioInput').value = question;
+      sendChartStudioMsg();
+    }
+
+    async function sendChartStudioMsg() {
+      if (!checkAgentLimit()) return;
+      var input = document.getElementById('chartStudioInput');
+      var msg = input.value.trim();
+      if (!msg) return;
+      input.value = ''; input.style.height = 'auto';
+      var msgs = document.getElementById('chartStudioMessages');
+      msgs.innerHTML += '<div class="msg user">' + msg.replace(/</g,'&lt;') + '</div>';
+      msgs.innerHTML += '<div class="msg ai" id="chartStudioTyping"></div>';
+      showThinking('chartStudioMessages', 'chartStudioTyping');
+      msgs.scrollTop = msgs.scrollHeight;
+      chartStudioHistory.push({ role: 'user', content: msg });
+
+      var holdingsCtx = portfolioHoldings.map(function(h) {
+        var p = portfolioPrices[h.symbol] || {};
+        return h.symbol + ': ' + h.qty + ' shares, price $' + formatNum(p.price) + ', avg cost $' + formatNum(h.avgCost);
+      }).join('\n');
+
+      var systemPrompt = 'You are Chart Studio, a premium Highcharts-powered visualization engine in WishPath. Create beautiful, insightful financial charts. The user\'s portfolio:\n' + (holdingsCtx || 'No holdings.') + '\n\nWhen creating charts, output a [CHARTDATA] block with valid Highcharts config JSON. Example:\n[CHARTDATA]\n{"chart":{"type":"pie"},"title":{"text":"Allocation"},"series":[{"name":"Value","data":[{"name":"AAPL","y":5000},{"name":"MSFT","y":3000}]}]}\n[/CHARTDATA]\n\nAlways include a brief text explanation before the chart data. Use real data when available.';
+
+      try {
+        var res = await fetch(EDGE_FN, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ coachMode: true, systemPrompt: systemPrompt, messages: chartStudioHistory.slice(-10) }) });
+        var data = await res.json();
+        var reply = data.reply || "Couldn't process that. Try again.";
+        chartStudioHistory.push({ role: 'assistant', content: reply });
+        stopThinking('chartStudioTyping');
+        var chartDivId = 'cs-chart-' + Date.now();
+        var chartDiv = document.createElement('div');
+        chartDiv.id = chartDivId; chartDiv.className = 'chart-container'; chartDiv.style.display = 'none';
+        typewriterEffect(msgs, reply, function(msgDiv) {
+          wrapAiTables(msgDiv);
+          msgDiv.parentNode.insertBefore(chartDiv, msgDiv.nextSibling);
+          detectAndRenderCharts(reply, chartDivId);
+          addAiOutputActions(msgDiv);
+          incrementAgentUsage();
+        });
+      } catch(e) {
+        stopThinking('chartStudioTyping');
+        msgs.innerHTML += '<div class="msg ai" style="color:#f85149;">Connection error.</div>';
+      }
+    }
+
+    // ════════════════════════════════
+    // ── NEWS FEED (MarketAux + AI)
+    // ════════════════════════════════
+
+    async function refreshNewsFeed() {
+      var container = document.getElementById('newsFeedContainer');
+      var btn = document.getElementById('newsFeedRefreshBtn');
+      if (btn) btn.classList.add('spinning');
+      container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-dim);">Loading personalized news...</div>';
+
+      // Build tickers from portfolio + watchlists for personalization
+      var userTickers = portfolioHoldings.map(function(h) { return h.symbol; });
+      watchlists.forEach(function(wl) { wl.symbols.forEach(function(s) { if (userTickers.indexOf(s) === -1) userTickers.push(s); }); });
+      var tickerStr = userTickers.length > 0 ? userTickers.slice(0, 15).join(',') : 'AAPL,MSFT,GOOGL,AMZN,NVDA,META,TSLA';
+
+      try {
+        var res = await fetch(EDGE_FN, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            coachMode: true,
+            systemPrompt: 'You are a financial news aggregator. Use MarketAux to fetch the latest news for these tickers: ' + tickerStr + '. Return ONLY a JSON array: [{"title":"...","source":"...","snippet":"...","url":"...","published":"...","tickers":["AAPL"],"sentiment":"bullish|bearish|neutral","isBreaking":false,"isEarnings":false,"aiSummary":"One-line AI summary of how this affects the portfolio"}]. Return 10-15 articles. Mark articles from the last hour as isBreaking. Mark earnings-related articles as isEarnings. Set sentiment based on content. For aiSummary, relate it to portfolio holdings if applicable.',
+            messages: [{ role: 'user', content: 'Get personalized market news for: ' + tickerStr + '. Return only JSON array.' }]
+          }) });
+        var data = await res.json();
+        var reply = data.reply || '';
+        var jsonMatch = reply.match(/\[[\s\S]*\]/);
+        if (jsonMatch) {
+          var articles = JSON.parse(jsonMatch[0]);
+          renderNewsFeed(articles, userTickers);
+        } else {
+          container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-dim);">Unable to load news. Try refreshing.</div>';
+        }
+      } catch(e) {
+        container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-dim);">Connection error loading news.</div>';
+      }
+      if (btn) btn.classList.remove('spinning');
+    }
+
+    function renderNewsFeed(articles, userTickers) {
+      var container = document.getElementById('newsFeedContainer');
+      if (!articles || !articles.length) {
+        container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-dim);">No news found.</div>';
+        return;
+      }
+      // Sort: breaking first, then earnings for held stocks, then rest
+      articles.sort(function(a, b) {
+        if (a.isBreaking && !b.isBreaking) return -1;
+        if (!a.isBreaking && b.isBreaking) return 1;
+        var aHeld = (a.tickers || []).some(function(t) { return userTickers.indexOf(t) !== -1; });
+        var bHeld = (b.tickers || []).some(function(t) { return userTickers.indexOf(t) !== -1; });
+        if (aHeld && !bHeld) return -1;
+        if (!aHeld && bHeld) return 1;
+        return 0;
+      });
+
+      container.innerHTML = articles.map(function(a, idx) {
+        var badges = '';
+        if (a.isBreaking) badges += '<span class="news-badge breaking">Breaking</span>';
+        if (a.isEarnings) badges += '<span class="news-badge earnings">Earnings</span>';
+        var sentClass = a.sentiment === 'bullish' ? 'bullish' : a.sentiment === 'bearish' ? 'bearish' : 'neutral';
+        badges += '<span class="news-badge ' + sentClass + '">' + (a.sentiment || 'Neutral') + '</span>';
+        var heldTickers = (a.tickers || []).filter(function(t) { return userTickers.indexOf(t) !== -1; });
+        heldTickers.forEach(function(t) { badges += '<span class="news-badge holding">' + t + ' (held)</span>'; });
+
+        return '<div class="news-feed-item">' +
+          '<div class="news-feed-badges">' + badges + '</div>' +
+          '<div class="news-feed-title">' + (a.title || '').replace(/</g,'&lt;') + '</div>' +
+          (a.aiSummary ? '<div class="news-feed-summary">&#x1F916; ' + a.aiSummary.replace(/</g,'&lt;') + '</div>' : '') +
+          '<div class="news-feed-meta"><span class="news-source" style="color:var(--accent);font-weight:500;">' + (a.source || '') + '</span><span>' + (a.published || '') + '</span></div>' +
+          '<div class="news-feed-actions">' +
+            '<button class="news-feed-action" onclick="askAIAboutArticle(' + idx + ')">&#x1F916; Ask AI about this</button>' +
+            '<button class="news-feed-action" onclick="saveArticleToNotes(' + idx + ')">&#x1F4BE; Save to Notes</button>' +
+            (a.url ? '<a class="news-feed-action" href="' + a.url + '" target="_blank" rel="noopener" style="text-decoration:none;">&#x1F517; Read full article</a>' : '') +
+          '</div></div>';
+      }).join('');
+      window._newsFeedArticles = articles;
+    }
+
+    function askAIAboutArticle(idx) {
+      var articles = window._newsFeedArticles || [];
+      if (!articles[idx]) return;
+      var a = articles[idx];
+      var question = 'What does this news mean for my portfolio? Article: "' + a.title + '" - ' + (a.aiSummary || a.snippet || '');
+      // Switch to Portfolio Coach
+      switchFMTab('fmPortfolio', document.querySelector('[onclick*="fmPortfolio"]'));
+      askPortfolioCoach(question);
+    }
+
+    async function saveArticleToNotes(idx) {
+      var articles = window._newsFeedArticles || [];
+      if (!articles[idx]) return;
+      var a = articles[idx];
+      try {
+        var sb = getSupabase(); var user = await getUser();
+        if (!user) { alert('Log in first.'); return; }
+        await sb.from('user_notes').insert({ user_id: user.id, title: 'News: ' + (a.title || '').substring(0, 60), content: a.title + '\n\nSource: ' + a.source + '\nSentiment: ' + a.sentiment + '\n\n' + (a.aiSummary || '') + '\n\n' + (a.url || '') });
+        showToast('Saved to Notes!');
+      } catch(e) { showToast('Save failed', 'error'); }
+    }
+
+    // ════════════════════════════════
+    // ── INIT: Load data from Supabase on auth
+    // ════════════════════════════════
+
+    // Patch the auth init to load FM data after login
+    var _origLoadWishes = loadWishes;
+    loadWishes = async function() {
+      await _origLoadWishes();
+      // Load portfolio and watchlists from Supabase
+      await Promise.all([loadPortfolioFromDB(), loadWatchlistsFromDB()]);
+      renderHoldings();
+      renderSidebarWatchlists();
+    };
 
     // ── Auto-refresh: markets every 60s, watchlist every 30s ──
     setInterval(function() {
-      var marketsTab = document.getElementById('homeMarketsTab');
-      if (marketsTab && marketsTab.classList.contains('active') && window._marketsLoaded) {
-        refreshMarkets();
+      var marketsActive = document.getElementById('homeMarketsTab');
+      var fmActive = document.getElementById('fmMarketsContent');
+      if ((marketsActive && marketsActive.classList.contains('active')) || (fmActive && fmActive.classList.contains('active'))) {
+        if (window._marketsLoaded) refreshMarkets();
+        if (window._fmMarketsLoaded) refreshFMMarkets();
       }
     }, 60000);
 
@@ -3862,7 +4447,6 @@
       if (activeWatchlistId) {
         var wl = watchlists.find(function(w) { return w.id === activeWatchlistId; });
         if (wl && wl.symbols.length > 0) {
-          // Force fresh fetch
           wl.symbols.forEach(function(s) { delete marketsCache[s]; });
           refreshWatchlistPrices();
         }
