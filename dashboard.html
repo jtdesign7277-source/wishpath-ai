@@ -755,8 +755,9 @@
     .holdings-table th { text-align: left; font-size: 0.7rem; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.04em; padding: 8px 10px; border-bottom: 1px solid var(--border); }
     .holdings-table td { padding: 10px; border-bottom: 1px solid rgba(48,54,61,0.4); font-size: 0.85rem; color: var(--text-muted); font-variant-numeric: tabular-nums; }
     .holdings-table tbody tr:hover { background: rgba(255,255,255,0.02); }
-    .holdings-remove-btn { background: none; border: none; color: var(--red); cursor: pointer; font-size: 0.85rem; padding: 2px 6px; border-radius: 4px; }
-    .holdings-remove-btn:hover { background: rgba(248,81,73,0.1); }
+    .holdings-remove-btn { background: none; border: none; color: rgba(255,255,255,0.3); cursor: pointer; padding: 6px; border-radius: 6px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+    .holdings-remove-btn:hover { color: #ef4444; background: rgba(239,68,68,0.1); }
+    .holdings-remove-btn svg { display: block; }
     .portfolio-coach-section { border-top: 1px solid var(--border); padding-top: 20px; margin-top: 8px; }
     .portfolio-coach-header { font-size: 0.95rem; font-weight: 700; color: var(--text); margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
     .portfolio-coach-sub { font-size: 0.78rem; color: var(--text-dim); margin-bottom: 14px; }
@@ -4221,7 +4222,7 @@
         if (h.avgCost > 0) { totalPL += totalItemPL; totalCostBasis += costBasis; }
         var dayClass = dayPLVal > 0 ? 'up' : dayPLVal < 0 ? 'down' : 'flat';
         var totalClass = totalItemPL > 0 ? 'up' : totalItemPL < 0 ? 'down' : 'flat';
-        return '<tr><td style="font-weight:600;color:var(--text);">' + h.symbol + '</td><td>' + h.qty + '</td><td>' + (price ? '$' + formatNum(price) : '--') + '</td><td style="font-weight:600;color:#fff;">' + (value ? '$' + formatNum(value) : '--') + '</td><td class="stock-change ' + dayClass + '">' + (dayPLVal>0?'+':'') + '$' + formatNum(dayPLVal) + '</td><td class="stock-change ' + totalClass + '">' + (h.avgCost>0 ? (totalItemPL>0?'+':'') + '$' + formatNum(totalItemPL) : '--') + '</td><td><button class="holdings-remove-btn" onclick="removeHolding(' + i + ')">&times;</button></td></tr>';
+        return '<tr><td style="font-weight:600;color:var(--text);">' + h.symbol + '</td><td>' + h.qty + '</td><td>' + (price ? '$' + formatNum(price) : '--') + '</td><td style="font-weight:600;color:#fff;">' + (value ? '$' + formatNum(value) : '--') + '</td><td class="stock-change ' + dayClass + '">' + (dayPLVal>0?'+':'') + '$' + formatNum(dayPLVal) + '</td><td class="stock-change ' + totalClass + '">' + (h.avgCost>0 ? (totalItemPL>0?'+':'') + '$' + formatNum(totalItemPL) : '--') + '</td><td><button class="holdings-remove-btn" onclick="removeHolding(' + i + ')" title="Delete holding"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></button></td></tr>';
       }).join('');
 
       var tvEl = document.getElementById(totalValId); if (tvEl) tvEl.textContent = '$' + formatNum(totalValue);
@@ -5765,6 +5766,7 @@
       // Load portfolio and watchlists from Supabase
       await Promise.all([loadPortfolioFromDB(), loadWatchlistsFromDB(), loadCommandCenters()]);
       renderHoldings();
+      refreshPortfolioPrices();
       renderSidebarWatchlists();
       renderSidebarCCList();
     };
