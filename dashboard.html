@@ -403,8 +403,8 @@
         height: calc(56px + env(safe-area-inset-bottom));
       }
       .mobile-nav-item {
-        flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-        gap: 3px; padding: 8px 4px;
+        flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; justify-content: center;
+        gap: 3px; padding: 8px 12px;
         background: none; border: none; color: rgba(255,255,255,0.45);
         font-family: inherit; font-size: 10px; font-weight: 500; letter-spacing: 0.01em;
         cursor: pointer; -webkit-tap-highlight-color: transparent;
@@ -414,25 +414,31 @@
       .mobile-nav-item.active { color: var(--accent); }
       .mobile-nav-item.active svg { filter: drop-shadow(0 0 4px rgba(0,201,167,0.4)); }
       .mobile-nav-item:active { transform: scale(0.88); opacity: 0.7; }
-      /* Center Ask AI pill */
+      /* Center Ask AI pill — input bar style */
       .mobile-nav-item[data-nav="coach"] {
-        flex: 0 0 auto;
+        flex: 1 1 auto;
         flex-direction: row;
-        gap: 7px;
-        background: rgba(255,255,255,0.07);
+        gap: 0;
+        background: #2a2a2a;
         border: 1px solid rgba(255,255,255,0.12);
-        border-radius: 22px;
-        padding: 9px 22px;
-        color: rgba(255,255,255,0.9);
-        font-size: 14px;
-        font-weight: 600;
-        min-width: 118px;
-        margin: 0 8px;
+        border-radius: 24px;
+        padding: 10px 14px;
+        color: rgba(255,255,255,0.45);
+        font-size: 15px;
+        font-weight: 400;
+        margin: 0 6px;
         letter-spacing: 0;
+        justify-content: center;
+        align-items: center;
+        min-height: 44px;
       }
-      .mobile-nav-item[data-nav="coach"] svg { width: 18px; height: 18px; margin-bottom: 0; }
+      .mobile-nav-item[data-nav="coach"] .nav-ask-sparkle { font-size: 16px; flex-shrink: 0; margin-right: 8px; }
+      .mobile-nav-item[data-nav="coach"] .nav-ask-label { flex: 1; text-align: left; }
+      .mobile-nav-item[data-nav="coach"] .nav-ask-arrow { flex-shrink: 0; margin-left: 8px; opacity: 0.4; }
+      .mobile-nav-item[data-nav="coach"] .nav-ask-arrow svg { width: 18px; height: 18px; }
+      .mobile-nav-item[data-nav="coach"] svg.nav-star-icon { display: none; }
       .mobile-nav-item[data-nav="coach"].active,
-      .mobile-nav-item[data-nav="coach"]:hover { background: rgba(0,201,167,0.12); border-color: rgba(0,201,167,0.25); color: var(--accent); }
+      .mobile-nav-item[data-nav="coach"]:hover { background: #333; border-color: rgba(255,255,255,0.18); color: rgba(255,255,255,0.55); }
 
       /* ── Ask AI bottom sheet ── */
       .mobile-ask-ai-overlay.active {
@@ -1740,8 +1746,9 @@
       <span>Home</span>
     </button>
     <button class="mobile-nav-item" data-nav="coach" onclick="mobileNavTo('coach')" aria-label="Ask AI">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.3L12 17l-6.2 4.2 2.4-7.3L2 9.4h7.6z"/></svg>
-      <span>Ask AI</span>
+      <span class="nav-ask-sparkle">✨</span>
+      <span class="nav-ask-label">Ask AI</span>
+      <span class="nav-ask-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
     </button>
     <button class="mobile-nav-item" data-nav="more" onclick="toggleMobileSidebar()" aria-label="More">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
