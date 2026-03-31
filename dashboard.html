@@ -758,6 +758,24 @@
     .holdings-remove-btn { background: none; border: none; color: rgba(255,255,255,0.3); cursor: pointer; padding: 6px; border-radius: 6px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
     .holdings-remove-btn:hover { color: #ef4444; background: rgba(239,68,68,0.1); }
     .holdings-remove-btn svg { display: block; }
+
+    /* Live crypto pulse */
+    .crypto-live { position: relative; }
+    .crypto-live-dot { position: absolute; top: 10px; right: 10px; width: 6px; height: 6px; border-radius: 50%; background: #22c55e; animation: cryptoPulse 2s ease-in-out infinite; }
+    @keyframes cryptoPulse { 0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(34,197,94,0.5); } 50% { opacity: 0.6; box-shadow: 0 0 0 4px rgba(34,197,94,0); } }
+
+    /* Ticker autocomplete dropdown */
+    .ticker-ac-dropdown { position: absolute; left: 0; right: auto; top: 100%; width: 280px; max-height: 260px; overflow-y: auto; background: #2a2a2a; border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.6); z-index: 9999; margin-top: 4px; }
+    .ticker-ac-item { display: flex; align-items: center; gap: 8px; padding: 10px 12px; cursor: pointer; transition: background 0.12s; }
+    .ticker-ac-item:hover, .ticker-ac-item.active { background: rgba(255,255,255,0.06); }
+    .ticker-ac-item:first-child { border-radius: 12px 12px 0 0; }
+    .ticker-ac-item:last-child { border-radius: 0 0 12px 12px; }
+    .ticker-ac-symbol { font-size: 0.85rem; font-weight: 700; color: var(--text); min-width: 54px; }
+    .ticker-ac-name { font-size: 0.78rem; color: var(--text-muted); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .ticker-ac-type { font-size: 0.65rem; font-weight: 600; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; }
+    .ticker-ac-type.stock { color: #3b82f6; background: rgba(59,130,246,0.1); }
+    .ticker-ac-type.etf { color: #a78bfa; background: rgba(167,139,250,0.1); }
+    .ticker-ac-type.crypto { color: #f59e0b; background: rgba(245,158,11,0.1); }
     .portfolio-coach-section { border-top: 1px solid var(--border); padding-top: 20px; margin-top: 8px; }
     .portfolio-coach-header { font-size: 0.95rem; font-weight: 700; color: var(--text); margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
     .portfolio-coach-sub { font-size: 0.78rem; color: var(--text-dim); margin-bottom: 14px; }
@@ -1264,12 +1282,6 @@
             </div>
           </div>
 
-          <div class="markets-section-label" style="margin-top:28px;"><span>&#x1F4F0; Market News</span></div>
-          <div class="news-list" id="marketNewsList">
-            <div class="news-item"><div class="stock-shimmer" style="width:80%;height:16px;"></div><div class="stock-shimmer" style="width:40%;height:12px;margin-top:8px;"></div></div>
-            <div class="news-item"><div class="stock-shimmer" style="width:70%;height:16px;"></div><div class="stock-shimmer" style="width:35%;height:12px;margin-top:8px;"></div></div>
-            <div class="news-item"><div class="stock-shimmer" style="width:75%;height:16px;"></div><div class="stock-shimmer" style="width:45%;height:12px;margin-top:8px;"></div></div>
-          </div>
         </div>
 
         <!-- Portfolio Tab -->
@@ -1373,8 +1385,6 @@
           <div class="markets-section-label" style="margin-top:20px;"><span>&#x1FA99; Crypto</span></div>
           <div class="stock-grid" id="fmCryptoGrid"></div>
           <div id="fmMarketsChartContainer" class="chart-container" style="display:none;"></div>
-          <div class="markets-section-label" style="margin-top:28px;"><span>&#x1F4F0; Market News</span></div>
-          <div class="news-list" id="fmMarketNewsList"><div class="news-item" style="color:var(--text-dim);">Loading news...</div></div>
         </div>
 
         <!-- FM: Portfolio -->
@@ -3909,7 +3919,6 @@
       }
 
       renderMarketCards();
-      fetchMarketNews();
 
       // Update timestamp
       var ts = document.getElementById('marketsUpdatedTime');
@@ -4141,7 +4150,7 @@
     function addHolding() { _addHoldingFrom('holdingSymbolInput', 'holdingQtyInput', 'holdingCostInput'); }
     function addHoldingFM() { _addHoldingFrom('fmHoldingSymbolInput', 'fmHoldingQtyInput', 'fmHoldingCostInput'); }
 
-    function _addHoldingFrom(symId, qtyId, costId) {
+    async function _addHoldingFrom(symId, qtyId, costId) {
       var symbolInput = document.getElementById(symId);
       var qtyInput = document.getElementById(qtyId);
       var costInput = document.getElementById(costId);
@@ -4160,8 +4169,8 @@
       }
       savePortfolio();
       symbolInput.value = ''; qtyInput.value = ''; costInput.value = '';
-      renderHoldings();
-      refreshPortfolioPrices();
+      // Fetch price for new symbol FIRST, then render with real data
+      await refreshPortfolioPrices();
     }
 
     function removeHolding(idx) {
@@ -4894,10 +4903,6 @@
       if (cryptoEl && homeCrypto) cryptoEl.innerHTML = homeCrypto.innerHTML;
       var ts = document.getElementById('fmMarketsUpdatedTime');
       if (ts) ts.textContent = 'Last updated: ' + new Date().toLocaleTimeString();
-      // Copy news
-      var homeNews = document.getElementById('marketNewsList');
-      var fmNews = document.getElementById('fmMarketNewsList');
-      if (homeNews && fmNews) fmNews.innerHTML = homeNews.innerHTML;
     }
 
     // ════════════════════════════════
@@ -5774,6 +5779,135 @@
         }
       }
     }, 30000);
+
+    // ── Live Crypto Refresh (every 10s — crypto markets are 24/7) ──
+    async function refreshCryptoPrices() {
+      var cryptoSymbols = CRYPTO.map(function(c) { return c.symbol; });
+      try {
+        var res = await fetch(SUPABASE_FN + '/watchlist-quotes?symbols=' + encodeURIComponent(cryptoSymbols.join(',')));
+        var data = await res.json();
+        if (data && Array.isArray(data.data)) {
+          var changed = false;
+          data.data.forEach(function(q) {
+            var prev = marketsCache[q.symbol];
+            var newEntry = { symbol: q.symbol, name: q.name, price: q.price, change: q.change, changePercent: q.percentChange };
+            if (!prev || prev.price !== q.price) changed = true;
+            marketsCache[q.symbol] = newEntry;
+          });
+          if (changed) renderCryptoCards();
+        }
+      } catch(e) { /* silent — will retry in 10s */ }
+    }
+
+    function renderCryptoCards() {
+      var cryptoHtml = CRYPTO.map(function(coin) {
+        var q = marketsCache[coin.symbol];
+        if (!q) return '<div class="stock-card"><div class="stock-symbol">' + coin.display + '</div><div class="stock-name">' + coin.name + '</div><div class="stock-price" style="color:var(--text-dim);">--</div><div class="stock-change flat">Loading...</div></div>';
+        var changeClass = q.change > 0 ? 'up' : q.change < 0 ? 'down' : 'flat';
+        var arrow = q.change > 0 ? '&#x25B2;' : q.change < 0 ? '&#x25BC;' : '';
+        var sign = q.change > 0 ? '+' : '';
+        return '<div class="stock-card crypto-live"><div class="stock-symbol">' + coin.display + '</div><div class="stock-name">' + coin.name + '</div>' +
+          '<div class="stock-price">$' + formatNum(q.price) + '</div>' +
+          '<div class="stock-change ' + changeClass + '">' + arrow + ' ' + sign + formatNum(q.change) + ' (' + sign + formatNum(q.changePercent) + '%)</div>' +
+          '<div class="crypto-live-dot"></div></div>';
+      }).join('');
+      var cryptoGrid = document.getElementById('cryptoGrid');
+      var fmCryptoGrid = document.getElementById('fmCryptoGrid');
+      if (cryptoGrid) cryptoGrid.innerHTML = cryptoHtml;
+      if (fmCryptoGrid) fmCryptoGrid.innerHTML = cryptoHtml;
+    }
+
+    setInterval(refreshCryptoPrices, 10000);
+
+    // ── Ticker Autocomplete ──
+    var _acDebounce = null;
+    var _acActiveInput = null;
+
+    function initTickerAutocomplete(inputId) {
+      var input = document.getElementById(inputId);
+      if (!input) return;
+      // Create dropdown
+      var dropdown = document.createElement('div');
+      dropdown.className = 'ticker-ac-dropdown';
+      dropdown.id = inputId + '_ac';
+      dropdown.style.display = 'none';
+      input.parentElement.style.position = 'relative';
+      input.parentElement.appendChild(dropdown);
+
+      input.addEventListener('input', function() {
+        var q = input.value.trim();
+        if (q.length < 1) { dropdown.style.display = 'none'; return; }
+        _acActiveInput = input;
+        clearTimeout(_acDebounce);
+        _acDebounce = setTimeout(function() { searchTickers(q, dropdown, input); }, 250);
+      });
+
+      input.addEventListener('blur', function() {
+        setTimeout(function() { dropdown.style.display = 'none'; }, 200);
+      });
+
+      input.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') dropdown.style.display = 'none';
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+          e.preventDefault();
+          var items = dropdown.querySelectorAll('.ticker-ac-item');
+          if (!items.length) return;
+          var activeItem = dropdown.querySelector('.ticker-ac-item.active');
+          var idx = activeItem ? Array.from(items).indexOf(activeItem) : -1;
+          if (activeItem) activeItem.classList.remove('active');
+          if (e.key === 'ArrowDown') idx = Math.min(idx + 1, items.length - 1);
+          else idx = Math.max(idx - 1, 0);
+          items[idx].classList.add('active');
+          items[idx].scrollIntoView({ block: 'nearest' });
+        }
+        if (e.key === 'Enter') {
+          var sel = dropdown.querySelector('.ticker-ac-item.active');
+          if (sel) { e.preventDefault(); selectTicker(sel, input, dropdown); }
+        }
+      });
+    }
+
+    async function searchTickers(query, dropdown, input) {
+      try {
+        var res = await fetch(SUPABASE_FN + '/stock-search?q=' + encodeURIComponent(query));
+        var results = await res.json();
+        if (!Array.isArray(results) || results.length === 0) { dropdown.style.display = 'none'; return; }
+        // Filter to stocks/ETFs on major US exchanges + crypto
+        var filtered = results.filter(function(r) {
+          var ex = (r.exchange || '').toUpperCase();
+          var type = (r.type || '').toLowerCase();
+          return type === 'stock' || type === 'etf' || type === 'cryptocurrency' ||
+                 ex.indexOf('NYSE') >= 0 || ex.indexOf('NASDAQ') >= 0 || ex.indexOf('AMEX') >= 0;
+        }).slice(0, 8);
+        if (filtered.length === 0) { dropdown.style.display = 'none'; return; }
+        dropdown.innerHTML = filtered.map(function(r, i) {
+          var typeLabel = (r.type || 'Stock').toLowerCase();
+          var typeClass = typeLabel === 'cryptocurrency' ? 'crypto' : typeLabel === 'etf' ? 'etf' : 'stock';
+          return '<div class="ticker-ac-item' + (i === 0 ? ' active' : '') + '" data-symbol="' + r.symbol + '" onmousedown="selectTicker(this,document.getElementById(\'' + input.id + '\'),document.getElementById(\'' + input.id + '_ac\'))">' +
+            '<span class="ticker-ac-symbol">' + r.symbol + '</span>' +
+            '<span class="ticker-ac-name">' + (r.name || '').substring(0, 30) + '</span>' +
+            '<span class="ticker-ac-type ' + typeClass + '">' + r.type + '</span>' +
+            '</div>';
+        }).join('');
+        dropdown.style.display = 'block';
+      } catch(e) { dropdown.style.display = 'none'; }
+    }
+
+    function selectTicker(item, input, dropdown) {
+      input.value = item.getAttribute('data-symbol');
+      dropdown.style.display = 'none';
+      // Focus next input (quantity)
+      var next = input.parentElement.querySelectorAll('input');
+      for (var i = 0; i < next.length; i++) {
+        if (next[i] === input && next[i + 1]) { next[i + 1].focus(); break; }
+      }
+    }
+
+    // Init autocomplete on all symbol inputs
+    initTickerAutocomplete('holdingSymbolInput');
+    initTickerAutocomplete('fmHoldingSymbolInput');
+    initTickerAutocomplete('watchlistAddInput');
+    initTickerAutocomplete('fmWatchlistAddInput');
 
     // ── Chart Fullscreen ──
 (function initChartFullscreen() {
