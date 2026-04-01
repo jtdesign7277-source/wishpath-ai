@@ -4978,7 +4978,7 @@
       var viewId = activeView ? activeView.id : '';
       if (viewId === 'notesView') { createNewNote(); }
       else if (viewId === 'todosView') { createNewTodoList(); }
-      else { hideMobileHome(); showView('newwish'); }
+      else { showMobileHome(); switchHomeTab('roadmap', document.querySelector('#homeView .home-tab')); }
     }
 
     // ════════════════════════════════════════════════════
