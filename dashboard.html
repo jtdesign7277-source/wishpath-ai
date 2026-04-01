@@ -932,7 +932,7 @@
         height: 100% !important;
         min-height: 100% !important;
       }
-      body.fm-mobile-fullscreen #fmView .chart-fs-btn { display: none !important; }
+      body.fm-mobile-fullscreen #fmView .fm-widget-container .chart-fs-btn { display: none !important; }
 
       /* ── Unified Notion dark color scheme ── */
       body, .app-container, .main-content, .view, .coach-layout, .coach-left, .coach-right-wrapper {
@@ -1162,6 +1162,14 @@
     .chart-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
     .chart-action-btn { display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%); border: 1px solid rgba(255,255,255,0.06); border-radius: 99px; color: rgba(255,255,255,0.55); font-size: 0.7rem; font-weight: 500; cursor: pointer; font-family: inherit; box-shadow: 0 2px 8px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04); transition: all 0.3s ease; }
     .chart-action-btn:hover { background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%); color: rgba(255,255,255,0.85); border-color: rgba(255,255,255,0.1); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+    .chart-container .chart-fs-btn { left: 8px; right: auto; }
+    .saved-chart-list { display: flex; flex-direction: column; gap: 8px; }
+    .saved-chart-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06); background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%); cursor: pointer; transition: all 0.2s ease; }
+    .saved-chart-item:hover { border-color: rgba(0,201,167,0.18); box-shadow: 0 8px 20px rgba(0,0,0,0.26), 0 0 12px rgba(0,201,167,0.08); }
+    .saved-chart-item-icon { width: 32px; height: 32px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; background: rgba(0,201,167,0.08); color: var(--accent); font-size: 16px; flex-shrink: 0; }
+    .saved-chart-item-info { min-width: 0; flex: 1; }
+    .saved-chart-item-title { font-size: 0.82rem; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .saved-chart-item-meta { font-size: 0.7rem; color: var(--text-dim); margin-top: 2px; }
 
     /* ── Watchlist ── */
     .watchlist-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
@@ -1578,6 +1586,8 @@
           <div id="sidebarFMWatchlists" style="border-top:1px solid rgba(255,255,255,0.06);margin-top:6px;padding-top:6px;"></div>
         </div>
       </div>
+      <div class="sidebar-section" id="savedTemplatesLabel" style="display:none;">Saved Templates</div>
+      <div id="savedTemplatesList"></div>
       <div class="sidebar-section" id="savedChatsLabel" style="display:none;">Saved Chats</div>
       <div id="savedChatsList"></div>
       <a class="nav-item" data-view="newwish" onclick="showView('newwish')" style="margin-top: 12px;">
@@ -4495,12 +4505,21 @@
       el.innerHTML = '<div id="' + containerId + '-chart" style="min-height:300px;"></div>';
       var chartActions = document.createElement('div');
       chartActions.className = 'chart-actions';
-      chartActions.innerHTML =
-        '<button class="chart-action-btn" onclick="downloadChartPng(\'' + containerId + '-chart\')">&#x1F4E5; Download PNG</button>' +
-        '<button class="chart-action-btn" onclick="saveChartToNotes(\'' + containerId + '-chart\')">&#x1F4BE; Save to Notes</button>' +
+      var saveLabel = _activeChartStudioTemplate ? 'Save Template' : 'Save Chart';
+      var actionsHtml =
+        '<button class="chart-action-btn" onclick="openChartFullscreenById(\'' + containerId + '-chart\')">&#x26F6; Full Screen</button>' +
+        '<button class="chart-action-btn" onclick="downloadChartPng(\'' + containerId + '-chart\')">&#x1F4E5; Download PNG</button>';
+      if (containerId === 'chartStudioChartArea') {
+        actionsHtml += '<button class="chart-action-btn" onclick="saveActiveTemplateChart()">&#x1F4BE; ' + saveLabel + '</button>';
+      }
+      actionsHtml +=
+        '<button class="chart-action-btn" onclick="saveChartToNotes(\'' + containerId + '-chart\')">&#x1F4DD; Save to Notes</button>' +
         '<button class="chart-action-btn" onclick="emailChartToMe(\'' + containerId + '-chart\')">&#x1F4E7; Email to Me</button>';
+      chartActions.innerHTML = actionsHtml;
       el.appendChild(chartActions);
-      return Highcharts.chart(containerId + '-chart', chartConfig);
+      var chart = Highcharts.chart(containerId + '-chart', chartConfig);
+      addChartFsButtons();
+      return chart;
     }
 
     // Chart action helpers
@@ -5533,6 +5552,7 @@
     // ── Templates Browser ──
     var CHART_STUDIO_DEFAULT_PLACEHOLDER = 'Describe a chart to create...';
     var _activeChartStudioTemplate = null;
+    var savedChartTemplates = [];
     var TEMPLATES = [
       { name: 'Candlestick Chart', cat: 'Investing', icon: '🕯️', rating: '4.9', helpText: 'Share the dates plus open, high, low, and close values you want visualized.', prompt: 'Help me fill out the Candlestick Chart template. Ask me for the dates and OHLC values you need, then rebuild this starter chart with my real numbers.', inputPlaceholder: 'Tell AI the dates and OHLC values to use...' },
       { name: 'Portfolio Performance', cat: 'Investing', icon: '📈', rating: '4.8', helpText: 'Add your portfolio values by month or compare them to a benchmark.', prompt: 'Help me fill out the Portfolio Performance template. Ask me for my portfolio values, date range, and any benchmark I want to compare, then rebuild the chart with my real data.', inputPlaceholder: 'Tell AI your date range and portfolio values...' },
@@ -5550,6 +5570,169 @@
 
     function getTemplateByName(name) {
       return TEMPLATES.find(function(t) { return t.name === name; }) || null;
+    }
+
+    function getSavedChartTemplateIcon(name) {
+      var template = getTemplateByName(name);
+      return template ? template.icon : '&#x1F4CA;';
+    }
+
+    function getSavedChartTitle(entry) {
+      return (entry && (entry.title || entry.name || entry.templateName)) || 'Untitled Template';
+    }
+
+    function buildSavedChartRecord(chart, templateName) {
+      var title = chart && chart.title && chart.title.textStr ? chart.title.textStr : (templateName || 'Chart Studio Template');
+      var config = {};
+      try {
+        config = JSON.parse(JSON.stringify(chart.userOptions || {}, function(key, value) {
+          return typeof value === 'function' ? undefined : value;
+        }));
+      } catch(e) {
+        config = {};
+      }
+      return {
+        id: 'chart-' + Date.now(),
+        templateName: templateName || null,
+        title: title,
+        savedAt: new Date().toISOString(),
+        config: config
+      };
+    }
+
+    function applySavedTemplateInteractions(entry) {
+      if (!entry || !entry.config) return entry;
+      var config = JSON.parse(JSON.stringify(entry.config));
+      if (entry.templateName) {
+        config.chart = config.chart || {};
+        config.chart.events = config.chart.events || {};
+        config.chart.events.click = getTemplateChartClickHandler(entry.templateName);
+        if (!config.subtitle || !config.subtitle.text) {
+          config.subtitle = { text: 'Tap chart to ask AI to fill in your numbers' };
+        }
+      }
+      return Object.assign({}, entry, { config: config });
+    }
+
+    async function loadSavedChartTemplates() {
+      if (!currentUserId) return;
+      try {
+        var sb = getSupabase();
+        var { data } = await sb.from('user_notes').select('*').eq('user_id', currentUserId).like('title', '__WP_CHART__%').order('updated_at', { ascending: false });
+        savedChartTemplates = (data || []).map(function(note) {
+          var parsed = {};
+          try { parsed = JSON.parse(note.content || '{}'); } catch(e) {}
+          return {
+            id: parsed.id || note.id,
+            title: parsed.title || parsed.name || 'Chart Template',
+            templateName: parsed.templateName || null,
+            savedAt: parsed.savedAt || note.updated_at || note.created_at,
+            config: parsed.config || {},
+            _noteId: note.id
+          };
+        });
+      } catch(e) {
+        console.error('Load saved chart templates error:', e);
+        savedChartTemplates = [];
+      }
+      renderSavedChartTemplates();
+      renderSidebarSavedChartTemplates();
+    }
+
+    async function persistSavedChartTemplate(entry) {
+      if (!currentUserId) return null;
+      var sb = getSupabase();
+      var payload = JSON.stringify({
+        id: entry.id,
+        title: entry.title,
+        templateName: entry.templateName,
+        savedAt: entry.savedAt,
+        config: entry.config
+      });
+      if (entry._noteId) {
+        await sb.from('user_notes').update({ content: payload, updated_at: new Date().toISOString() }).eq('id', entry._noteId);
+      } else {
+        var { data } = await sb.from('user_notes').insert({ user_id: currentUserId, title: '__WP_CHART__' + entry.id, content: payload }).select('id').single();
+        if (data) entry._noteId = data.id;
+      }
+      return entry;
+    }
+
+    function renderSavedChartTemplates() {
+      var el = document.getElementById('savedChartsList');
+      if (!el) return;
+      if (!savedChartTemplates.length) {
+        el.innerHTML = '<div style="color:var(--text-dim);font-size:0.85rem;">No saved charts yet.</div>';
+        return;
+      }
+      el.innerHTML = '<div class="saved-chart-list">' + savedChartTemplates.map(function(entry) {
+        var icon = getSavedChartTemplateIcon(entry.templateName);
+        var savedAt = entry.savedAt ? new Date(entry.savedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Saved';
+        return '<div class="saved-chart-item" onclick="openSavedChartTemplate(\'' + entry.id + '\')">' +
+          '<div class="saved-chart-item-icon">' + icon + '</div>' +
+          '<div class="saved-chart-item-info"><div class="saved-chart-item-title">' + getSavedChartTitle(entry).replace(/</g,'&lt;') + '</div><div class="saved-chart-item-meta">' + (entry.templateName || 'Custom Chart').replace(/</g,'&lt;') + ' • ' + savedAt + '</div></div>' +
+          '<div class="tmpl-arrow">›</div></div>';
+      }).join('') + '</div>';
+    }
+
+    function renderSidebarSavedChartTemplates() {
+      var container = document.getElementById('savedTemplatesList');
+      var label = document.getElementById('savedTemplatesLabel');
+      if (!container || !label) return;
+      if (!savedChartTemplates.length) {
+        container.innerHTML = '';
+        label.style.display = 'none';
+        return;
+      }
+      label.style.display = 'block';
+      container.innerHTML = savedChartTemplates.map(function(entry) {
+        var icon = getSavedChartTemplateIcon(entry.templateName);
+        return '<div class="sidebar-folder"><div class="sidebar-chat-item" onclick="openSavedChartTemplate(\'' + entry.id + '\')" title="' + getSavedChartTitle(entry).replace(/"/g, '&quot;') + '">' + icon + ' ' + getSavedChartTitle(entry).replace(/</g,'&lt;') + '</div></div>';
+      }).join('');
+    }
+
+    function openSavedChartTemplate(savedId) {
+      var entry = savedChartTemplates.find(function(item) { return item.id === savedId; });
+      if (!entry) return;
+      var hydrated = applySavedTemplateInteractions(entry);
+      _activeChartStudioTemplate = hydrated.templateName || null;
+      chartStudioHistory = [];
+      openFMTab('fmChartStudio');
+      setTimeout(function() {
+        renderHighchart('chartStudioChartArea', hydrated.config || {});
+        var msgs = getChartStudioMessagesEl();
+        if (msgs) {
+          msgs.innerHTML = '<div class="msg ai"><strong>' + getSavedChartTitle(entry).replace(/</g, '&lt;') + ' loaded.</strong><br>Continue editing this saved template or tap the chart to let AI rebuild it with new data.</div>';
+        }
+        var input = getChartStudioInputEl();
+        if (input) {
+          var template = hydrated.templateName ? getTemplateByName(hydrated.templateName) : null;
+          input.placeholder = template ? (template.inputPlaceholder || CHART_STUDIO_DEFAULT_PLACEHOLDER) : CHART_STUDIO_DEFAULT_PLACEHOLDER;
+          input.value = '';
+          input.style.height = 'auto';
+        }
+        addChartFsButtons();
+      }, window.innerWidth <= 768 ? 180 : 40);
+    }
+
+    async function saveActiveTemplateChart() {
+      var chart = Highcharts && Highcharts.charts.find(function(c) { return c && c.renderTo && c.renderTo.id === 'chartStudioChartArea-chart'; });
+      if (!chart) {
+        showToast('No chart to save yet.');
+        return;
+      }
+      var record = buildSavedChartRecord(chart, _activeChartStudioTemplate);
+      savedChartTemplates = savedChartTemplates.filter(function(item) { return item.id !== record.id; });
+      savedChartTemplates.unshift(record);
+      try {
+        await persistSavedChartTemplate(record);
+        renderSavedChartTemplates();
+        renderSidebarSavedChartTemplates();
+        showToast('Template saved to sidebar.');
+      } catch(e) {
+        console.error('Save chart template error:', e);
+        showToast('Unable to save template.');
+      }
     }
 
     function getChartStudioMessagesEl() {
@@ -6988,11 +7171,12 @@
     loadWishes = async function() {
       await _origLoadWishes();
       // Load portfolio and watchlists from Supabase
-      await Promise.all([loadPortfolioFromDB(), loadWatchlistsFromDB(), loadCommandCenters()]);
+      await Promise.all([loadPortfolioFromDB(), loadWatchlistsFromDB(), loadCommandCenters(), loadSavedChartTemplates()]);
       renderHoldings();
       refreshPortfolioPrices();
       renderSidebarWatchlists();
       renderSidebarCCList();
+      renderSidebarSavedChartTemplates();
     };
 
     // ── Auto-refresh: markets every 60s, watchlist every 30s ──
@@ -7171,6 +7355,25 @@
 var _chartFsOrigParent = null;
 var _chartFsOrigNext = null;
 var _chartFsEl = null;
+var _chartFsOrigStyles = null;
+var _chartFsOrigChartHeights = [];
+
+function reflowFullscreenChart() {
+  if (!_chartFsEl || typeof Highcharts === 'undefined') return;
+  var body = document.getElementById('chartFsBody');
+  var actions = _chartFsEl.querySelector('.chart-actions');
+  var actionsHeight = actions ? actions.getBoundingClientRect().height + 12 : 0;
+  var availableHeight = body ? Math.max(320, Math.floor(body.getBoundingClientRect().height - actionsHeight - 12)) : null;
+  Highcharts.charts.forEach(function(chart) {
+    if (!chart || !chart.renderTo) return;
+    if (_chartFsEl.contains(chart.renderTo)) {
+      try {
+        if (availableHeight) chart.setSize(null, availableHeight, false);
+        chart.reflow();
+      } catch(e) {}
+    }
+  });
+}
 
 function openChartFullscreen(el) {
   var container = el.closest('.fm-widget-container') || el.closest('.chart-container') || el.closest('.cc-widget-body') || el.parentElement;
@@ -7178,13 +7381,37 @@ function openChartFullscreen(el) {
   _chartFsOrigParent = container.parentElement;
   _chartFsOrigNext = container.nextSibling;
   _chartFsEl = container;
+  _chartFsOrigStyles = {
+    width: container.style.width,
+    height: container.style.height,
+    minHeight: container.style.minHeight,
+    maxWidth: container.style.maxWidth
+  };
+  _chartFsOrigChartHeights = [];
+  if (typeof Highcharts !== 'undefined') {
+    Highcharts.charts.forEach(function(chart) {
+      if (!chart || !chart.renderTo) return;
+      if (container.contains(chart.renderTo)) {
+        _chartFsOrigChartHeights.push({ chart: chart, height: chart.chartHeight });
+      }
+    });
+  }
   var body = document.getElementById('chartFsBody');
   body.innerHTML = '';
   body.appendChild(container);
   container.style.width = '100%';
   container.style.height = '100%';
+  container.style.minHeight = '100%';
+  container.style.maxWidth = '100%';
   document.getElementById('chartFsOverlay').classList.add('active');
   document.body.style.overflow = 'hidden';
+  setTimeout(reflowFullscreenChart, 60);
+}
+
+function openChartFullscreenById(chartId) {
+  var chartEl = document.getElementById(chartId);
+  if (!chartEl) return;
+  openChartFullscreen(chartEl);
 }
 
 function closeChartFullscreen() {
@@ -7192,12 +7419,18 @@ function closeChartFullscreen() {
   overlay.classList.remove('active');
   document.body.style.overflow = '';
   if (_chartFsEl && _chartFsOrigParent) {
-    _chartFsEl.style.width = '';
-    _chartFsEl.style.height = '';
+    _chartFsEl.style.width = _chartFsOrigStyles ? _chartFsOrigStyles.width : '';
+    _chartFsEl.style.height = _chartFsOrigStyles ? _chartFsOrigStyles.height : '';
+    _chartFsEl.style.minHeight = _chartFsOrigStyles ? _chartFsOrigStyles.minHeight : '';
+    _chartFsEl.style.maxWidth = _chartFsOrigStyles ? _chartFsOrigStyles.maxWidth : '';
     if (_chartFsOrigNext) _chartFsOrigParent.insertBefore(_chartFsEl, _chartFsOrigNext);
     else _chartFsOrigParent.appendChild(_chartFsEl);
+    _chartFsOrigChartHeights.forEach(function(item) {
+      try { item.chart.setSize(null, item.height || null, false); item.chart.reflow(); } catch(e) {}
+    });
+    setTimeout(reflowFullscreenChart, 60);
   }
-  _chartFsEl = null; _chartFsOrigParent = null; _chartFsOrigNext = null;
+  _chartFsEl = null; _chartFsOrigParent = null; _chartFsOrigNext = null; _chartFsOrigStyles = null; _chartFsOrigChartHeights = [];
 }
 
 // Add fullscreen buttons to all chart containers
@@ -7217,6 +7450,16 @@ function addChartFsButtons() {
 // Run on load and after dynamic content
 setInterval(addChartFsButtons, 3000);
 setTimeout(addChartFsButtons, 1500);
+window.addEventListener('resize', function() {
+  if (document.getElementById('chartFsOverlay').classList.contains('active')) {
+    setTimeout(reflowFullscreenChart, 90);
+  }
+});
+window.addEventListener('orientationchange', function() {
+  if (document.getElementById('chartFsOverlay').classList.contains('active')) {
+    setTimeout(reflowFullscreenChart, 120);
+  }
+});
 
   </script>
 
