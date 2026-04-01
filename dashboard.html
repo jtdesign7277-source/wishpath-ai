@@ -277,10 +277,110 @@
 
     /* Mobile */
     /* Mobile toggle — minimalist drawer button */
-    .mobile-sidebar-toggle { display: none; position: fixed; top: max(10px, env(safe-area-inset-top)); left: 12px; z-index: 550; background: linear-gradient(180deg, rgba(36,36,36,0.92) 0%, rgba(24,24,24,0.98) 100%); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; color: rgba(255,255,255,0.72); cursor: pointer; width: 42px; height: 42px; align-items: center; justify-content: center; -webkit-tap-highlight-color: transparent; box-shadow: 0 8px 24px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.05); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease, border-color 0.18s ease; }
-    .mobile-sidebar-toggle:hover { background: linear-gradient(180deg, rgba(42,42,42,0.96) 0%, rgba(27,27,27,0.98) 100%); color: rgba(255,255,255,0.9); border-color: rgba(255,255,255,0.12); }
-    .mobile-sidebar-toggle:active { transform: scale(0.96); }
-    .mobile-sidebar-toggle svg { width: 18px; height: 18px; }
+    .mobile-sidebar-toggle,
+    .mobile-fm-tabs-toggle {
+      display: none;
+      position: fixed;
+      top: max(10px, env(safe-area-inset-top));
+      z-index: 550;
+      background: linear-gradient(180deg, rgba(36,36,36,0.92) 0%, rgba(24,24,24,0.98) 100%);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      color: rgba(255,255,255,0.72);
+      cursor: pointer;
+      width: 42px;
+      height: 42px;
+      align-items: center;
+      justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.05);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+    }
+    .mobile-sidebar-toggle { left: 12px; }
+    .mobile-fm-tabs-toggle { right: 12px; z-index: 551; }
+    .mobile-sidebar-toggle:hover,
+    .mobile-fm-tabs-toggle:hover {
+      background: linear-gradient(180deg, rgba(42,42,42,0.96) 0%, rgba(27,27,27,0.98) 100%);
+      color: rgba(255,255,255,0.9);
+      border-color: rgba(255,255,255,0.12);
+    }
+    .mobile-sidebar-toggle:active,
+    .mobile-fm-tabs-toggle:active { transform: scale(0.96); }
+    .mobile-sidebar-toggle svg,
+    .mobile-fm-tabs-toggle svg { width: 18px; height: 18px; }
+    .mobile-fm-tabs-toggle.active {
+      color: rgba(255,255,255,0.92);
+      border-color: rgba(0,201,167,0.24);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.32), 0 0 18px rgba(0,201,167,0.14);
+    }
+    .mobile-fm-menu-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.18);
+      z-index: 540;
+    }
+    .mobile-fm-menu-backdrop.active { display: block; }
+    .mobile-fm-menu {
+      display: none;
+      position: fixed;
+      top: calc(max(10px, env(safe-area-inset-top)) + 52px);
+      right: 12px;
+      width: min(242px, calc(100vw - 24px));
+      max-height: calc(100dvh - 124px - env(safe-area-inset-bottom));
+      overflow-y: auto;
+      z-index: 545;
+      padding: 10px;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: linear-gradient(180deg, rgba(25,26,31,0.78) 0%, rgba(15,16,20,0.94) 100%);
+      box-shadow: 0 18px 40px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.05);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+    }
+    .mobile-fm-menu.active { display: block; animation: fadeInUp 0.18s ease; }
+    .mobile-fm-menu-list { display: flex; flex-direction: column; gap: 6px; }
+    .mobile-fm-menu-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid transparent;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.02);
+      color: rgba(255,255,255,0.64);
+      font: inherit;
+      font-size: 0.88rem;
+      font-weight: 600;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.16s ease;
+    }
+    .mobile-fm-menu-item:hover {
+      background: rgba(255,255,255,0.05);
+      color: rgba(255,255,255,0.86);
+    }
+    .mobile-fm-menu-item.active {
+      background: linear-gradient(135deg, rgba(0,201,167,0.16) 0%, rgba(167,139,250,0.12) 100%);
+      border-color: rgba(0,201,167,0.18);
+      color: #fff;
+      box-shadow: 0 0 18px rgba(0,201,167,0.08);
+    }
+    .mobile-fm-menu-icon {
+      width: 18px;
+      flex-shrink: 0;
+      text-align: center;
+      font-size: 0.95rem;
+      opacity: 0.92;
+    }
+    .mobile-fm-menu-label { flex: 1; min-width: 0; }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(-6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
     .menu-toggle { display: none; }
 
     @media (max-width: 768px) {
@@ -427,6 +527,33 @@
       }
       .mobile-nav-item .nav-ask-arrow { flex-shrink: 0; margin-left: 12px; opacity: 0.32; }
       .mobile-nav-item .nav-ask-arrow svg { width: 20px; height: 20px; }
+
+      body.fm-mobile-fullscreen .mobile-sidebar-toggle,
+      body.fm-mobile-fullscreen .mobile-fm-tabs-toggle {
+        background: linear-gradient(180deg, rgba(26,27,31,0.42) 0%, rgba(15,16,20,0.58) 100%);
+        border-color: rgba(255,255,255,0.12);
+        color: rgba(255,255,255,0.82);
+        box-shadow: 0 12px 28px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.06);
+      }
+      body.fm-mobile-fullscreen .mobile-nav-bar {
+        background: linear-gradient(180deg, rgba(25,25,25,0) 0%, rgba(25,25,25,0.18) 24%, rgba(25,25,25,0.4) 100%);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+      }
+      body.fm-mobile-fullscreen .mobile-nav-item {
+        background:
+          linear-gradient(rgba(41,41,45,0.48), rgba(31,31,35,0.48)) padding-box,
+          linear-gradient(135deg, var(--accent), #a78bfa) border-box;
+        box-shadow: 0 12px 30px rgba(0,0,0,0.18), 0 0 20px rgba(0,201,167,0.1);
+      }
+      body.fm-mobile-fullscreen .mobile-nav-item .nav-ask-label { color: rgba(255,255,255,0.56); }
+      body.fm-mobile-fullscreen .mobile-nav-item .nav-ask-arrow { opacity: 0.46; }
+      body.fm-mobile-fullscreen .main-header {
+        background: linear-gradient(180deg, rgba(25,25,25,0.92) 0%, rgba(25,25,25,0.68) 100%) !important;
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+      }
 
       /* ── Ask AI full-screen overlay ── */
       body.mobile-ai-open { overflow: hidden !important; }
@@ -725,6 +852,53 @@
 
       /* ── Content padding so nothing hides behind nav bar ── */
       .main-content { padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 16px) !important; }
+
+      body.fm-mobile-fullscreen .main-content {
+        padding: 0 0 calc(var(--nav-h) + env(safe-area-inset-bottom) + 10px) !important;
+      }
+      body.fm-mobile-fullscreen #fmView { padding: 0 !important; }
+      body.fm-mobile-fullscreen #fmSubTabs { display: none !important; }
+      body.fm-mobile-fullscreen #fmView .fm-sub-content {
+        padding: 4px 12px calc(var(--nav-h) + env(safe-area-inset-bottom) + 18px);
+      }
+      body.fm-mobile-fullscreen #fmTVChartsContent.active,
+      body.fm-mobile-fullscreen #fmTechAnalysisContent.active {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        min-height: calc(100dvh - 72px - var(--nav-h) - env(safe-area-inset-bottom));
+        padding: 6px 0 calc(var(--nav-h) + env(safe-area-inset-bottom) + 14px) !important;
+      }
+      body.fm-mobile-fullscreen #fmTVChartsContent .fm-ticker-input-row,
+      body.fm-mobile-fullscreen #fmTechAnalysisContent .fm-ticker-input-row {
+        padding: 0 12px;
+        margin-bottom: 0;
+      }
+      body.fm-mobile-fullscreen #fmHeatMapContent.active,
+      body.fm-mobile-fullscreen #fmScreenerContent.active,
+      body.fm-mobile-fullscreen #fmOverviewContent.active,
+      body.fm-mobile-fullscreen #fmCalendarContent.active {
+        display: flex;
+        flex-direction: column;
+        min-height: calc(100dvh - 72px - var(--nav-h) - env(safe-area-inset-bottom));
+        padding: 4px 0 calc(var(--nav-h) + env(safe-area-inset-bottom) + 10px) !important;
+      }
+      body.fm-mobile-fullscreen #fmTVChartsContent .fm-widget-container,
+      body.fm-mobile-fullscreen #fmTechAnalysisContent .fm-widget-container,
+      body.fm-mobile-fullscreen #fmHeatMapContent .fm-widget-container,
+      body.fm-mobile-fullscreen #fmScreenerContent .fm-widget-container,
+      body.fm-mobile-fullscreen #fmOverviewContent .fm-widget-container,
+      body.fm-mobile-fullscreen #fmCalendarContent .fm-widget-container {
+        flex: 1;
+        min-height: calc(100dvh - 150px - var(--nav-h) - env(safe-area-inset-bottom));
+        height: auto !important;
+        background: #0f1013;
+        border: none;
+        border-radius: 0;
+        box-shadow: none;
+      }
+      body.fm-mobile-fullscreen #fmView .fm-widget-container iframe { min-height: 100%; }
+      body.fm-mobile-fullscreen #fmView .chart-fs-btn { display: none !important; }
 
       /* ── Unified Notion dark color scheme ── */
       body, .app-container, .main-content, .view, .coach-layout, .coach-left, .coach-right-wrapper {
@@ -1277,7 +1451,30 @@
       <path d="M4.5 14.5h11"/>
     </svg>
   </button>
+  <button class="mobile-fm-tabs-toggle" id="mobileFMTabsToggle" onclick="toggleMobileFMMenu()" aria-label="Open Financial Markets menu" aria-expanded="false">
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M4.5 5.5h11"/>
+      <path d="M4.5 10h7.5"/>
+      <path d="M4.5 14.5h11"/>
+    </svg>
+  </button>
   <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleMobileSidebar()"></div>
+  <div class="mobile-fm-menu-backdrop" id="mobileFMTabsBackdrop" onclick="closeMobileFMMenu()"></div>
+  <div class="mobile-fm-menu" id="mobileFMTabsMenu" aria-label="Financial Markets sections">
+    <div class="mobile-fm-menu-list">
+      <button class="mobile-fm-menu-item" data-fm-tab="fmMarkets" onclick="selectMobileFMTab('fmMarkets')"><span class="mobile-fm-menu-icon">&#x1F4C8;</span><span class="mobile-fm-menu-label">Markets</span></button>
+      <button class="mobile-fm-menu-item" data-fm-tab="fmPortfolio" onclick="selectMobileFMTab('fmPortfolio')"><span class="mobile-fm-menu-icon">&#x1F4BC;</span><span class="mobile-fm-menu-label">Portfolio</span></button>
+      <button class="mobile-fm-menu-item" data-fm-tab="fmChartStudio" onclick="selectMobileFMTab('fmChartStudio')"><span class="mobile-fm-menu-icon">&#x1F4CA;</span><span class="mobile-fm-menu-label">Chart Studio</span></button>
+      <button class="mobile-fm-menu-item" data-fm-tab="fmWatchlists" onclick="selectMobileFMTab('fmWatchlists')"><span class="mobile-fm-menu-icon">&#x1F4CB;</span><span class="mobile-fm-menu-label">Watchlists</span></button>
+      <button class="mobile-fm-menu-item" data-fm-tab="fmNewsFeed" onclick="selectMobileFMTab('fmNewsFeed')"><span class="mobile-fm-menu-icon">&#x1F4F0;</span><span class="mobile-fm-menu-label">News Feed</span></button>
+      <button class="mobile-fm-menu-item" data-fm-tab="fmTVCharts" onclick="selectMobileFMTab('fmTVCharts')"><span class="mobile-fm-menu-icon">&#x1F5A5;</span><span class="mobile-fm-menu-label">Charts</span></button>
+      <button class="mobile-fm-menu-item" data-fm-tab="fmHeatMap" onclick="selectMobileFMTab('fmHeatMap')"><span class="mobile-fm-menu-icon">&#x1F525;</span><span class="mobile-fm-menu-label">Heat Map</span></button>
+      <button class="mobile-fm-menu-item" data-fm-tab="fmScreener" onclick="selectMobileFMTab('fmScreener')"><span class="mobile-fm-menu-icon">&#x1F50D;</span><span class="mobile-fm-menu-label">Screener</span></button>
+      <button class="mobile-fm-menu-item" data-fm-tab="fmOverview" onclick="selectMobileFMTab('fmOverview')"><span class="mobile-fm-menu-icon">&#x1F30D;</span><span class="mobile-fm-menu-label">Market Overview</span></button>
+      <button class="mobile-fm-menu-item" data-fm-tab="fmCalendar" onclick="selectMobileFMTab('fmCalendar')"><span class="mobile-fm-menu-icon">&#x1F4C5;</span><span class="mobile-fm-menu-label">Economic Calendar</span></button>
+      <button class="mobile-fm-menu-item" data-fm-tab="fmTechAnalysis" onclick="selectMobileFMTab('fmTechAnalysis')"><span class="mobile-fm-menu-icon">&#x1F4CA;</span><span class="mobile-fm-menu-label">Technical Analysis</span></button>
+    </div>
+  </div>
   <button class="sidebar-expand-btn" id="sidebarExpandBtn" onclick="toggleSidebar()" title="Open sidebar"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="16" height="14" rx="2"/><line x1="7" y1="3" x2="7" y2="17"/></svg></button>
 
   <!-- Sidebar -->
@@ -2087,15 +2284,79 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="/auth.js"></script>
   <script>
+    function getActiveFMTabId() {
+      var activeContent = document.querySelector('#fmView .fm-sub-content.active');
+      return activeContent ? activeContent.id.replace('Content', '') : 'fmMarkets';
+    }
+
+    function syncMobileFMMenuState() {
+      var activeTabId = getActiveFMTabId();
+      document.querySelectorAll('#mobileFMTabsMenu .mobile-fm-menu-item').forEach(function(item) {
+        item.classList.toggle('active', item.dataset.fmTab === activeTabId);
+      });
+    }
+
+    function closeMobileFMMenu() {
+      var menu = document.getElementById('mobileFMTabsMenu');
+      var backdrop = document.getElementById('mobileFMTabsBackdrop');
+      var toggle = document.getElementById('mobileFMTabsToggle');
+      if (menu) menu.classList.remove('active');
+      if (backdrop) backdrop.classList.remove('active');
+      if (toggle) {
+        toggle.classList.remove('active');
+        toggle.setAttribute('aria-expanded', 'false');
+      }
+    }
+
+    function toggleMobileFMMenu() {
+      if (window.innerWidth > 768 || !document.body.classList.contains('fm-mobile-fullscreen')) return;
+      var menu = document.getElementById('mobileFMTabsMenu');
+      var backdrop = document.getElementById('mobileFMTabsBackdrop');
+      var toggle = document.getElementById('mobileFMTabsToggle');
+      if (!menu || !backdrop || !toggle) return;
+      var isOpen = !menu.classList.contains('active');
+      syncMobileFMMenuState();
+      menu.classList.toggle('active', isOpen);
+      backdrop.classList.toggle('active', isOpen);
+      toggle.classList.toggle('active', isOpen);
+      toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    }
+
+    function selectMobileFMTab(tabId) {
+      closeMobileFMMenu();
+      openFMTab(tabId);
+    }
+
+    function updateMobileFMChrome() {
+      var onMobile = window.innerWidth <= 768;
+      var fmView = document.getElementById('fmView');
+      var toggle = document.getElementById('mobileFMTabsToggle');
+      var isFMActive = !!(fmView && fmView.classList.contains('active'));
+      var isHome = !!(document.getElementById('mobileHome') && document.getElementById('mobileHome').classList.contains('active'));
+      var isSidebarOpen = !!(document.querySelector('.sidebar') && document.querySelector('.sidebar').classList.contains('open'));
+      if (!onMobile || !isFMActive || isHome) {
+        document.body.classList.remove('fm-mobile-fullscreen');
+        closeMobileFMMenu();
+        if (toggle) toggle.style.display = 'none';
+        return;
+      }
+      document.body.classList.add('fm-mobile-fullscreen');
+      if (toggle) toggle.style.display = isSidebarOpen ? 'none' : 'flex';
+      if (isSidebarOpen) closeMobileFMMenu();
+      syncMobileFMMenuState();
+    }
+
     function toggleMobileSidebar() {
       var sidebar = document.querySelector('.sidebar');
       var backdrop = document.getElementById('sidebarBackdrop');
       var navBar = document.getElementById('mobileNavBar');
       var isOpen = sidebar.classList.toggle('open');
+      closeMobileFMMenu();
       backdrop.style.display = isOpen ? 'block' : 'none';
       var isHome = document.getElementById('mobileHome') && document.getElementById('mobileHome').classList.contains('active');
       var isCoach = document.querySelector('.view[id="coachView"].active');
       if (navBar) navBar.style.display = (isOpen || isHome || isCoach) ? 'none' : 'flex';
+      updateMobileFMChrome();
     }
 
     function closeMobileSidebar() {
@@ -2104,9 +2365,11 @@
       var navBar = document.getElementById('mobileNavBar');
       var isHome = document.getElementById('mobileHome') && document.getElementById('mobileHome').classList.contains('active');
       var isCoach = document.querySelector('.view[id="coachView"].active');
+      closeMobileFMMenu();
       if (sidebar) sidebar.classList.remove('open');
       if (backdrop) backdrop.style.display = 'none';
       if (navBar) navBar.style.display = (isHome || isCoach) ? 'none' : 'flex';
+      updateMobileFMChrome();
     }
 
     // ── Mobile bottom nav ──
@@ -2504,6 +2767,7 @@
 
     function showView(view) {
       closeMobileAskAI();
+      closeMobileFMMenu();
       document.querySelectorAll('.view').forEach(function(v) { v.classList.remove('active'); });
       document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
       document.getElementById(view + 'View').classList.add('active');
@@ -2528,6 +2792,7 @@
         var navBar = document.getElementById('mobileNavBar');
         if (navBar) navBar.style.display = (view === 'coach') ? 'none' : 'flex';
       }
+      updateMobileFMChrome();
     }
 
     // Coach — persistent conversations
@@ -3526,15 +3791,18 @@
     function showMobileHome() {
       if (window.innerWidth > 768) return;
       closeMobileAskAI();
+      closeMobileFMMenu();
       document.getElementById('mobileHome').classList.add('active');
       renderMobileRecents();
       setMobileNavActive('home');
       // Hide Ask AI bar on home (home has its own input at top)
       var navBar = document.getElementById('mobileNavBar');
       if (navBar) navBar.style.display = 'none';
+      updateMobileFMChrome();
     }
     function hideMobileHome() {
       document.getElementById('mobileHome').classList.remove('active');
+      updateMobileFMChrome();
     }
     function renderMobileRecents() {
       var row = document.getElementById('mobileRecentsRow');
@@ -3770,6 +4038,7 @@
 
     function openMobileAskAI() {
       var overlay = document.getElementById('mobileAskAIOverlay');
+      closeMobileFMMenu();
       resetMobileAskAIComposer();
       overlay.classList.add('active');
       document.body.classList.add('mobile-ai-open');
@@ -3777,7 +4046,13 @@
     function closeMobileAskAI() {
       document.getElementById('mobileAskAIOverlay').classList.remove('active');
       document.body.classList.remove('mobile-ai-open');
+      updateMobileFMChrome();
     }
+    window.addEventListener('resize', function() {
+      closeMobileFMMenu();
+      updateMobileFMChrome();
+    });
+    setTimeout(updateMobileFMChrome, 0);
     function sendMobileAskAI() {
       var input = document.getElementById('mobileAskAIInput');
       var msg = input.value.trim();
@@ -5170,7 +5445,7 @@
       if (!wl) return;
       // Show in FM view
       showView('fm');
-      switchFMTab('fmWatchlists', document.querySelector('[onclick*="fmWatchlists"]'));
+      switchFMTab('fmWatchlists', document.querySelector('#fmView .fm-sub-tab[onclick*="fmWatchlists"]'));
       var view = document.getElementById('fmActiveWatchlistView');
       var empty = document.getElementById('fmWatchlistEmptyState');
       if (view) view.style.display = '';
@@ -5360,6 +5635,8 @@
       if (tabId === 'fmOverview' && !window._tvOverviewLoaded) { loadTVOverview(); window._tvOverviewLoaded = true; }
       if (tabId === 'fmCalendar' && !window._tvCalendarLoaded) { loadTVCalendar(); window._tvCalendarLoaded = true; }
       if (tabId === 'fmTechAnalysis' && !window._tvTechLoaded) { loadTVTechAnalysis(); window._tvTechLoaded = true; }
+      syncMobileFMMenuState();
+      updateMobileFMChrome();
     }
 
     // FM Markets — renders into fmView grids
@@ -5696,7 +5973,7 @@
       var a = articles[idx];
       var question = 'What does this news mean for my portfolio? Article: "' + a.title + '" - ' + (a.aiSummary || a.snippet || '');
       // Switch to Portfolio Coach
-      switchFMTab('fmPortfolio', document.querySelector('[onclick*="fmPortfolio"]'));
+      switchFMTab('fmPortfolio', document.querySelector('#fmView .fm-sub-tab[onclick*="fmPortfolio"]'));
       askPortfolioCoach(question);
     }
 
