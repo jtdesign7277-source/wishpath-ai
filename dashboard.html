@@ -440,10 +440,13 @@
       .tab-bar { overflow-x: auto; -webkit-overflow-scrolling: touch; }
       .tab-item { min-width: auto; padding: 6px 10px; font-size: 0.7rem; }
 
+      /* Mobile coach header — show back + compose buttons */
+      .coach-mobile-header { display: flex !important; }
       /* Mobile coach input — show and pin to bottom of chat area */
       .coach-input-row { display: flex !important; flex-shrink: 0 !important; padding: 8px 0 4px !important; background: #191919; }
       .view[id="notesView"].active .coach-input-row,
       .view[id="todosView"].active .coach-input-row { display: none !important; }
+      .coach-input-row > span { display: none !important; }
       .coach-input { font-size: 16px !important; min-height: 44px !important; }
       .save-btn, #saveConvoBtn, #noteCoachSaveBtn { display: none !important; }
       .save-status { display: none; }
@@ -901,19 +904,21 @@
       .coach-notion-suggestion-text { font-size: 15px; color: rgba(255,255,255,0.72); line-height: 1.4; }
 
       /* ── Notion-style coach input bar ── */
-      /* Coach mobile header — back + compose (Notion-style) */
-      .coach-mobile-header { display: flex; align-items: center; padding: 8px 12px 4px; gap: 8px; }
+      /* Coach mobile header — back + compose (Notion-style) — shown on mobile */
+      .coach-mobile-header { display: none; align-items: center; padding: 8px 12px 4px; gap: 8px; flex-shrink: 0; }
       .coach-mobile-back, .coach-mobile-compose { background: none; border: none; color: rgba(255,255,255,0.5); cursor: pointer; padding: 8px; border-radius: 10px; -webkit-tap-highlight-color: transparent; }
       .coach-mobile-back:active, .coach-mobile-compose:active { background: rgba(255,255,255,0.06); }
       .coach-select-row { display: none !important; }
       /* Hide coach-input-row on all views EXCEPT coachView */
       .coach-input-row { display: none !important; }
-      #coachView .coach-input-row { display: flex !important; flex-shrink: 0 !important; padding: 10px 16px calc(10px + env(safe-area-inset-bottom)) !important; background: var(--bg, #191919) !important; margin: 0 !important; align-items: center !important; gap: 8px !important; position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important; z-index: 9999 !important; }
+      #coachView .coach-input-row { display: flex !important; flex-shrink: 0 !important; padding: 12px 12px calc(12px + env(safe-area-inset-bottom)) 12px !important; background: var(--bg, #191919) !important; margin: 0 !important; align-items: center !important; gap: 8px !important; position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important; z-index: 9999 !important; }
       /* Hide bottom nav when full-screen AI is active */
       .view[id="coachView"].active ~ .mobile-nav-bar { display: none !important; }
-      .coach-input { background: #2a2a2a !important; border: 1px solid rgba(255,255,255,0.12) !important; border-radius: 24px !important; padding: 14px 18px !important; font-size: 16px !important; color: rgba(255,255,255,0.85) !important; }
-      .coach-input::placeholder { color: rgba(255,255,255,0.3) !important; }
-      .coach-send { border-radius: 50% !important; width: 38px !important; height: 38px !important; box-shadow: none !important; background: none !important; color: rgba(255,255,255,0.4) !important; padding: 0 !important; }
+      .coach-input { background: #2a2a2a !important; border: 1px solid rgba(255,255,255,0.1) !important; border-radius: 24px !important; padding: 12px 16px !important; font-size: 15px !important; color: rgba(255,255,255,0.85) !important; flex: 1 !important; min-height: 42px !important; }
+      .coach-input::placeholder { color: rgba(255,255,255,0.35) !important; }
+      .coach-send { border-radius: 50% !important; width: 42px !important; height: 42px !important; box-shadow: none !important; background: none !important; color: rgba(255,255,255,0.4) !important; padding: 0 !important; flex-shrink: 0 !important; display: flex !important; align-items: center !important; justify-content: center !important; }
+      .coach-send svg { width: 18px !important; height: 18px !important; }
+      .coach-send:active { opacity: 0.6 !important; }
 
       /* Bottom nav always visible on mobile — no exceptions */
       /* Portfolio page: hide inline coach input to prevent double AI */
@@ -1357,7 +1362,6 @@
 
     /* Notion AI empty state — hidden on desktop, shown on mobile via media query */
     .coach-notion-empty { display: none; }
-    .coach-mobile-header { display: none; }
     .coach-select-row { display: flex !important; }
 
     /* ── Native app polish ── */
