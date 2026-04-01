@@ -1461,6 +1461,7 @@
   <!-- Highcharts -->
   <script src="https://code.highcharts.com/highcharts.js"></script>
   <script src="https://code.highcharts.com/modules/exporting.js"></script>
+  <script src="https://code.highcharts.com/modules/full-screen.js"></script>
   <script src="https://code.highcharts.com/modules/export-data.js"></script>
   <script src="https://code.highcharts.com/modules/accessibility.js"></script>
 </head>
@@ -4492,7 +4493,17 @@
         tooltip: { backgroundColor: '#1c2128', borderColor: '#30363d', style: { color: '#e6edf3', fontSize: '12px' } },
         plotOptions: { series: { borderWidth: 0 }, pie: { borderWidth: 0, dataLabels: { color: '#e6edf3', style: { fontSize: '11px', textOutline: 'none' } } } },
         navigation: { buttonOptions: { symbolStroke: '#8b949e', theme: { fill: '#161b22', stroke: '#30363d', states: { hover: { fill: '#1c2128' }, select: { fill: '#1c2128' } } } } },
-        exporting: { buttons: { contextButton: { menuItems: ['downloadPNG','downloadSVG','downloadPDF','downloadCSV','separator','viewFullscreen'] } } },
+        exporting: {
+          buttons: { contextButton: { menuItems: ['downloadPNG','downloadSVG','downloadPDF','downloadCSV','separator','viewFullscreen'] } },
+          menuItemDefinitions: {
+            viewFullscreen: {
+              text: 'View in full screen',
+              onclick: function() {
+                if (this && this.renderTo && this.renderTo.id) openChartFullscreenById(this.renderTo.id);
+              }
+            }
+          }
+        },
         credits: { enabled: false }
       });
     })();
@@ -7378,6 +7389,9 @@ function reflowFullscreenChart() {
 function openChartFullscreen(el) {
   var container = el.closest('.fm-widget-container') || el.closest('.chart-container') || el.closest('.cc-widget-body') || el.parentElement;
   if (!container) return;
+  var overlay = document.getElementById('chartFsOverlay');
+  if (_chartFsEl === container && overlay && overlay.classList.contains('active')) return;
+  if (_chartFsEl && _chartFsEl !== container) closeChartFullscreen();
   _chartFsOrigParent = container.parentElement;
   _chartFsOrigNext = container.nextSibling;
   _chartFsEl = container;
@@ -7403,7 +7417,7 @@ function openChartFullscreen(el) {
   container.style.height = '100%';
   container.style.minHeight = '100%';
   container.style.maxWidth = '100%';
-  document.getElementById('chartFsOverlay').classList.add('active');
+  overlay.classList.add('active');
   document.body.style.overflow = 'hidden';
   setTimeout(reflowFullscreenChart, 60);
 }
