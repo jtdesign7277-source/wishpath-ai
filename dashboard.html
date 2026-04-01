@@ -91,7 +91,8 @@
     .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
     .sidebar-bottom { padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.06); }
     .plan-badge { font-size: 0.75rem; font-weight: 600; color: rgb(145,107,230); background: linear-gradient(135deg, rgba(120,80,220,0.08) 0%, rgba(255,255,255,0.02) 100%); border: 1px solid rgba(120,80,220,0.2); border-radius: 99px; padding: 4px 12px; display: inline-block; box-shadow: 0 0 12px rgba(120,80,220,0.1); }
-    .user-email { font-size: 0.78rem; color: var(--text-dim); margin-top: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .sidebar-bottom-row { display: flex; align-items: center; gap: 10px; }
+    .user-email { font-size: 0.78rem; color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
     /* Main */
     .main { margin-left: 240px; flex: 1; min-height: 100vh; }
@@ -1761,8 +1762,10 @@
       </a>
     </nav>
     <div class="sidebar-bottom">
-      <div class="plan-badge" id="planBadge">Free Plan</div>
-      <div class="user-email" id="userEmail"></div>
+      <div class="sidebar-bottom-row">
+        <div class="plan-badge" id="planBadge">Free Plan</div>
+        <div class="user-email" id="userEmail"></div>
+      </div>
     </div>
   </aside>
 
