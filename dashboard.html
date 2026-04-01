@@ -221,6 +221,45 @@
     .todo-check.done::after { content: '\2713'; color: var(--bg); font-size: 0.7rem; font-weight: 700; }
     .todo-text { font-size: 0.9rem; color: var(--text-muted); line-height: 1.5; }
     .todo-text.done { text-decoration: line-through; color: var(--text-dim); }
+    .todo-notion-page { max-width: 760px; margin: 0 auto; padding: 8px 4px 28px; }
+    .todo-notion-icon { width: 80px; height: 80px; color: #2eb67d; margin-bottom: 18px; }
+    .todo-notion-icon svg { width: 100%; height: 100%; display: block; }
+    .todo-notion-title { width: 100%; background: none; border: none; outline: none; color: rgba(255,255,255,0.98); font: inherit; font-size: clamp(2.5rem, 5vw, 3.75rem); line-height: 1.02; font-weight: 800; letter-spacing: -0.055em; margin-bottom: 14px; }
+    .todo-notion-updated { color: rgba(255,255,255,0.42); font-size: 0.86rem; line-height: 1.4; margin-bottom: 18px; }
+    .todo-notion-toolbar { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 14px; margin-bottom: 24px; }
+    .todo-notion-toolbar-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .todo-notion-pill { display: inline-flex; align-items: center; gap: 10px; min-height: 46px; padding: 0 16px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.06); background: #202020; color: rgba(255,255,255,0.9); font-size: 1rem; font-weight: 600; letter-spacing: -0.02em; }
+    .todo-notion-pill svg { width: 20px; height: 20px; color: rgba(255,255,255,0.74); flex-shrink: 0; }
+    .todo-notion-toolbar-right { display: flex; align-items: center; gap: 6px; }
+    .todo-notion-icon-btn { width: 40px; height: 40px; border: none; border-radius: 12px; background: transparent; color: rgba(255,255,255,0.62); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.15s ease, color 0.15s ease; -webkit-tap-highlight-color: transparent; }
+    .todo-notion-icon-btn:hover, .todo-notion-icon-btn:active { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.94); }
+    .todo-notion-icon-btn svg { width: 20px; height: 20px; }
+    .todo-notion-add-group { position: relative; display: inline-flex; align-items: center; min-height: 46px; border-radius: 12px; overflow: hidden; background: #2383e2; box-shadow: inset 0 1px 0 rgba(255,255,255,0.16); }
+    .todo-notion-add-main, .todo-notion-add-caret { border: none; background: transparent; color: #fff; cursor: pointer; font: inherit; font-weight: 700; }
+    .todo-notion-add-main { min-width: 52px; padding: 0 18px; font-size: 1.7rem; line-height: 1; }
+    .todo-notion-add-caret { width: 42px; height: 46px; border-left: 1px solid rgba(255,255,255,0.18); display: inline-flex; align-items: center; justify-content: center; }
+    .todo-notion-add-caret svg { width: 16px; height: 16px; }
+    .todo-notion-menu { position: absolute; top: calc(100% + 8px); right: 0; min-width: 168px; padding: 6px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.08); background: rgba(28,28,28,0.98); box-shadow: 0 18px 48px rgba(0,0,0,0.46); display: none; flex-direction: column; z-index: 30; }
+    .todo-notion-menu.active { display: flex; }
+    .todo-notion-menu button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 11px 12px; border: none; background: transparent; border-radius: 10px; color: rgba(255,255,255,0.84); font: inherit; font-size: 0.92rem; cursor: pointer; text-align: left; }
+    .todo-notion-menu button:hover, .todo-notion-menu button:active { background: rgba(255,255,255,0.05); }
+    .todo-notion-menu button.todo-notion-menu-danger { color: #ff8a84; }
+    .todo-notion-status { min-height: 18px; margin-top: -2px; margin-bottom: 14px; color: rgba(255,255,255,0.45); font-size: 0.8rem; line-height: 1.4; }
+    .todo-notion-list { display: flex; flex-direction: column; gap: 22px; }
+    .todo-notion-item { display: flex; align-items: flex-start; gap: 14px; }
+    .todo-notion-check { width: 30px; height: 30px; margin-top: 2px; border: 2px solid rgba(255,255,255,0.2); border-radius: 8px; background: transparent; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease; }
+    .todo-notion-check:hover, .todo-notion-check:active { border-color: rgba(255,255,255,0.34); transform: scale(0.98); }
+    .todo-notion-check.done { background: #2383e2; border-color: #2383e2; }
+    .todo-notion-check.done::after { content: '\2713'; color: #fff; font-size: 1rem; font-weight: 800; line-height: 1; }
+    .todo-notion-main { flex: 1; min-width: 0; }
+    .todo-notion-text, .todo-notion-detail { outline: none; }
+    .todo-notion-text { color: rgba(255,255,255,0.94); font-size: clamp(1.45rem, 3vw, 1.9rem); line-height: 1.24; font-weight: 500; letter-spacing: -0.03em; min-height: 31px; }
+    .todo-notion-text.done { color: rgba(255,255,255,0.62); }
+    .todo-notion-detail { margin-top: 8px; color: rgba(255,255,255,0.42); font-size: 1.03rem; line-height: 1.4; min-height: 22px; }
+    .todo-notion-detail.done { color: rgba(255,255,255,0.3); }
+    .todo-notion-text[data-placeholder]:empty::before, .todo-notion-detail[data-placeholder]:empty::before { content: attr(data-placeholder); color: rgba(255,255,255,0.24); }
+    .todo-notion-text:focus, .todo-notion-detail:focus { border-radius: 6px; box-shadow: 0 0 0 1px rgba(255,255,255,0.05); }
+    .todo-notion-empty { padding: 28px 0 12px 44px; color: rgba(255,255,255,0.4); font-size: 1rem; line-height: 1.45; }
     /* Auto-rendered right panel content */
     .auto-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
     .auto-table th { text-align: left; padding: 8px 12px; background: rgba(255,255,255,0.04); border-bottom: 1px solid var(--border); font-weight: 600; color: var(--text); font-size: 0.78rem; text-transform: uppercase; }
@@ -868,6 +907,21 @@
       /* ── Notion-style Templates Browser ── */
       .mobile-templates-overlay { display: none; position: fixed; inset: 0; background: #191919; z-index: 510; flex-direction: column; overflow: hidden; }
       .mobile-templates-overlay.active { display: flex; animation: slideUpSheet 0.25s ease; }
+      .todo-mobile-overlay { display: none; position: fixed; inset: 0; background: #191919; z-index: 760; flex-direction: column; overflow: hidden; }
+      .todo-mobile-overlay.active { display: flex; animation: slideUpSheet 0.22s ease; }
+      .todo-mobile-topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: max(14px, env(safe-area-inset-top)) 16px 12px; border-bottom: 1px solid rgba(255,255,255,0.06); flex-shrink: 0; }
+      .todo-mobile-topbar-btn { width: 38px; height: 38px; border: none; border-radius: 12px; background: transparent; color: rgba(255,255,255,0.74); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+      .todo-mobile-topbar-btn svg { width: 22px; height: 22px; }
+      .todo-mobile-topbar-title { flex: 1; text-align: center; font-size: 1rem; font-weight: 600; color: rgba(255,255,255,0.88); letter-spacing: -0.02em; }
+      .todo-mobile-overlay-body { flex: 1; overflow-y: auto; padding: 12px 18px calc(36px + env(safe-area-inset-bottom)); -webkit-overflow-scrolling: touch; }
+      .todo-mobile-overlay .todo-notion-page { max-width: none; padding: 8px 0 24px; }
+      .todo-mobile-overlay .todo-notion-icon { width: 78px; height: 78px; margin-bottom: 20px; }
+      .todo-mobile-overlay .todo-notion-title { font-size: clamp(2.55rem, 11vw, 3.7rem); margin-bottom: 16px; }
+      .todo-mobile-overlay .todo-notion-toolbar { grid-template-columns: minmax(0, 1fr) auto; gap: 10px; }
+      .todo-mobile-overlay .todo-notion-toolbar-right { justify-content: flex-end; }
+      .todo-mobile-overlay .todo-notion-list { gap: 24px; }
+      .todo-mobile-overlay .todo-notion-text { font-size: clamp(1.45rem, 7vw, 2rem); }
+      .todo-mobile-overlay .todo-notion-detail { font-size: 1rem; }
       .tmpl-topbar { display: flex; align-items: center; justify-content: space-between; padding: 16px 16px 12px; padding-top: max(16px, env(safe-area-inset-top)); border-bottom: 1px solid rgba(255,255,255,0.08); flex-shrink: 0; }
       .tmpl-topbar-title { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); }
       .tmpl-topbar-btn { background: none; border: none; color: rgba(255,255,255,0.5); font-size: 20px; cursor: pointer; padding: 4px 8px; line-height: 1; font-family: inherit; -webkit-tap-highlight-color: transparent; }
@@ -2271,6 +2325,19 @@
 
   <!-- Hidden input kept for legacy JS compat -->
   <input type="text" id="mobileAIInput" style="display:none;" />
+
+  <div class="todo-mobile-overlay" id="todoMobileOverlay" onclick="if(event.target===this)closeTodoMobileOverlay()">
+    <div class="todo-mobile-topbar">
+      <button class="todo-mobile-topbar-btn" onclick="closeTodoMobileOverlay()" aria-label="Back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <div class="todo-mobile-topbar-title">To-Do List</div>
+      <button class="todo-mobile-topbar-btn" onclick="toggleTodoListMenu(event)" aria-label="More options">
+        <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
+      </button>
+    </div>
+    <div class="todo-mobile-overlay-body" id="todoMobilePanel"></div>
+  </div>
 
   <!-- Templates Browser Overlay -->
   <div class="mobile-templates-overlay" id="mobileTemplatesOverlay">
@@ -3714,8 +3781,8 @@
 
     async function createNewTodoList() {
       var sb = getSupabase();
-      var { data } = await sb.from('user_todos').insert({ user_id: currentUserId, title: 'New List', items: [] }).select('id').single();
-      if (data) { currentTodoId = data.id; renderTodoSelect(); openTodoList(data.id); }
+      var { data } = await sb.from('user_todos').insert({ user_id: currentUserId, title: 'To Do List', items: [] }).select('id').single();
+      if (data) { currentTodoId = data.id; renderTodoSelect(); await openTodoList(data.id); }
     }
 
     async function openTodoList(todoId) {
@@ -3725,36 +3792,121 @@
       if (!data) return;
       renderTodoPanel(data);
       document.getElementById('todoSelect').value = todoId;
+      if (window.innerWidth <= 768) openTodoMobileOverlay();
+    }
+
+    function escapeTodoHtml(value) {
+      return String(value == null ? '' : value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
+    function escapeTodoAttr(value) {
+      return escapeTodoHtml(value).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    function getTodoPanelTarget() {
+      if (window.innerWidth <= 768) return document.getElementById('todoMobilePanel') || document.getElementById('todoRightPanel');
+      return document.getElementById('todoRightPanel');
+    }
+
+    function getTodoMenuMarkup() {
+      return '<div class="todo-notion-menu" id="todoListMenu">' +
+        '<button onclick="saveTodoList()">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg>' +
+          '<span>Save list</span>' +
+        '</button>' +
+        '<button class="todo-notion-menu-danger" onclick="deleteTodoList()">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>' +
+          '<span>Delete list</span>' +
+        '</button>' +
+      '</div>';
+    }
+
+    function getTodoNotionIconMarkup() {
+      return '<svg viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+        '<path d="M18 20l8 8 14-16" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '<path d="M40 20h34" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>' +
+        '<path d="M18 46l8 8 14-16" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '<path d="M40 46h34" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>' +
+        '<path d="M18 72l8 8 14-16" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '<path d="M40 72h34" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>' +
+      '</svg>';
+    }
+
+    function getTodoDetailText(item, fallbackValue) {
+      if (item && typeof item.detail === 'string' && item.detail.trim()) return item.detail.trim();
+      if (item && typeof item.meta === 'string' && item.meta.trim()) return item.meta.trim();
+      if (!fallbackValue) return '';
+      var date = new Date(fallbackValue);
+      if (Number.isNaN(date.getTime())) return '';
+      return date.toLocaleString('en-US', { weekday: 'long', hour: 'numeric', minute: '2-digit' });
     }
 
     function renderTodoPanel(todoData) {
-      var panel = document.getElementById('todoRightPanel');
+      var panel = getTodoPanelTarget();
+      if (!panel) return;
       var items = todoData.items || [];
-      var updated = new Date(todoData.updated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+      var updated = new Date(todoData.updated_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+      var rawTitle = todoData.title || 'To Do List';
+      var title = escapeTodoAttr(rawTitle);
+      var html = '<div class="todo-notion-page">' +
+        '<div class="todo-notion-icon">' + getTodoNotionIconMarkup() + '</div>' +
+        '<input id="todoTitleInput" class="todo-notion-title" value="' + title + '" onblur="saveTodoList()" onkeydown="if(event.key===\'Enter\'){event.preventDefault();this.blur();}" />' +
+        '<div class="todo-notion-updated">Last edited ' + updated + '</div>' +
+        '<div class="todo-notion-toolbar">' +
+          '<div class="todo-notion-toolbar-left">' +
+            '<div class="todo-notion-pill">' +
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><path d="M8 6h12"/><path d="M8 12h12"/><path d="M8 18h12"/><path d="M4 6h.01"/><path d="M4 12h.01"/><path d="M4 18h.01"/></svg>' +
+              '<span>To Do</span>' +
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>' +
+            '</div>' +
+          '</div>' +
+          '<div class="todo-notion-toolbar-right">' +
+            '<button class="todo-notion-icon-btn" onclick="focusFirstTodoText()" aria-label="Focus first task">' +
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>' +
+            '</button>' +
+            '<button class="todo-notion-icon-btn" onclick="sortTodoItems()" aria-label="Sort tasks">' +
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><path d="M6 7h12"/><path d="M9 12h9"/><path d="M12 17h6"/></svg>' +
+            '</button>' +
+            '<button class="todo-notion-icon-btn" onclick="toggleTodoListMenu(event)" aria-label="List options">' +
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M7 12h10"/><path d="M10 17h4"/></svg>' +
+            '</button>' +
+            '<div class="todo-notion-add-group">' +
+              '<button class="todo-notion-add-main" onclick="addTodoItem()" aria-label="Add task">+</button>' +
+              '<button class="todo-notion-add-caret" onclick="toggleTodoListMenu(event)" aria-label="Open task options">' +
+                '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>' +
+              '</button>' +
+              getTodoMenuMarkup() +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="todo-notion-status" id="todoSaveStatus"></div>' +
+        '<div class="todo-notion-list" id="todoItemsContainer">';
 
-      var html = '<div style="margin-bottom:16px;">' +
-        '<input id="todoTitleInput" value="' + (todoData.title || '').replace(/"/g, '&quot;') + '" style="font-size:1.2rem;font-weight:700;background:none;border:none;color:var(--text);outline:none;width:100%;font-family:inherit;" />' +
-        '<div style="font-size:0.72rem;color:var(--text-dim);margin-top:4px;">Last saved: ' + updated + '</div>' +
-      '</div>';
+      if (!items.length) {
+        html += '<div class="todo-notion-empty">No tasks yet. Tap the blue plus button to add one.</div>';
+      } else {
+        items.forEach(function(item, i) {
+          var doneClass = item.done ? ' done' : '';
+          var text = escapeTodoHtml(item.text || '');
+          var detail = escapeTodoHtml(getTodoDetailText(item, todoData.updated_at));
+          html += '<div class="todo-notion-item">' +
+            '<button type="button" class="todo-notion-check' + doneClass + '" onclick="toggleTodoItem(' + i + ')" aria-label="' + (item.done ? 'Mark task incomplete' : 'Mark task complete') + '"></button>' +
+            '<div class="todo-notion-main">' +
+              '<div class="todo-notion-text' + doneClass + '" data-placeholder="Untitled task" contenteditable="true" spellcheck="false" onkeydown="handleTodoEditableKey(event, ' + i + ', \'text\')" onblur="updateTodoText(' + i + ', this.textContent)">' + text + '</div>' +
+              '<div class="todo-notion-detail' + doneClass + '" data-placeholder="Add a due date or details" contenteditable="true" spellcheck="false" onkeydown="handleTodoEditableKey(event, ' + i + ', \'detail\')" onblur="updateTodoDetail(' + i + ', this.textContent)">' + detail + '</div>' +
+            '</div>' +
+          '</div>';
+        });
+      }
 
-      html += '<div id="todoItemsContainer">';
-      items.forEach(function(item, i) {
-        var doneClass = item.done ? ' done' : '';
-        html += '<div class="todo-item">' +
-          '<div class="todo-check' + doneClass + '" onclick="toggleTodoItem(' + i + ')"></div>' +
-          '<div class="todo-text' + doneClass + '" contenteditable="true" onblur="updateTodoText(' + i + ', this.textContent)">' + (item.text || '') + '</div>' +
-        '</div>';
-      });
-      html += '</div>';
-
-      html += '<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">' +
-        '<button onclick="addTodoItem()" style="padding:8px 16px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;color:var(--text-muted);font:inherit;font-size:0.82rem;cursor:pointer;">+ Add item</button>' +
-        '<button onclick="saveTodoList()" class="note-save-btn" style="padding:8px 16px;font-size:0.82rem;">Save List</button>' +
-        '<span id="todoSaveStatus" style="font-size:0.78rem;color:var(--text-dim);align-self:center;"></span>' +
-        '<button onclick="deleteTodoList()" style="margin-left:auto;background:none;border:1px solid rgba(248,81,73,0.3);color:var(--red);padding:8px 16px;border-radius:8px;font:inherit;font-size:0.82rem;cursor:pointer;">Delete</button>' +
-      '</div>';
+      html += '</div></div>';
 
       panel.innerHTML = html;
+      var topTitle = document.querySelector('#todoMobileOverlay .todo-mobile-topbar-title');
+      if (topTitle) topTitle.textContent = rawTitle;
     }
 
     async function toggleTodoItem(idx) {
@@ -3765,7 +3917,18 @@
       var items = data.items || [];
       if (items[idx]) items[idx].done = !items[idx].done;
       await sb.from('user_todos').update({ items: items, updated_at: new Date().toISOString() }).eq('id', currentTodoId);
-      openTodoList(currentTodoId);
+      await openTodoList(currentTodoId);
+    }
+
+    async function updateTodoDetail(idx, text) {
+      if (!currentTodoId) return;
+      var sb = getSupabase();
+      var { data } = await sb.from('user_todos').select('items').eq('id', currentTodoId).single();
+      if (!data) return;
+      var items = data.items || [];
+      if (items[idx]) items[idx].detail = text.trim();
+      await sb.from('user_todos').update({ items: items, updated_at: new Date().toISOString() }).eq('id', currentTodoId);
+      setTodoSaveStatus('Saved');
     }
 
     async function updateTodoText(idx, text) {
@@ -3776,6 +3939,7 @@
       var items = data.items || [];
       if (items[idx]) items[idx].text = text;
       await sb.from('user_todos').update({ items: items, updated_at: new Date().toISOString() }).eq('id', currentTodoId);
+      setTodoSaveStatus('Saved');
     }
 
     async function addTodoItem() {
@@ -3784,9 +3948,10 @@
       var { data } = await sb.from('user_todos').select('items').eq('id', currentTodoId).single();
       if (!data) return;
       var items = data.items || [];
-      items.push({ text: '', done: false });
+      items.push({ text: '', done: false, detail: getTodoDetailText({}, new Date().toISOString()) });
       await sb.from('user_todos').update({ items: items, updated_at: new Date().toISOString() }).eq('id', currentTodoId);
-      openTodoList(currentTodoId);
+      await openTodoList(currentTodoId);
+      setTimeout(focusLastTodoText, 30);
     }
 
     async function saveTodoList() {
@@ -3794,8 +3959,10 @@
       var title = document.getElementById('todoTitleInput').value.trim() || 'Untitled';
       var sb = getSupabase();
       await sb.from('user_todos').update({ title: title, updated_at: new Date().toISOString() }).eq('id', currentTodoId);
-      document.getElementById('todoSaveStatus').textContent = 'Saved!';
-      setTimeout(function() { document.getElementById('todoSaveStatus').textContent = ''; }, 2000);
+      setTodoSaveStatus('Saved');
+      closeTodoListMenu();
+      var topTitle = document.querySelector('#todoMobileOverlay .todo-mobile-topbar-title');
+      if (topTitle) topTitle.textContent = title;
       renderTodoSelect();
     }
 
@@ -3804,9 +3971,107 @@
       var sb = getSupabase();
       await sb.from('user_todos').delete().eq('id', currentTodoId);
       currentTodoId = null;
-      document.getElementById('todoRightPanel').innerHTML = '<div class="coach-right-empty">List deleted.</div>';
+      closeTodoListMenu();
+      var rightPanel = document.getElementById('todoRightPanel');
+      if (rightPanel) rightPanel.innerHTML = '<div class="coach-right-empty">List deleted.</div>';
+      closeTodoMobileOverlay();
       renderTodoSelect();
     }
+
+    function setTodoSaveStatus(message) {
+      var status = document.getElementById('todoSaveStatus');
+      if (!status) return;
+      status.textContent = message;
+      clearTimeout(window._todoSaveStatusTimer);
+      window._todoSaveStatusTimer = setTimeout(function() {
+        var current = document.getElementById('todoSaveStatus');
+        if (current) current.textContent = '';
+      }, 1800);
+    }
+
+    function toggleTodoListMenu(event) {
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      var menu = document.getElementById('todoListMenu');
+      if (!menu) return;
+      menu.classList.toggle('active');
+    }
+
+    function closeTodoListMenu() {
+      var menu = document.getElementById('todoListMenu');
+      if (menu) menu.classList.remove('active');
+    }
+
+    function openTodoMobileOverlay() {
+      var overlay = document.getElementById('todoMobileOverlay');
+      if (!overlay) return;
+      overlay.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeTodoMobileOverlay() {
+      var overlay = document.getElementById('todoMobileOverlay');
+      if (!overlay) return;
+      overlay.classList.remove('active');
+      document.body.style.overflow = '';
+      closeTodoListMenu();
+    }
+
+    function focusFirstTodoText() {
+      var target = document.querySelector('.todo-notion-text');
+      if (!target) return;
+      target.focus();
+      placeCaretAtEnd(target);
+    }
+
+    function focusLastTodoText() {
+      var nodes = document.querySelectorAll('.todo-notion-text');
+      if (!nodes.length) return;
+      var target = nodes[nodes.length - 1];
+      target.focus();
+      placeCaretAtEnd(target);
+    }
+
+    function placeCaretAtEnd(el) {
+      if (!el) return;
+      var range = document.createRange();
+      range.selectNodeContents(el);
+      range.collapse(false);
+      var sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+
+    function handleTodoEditableKey(event, idx, field) {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        if (field === 'text') addTodoItem();
+        else event.currentTarget.blur();
+      }
+    }
+
+    async function sortTodoItems() {
+      if (!currentTodoId) return;
+      var sb = getSupabase();
+      var { data } = await sb.from('user_todos').select('items').eq('id', currentTodoId).single();
+      if (!data) return;
+      var items = (data.items || []).slice().sort(function(a, b) { return Number(!!a.done) - Number(!!b.done); });
+      await sb.from('user_todos').update({ items: items, updated_at: new Date().toISOString() }).eq('id', currentTodoId);
+      closeTodoListMenu();
+      await openTodoList(currentTodoId);
+    }
+
+    document.addEventListener('click', function(e) {
+      var menu = document.getElementById('todoListMenu');
+      if (!menu || !menu.classList.contains('active')) return;
+      if (e.target.closest('#todoListMenu')) return;
+      if (e.target.closest('.todo-notion-add-group')) return;
+      if (e.target.closest('.todo-notion-icon-btn')) return;
+      if (e.target.closest('.todo-mobile-topbar-btn')) return;
+      closeTodoListMenu();
+    });
 
     // Parse agent response for structured content and auto-render on right panel
     function parseAndRenderStructured(reply) {
@@ -3873,10 +4138,11 @@
         if (data) {
           currentTodoId = data.id;
           renderTodoPanel({ id: data.id, title: parsed.title, items: parsed.items, updated_at: new Date().toISOString() });
+          if (window.innerWidth <= 768) openTodoMobileOverlay();
           renderTodoSelect();
         }
       } else if (parsed.type === 'table') {
-        var panel = document.getElementById('todoRightPanel');
+        var panel = getTodoPanelTarget();
         panel.innerHTML = '<h3 style="font-size:1.1rem;font-weight:700;margin-bottom:16px;">' + parsed.title + '</h3>' + parsed.html;
       }
     }
