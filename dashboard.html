@@ -281,7 +281,7 @@
     .mobile-fm-tabs-toggle {
       display: none;
       position: fixed;
-      top: calc(max(6px, env(safe-area-inset-top)) + 6px);
+      top: calc(max(6px, env(safe-area-inset-top)) + 54px);
       z-index: 550;
       border: 1px solid rgba(34,197,94,0.18);
       color: rgba(191,255,209,0.84);
@@ -296,10 +296,10 @@
     }
     .mobile-sidebar-toggle {
       left: 0;
-      width: 18px;
-      height: 74px;
+      width: 14px;
+      height: 60px;
       border-left: none;
-      border-radius: 0 14px 14px 0;
+      border-radius: 0 12px 12px 0;
       padding-left: 0;
       background: linear-gradient(180deg, rgba(34,197,94,0.18) 0%, rgba(12,34,20,0.12) 100%);
       border-color: rgba(34,197,94,0.22);
@@ -329,7 +329,7 @@
     }
     .mobile-sidebar-toggle:active,
     .mobile-fm-tabs-toggle:active { transform: scale(0.96); }
-    .mobile-sidebar-toggle svg { width: 8px; height: 14px; }
+    .mobile-sidebar-toggle svg { width: 6px; height: 12px; }
     .mobile-fm-tabs-toggle svg { width: 15px; height: 15px; }
     .mobile-fm-tabs-toggle.active {
       color: rgba(236,255,242,0.98);
@@ -429,7 +429,7 @@
       .sidebar-collapse-btn { display: none; }
       .main-header { padding: max(4px, env(safe-area-inset-top)) 46px 4px !important; margin-bottom: 0 !important; min-height: 48px !important; display: flex !important; align-items: center !important; justify-content: center !important; position: relative !important; }
       .main-header h1, .main-header h2 { font-size: 1.02rem; margin-bottom: 0 !important; width: 100%; text-align: center; }
-      .mobile-home.active { padding-top: 56px !important; }
+      .mobile-home.active { padding-top: max(0px, env(safe-area-inset-top)) !important; }
       .main-content { padding: 6px 12px 12px; }
       .tab-bar { margin-top: 0 !important; padding-top: 0 !important; padding: 4px 8px !important; margin-left: -12px !important; margin-right: -12px !important; overflow-x: auto !important; }
       .coach-select { margin-bottom: 12px !important; margin-top: 4px !important; }
@@ -794,7 +794,7 @@
         font-family: inherit; flex-shrink: 0; text-align: left;
       }
       .mobile-chat-back:active { color: rgba(255,255,255,0.85); }
-      .mobile-home-inner { padding: 6px 20px 0; }
+      .mobile-home-inner { padding: 0 20px 0; }
       .mobile-home-title { font-size: 26px; font-weight: 700; color: rgba(255,255,255,0.9); line-height: 1.3; margin-bottom: 24px; text-align: center; }
       .mobile-home-input-wrap { position: relative; margin-bottom: 14px; }
       .mobile-home-input { width: 100%; padding: 14px 50px 14px 18px; background: #242424; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; color: rgba(255,255,255,0.9); font: inherit; font-size: 16px; outline: none; resize: none; min-height: 52px; max-height: 120px; overflow-y: auto; display: block; box-shadow: 8px 8px 16px rgba(0,0,0,0.6), -4px -4px 12px rgba(255,255,255,0.03); transition: all 0.2s ease; }
