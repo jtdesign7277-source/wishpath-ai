@@ -914,15 +914,24 @@
       body.fm-mobile-fullscreen #fmScreenerContent .fm-widget-container,
       body.fm-mobile-fullscreen #fmOverviewContent .fm-widget-container,
       body.fm-mobile-fullscreen #fmCalendarContent .fm-widget-container {
-        flex: 1;
+        flex: 1 1 auto;
         min-height: calc(100dvh - 150px - var(--nav-h) - env(safe-area-inset-bottom));
-        height: auto !important;
+        height: calc(100dvh - 150px - var(--nav-h) - env(safe-area-inset-bottom)) !important;
         background: #0f1013;
         border: none;
         border-radius: 0;
         box-shadow: none;
+        overflow: hidden;
       }
-      body.fm-mobile-fullscreen #fmView .fm-widget-container iframe { min-height: 100%; }
+      body.fm-mobile-fullscreen #fmView .fm-widget-container,
+      body.fm-mobile-fullscreen #fmView .fm-widget-container > div,
+      body.fm-mobile-fullscreen #fmView .fm-widget-container .tradingview-widget-container,
+      body.fm-mobile-fullscreen #fmView .fm-widget-container .tradingview-widget-container__widget,
+      body.fm-mobile-fullscreen #fmView .fm-widget-container iframe {
+        width: 100% !important;
+        height: 100% !important;
+        min-height: 100% !important;
+      }
       body.fm-mobile-fullscreen #fmView .chart-fs-btn { display: none !important; }
 
       /* ── Unified Notion dark color scheme ── */
@@ -2307,9 +2316,123 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="/auth.js"></script>
   <script>
+    var FM_WIDGET_TAB_IDS = ['fmTVCharts', 'fmHeatMap', 'fmScreener', 'fmOverview', 'fmCalendar', 'fmTechAnalysis'];
+    var FM_WIDGET_CONTAINER_IDS = {
+      fmTVCharts: 'tvChartWidget',
+      fmHeatMap: 'tvHeatMapWidget',
+      fmScreener: 'tvScreenerWidget',
+      fmOverview: 'tvOverviewWidget',
+      fmCalendar: 'tvCalendarWidget',
+      fmTechAnalysis: 'tvTechWidget'
+    };
+    var FM_WIDGET_LOADER_NAMES = {
+      fmTVCharts: 'loadTVChart',
+      fmHeatMap: 'loadTVHeatMap',
+      fmScreener: 'loadTVScreener',
+      fmOverview: 'loadTVOverview',
+      fmCalendar: 'loadTVCalendar',
+      fmTechAnalysis: 'loadTVTechAnalysis'
+    };
+    var FM_WIDGET_LOADED_FLAGS = {
+      fmTVCharts: '_tvChartLoaded',
+      fmHeatMap: '_tvHeatMapLoaded',
+      fmScreener: '_tvScreenerLoaded',
+      fmOverview: '_tvOverviewLoaded',
+      fmCalendar: '_tvCalendarLoaded',
+      fmTechAnalysis: '_tvTechLoaded'
+    };
+    var _fmWidgetRenderTimers = {};
+    var _fmWidgetResizeTimer = null;
+
     function getActiveFMTabId() {
       var activeContent = document.querySelector('#fmView .fm-sub-content.active');
       return activeContent ? activeContent.id.replace('Content', '') : 'fmMarkets';
+    }
+
+    function isFMWidgetTab(tabId) {
+      return FM_WIDGET_TAB_IDS.indexOf(tabId) !== -1;
+    }
+
+    function getFMWidgetContainer(tabId) {
+      return document.getElementById(FM_WIDGET_CONTAINER_IDS[tabId] || '');
+    }
+
+    function getFMWidgetLoader(tabId) {
+      return window[FM_WIDGET_LOADER_NAMES[tabId]];
+    }
+
+    function getFMWidgetLoadedFlag(tabId) {
+      return FM_WIDGET_LOADED_FLAGS[tabId];
+    }
+
+    function getMobileViewportHeight() {
+      if (window.visualViewport && window.visualViewport.height) {
+        return Math.round(window.visualViewport.height);
+      }
+      return window.innerHeight || document.documentElement.clientHeight || 0;
+    }
+
+    function getMobileFMWidgetHeight(tabId) {
+      if (window.innerWidth > 768 || !document.body.classList.contains('fm-mobile-fullscreen') || !isFMWidgetTab(tabId)) return 0;
+      var container = getFMWidgetContainer(tabId);
+      if (!container) return 0;
+      var viewportHeight = getMobileViewportHeight();
+      var navBar = document.getElementById('mobileNavBar');
+      var navHeight = navBar && window.getComputedStyle(navBar).display !== 'none'
+        ? Math.ceil(navBar.getBoundingClientRect().height)
+        : 96;
+      var containerTop = Math.max(0, Math.floor(container.getBoundingClientRect().top));
+      var availableHeight = viewportHeight - containerTop - navHeight - 12;
+      return Math.max(320, availableHeight);
+    }
+
+    function applyFMWidgetHeight(tabId) {
+      var targetTabId = tabId || getActiveFMTabId();
+      if (!isFMWidgetTab(targetTabId)) return;
+      var container = getFMWidgetContainer(targetTabId);
+      if (!container) return;
+      var height = getMobileFMWidgetHeight(targetTabId);
+      if (!height) return;
+      container.style.setProperty('height', height + 'px', 'important');
+      container.style.setProperty('min-height', height + 'px', 'important');
+      container.querySelectorAll('iframe, .tradingview-widget-container, .tradingview-widget-container__widget').forEach(function(el) {
+        el.style.setProperty('height', '100%', 'important');
+        el.style.setProperty('min-height', height + 'px', 'important');
+        el.style.setProperty('width', '100%', 'important');
+      });
+    }
+
+    function loadFMWidgetForTab(tabId) {
+      if (!isFMWidgetTab(tabId)) return;
+      var loader = getFMWidgetLoader(tabId);
+      if (typeof loader !== 'function') return;
+      applyFMWidgetHeight(tabId);
+      loader();
+      var loadedFlag = getFMWidgetLoadedFlag(tabId);
+      if (loadedFlag) window[loadedFlag] = true;
+    }
+
+    function queueFMWidgetRender(tabId, forceReload) {
+      if (!isFMWidgetTab(tabId)) return;
+      var loadedFlag = getFMWidgetLoadedFlag(tabId);
+      var alreadyLoaded = loadedFlag ? !!window[loadedFlag] : false;
+      var shouldReload = !!forceReload || !alreadyLoaded;
+      clearTimeout(_fmWidgetRenderTimers[tabId]);
+      applyFMWidgetHeight(tabId);
+      _fmWidgetRenderTimers[tabId] = setTimeout(function() {
+        applyFMWidgetHeight(tabId);
+        if (shouldReload) loadFMWidgetForTab(tabId);
+        setTimeout(function() { applyFMWidgetHeight(tabId); }, 260);
+      }, shouldReload ? 110 : 40);
+    }
+
+    function refreshActiveFMWidgetLayout(forceReload) {
+      var fmView = document.getElementById('fmView');
+      if (!fmView || !fmView.classList.contains('active')) return;
+      if (window.innerWidth <= 768 && !document.body.classList.contains('fm-mobile-fullscreen')) return;
+      var activeTabId = getActiveFMTabId();
+      if (!isFMWidgetTab(activeTabId)) return;
+      queueFMWidgetRender(activeTabId, !!forceReload);
     }
 
     function syncMobileFMMenuState() {
@@ -2367,6 +2490,7 @@
       if (toggle) toggle.style.display = isSidebarOpen ? 'none' : 'flex';
       if (isSidebarOpen) closeMobileFMMenu();
       syncMobileFMMenuState();
+      applyFMWidgetHeight(getActiveFMTabId());
     }
 
     function toggleMobileSidebar() {
@@ -2817,6 +2941,9 @@
         if (navBar) navBar.style.display = (view === 'coach') ? 'none' : 'flex';
       }
       updateMobileFMChrome();
+      if (view === 'fm') {
+        refreshActiveFMWidgetLayout(window.innerWidth <= 768);
+      }
     }
 
     // Coach — persistent conversations
@@ -4076,7 +4203,19 @@
     window.addEventListener('resize', function() {
       closeMobileFMMenu();
       updateMobileFMChrome();
+      clearTimeout(_fmWidgetResizeTimer);
+      _fmWidgetResizeTimer = setTimeout(function() {
+        refreshActiveFMWidgetLayout(window.innerWidth <= 768);
+      }, 120);
     });
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', function() {
+        clearTimeout(_fmWidgetResizeTimer);
+        _fmWidgetResizeTimer = setTimeout(function() {
+          refreshActiveFMWidgetLayout(window.innerWidth <= 768);
+        }, 120);
+      });
+    }
     document.body.setAttribute('data-active-view', document.querySelector('.view.active') ? document.querySelector('.view.active').id.replace('View', '') : 'home');
     setTimeout(updateMobileFMChrome, 0);
     function sendMobileAskAI() {
@@ -5765,14 +5904,11 @@
       if (tabId === 'fmPortfolio') { if (!_portfolioLoaded) loadPortfolioFromDB().then(function() { renderHoldings(); refreshPortfolioPrices(); }); }
       if (tabId === 'fmWatchlists') renderWatchlistSelector();
       if (tabId === 'fmNewsFeed' && !window._newsFeedLoaded) { refreshNewsFeed().then(function() { window._newsFeedLoaded = true; }).catch(function() { window._newsFeedLoaded = false; }); }
-      if (tabId === 'fmTVCharts' && !window._tvChartLoaded) { loadTVChart(); window._tvChartLoaded = true; }
-      if (tabId === 'fmHeatMap' && !window._tvHeatMapLoaded) { loadTVHeatMap(); window._tvHeatMapLoaded = true; }
-      if (tabId === 'fmScreener' && !window._tvScreenerLoaded) { loadTVScreener(); window._tvScreenerLoaded = true; }
-      if (tabId === 'fmOverview' && !window._tvOverviewLoaded) { loadTVOverview(); window._tvOverviewLoaded = true; }
-      if (tabId === 'fmCalendar' && !window._tvCalendarLoaded) { loadTVCalendar(); window._tvCalendarLoaded = true; }
-      if (tabId === 'fmTechAnalysis' && !window._tvTechLoaded) { loadTVTechAnalysis(); window._tvTechLoaded = true; }
       syncMobileFMMenuState();
       updateMobileFMChrome();
+      if (isFMWidgetTab(tabId)) {
+        queueFMWidgetRender(tabId, window.innerWidth <= 768);
+      }
     }
 
     // FM Markets — renders into fmView grids
@@ -5796,6 +5932,7 @@
     function loadTVChart() {
       var ticker = (document.getElementById('tvChartTicker').value || 'AAPL').toUpperCase();
       var container = document.getElementById('tvChartWidget');
+      applyFMWidgetHeight('fmTVCharts');
       container.innerHTML = '';
       var script = document.createElement('script');
       script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
@@ -5811,6 +5948,7 @@
 
     function loadTVHeatMap() {
       var container = document.getElementById('tvHeatMapWidget');
+      applyFMWidgetHeight('fmHeatMap');
       container.innerHTML = '';
       var script = document.createElement('script');
       script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-stock-heatmap.js';
@@ -5828,6 +5966,7 @@
 
     function loadTVScreener() {
       var container = document.getElementById('tvScreenerWidget');
+      applyFMWidgetHeight('fmScreener');
       container.innerHTML = '';
       var script = document.createElement('script');
       script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-screener.js';
@@ -5842,6 +5981,7 @@
 
     function loadTVOverview() {
       var container = document.getElementById('tvOverviewWidget');
+      applyFMWidgetHeight('fmOverview');
       container.innerHTML = '';
       var script = document.createElement('script');
       script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js';
@@ -5862,6 +6002,7 @@
 
     function loadTVCalendar() {
       var container = document.getElementById('tvCalendarWidget');
+      applyFMWidgetHeight('fmCalendar');
       container.innerHTML = '';
       var script = document.createElement('script');
       script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-events.js';
@@ -5876,6 +6017,7 @@
     function loadTVTechAnalysis() {
       var ticker = (document.getElementById('tvTechTicker').value || 'AAPL').toUpperCase();
       var container = document.getElementById('tvTechWidget');
+      applyFMWidgetHeight('fmTechAnalysis');
       container.innerHTML = '';
       var script = document.createElement('script');
       script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js';
