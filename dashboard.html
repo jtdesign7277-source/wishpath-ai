@@ -4335,6 +4335,36 @@
       }
     }
     // ── Mobile home screen ──
+    var MARKET_NEWS_CACHE_STORAGE_KEY = 'wishpath_market_news_v3';
+    var MARKET_NEWS_CACHE_TTL_MS = 1000 * 60 * 15;
+
+    function loadPersistedMarketNewsCache() {
+      if (typeof localStorage === 'undefined') return;
+      try {
+        var raw = localStorage.getItem(MARKET_NEWS_CACHE_STORAGE_KEY);
+        if (!raw) return;
+        var parsed = JSON.parse(raw);
+        if (!parsed || !Array.isArray(parsed.articles) || !parsed.articles.length) return;
+        if (parsed.ts && (Date.now() - parsed.ts) > MARKET_NEWS_CACHE_TTL_MS) return;
+        window._marketNewsArticles = parsed.articles;
+        window._marketNewsStatus = 'ready';
+      } catch (err) {
+        console.error('Load market news cache failed:', err);
+      }
+    }
+
+    function persistMarketNewsCache(articles) {
+      if (typeof localStorage === 'undefined' || !Array.isArray(articles) || !articles.length) return;
+      try {
+        localStorage.setItem(MARKET_NEWS_CACHE_STORAGE_KEY, JSON.stringify({
+          ts: Date.now(),
+          articles: articles.slice(0, 12)
+        }));
+      } catch (err) {
+        console.error('Persist market news cache failed:', err);
+      }
+    }
+
     function showMobileHome() {
       if (window.innerWidth > 768) return;
       closeMobileAskAI();
@@ -4414,6 +4444,7 @@
     };
 
     // On mobile: show home screen on load (sidebar toggle stays as panel icon)
+    loadPersistedMarketNewsCache();
     if (window.innerWidth <= 768) {
       showMobileHome();
     }
@@ -5165,10 +5196,13 @@
     async function fetchMarketNews() {
       var newsList = document.getElementById('marketNewsList');
       var fmNewsList = document.getElementById('fmMarketNewsList');
+      var existingArticles = Array.isArray(window._marketNewsArticles) ? window._marketNewsArticles.slice() : [];
       window._marketNewsStatus = 'loading';
       try {
-        var userTickers = portfolioHoldings.map(function(h) { return h.symbol; });
-        watchlists.forEach(function(wl) {
+        var holdings = Array.isArray(portfolioHoldings) ? portfolioHoldings : [];
+        var lists = Array.isArray(watchlists) ? watchlists : [];
+        var userTickers = holdings.map(function(h) { return h.symbol; });
+        lists.forEach(function(wl) {
           (wl.symbols || []).forEach(function(s) {
             if (userTickers.indexOf(s) === -1) userTickers.push(s);
           });
@@ -5206,11 +5240,17 @@
           }).join('');
           if (newsList) newsList.innerHTML = html;
           if (fmNewsList) fmNewsList.innerHTML = html;
+          persistMarketNewsCache(window._marketNewsArticles);
           renderMobileHomeNews();
           queueArticlePrefetch(window._marketNewsArticles);
         } else {
-          window._marketNewsStatus = 'empty';
-          window._marketNewsArticles = [];
+          if (existingArticles.length) {
+            window._marketNewsStatus = 'ready';
+            window._marketNewsArticles = existingArticles;
+          } else {
+            window._marketNewsStatus = 'empty';
+            window._marketNewsArticles = [];
+          }
           var fallback = '<div class="news-item"><div class="news-item-body"><div class="news-title" style="color:var(--text-dim);">Unable to load news. Try refreshing.</div></div></div>';
           if (newsList) newsList.innerHTML = fallback;
           if (fmNewsList) fmNewsList.innerHTML = fallback;
@@ -5218,8 +5258,13 @@
         }
       } catch(e) {
         console.error('News fetch error:', e);
-        window._marketNewsStatus = 'error';
-        window._marketNewsArticles = [];
+        if (existingArticles.length) {
+          window._marketNewsStatus = 'ready';
+          window._marketNewsArticles = existingArticles;
+        } else {
+          window._marketNewsStatus = 'error';
+          window._marketNewsArticles = [];
+        }
         var errHtml = '<div class="news-item"><div class="news-item-body"><div class="news-title" style="color:var(--text-dim);">Connection error loading news.</div></div></div>';
         if (newsList) newsList.innerHTML = errHtml;
         if (fmNewsList) fmNewsList.innerHTML = errHtml;
@@ -5755,6 +5800,9 @@
         }
       } catch(e) { console.error('Load portfolio error:', e); }
       _portfolioLoaded = true;
+      if (window.innerWidth <= 768 && document.getElementById('mobileHome') && document.getElementById('mobileHome').classList.contains('active')) {
+        setTimeout(function() { fetchMarketNews(); }, 0);
+      }
     }
 
     async function savePortfolio() {
@@ -6683,6 +6731,9 @@
         }
       } catch(e) { console.error('Load watchlists error:', e); }
       renderSidebarWatchlists();
+      if (window.innerWidth <= 768 && document.getElementById('mobileHome') && document.getElementById('mobileHome').classList.contains('active')) {
+        setTimeout(function() { fetchMarketNews(); }, 0);
+      }
     }
 
     async function saveWatchlists() {
