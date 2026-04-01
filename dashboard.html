@@ -765,7 +765,11 @@
     @keyframes cryptoPulse { 0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(34,197,94,0.5); } 50% { opacity: 0.6; box-shadow: 0 0 0 4px rgba(34,197,94,0); } }
 
     /* Ticker autocomplete dropdown */
-    .ticker-ac-dropdown { position: absolute; left: 0; right: auto; top: 100%; width: 280px; max-height: 260px; overflow-y: auto; background: #2a2a2a; border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.6); z-index: 9999; margin-top: 4px; }
+    .ticker-ac-anchor { position: relative; display: flex; flex-direction: column; }
+    .add-holding-row .ticker-ac-anchor { width: 140px; }
+    .watchlist-add-row .ticker-ac-anchor { flex: 1; min-width: 0; }
+    .watchlist-add-row .ticker-ac-anchor .watchlist-add-input { width: 100%; }
+    .ticker-ac-dropdown { position: absolute; left: 0; top: calc(100% + 6px); width: max(100%, 280px); max-width: min(360px, calc(100vw - 32px)); max-height: 260px; overflow-y: auto; background: #2a2a2a; border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.6); z-index: 9999; }
     .ticker-ac-item { display: flex; align-items: center; gap: 8px; padding: 10px 12px; cursor: pointer; transition: background 0.12s; }
     .ticker-ac-item:hover, .ticker-ac-item.active { background: rgba(255,255,255,0.06); }
     .ticker-ac-item:first-child { border-radius: 12px 12px 0 0; }
@@ -1026,6 +1030,7 @@
       .portfolio-summary { grid-template-columns: repeat(2, 1fr); gap: 8px; }
       .add-holding-row { flex-direction: column; }
       .add-holding-input { width: 100%; font-size: 16px !important; }
+      .add-holding-row .ticker-ac-anchor { width: 100%; }
       .portfolio-coach-input { font-size: 16px !important; }
       .portfolio-coach-suggestions { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
       .portfolio-coach-chip { white-space: nowrap; flex-shrink: 0; }
@@ -1311,7 +1316,7 @@
           <div class="add-holding-row">
             <input class="add-holding-input" id="holdingSymbolInput" placeholder="Symbol (e.g. AAPL)" style="text-transform:uppercase;" />
             <input class="add-holding-input" id="holdingQtyInput" placeholder="Quantity" type="number" step="any" min="0" />
-            <input class="add-holding-input" id="holdingCostInput" placeholder="Avg cost (optional)" type="number" step="any" min="0" />
+            <input class="add-holding-input" id="holdingCostInput" placeholder="Avg cost / share" type="number" step="any" min="0" />
             <button class="add-holding-btn" onclick="addHolding()">+ Add</button>
           </div>
 
@@ -1399,7 +1404,7 @@
           <div class="add-holding-row">
             <input class="add-holding-input" id="fmHoldingSymbolInput" placeholder="Symbol (e.g. AAPL)" style="text-transform:uppercase;" />
             <input class="add-holding-input" id="fmHoldingQtyInput" placeholder="Quantity" type="number" step="any" min="0" />
-            <input class="add-holding-input" id="fmHoldingCostInput" placeholder="Avg cost (optional)" type="number" step="any" min="0" />
+            <input class="add-holding-input" id="fmHoldingCostInput" placeholder="Avg cost / share" type="number" step="any" min="0" />
             <button class="add-holding-btn" onclick="addHoldingFM()">+ Add</button>
           </div>
           <table class="holdings-table" id="fmHoldingsTable" style="display:none;">
@@ -4156,13 +4161,16 @@
       var costInput = document.getElementById(costId);
       var symbol = symbolInput.value.trim().toUpperCase();
       var qty = parseFloat(qtyInput.value);
-      var cost = parseFloat(costInput.value) || 0;
-      if (!symbol) { alert('Enter a symbol.'); return; }
-      if (!qty || qty <= 0) { alert('Enter a valid quantity.'); return; }
+      var cost = parseFloat(costInput.value);
+      if (!symbol) { alert('Enter a symbol.'); return false; }
+      if (!qty || qty <= 0) { alert('Enter a valid quantity.'); return false; }
+      if (!cost || cost <= 0) { alert('Enter the average price you paid per share.'); return false; }
       var existing = portfolioHoldings.find(function(h) { return h.symbol === symbol; });
       if (existing) {
         var totalQty = existing.qty + qty;
-        existing.avgCost = cost > 0 ? ((existing.avgCost * existing.qty) + (cost * qty)) / totalQty : existing.avgCost;
+        existing.avgCost = existing.avgCost > 0
+          ? ((existing.avgCost * existing.qty) + (cost * qty)) / totalQty
+          : cost;
         existing.qty = totalQty;
       } else {
         portfolioHoldings.push({ symbol: symbol, qty: qty, avgCost: cost });
@@ -4171,6 +4179,7 @@
       symbolInput.value = ''; qtyInput.value = ''; costInput.value = '';
       // Fetch price for new symbol FIRST, then render with real data
       await refreshPortfolioPrices();
+      return true;
     }
 
     function removeHolding(idx) {
@@ -4196,6 +4205,8 @@
         var tv = document.getElementById(totalValId); if (tv) tv.textContent = '$0.00';
         var dp = document.getElementById(dayPLId); if (dp) dp.textContent = '$0.00';
         var tp = document.getElementById(totalPLId); if (tp) tp.textContent = '$0.00';
+        var dpp = document.getElementById(dayPLPctId); if (dpp) dpp.textContent = '';
+        var tpp = document.getElementById(totalPLPctId); if (tpp) tpp.textContent = '';
         var pc = document.getElementById(posCountId); if (pc) pc.textContent = '0';
         return;
       }
@@ -4207,15 +4218,16 @@
         var p = portfolioPrices[h.symbol] || {};
         var price = p.price || 0;
         var dayChange = p.change || 0;
-        var value = price * h.qty;
-        var dayPLVal = dayChange * h.qty;
+        var hasPrice = price > 0;
+        var value = hasPrice ? price * h.qty : 0;
+        var dayPLVal = hasPrice ? dayChange * h.qty : 0;
         var costBasis = h.avgCost * h.qty;
-        var totalItemPL = h.avgCost > 0 ? value - costBasis : 0;
+        var totalItemPL = hasPrice && h.avgCost > 0 ? value - costBasis : 0;
         totalValue += value; totalDayPL += dayPLVal;
-        if (h.avgCost > 0) { totalPL += totalItemPL; totalCostBasis += costBasis; }
+        if (hasPrice && h.avgCost > 0) { totalPL += totalItemPL; totalCostBasis += costBasis; }
         var dayClass = dayPLVal > 0 ? 'up' : dayPLVal < 0 ? 'down' : 'flat';
         var totalClass = totalItemPL > 0 ? 'up' : totalItemPL < 0 ? 'down' : 'flat';
-        return '<tr><td style="font-weight:600;color:var(--text);">' + h.symbol + '</td><td>' + h.qty + '</td><td>' + (price ? '$' + formatNum(price) : '--') + '</td><td style="font-weight:600;color:#fff;">' + (value ? '$' + formatNum(value) : '--') + '</td><td class="stock-change ' + dayClass + '">' + (dayPLVal>0?'+':'') + '$' + formatNum(dayPLVal) + '</td><td class="stock-change ' + totalClass + '">' + (h.avgCost>0 ? (totalItemPL>0?'+':'') + '$' + formatNum(totalItemPL) : '--') + '</td><td><button class="holdings-remove-btn" onclick="removeHolding(' + i + ')" title="Delete holding"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></button></td></tr>';
+        return '<tr><td style="font-weight:600;color:var(--text);">' + h.symbol + '</td><td>' + h.qty + '</td><td>' + (hasPrice ? '$' + formatNum(price) : '--') + '</td><td style="font-weight:600;color:#fff;">' + (hasPrice ? '$' + formatNum(value) : '--') + '</td><td class="stock-change ' + dayClass + '">' + (hasPrice ? (dayPLVal>0?'+':'') + '$' + formatNum(dayPLVal) : '--') + '</td><td class="stock-change ' + totalClass + '">' + (hasPrice && h.avgCost>0 ? (totalItemPL>0?'+':'') + '$' + formatNum(totalItemPL) : '--') + '</td><td><button class="holdings-remove-btn" onclick="removeHolding(' + i + ')" title="Delete holding"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></button></td></tr>';
       }).join('');
 
       var tvEl = document.getElementById(totalValId); if (tvEl) tvEl.textContent = '$' + formatNum(totalValue);
@@ -4223,10 +4235,12 @@
       if (dayEl) { dayEl.textContent = (totalDayPL>=0?'+':'') + '$' + formatNum(totalDayPL); dayEl.style.color = totalDayPL>=0 ? '#22c55e' : '#ef4444'; }
       var dayPctEl = document.getElementById(dayPLPctId);
       if (dayPctEl && totalValue > 0) { var dayPct = (totalDayPL / (totalValue - totalDayPL)) * 100; dayPctEl.textContent = (dayPct>=0?'+':'') + dayPct.toFixed(2) + '%'; dayPctEl.style.color = dayPct>=0 ? '#22c55e' : '#ef4444'; }
+      else if (dayPctEl) { dayPctEl.textContent = ''; }
       var tpEl = document.getElementById(totalPLId);
       if (tpEl) { tpEl.textContent = (totalPL>=0?'+':'') + '$' + formatNum(totalPL); tpEl.style.color = totalPL>=0 ? '#22c55e' : '#ef4444'; }
       var tpPctEl = document.getElementById(totalPLPctId);
       if (tpPctEl && totalCostBasis > 0) { var totalPct = (totalPL / totalCostBasis) * 100; tpPctEl.textContent = (totalPct>=0?'+':'') + totalPct.toFixed(2) + '%'; tpPctEl.style.color = totalPct>=0 ? '#22c55e' : '#ef4444'; }
+      else if (tpPctEl) { tpPctEl.textContent = ''; }
       renderPortfolioChart(chartId);
     }
 
@@ -4480,10 +4494,12 @@
         '<div class="portfolio-summary" id="mobilePortfolioSummary" style="margin-bottom:16px;">' +
           '<div class="portfolio-stat"><div class="portfolio-stat-label">Total Value</div><div class="portfolio-stat-value" id="mobilePortfolioValue">$0.00</div></div>' +
           '<div class="portfolio-stat"><div class="portfolio-stat-label">Day P&L</div><div class="portfolio-stat-value" id="mobilePortfolioPL">$0.00</div></div>' +
+          '<div class="portfolio-stat"><div class="portfolio-stat-label">Total P&L</div><div class="portfolio-stat-value" id="mobilePortfolioTotalPL">$0.00</div></div>' +
         '</div>' +
         '<div class="add-holding-row">' +
           '<input class="add-holding-input" id="mobileHoldingSymbol" placeholder="Symbol" style="text-transform:uppercase;font-size:16px!important;" />' +
           '<input class="add-holding-input" id="mobileHoldingQty" placeholder="Qty" type="number" step="any" style="width:80px;font-size:16px!important;" />' +
+          '<input class="add-holding-input" id="mobileHoldingCost" placeholder="Avg cost / share" type="number" step="any" min="0" style="font-size:16px!important;" />' +
           '<button class="add-holding-btn" onclick="addMobileHolding()">+ Add</button>' +
         '</div>' +
         '<div id="mobileHoldingsList" style="margin-bottom:20px;"></div>' +
@@ -4617,42 +4633,38 @@
       var list = document.getElementById('mobileHoldingsList');
       var valueEl = document.getElementById('mobilePortfolioValue');
       var plEl = document.getElementById('mobilePortfolioPL');
+      var totalPlEl = document.getElementById('mobilePortfolioTotalPL');
       if (!list) return;
       if (!portfolioHoldings.length) {
         list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-dim);font-size:0.85rem;">No holdings yet</div>';
         if (valueEl) valueEl.textContent = '$0.00';
         if (plEl) plEl.textContent = '$0.00';
+        if (totalPlEl) totalPlEl.textContent = '$0.00';
         return;
       }
-      var totalVal = 0, totalDayPL = 0;
+      var totalVal = 0, totalDayPL = 0, totalPL = 0;
       list.innerHTML = portfolioHoldings.map(function(h, i) {
         var p = portfolioPrices[h.symbol] || {};
-        var val = (p.price || 0) * h.qty;
-        var dayPL = (p.change || 0) * h.qty;
+        var hasPrice = (p.price || 0) > 0;
+        var val = hasPrice ? (p.price || 0) * h.qty : 0;
+        var dayPL = hasPrice ? (p.change || 0) * h.qty : 0;
+        var totalItemPL = hasPrice && h.avgCost > 0 ? val - (h.avgCost * h.qty) : 0;
         totalVal += val; totalDayPL += dayPL;
+        if (hasPrice && h.avgCost > 0) totalPL += totalItemPL;
         var cls = dayPL > 0 ? 'up' : dayPL < 0 ? 'down' : 'flat';
         return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.06);">' +
-          '<div><div style="font-weight:600;color:var(--text);">' + h.symbol + '</div><div style="font-size:0.75rem;color:var(--text-dim);">' + h.qty + ' shares</div></div>' +
-          '<div style="text-align:right;"><div style="font-weight:600;color:#fff;">$' + formatNum(val) + '</div><div class="stock-change ' + cls + '" style="font-size:0.75rem;">' + (dayPL >= 0 ? '+' : '') + '$' + formatNum(dayPL) + '</div></div>' +
+          '<div><div style="font-weight:600;color:var(--text);">' + h.symbol + '</div><div style="font-size:0.75rem;color:var(--text-dim);">' + h.qty + ' shares @ $' + formatNum(h.avgCost || 0) + '</div></div>' +
+          '<div style="text-align:right;"><div style="font-weight:600;color:#fff;">' + (hasPrice ? '$' + formatNum(val) : '--') + '</div><div class="stock-change ' + cls + '" style="font-size:0.75rem;">' + (hasPrice ? (dayPL >= 0 ? '+' : '') + '$' + formatNum(dayPL) : '--') + '</div></div>' +
         '</div>';
       }).join('');
       if (valueEl) valueEl.textContent = '$' + formatNum(totalVal);
       if (plEl) { plEl.textContent = (totalDayPL >= 0 ? '+' : '') + '$' + formatNum(totalDayPL); plEl.style.color = totalDayPL >= 0 ? '#22c55e' : '#ef4444'; }
+      if (totalPlEl) { totalPlEl.textContent = (totalPL >= 0 ? '+' : '') + '$' + formatNum(totalPL); totalPlEl.style.color = totalPL >= 0 ? '#22c55e' : '#ef4444'; }
     }
 
-    function addMobileHolding() {
-      var sym = document.getElementById('mobileHoldingSymbol');
-      var qty = document.getElementById('mobileHoldingQty');
-      var symbol = sym.value.trim().toUpperCase();
-      var quantity = parseFloat(qty.value);
-      if (!symbol || !quantity || quantity <= 0) { alert('Enter symbol and quantity.'); return; }
-      var existing = portfolioHoldings.find(function(h) { return h.symbol === symbol; });
-      if (existing) { existing.qty += quantity; } else { portfolioHoldings.push({ symbol: symbol, qty: quantity, avgCost: 0 }); }
-      savePortfolio();
-      sym.value = ''; qty.value = '';
-      refreshPortfolioPrices();
-      renderMobilePortfolio();
-      renderHoldings();
+    async function addMobileHolding() {
+      var added = await _addHoldingFrom('mobileHoldingSymbol', 'mobileHoldingQty', 'mobileHoldingCost');
+      if (added) renderMobilePortfolio();
     }
 
     // ════════════════════════════════
@@ -5829,16 +5841,25 @@
     var _acDebounce = null;
     var _acActiveInput = null;
 
+    function getAutocompleteAnchor(input) {
+      if (input.parentElement && input.parentElement.classList.contains('ticker-ac-anchor')) return input.parentElement;
+      var anchor = document.createElement('div');
+      anchor.className = 'ticker-ac-anchor';
+      input.parentNode.insertBefore(anchor, input);
+      anchor.appendChild(input);
+      return anchor;
+    }
+
     function initTickerAutocomplete(inputId) {
       var input = document.getElementById(inputId);
       if (!input) return;
+      var anchor = getAutocompleteAnchor(input);
       // Create dropdown
       var dropdown = document.createElement('div');
       dropdown.className = 'ticker-ac-dropdown';
       dropdown.id = inputId + '_ac';
       dropdown.style.display = 'none';
-      input.parentElement.style.position = 'relative';
-      input.parentElement.appendChild(dropdown);
+      anchor.appendChild(dropdown);
 
       input.addEventListener('input', function() {
         var q = input.value.trim();
@@ -5903,7 +5924,8 @@
       input.value = item.getAttribute('data-symbol');
       dropdown.style.display = 'none';
       // Focus next input (quantity)
-      var next = input.parentElement.querySelectorAll('input');
+      var scope = input.closest('.add-holding-row') || input.parentElement;
+      var next = scope.querySelectorAll('input');
       for (var i = 0; i < next.length; i++) {
         if (next[i] === input && next[i + 1]) { next[i + 1].focus(); break; }
       }
@@ -5912,6 +5934,7 @@
     // Init autocomplete on all symbol inputs
     initTickerAutocomplete('holdingSymbolInput');
     initTickerAutocomplete('fmHoldingSymbolInput');
+    initTickerAutocomplete('mobileHoldingSymbol');
     initTickerAutocomplete('watchlistAddInput');
     initTickerAutocomplete('fmWatchlistAddInput');
 
