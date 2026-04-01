@@ -2093,6 +2093,17 @@
       if (navBar) navBar.style.display = (isOpen || isHome || isCoach) ? 'none' : 'flex';
     }
 
+    function closeMobileSidebar() {
+      var sidebar = document.querySelector('.sidebar');
+      var backdrop = document.getElementById('sidebarBackdrop');
+      var navBar = document.getElementById('mobileNavBar');
+      var isHome = document.getElementById('mobileHome') && document.getElementById('mobileHome').classList.contains('active');
+      var isCoach = document.querySelector('.view[id="coachView"].active');
+      if (sidebar) sidebar.classList.remove('open');
+      if (backdrop) backdrop.style.display = 'none';
+      if (navBar) navBar.style.display = (isHome || isCoach) ? 'none' : 'flex';
+    }
+
     // ── Mobile bottom nav ──
     function setMobileNavActive(view) {
       if (window.innerWidth > 768) return;
@@ -2505,8 +2516,7 @@
       }
       // Close sidebar on mobile after navigation
       if (window.innerWidth <= 768) {
-        document.querySelector('.sidebar').classList.remove('open');
-        document.getElementById('sidebarBackdrop').style.display = 'none';
+        closeMobileSidebar();
         hideMobileHome();
         setMobileNavActive(view);
         // Show Ask AI bar on all views except coach (has own input) and home (has own input)
@@ -5154,7 +5164,7 @@
       showView('fm');
       var btn = document.querySelector('.fm-sub-tab[onclick*="' + tabId + '"]');
       switchFMTab(tabId, btn);
-      if (window.innerWidth <= 768) toggleMobileSidebar();
+      if (window.innerWidth <= 768) closeMobileSidebar();
     }
 
     function switchFMTab(tabId, btn) {
@@ -5576,8 +5586,7 @@
       if (ccId === 'new') { createNewCC(); }
       else { openCCBuilder(ccId); }
       if (window.innerWidth <= 768) {
-        document.querySelector('.sidebar').classList.remove('open');
-        document.getElementById('sidebarBackdrop').style.display = 'none';
+        closeMobileSidebar();
       }
     }
 
