@@ -339,6 +339,73 @@
       .main.expanded { margin-left: 0 !important; }
       .main.expanded .main-header { padding-left: 36px; }
       .mobile-sidebar-toggle { display: none !important; }
+      .mobile-fm-tabs-toggle { display: none !important; }
+      .mobile-fm-menu-backdrop {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.18);
+        z-index: 540;
+      }
+      .mobile-fm-menu-backdrop.active { display: block; }
+      .mobile-fm-menu {
+        display: none;
+        position: fixed;
+        top: calc(max(10px, env(safe-area-inset-top)) + 52px);
+        right: 12px;
+        width: min(242px, calc(100vw - 24px));
+        max-height: calc(100dvh - 124px - env(safe-area-inset-bottom));
+        overflow-y: auto;
+        z-index: 545;
+        padding: 10px;
+        border-radius: 20px;
+        border: 1px solid rgba(255,255,255,0.1);
+        background: linear-gradient(180deg, rgba(25,26,31,0.78) 0%, rgba(15,16,20,0.94) 100%);
+        box-shadow: 0 18px 40px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.05);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+      }
+      .mobile-fm-menu.active { display: block; animation: fadeInUp 0.18s ease; }
+      .mobile-fm-menu-list { display: flex; flex-direction: column; gap: 6px; }
+      .mobile-fm-menu-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        padding: 12px 14px;
+        border: 1px solid transparent;
+        border-radius: 14px;
+        background: rgba(255,255,255,0.02);
+        color: rgba(255,255,255,0.64);
+        font: inherit;
+        font-size: 0.88rem;
+        font-weight: 600;
+        text-align: left;
+        cursor: pointer;
+        transition: all 0.16s ease;
+      }
+      .mobile-fm-menu-item:hover {
+        background: rgba(255,255,255,0.05);
+        color: rgba(255,255,255,0.86);
+      }
+      .mobile-fm-menu-item.active {
+        background: linear-gradient(135deg, rgba(0,201,167,0.16) 0%, rgba(167,139,250,0.12) 100%);
+        border-color: rgba(0,201,167,0.18);
+        color: #fff;
+        box-shadow: 0 0 18px rgba(0,201,167,0.08);
+      }
+      .mobile-fm-menu-icon {
+        width: 18px;
+        flex-shrink: 0;
+        text-align: center;
+        font-size: 0.95rem;
+        opacity: 0.92;
+      }
+      .mobile-fm-menu-label { flex: 1; min-width: 0; }
+      @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(-6px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
       .menu-toggle { display: none !important; }
       .sidebar-expand-btn { display: none !important; }
       .sidebar-collapse-btn { display: none; }
