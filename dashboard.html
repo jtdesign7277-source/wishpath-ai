@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-01-v3';
+    var APP_VERSION = '2026-04-01-v4';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -6399,11 +6399,8 @@
           '<div class="portfolio-stat"><div class="portfolio-stat-label">Day P&L</div><div class="portfolio-stat-value" id="mobilePortfolioPL">$0.00</div></div>' +
           '<div class="portfolio-stat"><div class="portfolio-stat-label">Total P&L</div><div class="portfolio-stat-value" id="mobilePortfolioTotalPL">$0.00</div></div>' +
         '</div>' +
-        '<div class="add-holding-row">' +
-          '<input class="add-holding-input" id="mobileHoldingSymbol" placeholder="Symbol" style="text-transform:uppercase;font-size:16px!important;" />' +
-          '<input class="add-holding-input" id="mobileHoldingQty" placeholder="Qty" type="number" step="any" style="width:80px;font-size:16px!important;" />' +
-          '<input class="add-holding-input" id="mobileHoldingCost" placeholder="Avg cost / share" type="number" step="any" min="0" style="font-size:16px!important;" />' +
-          '<button class="add-holding-btn" onclick="addMobileHolding()">+ Add</button>' +
+        '<div class="portfolio-add-panel" style="text-align:center;">' +
+          '<button class="add-holding-btn" onclick="openAddHoldingModal()" style="width:100%;padding:12px 20px;">+ Add</button>' +
         '</div>' +
         '<div id="mobileHoldingsList" style="margin-bottom:20px;"></div>' +
         '<div class="portfolio-coach-section" style="border-top:1px solid rgba(255,255,255,0.08);padding-top:16px;">' +
@@ -6900,7 +6897,7 @@
         totalVal += val; totalDayPL += dayPL;
         if (hasPrice && h.avgCost > 0) totalPL += totalItemPL;
         var cls = dayPL > 0 ? 'up' : dayPL < 0 ? 'down' : 'flat';
-        return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.06);">' +
+        return '<div onclick="openHoldingActions(' + i + ')" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.06);">' +
           '<div><div style="font-weight:600;color:var(--text);">' + h.symbol + '</div><div style="font-size:0.75rem;color:var(--text-dim);">' + h.qty + ' shares @ $' + formatNum(h.avgCost || 0) + '</div></div>' +
           '<div style="text-align:right;"><div style="font-weight:600;color:#fff;">' + (hasPrice ? '$' + formatNum(val) : '--') + '</div><div class="stock-change ' + cls + '" style="font-size:0.75rem;">' + (hasPrice ? (dayPL >= 0 ? '+' : '') + '$' + formatNum(dayPL) : '--') + '</div></div>' +
         '</div>';
