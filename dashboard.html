@@ -845,6 +845,16 @@
       .mobile-recent-icon { font-size: 22px; margin-bottom: 8px; }
       .mobile-recent-title { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.85); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; max-width: 123px; }
       .mobile-recent-meta { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 4px; }
+      .mobile-news-row { display: flex; gap: 12px; overflow-x: auto; -webkit-overflow-scrolling: touch; scroll-snap-type: x mandatory; padding-bottom: 8px; margin-bottom: 24px; }
+      .mobile-news-row::-webkit-scrollbar { display: none; }
+      .mobile-news-card { min-width: 228px; max-width: 228px; background: #252525; border: 1px solid rgba(255,255,255,0.1); border-radius: 18px; overflow: hidden; scroll-snap-align: start; cursor: pointer; flex-shrink: 0; box-shadow: 8px 8px 16px rgba(0,0,0,0.6), -4px -4px 12px rgba(255,255,255,0.03); transition: all 0.3s ease; }
+      .mobile-news-card:active { border-color: rgba(0,201,167,0.2); box-shadow: 4px 4px 8px rgba(0,0,0,0.5), -2px -2px 6px rgba(255,255,255,0.02); transform: scale(0.97); }
+      .mobile-news-img { width: 100%; height: 126px; object-fit: cover; display: block; background: #171717; }
+      .mobile-news-img-fallback { width: 100%; height: 126px; display: flex; align-items: flex-end; justify-content: flex-start; padding: 14px; background: linear-gradient(135deg, rgba(0,201,167,0.18), rgba(167,139,250,0.2)); color: rgba(255,255,255,0.82); font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+      .mobile-news-body { padding: 14px 14px 15px; }
+      .mobile-news-title { font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.9); line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; min-height: 52px; }
+      .mobile-news-meta { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 11px; color: rgba(255,255,255,0.42); }
+      .mobile-news-source { color: var(--accent); font-weight: 600; }
       .mobile-nav-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
       .mobile-nav-tile { background: #252525; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 18px 16px; cursor: pointer; display: flex; align-items: center; gap: 10px; box-shadow: 8px 8px 16px rgba(0,0,0,0.6), -4px -4px 12px rgba(255,255,255,0.03); transition: all 0.3s ease; }
       .mobile-nav-tile:active { border-color: rgba(0,201,167,0.2); box-shadow: 4px 4px 8px rgba(0,0,0,0.5), -2px -2px 6px rgba(255,255,255,0.02); transform: scale(0.97); }
@@ -2380,10 +2390,10 @@
           <div class="mobile-chip" onclick="prefillMobileHomeInput('Help me start a side hustle')"><span>🚀</span>Start a side hustle</div>
           <div class="mobile-chip" onclick="openMobileTemplates()"><span>🗂️</span>Browse Templates</div>
         </div>
-        <!-- Recents -->
-        <div class="mobile-sec-label">Recents</div>
-        <div class="mobile-recents-row" id="mobileRecentsRow">
-          <div class="mobile-recent-card" style="display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.3);font-size:13px;">Loading...</div>
+        <!-- News -->
+        <div class="mobile-sec-label">News</div>
+        <div class="mobile-news-row" id="mobileNewsRow">
+          <div class="mobile-news-card" style="display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.3);font-size:13px;min-height:180px;">Loading...</div>
         </div>
         <!-- Quick Access -->
         <div class="mobile-sec-label" style="margin-top:4px;">Quick Access</div>
@@ -2392,6 +2402,11 @@
           <div class="mobile-nav-tile" onclick="hideMobileHome();showView('todos')"><span class="mobile-nav-tile-icon">✅</span><span class="mobile-nav-tile-label">To-Dos</span></div>
           <div class="mobile-nav-tile" onclick="hideMobileHome();showView('notes')"><span class="mobile-nav-tile-icon">📝</span><span class="mobile-nav-tile-label">Notes</span></div>
           <div class="mobile-nav-tile" onclick="hideMobileHome();showView('library')"><span class="mobile-nav-tile-icon">📚</span><span class="mobile-nav-tile-label">Library</span></div>
+        </div>
+        <!-- Recents -->
+        <div class="mobile-sec-label" style="margin-top:24px;">Recents</div>
+        <div class="mobile-recents-row" id="mobileRecentsRow">
+          <div class="mobile-recent-card" style="display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.3);font-size:13px;">Loading...</div>
         </div>
       </div>
     </div>
@@ -4061,6 +4076,8 @@
       document.getElementById('mobileHome').classList.add('active');
       document.body.setAttribute('data-active-view', 'home');
       renderMobileRecents();
+      renderMobileHomeNews();
+      if (!window._marketNewsArticles || !window._marketNewsArticles.length) fetchMarketNews();
       setMobileNavActive('home');
       // Hide Ask AI bar on home (home has its own input at top)
       var navBar = document.getElementById('mobileNavBar');
@@ -4084,6 +4101,37 @@
           '<div class="mobile-recent-icon">🧭</div>' +
           '<div class="mobile-recent-title">' + (w.wish_title || 'Untitled').replace(/</g,'&lt;') + '</div>' +
           '<div class="mobile-recent-meta">' + date + '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    function renderMobileHomeNews() {
+      var row = document.getElementById('mobileNewsRow');
+      if (!row) return;
+      var articles = (window._marketNewsArticles || []).filter(function(a) { return a && a.title; }).slice(0, 10);
+      var status = window._marketNewsStatus || 'loading';
+      window._mobileHomeNewsArticles = articles;
+      if (!articles.length) {
+        var emptyLabel = 'Loading news...';
+        if (status === 'empty') emptyLabel = 'No news available right now';
+        if (status === 'error') emptyLabel = 'Unable to load news';
+        row.innerHTML = '<div class="mobile-news-card" style="display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.3);font-size:13px;min-height:180px;">' + emptyLabel + '</div>';
+        return;
+      }
+      row.innerHTML = articles.map(function(a, idx) {
+        var source = String(a.source || 'Market News').replace(/</g, '&lt;');
+        var title = String(a.title || '').replace(/</g, '&lt;');
+        var published = String(a.timeAgo || a.published || '').replace(/</g, '&lt;');
+        var img = a.image || a.image_url || a.imageUrl || '';
+        var media = img
+          ? '<img class="mobile-news-img" src="' + img.replace(/"/g, '&quot;') + '" alt="" loading="lazy" onerror="this.outerHTML=\'<div class=&quot;mobile-news-img-fallback&quot;>' + source.replace(/'/g, '&#39;') + '</div>\'" />'
+          : '<div class="mobile-news-img-fallback">' + source + '</div>';
+        return '<div class="mobile-news-card" onclick="openArticleReader(window._mobileHomeNewsArticles[' + idx + '])">' +
+          media +
+          '<div class="mobile-news-body">' +
+            '<div class="mobile-news-title">' + title + '</div>' +
+            '<div class="mobile-news-meta"><span class="mobile-news-source">' + source + '</span>' + (published ? '<span>' + published + '</span>' : '') + '</div>' +
+          '</div>' +
         '</div>';
       }).join('');
     }
@@ -4847,11 +4895,13 @@
     async function fetchMarketNews() {
       var newsList = document.getElementById('marketNewsList');
       var fmNewsList = document.getElementById('fmMarketNewsList');
+      window._marketNewsStatus = 'loading';
       try {
         var newsSymbols = MAG7.map(function(s) { return s.symbol; }).join(',');
         var res = await fetch(SUPABASE_FN + '/news?limit=8&symbols=' + encodeURIComponent(newsSymbols));
         var data = await res.json();
         if (data && Array.isArray(data.articles) && data.articles.length > 0) {
+          window._marketNewsStatus = 'ready';
           window._marketNewsArticles = data.articles.map(function(a) {
             return {
               title: a.title,
@@ -4880,16 +4930,23 @@
           }).join('');
           if (newsList) newsList.innerHTML = html;
           if (fmNewsList) fmNewsList.innerHTML = html;
+          renderMobileHomeNews();
         } else {
+          window._marketNewsStatus = 'empty';
+          window._marketNewsArticles = [];
           var fallback = '<div class="news-item"><div class="news-item-body"><div class="news-title" style="color:var(--text-dim);">Unable to load news. Try refreshing.</div></div></div>';
           if (newsList) newsList.innerHTML = fallback;
           if (fmNewsList) fmNewsList.innerHTML = fallback;
+          renderMobileHomeNews();
         }
       } catch(e) {
         console.error('News fetch error:', e);
+        window._marketNewsStatus = 'error';
+        window._marketNewsArticles = [];
         var errHtml = '<div class="news-item"><div class="news-item-body"><div class="news-title" style="color:var(--text-dim);">Connection error loading news.</div></div></div>';
         if (newsList) newsList.innerHTML = errHtml;
         if (fmNewsList) fmNewsList.innerHTML = errHtml;
+        renderMobileHomeNews();
       }
     }
 
@@ -5647,8 +5704,6 @@
         '<div class="stock-grid" id="mobileStockGrid" style="margin-bottom:20px;"></div>' +
         '<div class="markets-section-label"><span>&#x1FA99; Crypto</span></div>' +
         '<div class="stock-grid" id="mobileCryptoGrid" style="margin-bottom:20px;"></div>' +
-        '<div class="markets-section-label"><span>&#x1F4F0; News</span></div>' +
-        '<div class="news-list" id="mobileNewsList"><div class="news-item" style="color:var(--text-dim);">Tap refresh to load</div></div>' +
       '</div>';
 
       var portfolioContent = '<div id="mobilePortfolioTab" style="display:none;">' +
@@ -6118,7 +6173,6 @@
     function renderMobileMarkets() {
       var grid = document.getElementById('mobileStockGrid');
       var crypto = document.getElementById('mobileCryptoGrid');
-      var news = document.getElementById('mobileNewsList');
       if (!grid) return;
       grid.innerHTML = MAG7.map(function(s) {
         var q = marketsCache[s.symbol];
@@ -6134,9 +6188,6 @@
         var sign = q.change > 0 ? '+' : '';
         return '<div class="stock-card"><div class="stock-symbol">' + c.display + '</div><div class="stock-price">$' + formatNum(q.price) + '</div><div class="stock-change ' + cls + '">' + sign + formatNum(q.changePercent) + '%</div></div>';
       }).join('');
-      // Sync news from desktop
-      var desktopNews = document.getElementById('marketNewsList');
-      if (desktopNews && news) news.innerHTML = desktopNews.innerHTML;
     }
 
     function renderMobilePortfolio() {
