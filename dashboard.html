@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-01-v2';
+    var APP_VERSION = '2026-04-01-v3';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -954,9 +954,9 @@
       .view[id="coachView"].active ~ .mobile-nav-bar { display: none !important; }
       .coach-input { background: #2a2a2a !important; border: 1px solid rgba(255,255,255,0.1) !important; border-radius: 24px !important; padding: 12px 16px !important; font-size: 15px !important; color: rgba(255,255,255,0.85) !important; flex: 1 !important; min-height: 42px !important; }
       .coach-input::placeholder { color: rgba(255,255,255,0.35) !important; }
-      .coach-send { border-radius: 50% !important; width: 42px !important; height: 42px !important; box-shadow: none !important; background: none !important; color: rgba(255,255,255,0.4) !important; padding: 0 !important; flex-shrink: 0 !important; display: flex !important; align-items: center !important; justify-content: center !important; }
+      .coach-send { border-radius: 12px !important; width: 44px !important; height: 44px !important; box-shadow: none !important; background: var(--kraken-gradient-cta) !important; color: #fff !important; padding: 0 !important; flex-shrink: 0 !important; display: flex !important; align-items: center !important; justify-content: center !important; }
       .coach-send svg { width: 18px !important; height: 18px !important; }
-      .coach-send:active { opacity: 0.6 !important; }
+      .coach-send:active { opacity: 0.75 !important; transform: scale(0.96) !important; }
 
       /* Bottom nav always visible on mobile — no exceptions */
       /* Portfolio page: hide inline coach input to prevent double AI */
@@ -1220,6 +1220,8 @@
     .add-holding-input { padding: 10px 14px; background: var(--kraken-surface2); border: 1px solid var(--kraken-border); border-radius: 12px; color: var(--kraken-text); font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 14px; outline: none; width: 140px; transition: border-color 0.15s cubic-bezier(0.4,0,0.2,1), box-shadow 0.15s cubic-bezier(0.4,0,0.2,1); }
     .add-holding-input:focus { border-color: var(--kraken-purple); box-shadow: 0 0 0 3px rgba(113,50,245,0.15); }
     .add-holding-input::placeholder { color: var(--kraken-text-muted); }
+    .watchlist-create-btn { padding: 10px 18px; background: rgba(0,201,167,0.1); color: var(--accent); border: 1px solid rgba(0,201,167,0.2); border-radius: 12px; font: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; }
+    .watchlist-create-btn:hover { background: rgba(0,201,167,0.18); }
     .add-holding-btn { padding: 10px 20px; background: var(--kraken-gradient-cta); color: #fff; border: none; border-radius: 12px; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity 0.15s cubic-bezier(0.4,0,0.2,1), transform 0.1s ease; white-space: nowrap; }
     .add-holding-btn:hover { opacity: 0.92; }
     .add-holding-btn:active { transform: scale(0.97); opacity: 0.9; }
@@ -1849,7 +1851,7 @@
             </div>
             <div id="watchlistEmptyState" class="watchlist-create-card">
               <p>Create a watchlist to track your favorite stocks and crypto with live prices.</p>
-              <button class="add-holding-btn" onclick="createNewWatchlist()">&#x1F4CB; Create Watchlist</button>
+              <button class="watchlist-create-btn" onclick="createNewWatchlist()">&#x1F4CB; Create Watchlist</button>
             </div>
           </div>
 
@@ -2047,7 +2049,7 @@
             </div>
             <div id="fmWatchlistEmptyState" class="watchlist-create-card">
               <p>Create a watchlist to track your favorite stocks and crypto with live prices.</p>
-              <button class="add-holding-btn" onclick="createNewWatchlist()">&#x1F4CB; Create Watchlist</button>
+              <button class="watchlist-create-btn" onclick="createNewWatchlist()">&#x1F4CB; Create Watchlist</button>
             </div>
           </div>
         </div>
