@@ -337,6 +337,8 @@
 
       /* Mobile coach input — show and pin to bottom of chat area */
       .coach-input-row { display: flex !important; flex-shrink: 0 !important; padding: 8px 0 4px !important; background: #191919; }
+      .view[id="notesView"].active .coach-input-row,
+      .view[id="todosView"].active .coach-input-row { display: none !important; }
       .coach-input { font-size: 16px !important; min-height: 44px !important; }
       .save-btn, #saveConvoBtn, #noteCoachSaveBtn { display: none !important; }
       .save-status { display: none; }
@@ -404,7 +406,7 @@
         background: #2a2a2a;
         border: 1px solid rgba(255,255,255,0.12);
         border-radius: 24px;
-        padding: 12px 16px;
+        padding: 12px 18px;
         color: rgba(255,255,255,0.45);
         font-family: inherit; font-size: 15px; font-weight: 400; letter-spacing: 0;
         cursor: pointer; -webkit-tap-highlight-color: transparent;
@@ -412,70 +414,197 @@
         min-height: 44px;
       }
       .mobile-nav-item:active { transform: scale(0.97); opacity: 0.8; }
-      .mobile-nav-item .nav-ask-wand {
-        width: 24px;
-        height: 24px;
-        flex-shrink: 0;
-        margin-right: 10px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        filter: drop-shadow(0 0 12px rgba(241, 196, 74, 0.18));
+      .mobile-nav-item .nav-ask-label {
+        flex: 1;
+        text-align: left;
+        color: rgba(255,255,255,0.34);
+        font-size: 16px;
       }
-      .mobile-nav-item .nav-ask-wand svg {
-        width: 24px;
-        height: 24px;
-        display: block;
-      }
-      .mobile-nav-item .nav-ask-label { flex: 1; text-align: left; }
-      .mobile-nav-item .nav-ask-arrow { flex-shrink: 0; margin-left: 10px; opacity: 0.4; }
-      .mobile-nav-item .nav-ask-arrow svg { width: 18px; height: 18px; }
+      .mobile-nav-item .nav-ask-arrow { flex-shrink: 0; margin-left: 12px; opacity: 0.32; }
+      .mobile-nav-item .nav-ask-arrow svg { width: 20px; height: 20px; }
 
-      /* ── Ask AI bottom sheet ── */
+      /* ── Ask AI full-screen overlay ── */
+      body.mobile-ai-open { overflow: hidden !important; }
       .mobile-ask-ai-overlay.active {
-        display: flex; position: fixed; inset: 0;
-        background: rgba(0,0,0,0.5); z-index: 10000;
+        display: flex;
+        position: fixed;
+        inset: 0;
+        background: rgba(8,8,8,0.58);
+        z-index: 10000;
         align-items: flex-end;
+        padding: 8px 8px 0;
       }
       .mobile-ask-ai-sheet {
-        background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
-        backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-        border-top: 1px solid rgba(255,255,255,0.08);
-        border-radius: 24px 24px 0 0;
-        padding: 16px 20px;
-        padding-bottom: calc(20px + env(safe-area-inset-bottom));
-        width: 100%; animation: slideUpSheet 0.25s ease;
-        box-shadow: 0 -8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08);
+        width: 100%;
+        height: calc(100dvh - 8px);
+        background: #191919;
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 32px 32px 0 0;
+        box-shadow: 0 -16px 50px rgba(0,0,0,0.55);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        animation: slideUpSheet 0.22s ease;
       }
       @keyframes slideUpSheet { from { transform: translateY(100%); } to { transform: translateY(0); } }
       @keyframes float {
         0%, 100% { transform: translateY(0) rotate(-3deg); }
         50% { transform: translateY(-12px) rotate(3deg); }
       }
-      .ask-ai-handle { width: 36px; height: 4px; background: rgba(255,255,255,0.15); border-radius: 2px; margin: 0 auto 16px; }
-      .ask-ai-sheet-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-      .ask-ai-sheet-hdr span { font-size: 15px; font-weight: 600; color: rgba(255,255,255,0.9); }
-      .ask-ai-sheet-close { background: none; border: none; color: rgba(255,255,255,0.4); font-size: 24px; cursor: pointer; padding: 0 4px; line-height: 1; }
-      .ask-ai-input-row { display: flex; gap: 8px; align-items: flex-end; }
+      .mobile-ask-ai-topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 14px 0;
+        flex-shrink: 0;
+      }
+      .mobile-ask-ai-topbtn {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        border: 1px solid rgba(255,255,255,0.08);
+        background: rgba(255,255,255,0.04);
+        color: rgba(255,255,255,0.72);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+      }
+      .mobile-ask-ai-topbtn:active { transform: scale(0.96); }
+      .mobile-ask-ai-topbtn svg { width: 21px; height: 21px; }
+      .mobile-ask-ai-body {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding: 0 20px 18px;
+      }
+      .mobile-ask-ai-badge {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: #e8e8e8;
+        color: #171717;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: -0.04em;
+        margin-bottom: 18px;
+      }
+      .mobile-ask-ai-heading {
+        font-size: 24px;
+        line-height: 1.12;
+        font-weight: 700;
+        letter-spacing: -0.04em;
+        color: rgba(255,255,255,0.95);
+        margin-bottom: 22px;
+      }
+      .mobile-ask-ai-suggestions {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+      .mobile-ask-ai-suggestion {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        background: none;
+        border: none;
+        padding: 0;
+        text-align: left;
+        color: rgba(255,255,255,0.8);
+        font-family: inherit;
+        font-size: 16px;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .mobile-ask-ai-suggestion:active { opacity: 0.78; }
+      .mobile-ask-ai-suggestion-icon {
+        width: 28px;
+        height: 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255,255,255,0.86);
+        flex-shrink: 0;
+      }
+      .mobile-ask-ai-suggestion-icon svg {
+        width: 24px;
+        height: 24px;
+        display: block;
+      }
+      .mobile-ask-ai-composer-wrap {
+        flex-shrink: 0;
+        padding: 0 18px calc(18px + env(safe-area-inset-bottom));
+      }
+      .mobile-ask-ai-composer {
+        background: #232323;
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 28px;
+        padding: 18px 16px 12px;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+      }
       .ask-ai-textarea {
-        flex: 1; padding: 12px 14px;
-        background: rgba(0,0,0,0.4);
-        border: 1px solid rgba(255,255,255,0.04);
-        border-radius: 12px; color: rgba(255,255,255,0.9);
-        font: inherit; font-size: 16px; outline: none; resize: none;
-        min-height: 48px; max-height: 140px; overflow-y: auto;
-        box-shadow: inset 4px 4px 8px rgba(0,0,0,0.5), inset -2px -2px 6px rgba(255,255,255,0.02);
-        transition: all 0.3s ease;
+        width: 100%;
+        padding: 0;
+        background: transparent;
+        border: none;
+        border-radius: 0;
+        color: rgba(255,255,255,0.92);
+        font: inherit;
+        font-size: 16px;
+        line-height: 1.4;
+        outline: none;
+        resize: none;
+        min-height: 52px;
+        max-height: 140px;
+        overflow-y: auto;
+        box-shadow: none;
+        transition: none;
       }
-      .ask-ai-textarea:focus { border-color: rgba(0,201,167,0.3); box-shadow: inset 4px 4px 8px rgba(0,0,0,0.5), inset -2px -2px 6px rgba(255,255,255,0.02), 0 0 12px rgba(0,201,167,0.1); }
+      .ask-ai-textarea::placeholder { color: rgba(255,255,255,0.34); }
+      .mobile-ask-ai-toolbar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 8px;
+      }
+      .ask-ai-tool-btn {
+        width: 36px;
+        height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: none;
+        border: none;
+        color: rgba(255,255,255,0.58);
+        cursor: pointer;
+        border-radius: 50%;
+      }
+      .ask-ai-tool-btn svg { width: 22px; height: 22px; display: block; }
+      .ask-ai-tool-btn:active { background: rgba(255,255,255,0.06); }
       .ask-ai-send-btn {
-        width: 44px; height: 44px; background: #00c9a7; border: none;
-        border-radius: 12px; color: #0d1117; cursor: pointer;
-        flex-shrink: 0; display: flex; align-items: center; justify-content: center;
-        box-shadow: 0 4px 16px rgba(0,201,167,0.3), 0 0 20px rgba(0,201,167,0.15);
-        transition: all 0.3s ease;
+        margin-left: auto;
+        width: 38px;
+        height: 38px;
+        background: rgba(255,255,255,0.12);
+        border: none;
+        border-radius: 50%;
+        color: rgba(255,255,255,0.92);
+        cursor: pointer;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: none;
+        transition: background 0.2s ease, transform 0.2s ease;
       }
-      .ask-ai-send-btn:hover { box-shadow: 0 6px 24px rgba(0,201,167,0.4), 0 0 28px rgba(0,201,167,0.2); transform: translateY(-1px); }
+      .ask-ai-send-btn svg { width: 20px; height: 20px; }
+      .ask-ai-send-btn:active { transform: scale(0.96); }
 
       /* ── Mobile home screen ── */
       .mobile-home.active {
@@ -1814,31 +1943,7 @@
 
   <!-- Mobile Bottom Bar — Ask AI only -->
   <nav class="mobile-nav-bar" id="mobileNavBar">
-    <button class="mobile-nav-item" data-nav="coach" onclick="mobileNavTo('coach')" aria-label="Ask AI">
-      <span class="nav-ask-wand" aria-hidden="true">
-        <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <g filter="url(#wandGlow)">
-            <path d="M17 48.2 27.5 37.7c1.1-1.1 2.9-1.1 4 0l1.8 1.8c1.1 1.1 1.1 2.9 0 4L22.8 54c-1.1 1.1-2.9 1.1-4 0L17 52.2c-1.1-1.1-1.1-2.9 0-4Z" fill="#F2F4F7"/>
-            <path d="M27.4 37.8 41.8 23.4l6.8 6.8-14.4 14.4-6.8-6.8Z" fill="url(#wandBody)"/>
-            <path d="m33.6 31.6 8.3-8.2 6.8 6.8-8.3 8.2-6.8-6.8Z" fill="#2A2B34"/>
-            <path d="M48.8 11.5 50.6 17l5.5 1.8-5.5 1.8-1.8 5.5-1.8-5.5-5.5-1.8L47 17l1.8-5.5Z" fill="#F6C84C"/>
-            <path d="M56.8 18.2 57.8 21l2.8 1-2.8 1-1 2.8-1-2.8-2.8-1 2.8-1 1-2.8Z" fill="#FFD968"/>
-            <path d="M43.4 18.8 44.3 21.2l2.4.9-2.4.8-.9 2.5-.8-2.5-2.5-.8 2.5-.9.8-2.4Z" fill="#FFE48E"/>
-          </g>
-          <defs>
-            <linearGradient id="wandBody" x1="30.8" y1="34.4" x2="48.5" y2="20.4" gradientUnits="userSpaceOnUse">
-              <stop stop-color="#4A4B56"/>
-              <stop offset=".58" stop-color="#1F2028"/>
-              <stop offset="1" stop-color="#0E1016"/>
-            </linearGradient>
-            <filter id="wandGlow" x="10.2" y="4.7" width="54.2" height="56" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-              <feFlood flood-opacity="0" result="BackgroundImageFix"/>
-              <feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
-              <feGaussianBlur stdDeviation="1.2" result="effect1_foregroundBlur_ask_ai"/>
-            </filter>
-          </defs>
-        </svg>
-      </span>
+    <button class="mobile-nav-item" data-nav="ask-ai" onclick="openMobileAskAI()" aria-label="Ask AI">
       <span class="nav-ask-label">Ask AI</span>
       <span class="nav-ask-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></span>
     </button>
@@ -1869,14 +1974,34 @@
   <!-- Mobile Ask AI Bottom Sheet -->
   <div class="mobile-ask-ai-overlay" id="mobileAskAIOverlay" onclick="if(event.target===this)closeMobileAskAI()">
     <div class="mobile-ask-ai-sheet">
-      <div class="ask-ai-handle"></div>
-      <div class="ask-ai-sheet-hdr">
-        <span>✨ Ask AI</span>
-        <button class="ask-ai-sheet-close" onclick="closeMobileAskAI()">×</button>
+      <div class="mobile-ask-ai-topbar">
+        <button class="mobile-ask-ai-topbtn" onclick="toggleMobileAskAIHistory()" aria-label="Recent prompts">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v6h6"/><path d="M12 7v6l4 2"/></svg>
+        </button>
+        <button class="mobile-ask-ai-topbtn" onclick="resetMobileAskAIComposer()" aria-label="New prompt">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5Z"/></svg>
+        </button>
       </div>
-      <div class="ask-ai-input-row">
-        <textarea class="ask-ai-textarea" id="mobileAskAIInput" placeholder="Ask AI" rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMobileAskAI();}"></textarea>
-        <button class="ask-ai-send-btn" onclick="sendMobileAskAI()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+      <div class="mobile-ask-ai-body">
+        <div class="mobile-ask-ai-badge">AI</div>
+        <div class="mobile-ask-ai-heading" id="mobileAskAIHeading">How can I help you today?</div>
+        <div class="mobile-ask-ai-suggestions" id="mobileAskAISuggestions"></div>
+      </div>
+      <div class="mobile-ask-ai-composer-wrap">
+        <div class="mobile-ask-ai-composer">
+          <textarea class="ask-ai-textarea" id="mobileAskAIInput" placeholder="Ask, search, or make anything..." rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMobileAskAI();}"></textarea>
+          <div class="mobile-ask-ai-toolbar">
+            <button class="ask-ai-tool-btn" type="button" aria-label="Add option">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            </button>
+            <button class="ask-ai-tool-btn" type="button" aria-label="Adjust options">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/><circle cx="9" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="11" cy="18" r="2"/></svg>
+            </button>
+            <button class="ask-ai-send-btn" onclick="sendMobileAskAI()" aria-label="Send">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="m5 12 7-7 7 7"/></svg>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -2339,6 +2464,7 @@
     })();
 
     function showView(view) {
+      closeMobileAskAI();
       document.querySelectorAll('.view').forEach(function(v) { v.classList.remove('active'); });
       document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
       document.getElementById(view + 'View').classList.add('active');
@@ -3361,6 +3487,7 @@
     // ── Mobile home screen ──
     function showMobileHome() {
       if (window.innerWidth > 768) return;
+      closeMobileAskAI();
       document.getElementById('mobileHome').classList.add('active');
       renderMobileRecents();
       setMobileNavActive('home');
@@ -3531,21 +3658,94 @@
     }
 
     // ── Mobile Ask AI overlay ──
+    var mobileAskAIRecent = [];
+
+    function getDefaultMobileAskAISuggestions() {
+      return [
+        {
+          label: 'Search for anything',
+          prompt: 'Search for anything',
+          icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>'
+        },
+        {
+          label: 'Brainstorm writing ideas',
+          prompt: 'Brainstorm writing ideas',
+          icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 13.7 8l4.8 1.7-4.8 1.7-1.7 4.6-1.7-4.6L5.5 9.7 10.3 8 12 3.5Z"/><path d="M18.5 15.5 19.3 17.6 21.5 18.4 19.3 19.1 18.5 21.3 17.8 19.1 15.6 18.4 17.8 17.6 18.5 15.5Z"/></svg>'
+        },
+        {
+          label: 'Draft a project plan',
+          prompt: 'Draft a project plan',
+          icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="M14 4 20 10"/><path d="M7 17l3.5-.9L19 7.6a1.5 1.5 0 0 0 0-2.1l-.5-.5a1.5 1.5 0 0 0-2.1 0L7.9 13.5 7 17Z"/></svg>'
+        }
+      ];
+    }
+
+    function renderMobileAskAISuggestions(items, heading) {
+      var wrap = document.getElementById('mobileAskAISuggestions');
+      var headingEl = document.getElementById('mobileAskAIHeading');
+      if (!wrap || !headingEl) return;
+      headingEl.textContent = heading || 'How can I help you today?';
+      wrap.innerHTML = items.map(function(item) {
+        return '<button class="mobile-ask-ai-suggestion" onclick="fillMobileAskAISuggestion(' + JSON.stringify(item.prompt) + ')">' +
+          '<span class="mobile-ask-ai-suggestion-icon" aria-hidden="true">' + item.icon + '</span>' +
+          '<span>' + item.label + '</span>' +
+          '</button>';
+      }).join('');
+    }
+
+    function resetMobileAskAIComposer() {
+      var input = document.getElementById('mobileAskAIInput');
+      if (input) {
+        input.value = '';
+        input.style.height = 'auto';
+      }
+      renderMobileAskAISuggestions(getDefaultMobileAskAISuggestions(), 'How can I help you today?');
+    }
+
+    function toggleMobileAskAIHistory() {
+      if (!mobileAskAIRecent.length) {
+        showToast('No recent prompts yet.');
+        return;
+      }
+      renderMobileAskAISuggestions(
+        mobileAskAIRecent.map(function(prompt) {
+          return {
+            label: prompt,
+            prompt: prompt,
+            icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v6h6"/><path d="M12 7v6l4 2"/></svg>'
+          };
+        }),
+        'Recent prompts'
+      );
+    }
+
+    function fillMobileAskAISuggestion(prompt) {
+      var input = document.getElementById('mobileAskAIInput');
+      if (!input) return;
+      input.value = prompt;
+      input.style.height = 'auto';
+      input.style.height = input.scrollHeight + 'px';
+      input.focus();
+      if (typeof input.setSelectionRange === 'function') {
+        input.setSelectionRange(input.value.length, input.value.length);
+      }
+    }
+
     function openMobileAskAI() {
       var overlay = document.getElementById('mobileAskAIOverlay');
+      resetMobileAskAIComposer();
       overlay.classList.add('active');
-      setTimeout(function() {
-        var input = document.getElementById('mobileAskAIInput');
-        if (input) input.focus();
-      }, 300);
+      document.body.classList.add('mobile-ai-open');
     }
     function closeMobileAskAI() {
       document.getElementById('mobileAskAIOverlay').classList.remove('active');
+      document.body.classList.remove('mobile-ai-open');
     }
     function sendMobileAskAI() {
       var input = document.getElementById('mobileAskAIInput');
       var msg = input.value.trim();
       if (!msg) return;
+      mobileAskAIRecent = [msg].concat(mobileAskAIRecent.filter(function(item) { return item !== msg; })).slice(0, 6);
       closeMobileAskAI();
       var activeView = document.querySelector('.view.active');
       var viewId = activeView ? activeView.id : '';
