@@ -551,29 +551,32 @@
 
       body.fm-mobile-fullscreen .mobile-sidebar-toggle,
       body.fm-mobile-fullscreen .mobile-fm-tabs-toggle {
-        background: linear-gradient(180deg, rgba(26,27,31,0.42) 0%, rgba(15,16,20,0.58) 100%);
-        border-color: rgba(255,255,255,0.12);
-        color: rgba(255,255,255,0.82);
-        box-shadow: 0 12px 28px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.06);
+        top: calc(max(8px, env(safe-area-inset-top)) + 18px);
+        background: linear-gradient(180deg, rgba(18,28,22,0.22) 0%, rgba(12,16,18,0.3) 100%);
+        border-color: rgba(255,255,255,0.08);
+        color: rgba(255,255,255,0.74);
+        box-shadow: 0 10px 24px rgba(0,0,0,0.16), inset 0 1px 0 rgba(255,255,255,0.04);
       }
       body.fm-mobile-fullscreen .mobile-nav-bar {
-        background: linear-gradient(180deg, rgba(25,25,25,0) 0%, rgba(25,25,25,0.18) 24%, rgba(25,25,25,0.4) 100%);
-        backdrop-filter: blur(18px);
-        -webkit-backdrop-filter: blur(18px);
+        background: transparent;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        padding: 0 16px calc(12px + env(safe-area-inset-bottom)) 16px;
+        pointer-events: none;
       }
       body.fm-mobile-fullscreen .mobile-nav-item {
+        pointer-events: auto;
         background:
-          linear-gradient(rgba(41,41,45,0.48), rgba(31,31,35,0.48)) padding-box,
+          linear-gradient(rgba(35,35,39,0.22), rgba(24,24,28,0.28)) padding-box,
           linear-gradient(135deg, var(--accent), #a78bfa) border-box;
-        box-shadow: 0 12px 30px rgba(0,0,0,0.18), 0 0 20px rgba(0,201,167,0.1);
-      }
-      body.fm-mobile-fullscreen .mobile-nav-item .nav-ask-label { color: rgba(255,255,255,0.56); }
-      body.fm-mobile-fullscreen .mobile-nav-item .nav-ask-arrow { opacity: 0.46; }
-      body.fm-mobile-fullscreen .main-header {
-        background: linear-gradient(180deg, rgba(25,25,25,0.92) 0%, rgba(25,25,25,0.68) 100%) !important;
         backdrop-filter: blur(18px);
         -webkit-backdrop-filter: blur(18px);
-        border-bottom: 1px solid rgba(255,255,255,0.04);
+        box-shadow: 0 10px 24px rgba(0,0,0,0.14), 0 0 18px rgba(0,201,167,0.08);
+      }
+      body.fm-mobile-fullscreen .mobile-nav-item .nav-ask-label { color: rgba(255,255,255,0.42); }
+      body.fm-mobile-fullscreen .mobile-nav-item .nav-ask-arrow { opacity: 0.28; }
+      body.fm-mobile-fullscreen .main-header {
+        display: none !important;
       }
       body[data-active-view="home"] .main-header { display: none !important; }
       body[data-active-view="home"] .main-content { padding-top: calc(max(6px, env(safe-area-inset-top)) + 4px) !important; }
@@ -879,25 +882,29 @@
       .main-content { padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 16px) !important; }
 
       body.fm-mobile-fullscreen .main-content {
-        padding: 0 0 calc(var(--nav-h) + env(safe-area-inset-bottom) + 10px) !important;
+        padding: 0 !important;
       }
-      body.fm-mobile-fullscreen #fmView { padding: 0 !important; }
+      body.fm-mobile-fullscreen #fmView {
+        padding: 0 !important;
+        min-height: 100dvh;
+      }
       body.fm-mobile-fullscreen #fmSubTabs { display: none !important; }
       body.fm-mobile-fullscreen #fmView .fm-sub-content {
-        padding: 4px 12px calc(var(--nav-h) + env(safe-area-inset-bottom) + 18px);
+        padding: 0 !important;
       }
       body.fm-mobile-fullscreen #fmTVChartsContent.active,
       body.fm-mobile-fullscreen #fmTechAnalysisContent.active {
         display: flex;
         flex-direction: column;
         gap: 12px;
-        min-height: calc(100dvh - 72px - var(--nav-h) - env(safe-area-inset-bottom));
-        padding: 6px 0 calc(var(--nav-h) + env(safe-area-inset-bottom) + 14px) !important;
+        min-height: 100dvh;
+        padding: 0 !important;
       }
       body.fm-mobile-fullscreen #fmTVChartsContent .fm-ticker-input-row,
       body.fm-mobile-fullscreen #fmTechAnalysisContent .fm-ticker-input-row {
-        padding: 0 12px;
+        padding: calc(max(8px, env(safe-area-inset-top)) + 58px) 12px 0;
         margin-bottom: 0;
+        z-index: 2;
       }
       body.fm-mobile-fullscreen #fmHeatMapContent.active,
       body.fm-mobile-fullscreen #fmScreenerContent.active,
@@ -905,8 +912,8 @@
       body.fm-mobile-fullscreen #fmCalendarContent.active {
         display: flex;
         flex-direction: column;
-        min-height: calc(100dvh - 72px - var(--nav-h) - env(safe-area-inset-bottom));
-        padding: 4px 0 calc(var(--nav-h) + env(safe-area-inset-bottom) + 10px) !important;
+        min-height: 100dvh;
+        padding: 0 !important;
       }
       body.fm-mobile-fullscreen #fmTVChartsContent .fm-widget-container,
       body.fm-mobile-fullscreen #fmTechAnalysisContent .fm-widget-container,
@@ -915,13 +922,18 @@
       body.fm-mobile-fullscreen #fmOverviewContent .fm-widget-container,
       body.fm-mobile-fullscreen #fmCalendarContent .fm-widget-container {
         flex: 1 1 auto;
-        min-height: calc(100dvh - 150px - var(--nav-h) - env(safe-area-inset-bottom));
-        height: calc(100dvh - 150px - var(--nav-h) - env(safe-area-inset-bottom)) !important;
+        min-height: 100dvh;
+        height: 100dvh !important;
         background: #0f1013;
         border: none;
         border-radius: 0;
         box-shadow: none;
         overflow: hidden;
+      }
+      body.fm-mobile-fullscreen #fmTVChartsContent .fm-widget-container,
+      body.fm-mobile-fullscreen #fmTechAnalysisContent .fm-widget-container {
+        min-height: calc(100dvh - 76px);
+        height: calc(100dvh - 76px) !important;
       }
       body.fm-mobile-fullscreen #fmView .fm-widget-container,
       body.fm-mobile-fullscreen #fmView .fm-widget-container > div,
@@ -1503,6 +1515,7 @@
   <div class="mobile-fm-menu-backdrop" id="mobileFMTabsBackdrop" onclick="closeMobileFMMenu()"></div>
   <div class="mobile-fm-menu" id="mobileFMTabsMenu" aria-label="Financial Markets sections">
     <div class="mobile-fm-menu-list">
+      <button class="mobile-fm-menu-item" id="mobileFMFullscreenToggle" onclick="toggleActiveFMMobileImmersive()" style="display:none;"><span class="mobile-fm-menu-icon" id="mobileFMFullscreenToggleIcon">&#x26F6;</span><span class="mobile-fm-menu-label" id="mobileFMFullscreenToggleLabel">Exit Full Screen</span></button>
       <button class="mobile-fm-menu-item" data-fm-tab="fmMarkets" onclick="selectMobileFMTab('fmMarkets')"><span class="mobile-fm-menu-icon">&#x1F4C8;</span><span class="mobile-fm-menu-label">Markets</span></button>
       <button class="mobile-fm-menu-item" data-fm-tab="fmPortfolio" onclick="selectMobileFMTab('fmPortfolio')"><span class="mobile-fm-menu-icon">&#x1F4BC;</span><span class="mobile-fm-menu-label">Portfolio</span></button>
       <button class="mobile-fm-menu-item" data-fm-tab="fmChartStudio" onclick="selectMobileFMTab('fmChartStudio')"><span class="mobile-fm-menu-icon">&#x1F4CA;</span><span class="mobile-fm-menu-label">Chart Studio</span></button>
@@ -2354,6 +2367,7 @@
     };
     var _fmWidgetRenderTimers = {};
     var _fmWidgetResizeTimer = null;
+    var _fmMobileImmersive = true;
 
     function getActiveFMTabId() {
       var activeContent = document.querySelector('#fmView .fm-sub-content.active');
@@ -2393,7 +2407,8 @@
         ? Math.ceil(navBar.getBoundingClientRect().height)
         : 96;
       var containerTop = Math.max(0, Math.floor(container.getBoundingClientRect().top));
-      var availableHeight = viewportHeight - containerTop - navHeight - 12;
+      var bottomOffset = document.body.classList.contains('fm-mobile-fullscreen') ? 6 : navHeight + 12;
+      var availableHeight = viewportHeight - containerTop - bottomOffset;
       return Math.max(320, availableHeight);
     }
 
@@ -2449,8 +2464,28 @@
     function syncMobileFMMenuState() {
       var activeTabId = getActiveFMTabId();
       document.querySelectorAll('#mobileFMTabsMenu .mobile-fm-menu-item').forEach(function(item) {
-        item.classList.toggle('active', item.dataset.fmTab === activeTabId);
+        if (item.dataset.fmTab) item.classList.toggle('active', item.dataset.fmTab === activeTabId);
       });
+      var fsToggle = document.getElementById('mobileFMFullscreenToggle');
+      var fsLabel = document.getElementById('mobileFMFullscreenToggleLabel');
+      var fsIcon = document.getElementById('mobileFMFullscreenToggleIcon');
+      if (!fsToggle || !fsLabel || !fsIcon) return;
+      var isWidgetTab = isFMWidgetTab(activeTabId);
+      fsToggle.style.display = isWidgetTab ? 'flex' : 'none';
+      if (!isWidgetTab) return;
+      var isImmersive = document.body.classList.contains('fm-mobile-fullscreen');
+      fsLabel.textContent = isImmersive ? 'Exit Full Screen' : 'Go Full Screen';
+      fsIcon.innerHTML = isImmersive ? '&#x21F2;' : '&#x26F6;';
+    }
+
+    function toggleActiveFMMobileImmersive() {
+      if (window.innerWidth > 768) return;
+      var activeTabId = getActiveFMTabId();
+      if (!isFMWidgetTab(activeTabId)) return;
+      _fmMobileImmersive = !_fmMobileImmersive;
+      closeMobileFMMenu();
+      updateMobileFMChrome();
+      refreshActiveFMWidgetLayout(true);
     }
 
     function closeMobileFMMenu() {
@@ -2466,7 +2501,8 @@
     }
 
     function toggleMobileFMMenu() {
-      if (window.innerWidth > 768 || !document.body.classList.contains('fm-mobile-fullscreen')) return;
+      var fmView = document.getElementById('fmView');
+      if (window.innerWidth > 768 || !fmView || !fmView.classList.contains('active')) return;
       var menu = document.getElementById('mobileFMTabsMenu');
       var backdrop = document.getElementById('mobileFMTabsBackdrop');
       var toggle = document.getElementById('mobileFMTabsToggle');
@@ -2491,17 +2527,20 @@
       var isFMActive = !!(fmView && fmView.classList.contains('active'));
       var isHome = !!(document.getElementById('mobileHome') && document.getElementById('mobileHome').classList.contains('active'));
       var isSidebarOpen = !!(document.querySelector('.sidebar') && document.querySelector('.sidebar').classList.contains('open'));
+      var activeTabId = getActiveFMTabId();
+      var shouldImmersive = isFMActive && isFMWidgetTab(activeTabId) && _fmMobileImmersive;
       if (!onMobile || !isFMActive || isHome) {
         document.body.classList.remove('fm-mobile-fullscreen');
         closeMobileFMMenu();
         if (toggle) toggle.style.display = 'none';
         return;
       }
-      document.body.classList.add('fm-mobile-fullscreen');
+      if (shouldImmersive) document.body.classList.add('fm-mobile-fullscreen');
+      else document.body.classList.remove('fm-mobile-fullscreen');
       if (toggle) toggle.style.display = isSidebarOpen ? 'none' : 'flex';
       if (isSidebarOpen) closeMobileFMMenu();
       syncMobileFMMenuState();
-      applyFMWidgetHeight(getActiveFMTabId());
+      applyFMWidgetHeight(activeTabId);
     }
 
     function toggleMobileSidebar() {
@@ -6277,6 +6316,7 @@
       if (btn) btn.classList.add('active');
       var content = document.getElementById(tabId + 'Content');
       if (content) content.classList.add('active');
+      if (isFMWidgetTab(tabId)) _fmMobileImmersive = true;
       syncFMShortcutState(tabId);
       // Lazy-load widgets on first visit
       if (tabId === 'fmMarkets' && !window._fmMarketsLoaded) { refreshFMMarkets().then(function() { window._fmMarketsLoaded = true; }).catch(function() {}); }
@@ -6286,7 +6326,7 @@
       syncMobileFMMenuState();
       updateMobileFMChrome();
       if (isFMWidgetTab(tabId)) {
-        queueFMWidgetRender(tabId, window.innerWidth <= 768);
+        queueFMWidgetRender(tabId, true);
       }
     }
 
@@ -7468,11 +7508,19 @@ window.addEventListener('resize', function() {
   if (document.getElementById('chartFsOverlay').classList.contains('active')) {
     setTimeout(reflowFullscreenChart, 90);
   }
+  refreshActiveFMWidgetLayout(window.innerWidth <= 768);
 });
 window.addEventListener('orientationchange', function() {
   if (document.getElementById('chartFsOverlay').classList.contains('active')) {
     setTimeout(reflowFullscreenChart, 120);
   }
+  setTimeout(function() { refreshActiveFMWidgetLayout(true); }, 140);
+});
+window.addEventListener('focus', function() {
+  refreshActiveFMWidgetLayout(true);
+});
+document.addEventListener('visibilitychange', function() {
+  if (document.visibilityState === 'visible') refreshActiveFMWidgetLayout(true);
 });
 
   </script>
