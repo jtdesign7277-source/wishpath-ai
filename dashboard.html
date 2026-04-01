@@ -412,7 +412,21 @@
         min-height: 44px;
       }
       .mobile-nav-item:active { transform: scale(0.97); opacity: 0.8; }
-      .mobile-nav-item .nav-ask-sparkle { font-size: 16px; flex-shrink: 0; margin-right: 10px; }
+      .mobile-nav-item .nav-ask-wand {
+        width: 24px;
+        height: 24px;
+        flex-shrink: 0;
+        margin-right: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        filter: drop-shadow(0 0 12px rgba(241, 196, 74, 0.18));
+      }
+      .mobile-nav-item .nav-ask-wand svg {
+        width: 24px;
+        height: 24px;
+        display: block;
+      }
       .mobile-nav-item .nav-ask-label { flex: 1; text-align: left; }
       .mobile-nav-item .nav-ask-arrow { flex-shrink: 0; margin-left: 10px; opacity: 0.4; }
       .mobile-nav-item .nav-ask-arrow svg { width: 18px; height: 18px; }
@@ -1801,7 +1815,30 @@
   <!-- Mobile Bottom Bar — Ask AI only -->
   <nav class="mobile-nav-bar" id="mobileNavBar">
     <button class="mobile-nav-item" data-nav="coach" onclick="mobileNavTo('coach')" aria-label="Ask AI">
-      <span class="nav-ask-sparkle">✨</span>
+      <span class="nav-ask-wand" aria-hidden="true">
+        <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <g filter="url(#wandGlow)">
+            <path d="M17 48.2 27.5 37.7c1.1-1.1 2.9-1.1 4 0l1.8 1.8c1.1 1.1 1.1 2.9 0 4L22.8 54c-1.1 1.1-2.9 1.1-4 0L17 52.2c-1.1-1.1-1.1-2.9 0-4Z" fill="#F2F4F7"/>
+            <path d="M27.4 37.8 41.8 23.4l6.8 6.8-14.4 14.4-6.8-6.8Z" fill="url(#wandBody)"/>
+            <path d="m33.6 31.6 8.3-8.2 6.8 6.8-8.3 8.2-6.8-6.8Z" fill="#2A2B34"/>
+            <path d="M48.8 11.5 50.6 17l5.5 1.8-5.5 1.8-1.8 5.5-1.8-5.5-5.5-1.8L47 17l1.8-5.5Z" fill="#F6C84C"/>
+            <path d="M56.8 18.2 57.8 21l2.8 1-2.8 1-1 2.8-1-2.8-2.8-1 2.8-1 1-2.8Z" fill="#FFD968"/>
+            <path d="M43.4 18.8 44.3 21.2l2.4.9-2.4.8-.9 2.5-.8-2.5-2.5-.8 2.5-.9.8-2.4Z" fill="#FFE48E"/>
+          </g>
+          <defs>
+            <linearGradient id="wandBody" x1="30.8" y1="34.4" x2="48.5" y2="20.4" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#4A4B56"/>
+              <stop offset=".58" stop-color="#1F2028"/>
+              <stop offset="1" stop-color="#0E1016"/>
+            </linearGradient>
+            <filter id="wandGlow" x="10.2" y="4.7" width="54.2" height="56" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+              <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+              <feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+              <feGaussianBlur stdDeviation="1.2" result="effect1_foregroundBlur_ask_ai"/>
+            </filter>
+          </defs>
+        </svg>
+      </span>
       <span class="nav-ask-label">Ask AI</span>
       <span class="nav-ask-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></span>
     </button>
