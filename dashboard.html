@@ -1247,7 +1247,7 @@
     .holding-action-btn.save { color: #fff; border-color: rgba(120,80,220,0.3); background: var(--kraken-gradient-cta); flex: 1.5; }
     .holding-action-btn.delete { color: #ff8b8b; border-color: rgba(239,68,68,0.18); background: rgba(239,68,68,0.1); flex: 0 0 48px; }
     .holding-action-btn.delete svg { width: 16px; height: 16px; }
-    .holding-edit-fields { display: flex; gap: 10px; margin: 14px 0; }
+    .holding-edit-fields { display: flex; flex-direction: column; gap: 10px; margin: 14px 0; }
     .holding-edit-row { flex: 1; display: flex; flex-direction: column; gap: 4px; }
     .holding-edit-label { font-size: 0.72rem; font-weight: 600; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.04em; }
     .holding-edit-input { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 10px 12px; font: inherit; font-size: 0.9rem; color: #fff; outline: none; }
@@ -1675,6 +1675,10 @@
       <div class="holding-action-symbol" id="holdingActionSymbol">AAPL</div>
       <div class="holding-action-meta" id="holdingActionMeta"></div>
       <div class="holding-edit-fields">
+        <div class="holding-edit-row" id="holdingSymbolRow" style="display:none;">
+          <label class="holding-edit-label">Symbol</label>
+          <input class="holding-edit-input" id="holdingEditSymbol" type="text" placeholder="e.g. AAPL" style="text-transform:uppercase;" />
+        </div>
         <div class="holding-edit-row">
           <label class="holding-edit-label">Shares</label>
           <input class="holding-edit-input" id="holdingEditQty" type="number" min="0" step="any" placeholder="Qty" />
@@ -1687,7 +1691,7 @@
       <div class="holding-action-btns">
         <button class="holding-action-btn" onclick="closeHoldingActions()">Cancel</button>
         <button class="holding-action-btn save" onclick="saveHoldingEdit()">Save</button>
-        <button class="holding-action-btn delete" onclick="deleteActiveHolding()">
+        <button class="holding-action-btn delete" id="holdingDeleteBtn" onclick="deleteActiveHolding()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
         </button>
       </div>
@@ -1899,14 +1903,8 @@
             </div>
           </div>
 
-          <div class="portfolio-add-panel">
-            <div class="portfolio-add-label">Add Holding</div>
-            <div class="add-holding-row">
-              <input class="add-holding-input" id="holdingSymbolInput" placeholder="Symbol (e.g. AAPL)" style="text-transform:uppercase;" />
-              <input class="add-holding-input" id="holdingQtyInput" placeholder="Quantity" type="number" step="any" min="0" />
-              <input class="add-holding-input" id="holdingCostInput" placeholder="Avg cost / share" type="number" step="any" min="0" />
-              <button class="add-holding-btn" onclick="addHolding()">+ Add</button>
-            </div>
+          <div class="portfolio-add-panel" style="text-align:center;">
+            <button class="add-holding-btn" onclick="openAddHoldingModal()" style="width:100%;padding:12px 20px;">+ Add</button>
           </div>
 
           <div id="holdingsTableWrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:16px;">
@@ -1919,7 +1917,6 @@
                   <th>Value</th>
                   <th>Day P&L</th>
                   <th>Total P&L</th>
-                  <th></th>
                 </tr>
               </thead>
               <tbody id="holdingsBody"></tbody>
@@ -1989,12 +1986,8 @@
             <div class="portfolio-stat"><div class="portfolio-stat-label">Total P&L</div><div class="portfolio-stat-value" id="fmPortfolioTotalPL">$0.00</div><div class="portfolio-stat-change" id="fmPortfolioTotalPLPct"></div></div>
             <div class="portfolio-stat"><div class="portfolio-stat-label">Positions</div><div class="portfolio-stat-value" id="fmPortfolioPositionCount">0</div></div>
           </div>
-          <div class="markets-section-label"><span>Add Holding</span></div>
-          <div class="add-holding-row">
-            <input class="add-holding-input" id="fmHoldingSymbolInput" placeholder="Symbol (e.g. AAPL)" style="text-transform:uppercase;" />
-            <input class="add-holding-input" id="fmHoldingQtyInput" placeholder="Quantity" type="number" step="any" min="0" />
-            <input class="add-holding-input" id="fmHoldingCostInput" placeholder="Avg cost / share" type="number" step="any" min="0" />
-            <button class="add-holding-btn" onclick="addHoldingFM()">+ Add</button>
+          <div style="text-align:center;margin:12px 0;">
+            <button class="add-holding-btn" onclick="openAddHoldingModal()" style="width:100%;padding:12px 20px;">+ Add</button>
           </div>
           <table class="holdings-table" id="fmHoldingsTable" style="display:none;">
             <thead><tr><th>Symbol</th><th>Qty</th><th>Price</th><th>Value</th><th>Day P&L</th><th>Total P&L</th><th></th></tr></thead>
@@ -6010,9 +6003,12 @@
     }
 
     var _activeHoldingIdx = null;
+    var _holdingModalMode = 'edit'; // 'edit' or 'add'
+
     function openHoldingActions(idx) {
       if (typeof idx !== 'number' || !portfolioHoldings[idx]) return;
       _activeHoldingIdx = idx;
+      _holdingModalMode = 'edit';
       var holding = portfolioHoldings[idx];
       var price = portfolioPrices[holding.symbol] || {};
       var symbolEl = document.getElementById('holdingActionSymbol');
@@ -6020,28 +6016,68 @@
       var overlay = document.getElementById('holdingActionOverlay');
       var qtyInput = document.getElementById('holdingEditQty');
       var costInput = document.getElementById('holdingEditCost');
+      var symbolRow = document.getElementById('holdingSymbolRow');
+      var deleteBtn = document.getElementById('holdingDeleteBtn');
       if (symbolEl) symbolEl.textContent = holding.symbol;
-      if (metaEl) {
-        metaEl.textContent = (price && price.price ? 'Current price $' + formatNum(price.price) : '');
-      }
+      if (metaEl) metaEl.textContent = (price && price.price ? 'Current price $' + formatNum(price.price) : '');
+      if (symbolRow) symbolRow.style.display = 'none';
+      if (deleteBtn) deleteBtn.style.display = '';
       if (qtyInput) qtyInput.value = holding.qty || '';
       if (costInput) costInput.value = holding.avgCost || '';
       if (overlay) overlay.classList.add('active');
     }
 
-    function saveHoldingEdit() {
-      if (_activeHoldingIdx === null || !portfolioHoldings[_activeHoldingIdx]) return;
+    function openAddHoldingModal() {
+      _activeHoldingIdx = null;
+      _holdingModalMode = 'add';
+      var symbolEl = document.getElementById('holdingActionSymbol');
+      var metaEl = document.getElementById('holdingActionMeta');
+      var overlay = document.getElementById('holdingActionOverlay');
+      var qtyInput = document.getElementById('holdingEditQty');
+      var costInput = document.getElementById('holdingEditCost');
+      var symbolInput = document.getElementById('holdingEditSymbol');
+      var symbolRow = document.getElementById('holdingSymbolRow');
+      var deleteBtn = document.getElementById('holdingDeleteBtn');
+      if (symbolEl) symbolEl.textContent = 'Add Holding';
+      if (metaEl) metaEl.textContent = '';
+      if (symbolRow) symbolRow.style.display = '';
+      if (deleteBtn) deleteBtn.style.display = 'none';
+      if (symbolInput) { symbolInput.value = ''; }
+      if (qtyInput) qtyInput.value = '';
+      if (costInput) costInput.value = '';
+      if (overlay) overlay.classList.add('active');
+      setTimeout(function() { if (symbolInput) symbolInput.focus(); }, 100);
+    }
+
+    async function saveHoldingEdit() {
       var qtyInput = document.getElementById('holdingEditQty');
       var costInput = document.getElementById('holdingEditCost');
       var qty = parseFloat(qtyInput.value);
       var cost = parseFloat(costInput.value);
       if (isNaN(qty) || qty <= 0) { qtyInput.focus(); return; }
-      portfolioHoldings[_activeHoldingIdx].qty = qty;
-      portfolioHoldings[_activeHoldingIdx].avgCost = isNaN(cost) ? 0 : cost;
+      if (isNaN(cost) || cost <= 0) { costInput.focus(); return; }
+
+      if (_holdingModalMode === 'add') {
+        var symbolInput = document.getElementById('holdingEditSymbol');
+        var symbol = symbolInput.value.trim().toUpperCase();
+        if (!symbol) { symbolInput.focus(); return; }
+        var existing = portfolioHoldings.find(function(h) { return h.symbol === symbol; });
+        if (existing) {
+          var totalQty = existing.qty + qty;
+          existing.avgCost = existing.avgCost > 0 ? ((existing.avgCost * existing.qty) + (cost * qty)) / totalQty : cost;
+          existing.qty = totalQty;
+        } else {
+          portfolioHoldings.push({ symbol: symbol, qty: qty, avgCost: cost });
+        }
+      } else {
+        if (_activeHoldingIdx === null || !portfolioHoldings[_activeHoldingIdx]) return;
+        portfolioHoldings[_activeHoldingIdx].qty = qty;
+        portfolioHoldings[_activeHoldingIdx].avgCost = cost;
+      }
       closeHoldingActions();
       savePortfolio();
+      await refreshPortfolioPrices();
       renderHoldings();
-      refreshPortfolioPrices();
     }
 
     function closeHoldingActions() {
@@ -6096,7 +6132,7 @@
         if (hasPrice && h.avgCost > 0) { totalPL += totalItemPL; totalCostBasis += costBasis; }
         var dayClass = dayPLVal > 0 ? 'up' : dayPLVal < 0 ? 'down' : 'flat';
         var totalClass = totalItemPL > 0 ? 'up' : totalItemPL < 0 ? 'down' : 'flat';
-        return '<tr><td><button class="holding-symbol-btn" onclick="openHoldingActions(' + i + ')">' + h.symbol + '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h9v9"/><path d="M16 4 4 16"/></svg></button></td><td>' + h.qty + '</td><td>' + (hasPrice ? '$' + formatNum(price) : '--') + '</td><td style="font-weight:600;color:#fff;">' + (hasPrice ? '$' + formatNum(value) : '--') + '</td><td class="stock-change ' + dayClass + '">' + (hasPrice ? (dayPLVal>0?'+':'') + '$' + formatNum(dayPLVal) : '--') + '</td><td class="stock-change ' + totalClass + '">' + (hasPrice && h.avgCost>0 ? (totalItemPL>0?'+':'') + '$' + formatNum(totalItemPL) : '--') + '</td><td><button class="holdings-remove-btn" onclick="event.stopPropagation();removeHolding(' + i + ')" title="Delete holding"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></button></td></tr>';
+        return '<tr onclick="openHoldingActions(' + i + ')" style="cursor:pointer;"><td><button class="holding-symbol-btn" onclick="openHoldingActions(' + i + ')">' + h.symbol + '</button></td><td>' + h.qty + ' shares</td><td>' + (hasPrice ? '$' + formatNum(price) : '--') + '</td><td style="font-weight:600;color:#fff;">' + (hasPrice ? '$' + formatNum(value) : '--') + '</td><td class="stock-change ' + dayClass + '">' + (hasPrice ? (dayPLVal>0?'+':'') + '$' + formatNum(dayPLVal) : '--') + '</td><td class="stock-change ' + totalClass + '">' + (hasPrice && h.avgCost>0 ? (totalItemPL>0?'+':'') + '$' + formatNum(totalItemPL) : '--') + '</td></tr>';
       }).join('');
 
       var tvEl = document.getElementById(totalValId); if (tvEl) tvEl.textContent = '$' + formatNum(totalValue);
