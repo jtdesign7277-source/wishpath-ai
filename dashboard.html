@@ -338,7 +338,7 @@
       .main { margin-left: 0 !important; }
       .main.expanded { margin-left: 0 !important; }
       .main.expanded .main-header { padding-left: 36px; }
-      .mobile-sidebar-toggle { display: flex; }
+      .mobile-sidebar-toggle { display: none !important; }
       .menu-toggle { display: none !important; }
       .sidebar-expand-btn { display: none !important; }
       .sidebar-collapse-btn { display: none; }
@@ -432,39 +432,44 @@
         position: fixed; bottom: 0; left: 0; right: 0;
         background: var(--bg, #191919);
         z-index: 9998;
-        padding: 10px 16px calc(12px + env(safe-area-inset-bottom)) 16px;
+        padding: 8px 12px calc(10px + env(safe-area-inset-bottom)) 12px;
+        display: flex;
         align-items: center;
+        gap: 8px;
         border-top: none;
         box-shadow: none;
-        display: none;
       }
-      .mobile-nav-item {
-        flex: 1 1 auto; display: flex; flex-direction: row; align-items: center;
-        gap: 0;
-        background:
-          linear-gradient(180deg, rgba(15,17,21,0.88) 0%, rgba(10,12,15,0.82) 100%) padding-box,
-          linear-gradient(135deg, rgba(0,201,167,0.92), rgba(167,139,250,0.9)) border-box;
-        border: 1px solid transparent;
-        border-radius: 24px;
-        padding: 12px 18px;
+      .mobile-nav-side-btn {
+        flex-shrink: 0;
+        width: 42px; height: 42px;
+        display: flex; align-items: center; justify-content: center;
+        background: none; border: none;
         color: rgba(255,255,255,0.45);
-        font-family: inherit; font-size: 15px; font-weight: 400; letter-spacing: 0;
-        cursor: pointer; -webkit-tap-highlight-color: transparent;
-        transition: all 0.15s ease;
-        min-height: 44px;
-        backdrop-filter: blur(14px);
-        -webkit-backdrop-filter: blur(14px);
-        box-shadow: 0 8px 24px rgba(0,0,0,0.24), 0 0 16px rgba(0,201,167,0.08);
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
       }
-      .mobile-nav-item:active { transform: scale(0.97); opacity: 0.8; }
-      .mobile-nav-item .nav-ask-label {
+      .mobile-nav-side-btn:active { opacity: 0.6; }
+      .mobile-nav-side-btn svg { width: 22px; height: 22px; }
+      .mobile-nav-ask-pill {
         flex: 1;
-        text-align: left;
-        color: rgba(255,255,255,0.34);
-        font-size: 16px;
+        display: flex; align-items: center; gap: 10px;
+        background: #2a2a2a;
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 22px;
+        padding: 10px 14px;
+        min-height: 42px;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        transition: background 0.15s ease;
       }
-      .mobile-nav-item .nav-ask-arrow { flex-shrink: 0; margin-left: 12px; opacity: 0.32; }
-      .mobile-nav-item .nav-ask-arrow svg { width: 20px; height: 20px; }
+      .mobile-nav-ask-pill:active { background: #333; }
+      .mobile-nav-ask-pill .nav-pill-icon { display: flex; color: rgba(255,255,255,0.35); }
+      .mobile-nav-ask-pill .nav-pill-icon svg { width: 18px; height: 18px; }
+      .mobile-nav-ask-pill .nav-pill-label {
+        flex: 1;
+        font-size: 15px;
+        color: rgba(255,255,255,0.4);
+      }
 
       body.fm-mobile-fullscreen .mobile-sidebar-toggle,
       body.fm-mobile-fullscreen .mobile-fm-tabs-toggle {
@@ -478,20 +483,13 @@
         background: transparent;
         backdrop-filter: none;
         -webkit-backdrop-filter: none;
-        padding: 0 16px calc(12px + env(safe-area-inset-bottom)) 16px;
+        padding: 0 12px calc(10px + env(safe-area-inset-bottom)) 12px;
         pointer-events: none;
       }
-      body.fm-mobile-fullscreen .mobile-nav-item {
+      body.fm-mobile-fullscreen .mobile-nav-side-btn,
+      body.fm-mobile-fullscreen .mobile-nav-ask-pill {
         pointer-events: auto;
-        background:
-          linear-gradient(180deg, rgba(10,12,14,0.44) 0%, rgba(10,12,14,0.32) 100%) padding-box,
-          linear-gradient(135deg, rgba(0,201,167,0.9), rgba(167,139,250,0.86)) border-box;
-        backdrop-filter: blur(18px);
-        -webkit-backdrop-filter: blur(18px);
-        box-shadow: 0 8px 18px rgba(0,0,0,0.1), 0 0 12px rgba(0,201,167,0.04);
       }
-      body.fm-mobile-fullscreen .mobile-nav-item .nav-ask-label { color: rgba(255,255,255,0.72); }
-      body.fm-mobile-fullscreen .mobile-nav-item .nav-ask-arrow { opacity: 0.62; }
       body.fm-mobile-fullscreen .main-header {
         display: none !important;
       }
@@ -2599,12 +2597,12 @@
     function toggleMobileSidebar() {
       var sidebar = document.querySelector('.sidebar');
       var backdrop = document.getElementById('sidebarBackdrop');
+      var navBar = document.getElementById('mobileNavBar');
       var isOpen = sidebar.classList.toggle('open');
       closeMobileFMMenu();
       backdrop.style.display = isOpen ? 'block' : 'none';
-      var isHome = document.getElementById('mobileHome') && document.getElementById('mobileHome').classList.contains('active');
       var isCoach = document.querySelector('.view[id="coachView"].active');
-      if (navBar) navBar.style.display = (isOpen || isHome || isCoach) ? 'none' : 'flex';
+      if (navBar) navBar.style.display = (isOpen || isCoach) ? 'none' : 'flex';
       updateMobileFMChrome();
     }
 
@@ -2612,14 +2610,12 @@
       var sidebar = document.querySelector('.sidebar');
       var backdrop = document.getElementById('sidebarBackdrop');
       var navBar = document.getElementById('mobileNavBar');
-      var isHome = document.getElementById('mobileHome') && document.getElementById('mobileHome').classList.contains('active');
       var isCoach = document.querySelector('.view[id="coachView"].active');
       closeMobileFMMenu();
       if (sidebar) sidebar.classList.remove('open');
       if (backdrop) backdrop.style.display = 'none';
-      if (navBar) navBar.style.display = (isHome || isCoach) ? 'none' : 'flex';
+      if (navBar) navBar.style.display = isCoach ? 'none' : 'flex';
       updateMobileFMChrome();
-    }
     }
 
     // ── Swipe-right from left edge to open sidebar ──
