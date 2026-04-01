@@ -1208,19 +1208,21 @@
     /* ── Portfolio Tab — Kraken Dark Theme ── */
     .portfolio-summary { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px; }
     .portfolio-stat { background: var(--kraken-card-bg); border: 1px solid var(--kraken-border); border-radius: 16px; padding: 16px; box-shadow: rgba(16,24,40,0.04) 0px 1px 4px 0px; transition: background 0.15s cubic-bezier(0.4,0,0.2,1); font-family: 'IBM Plex Sans', system-ui, sans-serif; }
-    .portfolio-stat:active { background: rgba(148,151,169,0.14); transform: scale(0.97); }
+    .portfolio-stat:active { background: rgba(148,151,169,0.14); }
     .portfolio-stat-label { font-size: 11px; color: var(--kraken-text-dim); text-transform: uppercase; font-weight: 500; letter-spacing: 0.06em; margin-bottom: 8px; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
     .portfolio-stat-value { font-size: 22px; font-weight: 700; color: var(--kraken-text); letter-spacing: -0.3px; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
     .portfolio-stat-change { font-size: 12px; font-weight: 500; margin-top: 4px; }
     .portfolio-add-panel { background: var(--kraken-surface1); border: 1px solid var(--kraken-border); border-radius: 16px; padding: 16px; margin-bottom: 16px; }
     .portfolio-add-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--kraken-text-dim); margin-bottom: 10px; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
     .add-holding-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end; }
+    #fmPortfolioContent .markets-section-label { margin-bottom: 10px; color: var(--kraken-text-dim); font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+    #fmPortfolioContent .add-holding-row { margin-bottom: 16px; padding: 16px; background: var(--kraken-surface1); border: 1px solid var(--kraken-border); border-radius: 16px; }
     .add-holding-input { padding: 10px 14px; background: var(--kraken-surface2); border: 1px solid var(--kraken-border); border-radius: 12px; color: var(--kraken-text); font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 14px; outline: none; width: 140px; transition: border-color 0.15s cubic-bezier(0.4,0,0.2,1), box-shadow 0.15s cubic-bezier(0.4,0,0.2,1); }
     .add-holding-input:focus { border-color: var(--kraken-purple); box-shadow: 0 0 0 3px rgba(113,50,245,0.15); }
     .add-holding-input::placeholder { color: var(--kraken-text-muted); }
     .add-holding-btn { padding: 10px 20px; background: var(--kraken-gradient-cta); color: #fff; border: none; border-radius: 12px; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity 0.15s cubic-bezier(0.4,0,0.2,1), transform 0.1s ease; white-space: nowrap; }
     .add-holding-btn:hover { opacity: 0.92; }
-    .add-holding-btn:active { transform: scale(0.97); opacity: 0.88; }
+    .add-holding-btn:active { transform: scale(0.97); opacity: 0.9; }
     .holdings-table { width: 100%; border-collapse: collapse; background: transparent; }
     .holdings-table th { text-align: left; font-size: 11px; font-weight: 500; color: var(--kraken-text-muted); text-transform: uppercase; letter-spacing: 0.06em; padding: 8px 12px; border-bottom: 1px solid var(--kraken-border); font-family: 'IBM Plex Sans', system-ui, sans-serif; }
     .holdings-table td { padding: 12px 12px; border-bottom: 1px solid var(--kraken-border); font-size: 13px; font-weight: 500; color: var(--kraken-text); vertical-align: middle; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
@@ -1278,6 +1280,10 @@
     .chart-container { background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 16px; margin: 16px 0; box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.05); transition: all 0.3s ease; }
     /* Portfolio-specific chart override — Kraken surface */
     #portfolioChartContainer, #fmPortfolioChartContainer { background: var(--kraken-surface1); border: 1px solid var(--kraken-border); box-shadow: rgba(16,24,40,0.04) 0px 1px 4px 0px; }
+    .portfolio-coach-section .msg.ai { background: var(--kraken-card-bg); border: 1px solid var(--kraken-border); color: var(--kraken-text); box-shadow: none; }
+    .portfolio-coach-section .msg.user { background: var(--kraken-purple-tint); border: 1px solid rgba(113,50,245,0.28); color: var(--kraken-text); box-shadow: none; }
+    .portfolio-coach-section .msg.ai .thinking-label { color: var(--kraken-purple); }
+    .portfolio-coach-section .msg.ai .thinking-dots span { background: var(--kraken-purple); }
     .chart-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
     .chart-action-btn { display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%); border: 1px solid rgba(255,255,255,0.06); border-radius: 99px; color: rgba(255,255,255,0.55); font-size: 0.7rem; font-weight: 500; cursor: pointer; font-family: inherit; box-shadow: 0 2px 8px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04); transition: all 0.3s ease; }
     .chart-action-btn:hover { background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%); color: rgba(255,255,255,0.85); border-color: rgba(255,255,255,0.1); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
@@ -1416,9 +1422,10 @@
     @keyframes msgSlideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     .msg { animation: msgSlideIn 0.15s ease-out both; }
     /* Press feedback — all interactive cards */
-    .wish-card:active, .cc-card:active, .stock-card:active, .news-feed-item:active, .portfolio-stat:active { transform: scale(0.97); box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 1px 4px rgba(0,0,0,0.2); transition: transform 0.1s ease, box-shadow 0.1s ease; }
-    .wish-card-btn:active, .add-holding-btn:active, .fm-ticker-btn:active, .watchlist-add-btn:active, .note-save-btn:active { transform: scale(0.95); transition: transform 0.1s ease; }
-    .coach-send:active, .ask-ai-send-btn:active { transform: scale(0.92); transition: transform 0.1s ease; }
+    .wish-card:active, .cc-card:active, .stock-card:active, .news-feed-item:active { transform: scale(0.97); box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 1px 4px rgba(0,0,0,0.2); transition: transform 0.1s ease, box-shadow 0.1s ease; }
+    .wish-card-btn:active, .fm-ticker-btn:active, .watchlist-add-btn:active, .note-save-btn:active { transform: scale(0.95); transition: transform 0.1s ease; }
+    .ask-ai-send-btn:active { transform: scale(0.92); transition: transform 0.1s ease; }
+    #homePortfolioTab .coach-send:active, #fmPortfolioContent .coach-send:active { opacity: 0.85; transform: scale(0.96); transition: opacity 0.15s ease, transform 0.1s ease; }
     .skeleton { background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; }
     @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
     .nav-item { transition: all 0.15s cubic-bezier(0.32,0.72,0,1); }
@@ -1540,12 +1547,13 @@
       .add-holding-row { flex-direction: column; gap: 8px; }
       .add-holding-input { width: 100% !important; font-size: 16px !important; }
       .add-holding-btn { width: 100%; font-size: 16px !important; }
-      .add-holding-row { flex-direction: column; }
-      .add-holding-input { width: 100%; font-size: 16px !important; }
       .add-holding-row .ticker-ac-anchor { width: 100%; }
       .portfolio-coach-input { font-size: 16px !important; }
       .portfolio-coach-suggestions { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
       .portfolio-coach-chip { white-space: nowrap; flex-shrink: 0; }
+      #homePortfolioTab .portfolio-coach-input-row, #fmPortfolioContent .portfolio-coach-input-row { display: flex !important; }
+      #homePortfolioTab .coach-send, #fmPortfolioContent .coach-send { border-radius: 12px !important; width: 44px !important; height: 44px !important; background: var(--kraken-gradient-cta) !important; color: #fff !important; opacity: 1 !important; }
+      #homePortfolioTab .coach-send:active, #fmPortfolioContent .coach-send:active { opacity: 0.85 !important; transform: scale(0.96) !important; }
       /* CC mobile */
       .cc-list { grid-template-columns: 1fr; gap: 12px; }
       .cc-card-actions { opacity: 1; }
@@ -1881,7 +1889,7 @@
           </div>
 
           <div id="holdingsTableWrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:16px;">
-            <table class="holdings-table" id="holdingsTable" style="display:none;min-width:520px;">
+            <table class="holdings-table" id="holdingsTable" style="display:none;min-width:640px;">
               <thead>
                 <tr>
                   <th>Symbol</th>
@@ -1904,7 +1912,7 @@
 
           <!-- Portfolio AI Coach -->
           <div class="portfolio-coach-section">
-            <div class="portfolio-coach-header">&#x1F916; Portfolio AI Coach</div>
+            <div class="portfolio-coach-header">Portfolio AI Coach</div>
             <div class="portfolio-coach-sub">Ask about your portfolio — rebalancing, risk, sector exposure, and more.</div>
             <div class="portfolio-coach-suggestions">
               <button class="portfolio-coach-chip" onclick="askPortfolioCoach('What is my sector breakdown?')">Sector breakdown</button>
