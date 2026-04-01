@@ -283,12 +283,9 @@
       position: fixed;
       top: calc(max(6px, env(safe-area-inset-top)) + 6px);
       z-index: 550;
-      background: linear-gradient(180deg, rgba(34,197,94,0.14) 0%, rgba(12,34,20,0.3) 100%);
-      border: 1px solid rgba(34,197,94,0.2);
+      border: 1px solid rgba(34,197,94,0.18);
       color: rgba(191,255,209,0.84);
       cursor: pointer;
-      width: 30px;
-      height: 54px;
       align-items: center;
       justify-content: center;
       -webkit-tap-highlight-color: transparent;
@@ -299,18 +296,32 @@
     }
     .mobile-sidebar-toggle {
       left: 0;
+      width: 18px;
+      height: 74px;
       border-left: none;
-      border-radius: 0 16px 16px 0;
-      padding-left: 2px;
+      border-radius: 0 14px 14px 0;
+      padding-left: 0;
+      background: linear-gradient(180deg, rgba(34,197,94,0.18) 0%, rgba(12,34,20,0.12) 100%);
+      border-color: rgba(34,197,94,0.22);
+      color: rgba(227,255,234,0.92);
+      box-shadow: 0 8px 22px rgba(0,0,0,0.14), 0 0 18px rgba(34,197,94,0.12);
     }
     .mobile-fm-tabs-toggle {
       right: 0;
       z-index: 551;
+      width: 30px;
+      height: 54px;
       border-right: none;
       border-radius: 16px 0 0 16px;
       padding-right: 2px;
+      background: linear-gradient(180deg, rgba(34,197,94,0.14) 0%, rgba(12,34,20,0.3) 100%);
     }
-    .mobile-sidebar-toggle:hover,
+    .mobile-sidebar-toggle:hover {
+      background: linear-gradient(180deg, rgba(34,197,94,0.22) 0%, rgba(14,38,24,0.16) 100%);
+      color: rgba(240,255,244,0.98);
+      border-color: rgba(34,197,94,0.3);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.16), 0 0 20px rgba(34,197,94,0.16);
+    }
     .mobile-fm-tabs-toggle:hover {
       background: linear-gradient(180deg, rgba(34,197,94,0.2) 0%, rgba(14,38,24,0.36) 100%);
       color: rgba(223,255,231,0.96);
@@ -318,7 +329,7 @@
     }
     .mobile-sidebar-toggle:active,
     .mobile-fm-tabs-toggle:active { transform: scale(0.96); }
-    .mobile-sidebar-toggle svg,
+    .mobile-sidebar-toggle svg { width: 8px; height: 14px; }
     .mobile-fm-tabs-toggle svg { width: 15px; height: 15px; }
     .mobile-fm-tabs-toggle.active {
       color: rgba(236,255,242,0.98);
@@ -411,15 +422,15 @@
       .sidebar.collapsed { transform: translateX(-100%); }
       .main { margin-left: 0 !important; }
       .main.expanded { margin-left: 0 !important; }
-      .main.expanded .main-header { padding-left: 46px; }
+      .main.expanded .main-header { padding-left: 36px; }
       .mobile-sidebar-toggle { display: flex; }
       .menu-toggle { display: none !important; }
       .sidebar-expand-btn { display: none !important; }
       .sidebar-collapse-btn { display: none; }
-      .main-header { padding: max(4px, env(safe-area-inset-top)) 52px 4px !important; margin-bottom: 0 !important; min-height: 52px !important; display: flex !important; align-items: center !important; justify-content: center !important; position: relative !important; }
+      .main-header { padding: max(4px, env(safe-area-inset-top)) 46px 4px !important; margin-bottom: 0 !important; min-height: 48px !important; display: flex !important; align-items: center !important; justify-content: center !important; position: relative !important; }
       .main-header h1, .main-header h2 { font-size: 1.02rem; margin-bottom: 0 !important; width: 100%; text-align: center; }
       .mobile-home.active { padding-top: 56px !important; }
-      .main-content { padding: 8px 12px 12px; }
+      .main-content { padding: 6px 12px 12px; }
       .tab-bar { margin-top: 0 !important; padding-top: 0 !important; padding: 4px 8px !important; margin-left: -12px !important; margin-right: -12px !important; overflow-x: auto !important; }
       .coach-select { margin-bottom: 12px !important; margin-top: 4px !important; }
       .view { padding: 6px 12px 8px !important; padding-top: 4px !important; }
@@ -564,16 +575,8 @@
         -webkit-backdrop-filter: blur(18px);
         border-bottom: 1px solid rgba(255,255,255,0.04);
       }
-      body[data-active-view="home"] .main-header {
-        min-height: 18px !important;
-        padding: max(4px, env(safe-area-inset-top)) 52px 0 !important;
-        background: transparent !important;
-        border-bottom: none !important;
-        backdrop-filter: none !important;
-        -webkit-backdrop-filter: none !important;
-      }
-      body[data-active-view="home"] #viewTitle { display: none !important; }
-      body[data-active-view="home"] .main-content { padding-top: 0 !important; }
+      body[data-active-view="home"] .main-header { display: none !important; }
+      body[data-active-view="home"] .main-content { padding-top: calc(max(6px, env(safe-area-inset-top)) + 4px) !important; }
       body[data-active-view="home"] #homeView { padding-top: 0 !important; }
       body[data-active-view="home"] #homeView .home-tabs { margin-top: 0 !important; }
 
@@ -1467,10 +1470,8 @@
 
   <button class="menu-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">&#9776;</button>
   <button class="mobile-sidebar-toggle" onclick="toggleMobileSidebar()" aria-label="Open navigation">
-    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M4.5 5.5h11"/>
-      <path d="M4.5 10h7.5"/>
-      <path d="M4.5 14.5h11"/>
+    <svg viewBox="0 0 12 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M3 3l6 7-6 7"/>
     </svg>
   </button>
   <button class="mobile-fm-tabs-toggle" id="mobileFMTabsToggle" onclick="toggleMobileFMMenu()" aria-label="Open Financial Markets menu" aria-expanded="false">
