@@ -5207,6 +5207,7 @@
           if (newsList) newsList.innerHTML = html;
           if (fmNewsList) fmNewsList.innerHTML = html;
           renderMobileHomeNews();
+          queueArticlePrefetch(window._marketNewsArticles);
         } else {
           window._marketNewsStatus = 'empty';
           window._marketNewsArticles = [];
@@ -5231,6 +5232,185 @@
     var _currentArticle = null;
     var _articleContentCache = {};
     var _articleLoadToken = 0;
+    var ARTICLE_CACHE_STORAGE_KEY = 'wishpath_article_cache_v2';
+    var ARTICLE_CACHE_TTL_MS = 1000 * 60 * 60 * 6;
+    var ARTICLE_CACHE_MAX_ENTRIES = 80;
+    var _articleCachePersistTimer = null;
+    var _articlePrefetchQueue = [];
+    var _articlePrefetchInFlight = 0;
+    var _articlePrefetchPromises = {};
+
+    function pruneArticleContentCache() {
+      var now = Date.now();
+      var entries = Object.entries(_articleContentCache || {}).filter(function(pair) {
+        var entry = pair[1];
+        if (!entry) return false;
+        if (typeof entry === 'string') return !!entry;
+        return !!entry.content && (!entry.ts || (now - entry.ts) < ARTICLE_CACHE_TTL_MS);
+      }).map(function(pair) {
+        var url = pair[0];
+        var entry = pair[1];
+        if (typeof entry === 'string') {
+          return [url, { content: entry, ts: now }];
+        }
+        return [url, entry];
+      }).sort(function(a, b) {
+        return (b[1].ts || 0) - (a[1].ts || 0);
+      }).slice(0, ARTICLE_CACHE_MAX_ENTRIES);
+
+      _articleContentCache = {};
+      entries.forEach(function(pair) {
+        _articleContentCache[pair[0]] = pair[1];
+      });
+    }
+
+    function persistArticleContentCacheSoon() {
+      if (typeof localStorage === 'undefined') return;
+      clearTimeout(_articleCachePersistTimer);
+      _articleCachePersistTimer = setTimeout(function() {
+        try {
+          pruneArticleContentCache();
+          localStorage.setItem(ARTICLE_CACHE_STORAGE_KEY, JSON.stringify(_articleContentCache));
+        } catch (err) {
+          console.error('Article cache persist failed:', err);
+        }
+      }, 180);
+    }
+
+    function loadPersistedArticleContentCache() {
+      if (typeof localStorage === 'undefined') return;
+      try {
+        var raw = localStorage.getItem(ARTICLE_CACHE_STORAGE_KEY);
+        if (!raw) return;
+        var parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== 'object') return;
+        _articleContentCache = parsed;
+        pruneArticleContentCache();
+      } catch (err) {
+        console.error('Article cache load failed:', err);
+      }
+    }
+
+    function getCachedArticleContent(url) {
+      if (!url) return '';
+      var entry = _articleContentCache[url];
+      if (!entry) return '';
+      if (typeof entry === 'string') {
+        _articleContentCache[url] = { content: entry, ts: Date.now() };
+        persistArticleContentCacheSoon();
+        return entry;
+      }
+      if (!entry.content) return '';
+      if (entry.ts && (Date.now() - entry.ts) >= ARTICLE_CACHE_TTL_MS) {
+        delete _articleContentCache[url];
+        persistArticleContentCacheSoon();
+        return '';
+      }
+      return entry.content;
+    }
+
+    function setCachedArticleContent(url, content) {
+      if (!url || !content) return;
+      _articleContentCache[url] = { content: content, ts: Date.now() };
+      persistArticleContentCacheSoon();
+    }
+
+    function extractArticleReaderPayloadContent(data, articleData) {
+      if (!data) return '';
+      if (data.content && !looksLikeBlockedArticlePayload(data.content)) return data.content;
+      if (data.markdown && !looksLikeBlockedArticlePayload(data.markdown)) return data.markdown;
+      if (data.html) return extractArticleTextFromHtml(data.html, articleData && articleData.title);
+      if (data.text && !looksLikeBlockedArticlePayload(data.text)) return data.text;
+      return '';
+    }
+
+    async function fetchAndCacheArticleContent(articleData, forceRefresh) {
+      if (!articleData) return '';
+      var cacheKey = articleData.url || '';
+      if (!forceRefresh && cacheKey) {
+        var cached = getCachedArticleContent(cacheKey);
+        if (cached) return cached;
+        if (_articlePrefetchPromises[cacheKey]) return _articlePrefetchPromises[cacheKey];
+      }
+      if (!articleData.url) {
+        return getBestInlineArticleText(articleData);
+      }
+
+      var promise = (async function() {
+        try {
+          var res = await fetch(SUPABASE_FN + '/article-reader', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              url: articleData.url,
+              title: articleData.title || '',
+              source: articleData.source || ''
+            })
+          });
+          if (!res.ok) throw new Error('Article reader returned ' + res.status);
+          var data = await res.json();
+          var content = extractArticleReaderPayloadContent(data, articleData);
+          if (!String(content || '').trim()) throw new Error('No article content returned');
+          setCachedArticleContent(articleData.url, content);
+          return content;
+        } finally {
+          if (cacheKey) delete _articlePrefetchPromises[cacheKey];
+        }
+      })();
+
+      if (cacheKey) _articlePrefetchPromises[cacheKey] = promise;
+      return promise;
+    }
+
+    function scheduleArticlePrefetchDrain() {
+      if (window._articlePrefetchScheduled) return;
+      window._articlePrefetchScheduled = true;
+      var run = function() {
+        window._articlePrefetchScheduled = false;
+        drainArticlePrefetchQueue();
+      };
+      if (typeof requestIdleCallback === 'function') requestIdleCallback(run, { timeout: 1200 });
+      else setTimeout(run, 180);
+    }
+
+    function queueArticlePrefetch(articles) {
+      if (!Array.isArray(articles) || !articles.length) return;
+      var seen = {};
+      articles.forEach(function(article) {
+        if (!article || !article.url || seen[article.url]) return;
+        seen[article.url] = true;
+        if (getCachedArticleContent(article.url) || _articlePrefetchPromises[article.url]) return;
+        _articlePrefetchQueue.push(article);
+        if (article.image) {
+          var img = new Image();
+          img.decoding = 'async';
+          img.src = article.image;
+        }
+        if (article.image_url) {
+          var altImg = new Image();
+          altImg.decoding = 'async';
+          altImg.src = article.image_url;
+        }
+      });
+      scheduleArticlePrefetchDrain();
+    }
+
+    function drainArticlePrefetchQueue() {
+      while (_articlePrefetchInFlight < 2 && _articlePrefetchQueue.length) {
+        var article = _articlePrefetchQueue.shift();
+        if (!article || !article.url) continue;
+        if (getCachedArticleContent(article.url) || _articlePrefetchPromises[article.url]) continue;
+        _articlePrefetchInFlight += 1;
+        fetchAndCacheArticleContent(article, false).catch(function(err) {
+          console.error('Article prefetch failed:', err);
+        }).finally(function() {
+          _articlePrefetchInFlight = Math.max(0, _articlePrefetchInFlight - 1);
+          if (_articlePrefetchQueue.length) scheduleArticlePrefetchDrain();
+        });
+      }
+    }
+
+    loadPersistedArticleContentCache();
 
     function escapeArticleHtml(value) {
       return String(value || '')
@@ -5447,7 +5627,7 @@
 
       var cacheKey = articleData.url;
       var loadToken = ++_articleLoadToken;
-      var cached = !forceRefresh && _articleContentCache[cacheKey];
+      var cached = !forceRefresh && getCachedArticleContent(cacheKey);
       if (cached) {
         document.getElementById('arFrame').style.display = 'none';
         text.style.display = 'block';
@@ -5462,31 +5642,8 @@
       text.innerHTML = '<div class="article-reader-loading">Loading full article...</div>';
 
       try {
-        var res = await fetch(SUPABASE_FN + '/article-reader', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            url: articleData.url,
-            title: articleData.title || '',
-            source: articleData.source || ''
-          })
-        });
-
-        if (!res.ok) throw new Error('Article reader returned ' + res.status);
-        var data = await res.json();
-        var content = '';
-        if (data.content && !looksLikeBlockedArticlePayload(data.content)) {
-          content = data.content;
-        } else if (data.markdown && !looksLikeBlockedArticlePayload(data.markdown)) {
-          content = data.markdown;
-        } else if (data.html) {
-          content = extractArticleTextFromHtml(data.html, articleData.title);
-        } else if (data.text && !looksLikeBlockedArticlePayload(data.text)) {
-          content = data.text;
-        }
+        var content = await fetchAndCacheArticleContent(articleData, forceRefresh);
         if (!content.trim()) throw new Error('No article content returned');
-
-        _articleContentCache[cacheKey] = content;
         if (!_currentArticle || _currentArticle.url !== articleData.url || loadToken !== _articleLoadToken) return;
 
         document.getElementById('arFrame').style.display = 'none';
@@ -7080,6 +7237,7 @@
         return;
       }
       window._newsFeedArticles = articles;
+      queueArticlePrefetch(articles);
       // Sort: breaking first, then held stocks, then rest
       articles.sort(function(a, b) {
         if (a.isBreaking && !b.isBreaking) return -1;
