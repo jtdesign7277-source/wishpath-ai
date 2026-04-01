@@ -5531,20 +5531,207 @@
     })();
 
     // ── Templates Browser ──
+    var CHART_STUDIO_DEFAULT_PLACEHOLDER = 'Describe a chart to create...';
+    var _activeChartStudioTemplate = null;
     var TEMPLATES = [
-      { name: 'Candlestick Chart', cat: 'Investing', icon: '🕯️', rating: '4.9' },
-      { name: 'Portfolio Performance', cat: 'Investing', icon: '📈', rating: '4.8' },
-      { name: 'Asset Allocation Pie', cat: 'Investing', icon: '🥧', rating: '4.7' },
-      { name: 'Monthly Spending Breakdown', cat: 'Budgeting', icon: '💸', rating: '4.9' },
-      { name: 'Budget vs Actual', cat: 'Budgeting', icon: '📊', rating: '4.6' },
-      { name: 'Expense Waterfall', cat: 'Budgeting', icon: '🌊', rating: '4.5' },
-      { name: 'Net Worth Tracker', cat: 'Finance', icon: '💰', rating: '4.9' },
-      { name: 'Cash Flow Timeline', cat: 'Finance', icon: '💵', rating: '4.7' },
-      { name: 'Savings Goal Progress', cat: 'Goals', icon: '🎯', rating: '4.8' },
-      { name: 'Debt Payoff Plan', cat: 'Goals', icon: '🏁', rating: '4.6' },
-      { name: 'Revenue Dashboard', cat: 'Business', icon: '🚀', rating: '4.8' },
-      { name: 'P&L Statement', cat: 'Business', icon: '📋', rating: '4.7' },
+      { name: 'Candlestick Chart', cat: 'Investing', icon: '🕯️', rating: '4.9', helpText: 'Share the dates plus open, high, low, and close values you want visualized.', prompt: 'Help me fill out the Candlestick Chart template. Ask me for the dates and OHLC values you need, then rebuild this starter chart with my real numbers.', inputPlaceholder: 'Tell AI the dates and OHLC values to use...' },
+      { name: 'Portfolio Performance', cat: 'Investing', icon: '📈', rating: '4.8', helpText: 'Add your portfolio values by month or compare them to a benchmark.', prompt: 'Help me fill out the Portfolio Performance template. Ask me for my portfolio values, date range, and any benchmark I want to compare, then rebuild the chart with my real data.', inputPlaceholder: 'Tell AI your date range and portfolio values...' },
+      { name: 'Asset Allocation Pie', cat: 'Investing', icon: '🥧', rating: '4.7', helpText: 'List your holdings or asset buckets and the dollar values or percentages.', prompt: 'Help me fill out the Asset Allocation Pie template. Ask me for my holdings or allocation percentages, then rebuild the chart with my real portfolio mix.', inputPlaceholder: 'Tell AI your holdings and percentages...' },
+      { name: 'Monthly Spending Breakdown', cat: 'Budgeting', icon: '💸', rating: '4.9', helpText: 'Provide your spending categories and monthly totals.', prompt: 'Help me fill out the Monthly Spending Breakdown template. Ask me for my spending categories and monthly totals, then rebuild the chart with my real expenses.', inputPlaceholder: 'Tell AI your spending categories and monthly totals...' },
+      { name: 'Budget vs Actual', cat: 'Budgeting', icon: '📊', rating: '4.6', helpText: 'Compare your planned numbers against what you actually spent or earned.', prompt: 'Help me fill out the Budget vs Actual template. Ask me for each category, my budgeted amount, and my actual amount, then rebuild the chart with my real data.', inputPlaceholder: 'Tell AI your categories, budget, and actual numbers...' },
+      { name: 'Expense Waterfall', cat: 'Budgeting', icon: '🌊', rating: '4.5', helpText: 'Start with total income, then list the major costs or savings steps that move it.', prompt: 'Help me fill out the Expense Waterfall template. Ask me for my starting income and each expense or savings step, then rebuild the chart with my real numbers.', inputPlaceholder: 'Tell AI your income and waterfall steps...' },
+      { name: 'Net Worth Tracker', cat: 'Finance', icon: '💰', rating: '4.9', helpText: 'Add dates plus your total assets, liabilities, or net worth over time.', prompt: 'Help me fill out the Net Worth Tracker template. Ask me for my dates and net worth values over time, then rebuild the chart with my real numbers.', inputPlaceholder: 'Tell AI your dates and net worth values...' },
+      { name: 'Cash Flow Timeline', cat: 'Finance', icon: '💵', rating: '4.7', helpText: 'Track how cash is coming in and going out over weeks or months.', prompt: 'Help me fill out the Cash Flow Timeline template. Ask me for my periods, inflows, and outflows, then rebuild the chart with my real numbers.', inputPlaceholder: 'Tell AI your periods, inflows, and outflows...' },
+      { name: 'Savings Goal Progress', cat: 'Goals', icon: '🎯', rating: '4.8', helpText: 'Share your target amount, what you have saved, and your remaining gap.', prompt: 'Help me fill out the Savings Goal Progress template. Ask me for my savings goal, current savings, and any milestones, then rebuild the chart with my real numbers.', inputPlaceholder: 'Tell AI your goal amount and current savings...' },
+      { name: 'Debt Payoff Plan', cat: 'Goals', icon: '🏁', rating: '4.6', helpText: 'Use this for a payoff timeline with balances dropping over time.', prompt: 'Help me fill out the Debt Payoff Plan template. Ask me for my current debt balance and the projected balances over time, then rebuild the chart with my real numbers.', inputPlaceholder: 'Tell AI your debt balances and payoff timeline...' },
+      { name: 'Revenue Dashboard', cat: 'Business', icon: '🚀', rating: '4.8', helpText: 'Add the periods, revenue, and profit or expense numbers you want to track.', prompt: 'Help me fill out the Revenue Dashboard template. Ask me for my reporting periods, revenue, and profit or expense values, then rebuild the chart with my real numbers.', inputPlaceholder: 'Tell AI your revenue periods and values...' },
+      { name: 'P&L Statement', cat: 'Business', icon: '📋', rating: '4.7', helpText: 'Map out revenue, cost of goods, operating expenses, and net income.', prompt: 'Help me fill out the P&L Statement template. Ask me for my revenue, COGS, operating expenses, and net income values, then rebuild the chart with my real numbers.', inputPlaceholder: 'Tell AI your P&L line items and values...' }
     ];
+
+    function getTemplateByName(name) {
+      return TEMPLATES.find(function(t) { return t.name === name; }) || null;
+    }
+
+    function getChartStudioMessagesEl() {
+      return document.getElementById('chartStudioMessages');
+    }
+
+    function getChartStudioInputEl() {
+      return document.getElementById('chartStudioInput');
+    }
+
+    function getTemplateChartClickHandler(templateName) {
+      return function() {
+        primeChartStudioTemplateAssist(templateName, true, true);
+      };
+    }
+
+    function buildTemplateChartConfig(template) {
+      var clickHandler = getTemplateChartClickHandler(template.name);
+      var baseConfig = {
+        chart: { height: 320, animation: false, events: { click: clickHandler } },
+        title: { text: template.name + ' Template' },
+        subtitle: { text: 'Tap chart to ask AI to fill in your numbers' },
+        credits: { enabled: false }
+      };
+      switch (template.name) {
+        case 'Candlestick Chart':
+          return Object.assign({}, baseConfig, {
+            chart: Object.assign({}, baseConfig.chart, { type: 'line' }),
+            xAxis: { categories: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'] },
+            yAxis: { title: { text: 'Price' } },
+            series: [{ name: 'Placeholder Price', data: [182, 186, 184, 189, 191] }]
+          });
+        case 'Portfolio Performance':
+          return Object.assign({}, baseConfig, {
+            chart: Object.assign({}, baseConfig.chart, { type: 'line' }),
+            xAxis: { categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'] },
+            yAxis: { title: { text: 'Portfolio Value ($)' } },
+            series: [
+              { name: 'Portfolio', data: [12000, 12650, 13400, 14150, 14720, 15380] },
+              { name: 'Benchmark', data: [12000, 12240, 12820, 13310, 13850, 14410] }
+            ]
+          });
+        case 'Asset Allocation Pie':
+          return Object.assign({}, baseConfig, {
+            chart: Object.assign({}, baseConfig.chart, { type: 'pie' }),
+            series: [{ name: 'Allocation', innerSize: '54%', data: [{ name: 'Tech', y: 42 }, { name: 'ETFs', y: 24 }, { name: 'Cash', y: 18 }, { name: 'Other', y: 16 }] }]
+          });
+        case 'Monthly Spending Breakdown':
+          return Object.assign({}, baseConfig, {
+            chart: Object.assign({}, baseConfig.chart, { type: 'pie' }),
+            series: [{ name: 'Spend', innerSize: '48%', data: [{ name: 'Housing', y: 35 }, { name: 'Food', y: 18 }, { name: 'Transport', y: 11 }, { name: 'Utilities', y: 12 }, { name: 'Other', y: 24 }] }]
+          });
+        case 'Budget vs Actual':
+          return Object.assign({}, baseConfig, {
+            chart: Object.assign({}, baseConfig.chart, { type: 'column' }),
+            xAxis: { categories: ['Housing', 'Food', 'Transport', 'Savings'] },
+            yAxis: { title: { text: 'Amount ($)' } },
+            series: [
+              { name: 'Budget', data: [1800, 700, 250, 600] },
+              { name: 'Actual', data: [1750, 740, 230, 500] }
+            ]
+          });
+        case 'Expense Waterfall':
+          return Object.assign({}, baseConfig, {
+            chart: Object.assign({}, baseConfig.chart, { type: 'column' }),
+            xAxis: { categories: ['Income', 'Fixed Costs', 'Variable Costs', 'Savings', 'Balance'] },
+            yAxis: { title: { text: 'Amount ($)' } },
+            plotOptions: { column: { colorByPoint: true } },
+            series: [{ name: 'Cash Movement', data: [6200, -2400, -1450, -900, 1450] }]
+          });
+        case 'Net Worth Tracker':
+          return Object.assign({}, baseConfig, {
+            chart: Object.assign({}, baseConfig.chart, { type: 'area' }),
+            xAxis: { categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'] },
+            yAxis: { title: { text: 'Net Worth ($)' } },
+            series: [{ name: 'Net Worth', data: [25000, 26400, 27950, 29100, 30850, 32400] }]
+          });
+        case 'Cash Flow Timeline':
+          return Object.assign({}, baseConfig, {
+            chart: Object.assign({}, baseConfig.chart, { type: 'line' }),
+            xAxis: { categories: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6'] },
+            yAxis: { title: { text: 'Cash ($)' } },
+            series: [
+              { name: 'Inflow', data: [1800, 1500, 2200, 2100, 2400, 2000] },
+              { name: 'Outflow', data: [1100, 1250, 1360, 1290, 1500, 1425] }
+            ]
+          });
+        case 'Savings Goal Progress':
+          return Object.assign({}, baseConfig, {
+            chart: Object.assign({}, baseConfig.chart, { type: 'bar' }),
+            xAxis: { categories: ['Savings Goal'] },
+            yAxis: { min: 0, title: { text: 'Amount ($)' }, stackLabels: { enabled: true } },
+            plotOptions: { series: { stacking: 'normal' } },
+            series: [
+              { name: 'Saved', data: [6200] },
+              { name: 'Remaining', data: [3800] }
+            ]
+          });
+        case 'Debt Payoff Plan':
+          return Object.assign({}, baseConfig, {
+            chart: Object.assign({}, baseConfig.chart, { type: 'line' }),
+            xAxis: { categories: ['Month 1', 'Month 2', 'Month 3', 'Month 4', 'Month 5', 'Month 6'] },
+            yAxis: { title: { text: 'Balance ($)' } },
+            series: [{ name: 'Debt Balance', data: [18400, 16950, 15320, 13840, 12150, 10620] }]
+          });
+        case 'Revenue Dashboard':
+          return Object.assign({}, baseConfig, {
+            chart: Object.assign({}, baseConfig.chart, { type: 'column' }),
+            xAxis: { categories: ['Q1', 'Q2', 'Q3', 'Q4'] },
+            yAxis: { title: { text: 'Amount ($)' } },
+            series: [
+              { name: 'Revenue', data: [24000, 27800, 32400, 36900] },
+              { name: 'Profit', data: [6200, 7400, 9800, 11850] }
+            ]
+          });
+        case 'P&L Statement':
+          return Object.assign({}, baseConfig, {
+            chart: Object.assign({}, baseConfig.chart, { type: 'column' }),
+            xAxis: { categories: ['Revenue', 'COGS', 'Gross Profit', 'OpEx', 'Net Income'] },
+            yAxis: { title: { text: 'Amount ($)' } },
+            plotOptions: { column: { colorByPoint: true } },
+            series: [{ name: 'P&L', data: [58000, -21000, 37000, -16000, 21000] }]
+          });
+        default:
+          return Object.assign({}, baseConfig, {
+            chart: Object.assign({}, baseConfig.chart, { type: 'column' }),
+            xAxis: { categories: ['A', 'B', 'C', 'D'] },
+            yAxis: { title: { text: 'Value' } },
+            series: [{ name: 'Template', data: [5, 8, 4, 7] }]
+          });
+      }
+    }
+
+    function renderChartStudioTemplate(template) {
+      if (!template || typeof Highcharts === 'undefined') return;
+      renderHighchart('chartStudioChartArea', buildTemplateChartConfig(template));
+      var chartWrap = document.getElementById('chartStudioChartArea-chart');
+      if (chartWrap) chartWrap.style.cursor = 'pointer';
+    }
+
+    function renderChartStudioTemplateNote(template) {
+      var msgs = getChartStudioMessagesEl();
+      if (!msgs || !template) return;
+      var escapedName = template.name.replace(/'/g, "\\'");
+      msgs.innerHTML = '<div class="msg ai"><strong>' + template.name.replace(/</g, '&lt;') + ' template loaded.</strong><br>' +
+        template.helpText.replace(/</g, '&lt;') +
+        '<div style="margin-top:12px;"><button class="portfolio-coach-chip" onclick="primeChartStudioTemplateAssist(\'' + escapedName + '\', true, true)">Ask AI to fill this template</button></div></div>';
+    }
+
+    function primeChartStudioTemplateAssist(name, preserveExistingText, focusInput) {
+      var template = getTemplateByName(name);
+      var input = getChartStudioInputEl();
+      if (!template || !input) return;
+      _activeChartStudioTemplate = template.name;
+      input.placeholder = template.inputPlaceholder || CHART_STUDIO_DEFAULT_PLACEHOLDER;
+      if (!preserveExistingText || !input.value.trim()) input.value = template.prompt;
+      input.style.height = 'auto';
+      input.style.height = input.scrollHeight + 'px';
+      if (focusInput !== false) input.focus();
+      if (focusInput !== false && typeof input.setSelectionRange === 'function') {
+        input.setSelectionRange(input.value.length, input.value.length);
+      }
+      showToast('Template prompt loaded. Add your numbers and send.');
+    }
+
+    function openChartStudioTemplate(name) {
+      var template = getTemplateByName(name);
+      if (!template) return;
+      _activeChartStudioTemplate = template.name;
+      chartStudioHistory = [];
+      closeMobileTemplates();
+      openFMTab('fmChartStudio');
+      setTimeout(function() {
+        renderChartStudioTemplate(template);
+        renderChartStudioTemplateNote(template);
+        primeChartStudioTemplateAssist(template.name, false, false);
+        var chartArea = document.getElementById('chartStudioChartArea');
+        if (chartArea && typeof chartArea.scrollIntoView === 'function') {
+          chartArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, window.innerWidth <= 768 ? 180 : 40);
+    }
     var _tmplCat = 'All';
     function openMobileTemplates() {
       var el = document.getElementById('mobileTemplatesOverlay');
@@ -5579,9 +5766,7 @@
       }).join('');
     }
     function useTemplate(name) {
-      closeMobileTemplates();
-      var input = document.getElementById('mobileHomeInput');
-      if (input) { input.value = 'Create a ' + name + ' for my financial goals'; input.focus(); }
+      openChartStudioTemplate(name);
     }
 
     function switchMobileHomeTab(tab, btn) {
@@ -6068,13 +6253,30 @@
         var reply = data.reply || "Couldn't process that. Try again.";
         chartStudioHistory.push({ role: 'assistant', content: reply });
         stopThinking('chartStudioTyping');
-        var chartDivId = 'cs-chart-' + Date.now();
-        var chartDiv = document.createElement('div');
-        chartDiv.id = chartDivId; chartDiv.className = 'chart-container'; chartDiv.style.display = 'none';
+        var usesTemplateCanvas = !!_activeChartStudioTemplate;
+        var chartDivId = usesTemplateCanvas ? 'chartStudioChartArea' : 'cs-chart-' + Date.now();
+        var chartDiv = usesTemplateCanvas ? null : document.createElement('div');
+        if (chartDiv) {
+          chartDiv.id = chartDivId;
+          chartDiv.className = 'chart-container';
+          chartDiv.style.display = 'none';
+        }
         typewriterEffect(msgs, reply, function(msgDiv) {
           wrapAiTables(msgDiv);
-          msgDiv.parentNode.insertBefore(chartDiv, msgDiv.nextSibling);
-          detectAndRenderCharts(reply, chartDivId);
+          if (chartDiv) msgDiv.parentNode.insertBefore(chartDiv, msgDiv.nextSibling);
+          var rendered = detectAndRenderCharts(reply, chartDivId);
+          if (usesTemplateCanvas && rendered) {
+            var chartArea = document.getElementById('chartStudioChartArea');
+            if (chartArea) {
+              var chartWrap = document.getElementById('chartStudioChartArea-chart');
+              if (chartWrap) chartWrap.style.cursor = 'pointer';
+              setTimeout(function() {
+                if (typeof chartArea.scrollIntoView === 'function') {
+                  chartArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+              }, 30);
+            }
+          }
           addAiOutputActions(msgDiv);
           incrementAgentUsage();
         });
