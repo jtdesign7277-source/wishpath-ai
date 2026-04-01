@@ -871,18 +871,27 @@
       font-size: 17px; color: rgba(255,255,255,0.8); line-height: 1.65;
     }
     .article-reader-text p { margin-bottom: 16px; }
-    .article-reader-divider {
-      border: none; border-top: 1px solid rgba(255,255,255,0.08); margin: 24px 0;
-    }
-    .article-reader-fulllink {
-      display: block; text-align: center; color: var(--accent); font-size: 14px;
-      font-weight: 500; text-decoration: none; padding: 14px; margin-top: 8px;
-      border: 1px solid rgba(0,201,167,0.2); border-radius: 12px;
-      background: rgba(0,201,167,0.05);
+    .article-reader-frame {
+      display: none; width: 100%; min-height: 68vh; margin-top: 8px;
+      border: none; border-radius: 16px; background: #fff;
     }
     .article-reader-loading {
       display: flex; align-items: center; justify-content: center; gap: 8px;
       color: rgba(255,255,255,0.4); font-size: 14px; padding: 20px 0;
+    }
+    .article-reader-status {
+      font-size: 14px; color: rgba(255,255,255,0.42); margin-bottom: 16px;
+    }
+    .article-reader-status.error { color: rgba(248,81,73,0.9); }
+    .article-reader-retry {
+      display: none; margin-top: 12px; padding: 12px 18px;
+      background: linear-gradient(135deg, rgba(0,201,167,0.08) 0%, rgba(255,255,255,0.02) 100%);
+      border: 1px solid rgba(0,201,167,0.2); border-radius: 12px;
+      color: var(--accent); font: inherit; font-size: 0.88rem; font-weight: 600; cursor: pointer;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.28), 0 0 14px rgba(0,201,167,0.08);
+    }
+    .article-reader-retry:hover {
+      box-shadow: 0 6px 24px rgba(0,0,0,0.34), 0 0 18px rgba(0,201,167,0.14);
     }
     .news-title { font-size: 0.88rem; font-weight: 600; color: var(--text); line-height: 1.4; margin-bottom: 4px; }
     .news-meta { font-size: 0.7rem; color: var(--text-dim); display: flex; gap: 8px; }
@@ -1981,9 +1990,10 @@
       <h1 class="article-reader-title" id="arTitle"></h1>
       <div class="article-reader-meta"><span class="ar-source" id="arSource"></span> <span id="arDate"></span></div>
       <div class="article-reader-tickers" id="arTickers"></div>
+      <div class="article-reader-status" id="arStatus"></div>
       <div class="article-reader-text" id="arText"></div>
-      <hr class="article-reader-divider" />
-      <a class="article-reader-fulllink" id="arFullLink" href="#" target="_blank" rel="noopener">Read full article at source</a>
+      <iframe class="article-reader-frame" id="arFrame" title="Full article reader" loading="lazy" referrerpolicy="no-referrer"></iframe>
+      <button class="article-reader-retry" id="arRetryBtn" onclick="retryArticleReader()">Retry loading article</button>
     </div>
   </div>
 
@@ -4269,8 +4279,20 @@
         var res = await fetch(SUPABASE_FN + '/news?limit=8&symbols=' + encodeURIComponent(newsSymbols));
         var data = await res.json();
         if (data && Array.isArray(data.articles) && data.articles.length > 0) {
-          window._marketNewsArticles = data.articles;
-          var html = data.articles.map(function(a, idx) {
+          window._marketNewsArticles = data.articles.map(function(a) {
+            return {
+              title: a.title,
+              source: a.source,
+              description: a.description || '',
+              content: a.content || a.body || a.summary || a.description || '',
+              url: a.url,
+              image: a.image || null,
+              tickers: a.tickers || [],
+              sentiment: a.sentiment || 'neutral',
+              timeAgo: a.timeAgo || ''
+            };
+          });
+          var html = window._marketNewsArticles.map(function(a, idx) {
             var imgHtml = a.image ? '<img class="news-item-img" src="' + a.image + '" alt="" onerror="this.style.display=\'none\'" loading="lazy" />' : '';
             var tickerHtml = (a.tickers && a.tickers.length > 0) ? '<div class="news-tickers">' + a.tickers.map(function(t) { return '<span class="news-ticker-pill">' + t + '</span>'; }).join('') + (a.sentiment && a.sentiment !== 'neutral' ? '<span class="news-sentiment ' + a.sentiment + '">' + a.sentiment + '</span>' : '') + '</div>' : '';
             var descHtml = a.description ? '<div style="font-size:0.78rem;color:var(--text-dim);margin-top:4px;line-height:1.4;">' + String(a.description).replace(/</g,'&lt;').substring(0, 140) + '</div>' : '';
@@ -4301,6 +4323,175 @@
     // ════════════════════════════════
     // ── IN-APP ARTICLE READER ──
     var _currentArticle = null;
+    var _articleContentCache = {};
+    var _articleLoadToken = 0;
+    var _articleReaderProxyUnavailable = true;
+
+    function escapeArticleHtml(value) {
+      return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function normalizeArticleText(rawText, articleTitle) {
+      var cleaned = String(rawText || '').replace(/\r\n/g, '\n');
+      cleaned = cleaned.replace(/!\[[^\]]*\]\([^)]+\)/g, '');
+      cleaned = cleaned.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
+      cleaned = cleaned.replace(/`([^`]+)`/g, '$1');
+      cleaned = cleaned.replace(/^>\s?/gm, '');
+      cleaned = cleaned.replace(/\n{3,}/g, '\n\n').trim();
+      if (!cleaned) return '';
+
+      var blocks = cleaned.split(/\n{2,}/).map(function(block) { return block.trim(); }).filter(Boolean);
+      if (articleTitle && blocks.length) {
+        var firstBlock = blocks[0].replace(/^#{1,6}\s*/, '').trim().toLowerCase();
+        if (firstBlock === String(articleTitle).trim().toLowerCase()) {
+          blocks.shift();
+        }
+      }
+      return blocks.join('\n\n').trim();
+    }
+
+    function articleTextToHtml(rawText, articleTitle) {
+      var cleaned = normalizeArticleText(rawText, articleTitle);
+      if (!cleaned) return '';
+
+      return cleaned.split(/\n{2,}/).map(function(block) {
+        var lines = block.split('\n').map(function(line) { return line.trim(); }).filter(Boolean);
+        if (!lines.length) return '';
+
+        var bulletLines = lines.filter(function(line) { return /^[-*]\s+/.test(line) || /^\d+\.\s+/.test(line); });
+        if (bulletLines.length === lines.length) {
+          return bulletLines.map(function(line) {
+            return '<p>&bull; ' + escapeArticleHtml(line.replace(/^[-*]\s+/, '').replace(/^\d+\.\s+/, '')) + '</p>';
+          }).join('');
+        }
+
+        var isHeading = lines.length === 1 && /^#{1,6}\s+/.test(lines[0]);
+        var blockText = lines.join(' ').replace(/^#{1,6}\s+/, '');
+        if (isHeading) {
+          return '<p><strong>' + escapeArticleHtml(blockText) + '</strong></p>';
+        }
+        return '<p>' + escapeArticleHtml(blockText) + '</p>';
+      }).join('');
+    }
+
+    function setArticleReaderStatus(message, isError) {
+      var status = document.getElementById('arStatus');
+      var retryBtn = document.getElementById('arRetryBtn');
+      if (!status || !retryBtn) return;
+      status.textContent = message || '';
+      status.classList.toggle('error', !!isError);
+      retryBtn.style.display = isError ? 'inline-flex' : 'none';
+    }
+
+    function resetArticleReaderBody() {
+      var text = document.getElementById('arText');
+      var frame = document.getElementById('arFrame');
+      text.style.display = 'block';
+      text.innerHTML = '';
+      frame.style.display = 'none';
+      frame.removeAttribute('src');
+      frame.onload = null;
+      frame.onerror = null;
+    }
+
+    function buildInAppReaderUrl(url) {
+      return 'https://r.jina.ai/http://' + String(url || '').trim();
+    }
+
+    function openIframeArticleReader(articleData) {
+      if (!articleData || !articleData.url) return false;
+      var text = document.getElementById('arText');
+      var frame = document.getElementById('arFrame');
+      text.style.display = 'none';
+      frame.style.display = 'block';
+      setArticleReaderStatus('Loading full article...', false);
+      frame.onload = function() {
+        if (_currentArticle && _currentArticle.url === articleData.url) {
+          setArticleReaderStatus('', false);
+        }
+      };
+      frame.onerror = function() {
+        if (!_currentArticle || _currentArticle.url !== articleData.url) return;
+        frame.style.display = 'none';
+        text.style.display = 'block';
+        var fallbackText = articleData.content || articleData.description || articleData.snippet || '';
+        text.innerHTML = fallbackText ? articleTextToHtml(fallbackText, articleData.title) : '';
+        setArticleReaderStatus('Unable to load the full article right now. Retry below.', true);
+      };
+      frame.src = buildInAppReaderUrl(articleData.url);
+      return true;
+    }
+
+    async function hydrateArticleReader(articleData, forceRefresh) {
+      var text = document.getElementById('arText');
+      if (!articleData || !articleData.url) {
+        var inlineContent = articleData && (articleData.content || articleData.description || articleData.snippet || '');
+        text.innerHTML = inlineContent ? articleTextToHtml(inlineContent, articleData.title) : '';
+        setArticleReaderStatus(inlineContent ? '' : 'Article content unavailable.', !inlineContent);
+        return;
+      }
+
+      var cacheKey = articleData.url;
+      var loadToken = ++_articleLoadToken;
+      var cached = !forceRefresh && _articleContentCache[cacheKey];
+      if (cached) {
+        document.getElementById('arFrame').style.display = 'none';
+        text.style.display = 'block';
+        setArticleReaderStatus('', false);
+        text.innerHTML = articleTextToHtml(cached, articleData.title);
+        return;
+      }
+
+      if (_articleReaderProxyUnavailable) {
+        openIframeArticleReader(articleData);
+        return;
+      }
+
+      document.getElementById('arFrame').style.display = 'none';
+      text.style.display = 'block';
+      setArticleReaderStatus('Loading full article...', false);
+      text.innerHTML = '<div class="article-reader-loading">Loading full article...</div>';
+
+      try {
+        var res = await fetch(SUPABASE_FN + '/article-reader', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            url: articleData.url,
+            title: articleData.title || '',
+            source: articleData.source || ''
+          })
+        });
+
+        if (!res.ok) throw new Error('Article reader returned ' + res.status);
+        var data = await res.json();
+        var content = data.content || data.markdown || '';
+        if (!content.trim()) throw new Error('No article content returned');
+
+        _articleContentCache[cacheKey] = content;
+        if (!_currentArticle || _currentArticle.url !== articleData.url || loadToken !== _articleLoadToken) return;
+
+        document.getElementById('arFrame').style.display = 'none';
+        text.style.display = 'block';
+        setArticleReaderStatus('', false);
+        text.innerHTML = articleTextToHtml(content, articleData.title);
+      } catch (err) {
+        console.error('Article reader error:', err);
+        if (!_currentArticle || _currentArticle.url !== articleData.url || loadToken !== _articleLoadToken) return;
+        _articleReaderProxyUnavailable = true;
+        if (openIframeArticleReader(articleData)) {
+          return;
+        }
+        var fallbackText = articleData.content || articleData.description || articleData.snippet || '';
+        text.innerHTML = fallbackText ? articleTextToHtml(fallbackText, articleData.title) : '';
+        setArticleReaderStatus('Unable to load the full article right now. Retry below.', true);
+      }
+    }
 
     function openArticleReader(articleData) {
       _currentArticle = articleData;
@@ -4311,7 +4502,6 @@
       var date = document.getElementById('arDate');
       var tickers = document.getElementById('arTickers');
       var text = document.getElementById('arText');
-      var fullLink = document.getElementById('arFullLink');
       var sourceName = document.getElementById('arSourceName');
 
       title.textContent = articleData.title || '';
@@ -4337,32 +4527,23 @@
       }
       tickers.innerHTML = tickerHtml;
 
-      // Show description instantly — no AI loading
-      var desc = articleData.description || articleData.snippet || '';
-      if (desc) {
-        // Split into paragraphs if possible
-        var paragraphs = desc.split(/\n\n+/).filter(function(p) { return p.trim(); });
-        if (paragraphs.length <= 1 && desc.length > 200) {
-          // Break long single block into sentences for readability
-          var sentences = desc.match(/[^.!?]+[.!?]+/g) || [desc];
-          var mid = Math.ceil(sentences.length / 2);
-          paragraphs = [sentences.slice(0, mid).join(' '), sentences.slice(mid).join(' ')].filter(function(p) { return p.trim(); });
-        }
-        text.innerHTML = paragraphs.map(function(p) { return '<p>' + p.replace(/</g, '&lt;').trim() + '</p>'; }).join('');
-      } else {
-        text.innerHTML = '';
-      }
-
-      fullLink.href = articleData.url || '#';
-      fullLink.textContent = 'Read full article at ' + (articleData.source || 'source');
-
       overlay.classList.add('active');
       overlay.scrollTop = 0;
+      resetArticleReaderBody();
+      setArticleReaderStatus('', false);
+      hydrateArticleReader(articleData, false);
     }
 
     function closeArticleReader() {
       document.getElementById('articleReaderOverlay').classList.remove('active');
       _currentArticle = null;
+      _articleLoadToken += 1;
+      resetArticleReaderBody();
+      setArticleReaderStatus('', false);
+    }
+
+    function retryArticleReader() {
+      if (_currentArticle) hydrateArticleReader(_currentArticle, true);
     }
 
     function shareArticle() {
@@ -5392,6 +5573,7 @@
               title: a.title,
               source: a.source,
               snippet: a.description,
+              content: a.content || a.body || a.summary || a.description || '',
               url: a.url,
               published: a.timeAgo || '',
               tickers: a.tickers || [],
@@ -5500,6 +5682,7 @@
         title: a.title,
         source: a.source,
         description: a.snippet || a.aiSummary || '',
+        content: a.content || a.snippet || a.aiSummary || '',
         url: a.url,
         image: a.image_url || a.imageUrl || null,
         tickers: a.tickers || [],
