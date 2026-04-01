@@ -486,14 +486,17 @@
         height: 56px;
         border-radius: 50%;
         background: #e8e8e8;
-        color: #171717;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        font-size: 18px;
-        font-weight: 700;
-        letter-spacing: -0.04em;
         margin-bottom: 18px;
+      }
+      .mobile-ask-ai-badge svg {
+        width: 30px;
+        height: 30px;
+        display: block;
+        overflow: visible;
+        filter: drop-shadow(0 2px 6px rgba(0,0,0,0.18));
       }
       .mobile-ask-ai-heading {
         font-size: 24px;
@@ -1987,7 +1990,15 @@
         </button>
       </div>
       <div class="mobile-ask-ai-body">
-        <div class="mobile-ask-ai-badge">AI</div>
+        <div class="mobile-ask-ai-badge" aria-hidden="true">
+          <svg viewBox="0 0 32 32" fill="none">
+            <path d="M10.4 23.8 8.2 21.6 19.5 10.3c.7-.7 1.8-.8 2.6-.1l.7.7c.7.7.7 1.9 0 2.6L11.5 24.8c-.3.3-.8.3-1.1 0Z" fill="#2B2B31"/>
+            <path d="M7.6 24.4c-.6-.6-.6-1.6 0-2.2l1.3-1.3 2.2 2.2-1.3 1.3c-.6.6-1.6.6-2.2 0Z" fill="#F5F5F5"/>
+            <path d="M22.8 5.4l.5 2.2c.1.4.4.7.8.8l2.2.5-2.2.5c-.4.1-.7.4-.8.8l-.5 2.2-.5-2.2c-.1-.4-.4-.7-.8-.8l-2.2-.5 2.2-.5c.4-.1.7-.4.8-.8l.5-2.2Z" fill="#FFC83D"/>
+            <path d="M26.8 10.9l.3 1.2c.1.3.3.5.6.6l1.2.3-1.2.3c-.3.1-.5.3-.6.6l-.3 1.2-.3-1.2c-.1-.3-.3-.5-.6-.6l-1.2-.3 1.2-.3c.3-.1.5-.3.6-.6l.3-1.2Z" fill="#FFE27A"/>
+            <path d="M19.8 7.8l.2.9c.1.2.2.4.5.5l.9.2-.9.2c-.2.1-.4.2-.5.5l-.2.9-.2-.9c-.1-.2-.2-.4-.5-.5l-.9-.2.9-.2c.2-.1.4-.2.5-.5l.2-.9Z" fill="#FFD95B"/>
+          </svg>
+        </div>
         <div class="mobile-ask-ai-heading" id="mobileAskAIHeading">How can I help you today?</div>
         <div class="mobile-ask-ai-suggestions" id="mobileAskAISuggestions"></div>
       </div>
