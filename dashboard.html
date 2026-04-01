@@ -6606,6 +6606,68 @@
     // ── NEWS FEED (MarketAux + AI)
     // ════════════════════════════════
 
+    function getSelectedNewsCountryLabel(countryCode) {
+      if (!countryCode) return '';
+      var countryEl = document.getElementById('newsCountryFilter');
+      if (!countryEl) return countryCode;
+      var option = Array.prototype.find.call(countryEl.options || [], function(opt) { return opt.value === countryCode; });
+      if (!option) return countryCode;
+      return (option.textContent || option.innerText || countryCode).replace(/^[^\w]+/, '').trim();
+    }
+
+    function buildNewsFeedRequests(tickerStr, country, industry) {
+      var requests = [];
+      var countryLabel = getSelectedNewsCountryLabel(country);
+      function pushRequest(opts) {
+        var params = new URLSearchParams();
+        params.set('limit', String(opts.limit || 12));
+        if (opts.symbols) params.set('symbols', opts.symbols);
+        if (opts.countries) params.set('countries', opts.countries);
+        if (opts.industries) params.set('industries', opts.industries);
+        if (opts.q) params.set('q', opts.q);
+        if (opts.filterEntities) params.set('filter_entities', 'true');
+        if (opts.mustHaveEntities) params.set('must_have_entities', 'true');
+        requests.push(params.toString());
+      }
+
+      if (country || industry) {
+        pushRequest({
+          countries: country || '',
+          industries: industry || '',
+          filterEntities: true,
+          mustHaveEntities: true
+        });
+        pushRequest({
+          countries: country || '',
+          industries: industry || ''
+        });
+        if (countryLabel || industry) {
+          pushRequest({
+            q: [countryLabel, industry].filter(Boolean).join(' ')
+          });
+        }
+      } else {
+        pushRequest({
+          symbols: tickerStr || '',
+          filterEntities: true,
+          mustHaveEntities: true
+        });
+        pushRequest({});
+      }
+      return requests;
+    }
+
+    async function fetchNewsFeedArticles(requests) {
+      for (var i = 0; i < requests.length; i++) {
+        var res = await fetch(SUPABASE_FN + '/news?' + requests[i]);
+        var data = await res.json();
+        if (data && Array.isArray(data.articles) && data.articles.length > 0) {
+          return data.articles;
+        }
+      }
+      return [];
+    }
+
     async function refreshNewsFeed(overrideCountry, overrideIndustry) {
       var container = document.getElementById('newsFeedContainer');
       var btn = document.getElementById('newsFeedRefreshBtn');
@@ -6626,19 +6688,12 @@
       watchlists.forEach(function(wl) { wl.symbols.forEach(function(s) { if (userTickers.indexOf(s) === -1) userTickers.push(s); }); });
       var tickerStr = userTickers.length > 0 ? userTickers.slice(0, 15).join(',') : 'AAPL,MSFT,GOOGL,AMZN,NVDA,META,TSLA';
 
-      var filterContext = '';
-      if (country) filterContext += ' Filter by country: ' + country + '.';
-      if (industry) filterContext += ' Filter by industry: ' + industry + '.';
-
       try {
-        var queryParams = 'limit=12';
-        if (tickerStr) queryParams += '&symbols=' + encodeURIComponent(tickerStr);
-        if (country || industry) queryParams += '&q=' + encodeURIComponent((country || '') + ' ' + (industry || '')).trim();
-        var res = await fetch(SUPABASE_FN + '/news?' + queryParams);
-        var data = await res.json();
-        if (data && Array.isArray(data.articles) && data.articles.length > 0) {
+        var requests = buildNewsFeedRequests(tickerStr, country, industry);
+        var articlesRaw = await fetchNewsFeedArticles(requests);
+        if (articlesRaw.length > 0) {
           // Map to the format renderNewsFeed expects
-          var articles = data.articles.map(function(a) {
+          var articles = articlesRaw.map(function(a) {
             var isRecent = a.publishedAt && (Date.now() - new Date(a.publishedAt).getTime()) < 3600000;
             var isEarnings = /earnings|revenue|quarterly|profit|EPS/i.test(a.title || '');
             return {
@@ -6658,7 +6713,7 @@
           });
           renderNewsFeed(articles, userTickers);
         } else {
-          container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-dim);">Unable to load news. Try refreshing.</div>';
+          container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-dim);">No news found for that filter yet. Try another country or industry.</div>';
         }
       } catch(e) {
         console.error('News feed error:', e);
