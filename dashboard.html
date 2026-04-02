@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-01-v20';
+    var APP_VERSION = '2026-04-01-v21';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -386,24 +386,28 @@
       .mobile-fm-tabs-toggle {
         display: none;
         position: fixed;
-        top: calc(max(8px, env(safe-area-inset-top)) + 8px);
-        right: 12px;
+        top: 50%;
+        right: 0;
+        transform: translateY(-50%);
         z-index: 520;
-        width: 36px;
-        height: 36px;
-        border-radius: 12px;
-        border: 1px solid rgba(120,80,220,0.25);
-        background: linear-gradient(135deg, rgba(120,80,220,0.12) 0%, rgba(30,30,40,0.9) 100%);
+        width: 18px;
+        height: 56px;
+        border-radius: 10px 0 0 10px;
+        border: 1px solid rgba(120,80,220,0.3);
+        border-right: none;
+        background: linear-gradient(180deg, rgba(120,80,220,0.25) 0%, rgba(80,50,180,0.35) 100%);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
-        color: rgba(255,255,255,0.8);
+        color: rgba(255,255,255,0.7);
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.3), 0 0 12px rgba(120,80,220,0.1);
+        box-shadow: -2px 0 12px rgba(120,80,220,0.15);
         transition: all 0.2s ease;
+        padding: 0;
       }
-      .mobile-fm-tabs-toggle svg { width: 14px; height: 14px; }
+      .mobile-fm-tabs-toggle:active { background: linear-gradient(180deg, rgba(120,80,220,0.4) 0%, rgba(80,50,180,0.5) 100%); }
+      .mobile-fm-tabs-toggle svg { width: 10px; height: 10px; }
       body[data-active-view="fm"] .mobile-fm-tabs-toggle { display: flex !important; }
       body[data-active-view="fm"] .fm-sub-tabs { display: none !important; }
       .mobile-fm-menu-backdrop {
@@ -1734,8 +1738,8 @@
     </svg>
   </button>
   <button class="mobile-fm-tabs-toggle" id="mobileFMTabsToggle" onclick="toggleMobileFMMenu()" aria-label="Open Financial Markets menu" aria-expanded="false">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+    <svg viewBox="0 0 12 20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M9 4 3 10l6 6"/>
     </svg>
   </button>
   <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleMobileSidebar()"></div>
@@ -7252,21 +7256,25 @@
         container.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-dim);font-size:0.85rem;">Add symbols above to start tracking.</div>';
         return;
       }
-      container.innerHTML = wl.symbols.map(function(sym) {
+      // Render as table rows matching portfolio style
+      var rows = wl.symbols.map(function(sym) {
         var q = watchlistPrices[sym];
-        var prevQ = watchlistPrevPrices[sym];
-        var pulseClass = '';
-        if (q && prevQ && q.price !== prevQ.price) {
-          pulseClass = q.price > prevQ.price ? ' price-up' : ' price-down';
-        }
         var name = STOCK_NAMES[sym] || '';
-        if (!q) {
-          return '<div class="watchlist-item' + pulseClass + '"><div class="watchlist-item-left"><div class="watchlist-item-symbol">' + sym + '</div>' + (name ? '<div class="watchlist-item-name">' + name + '</div>' : '') + '</div><div style="display:flex;align-items:center;"><div class="watchlist-item-right"><div class="watchlist-item-price" style="color:var(--text-dim);">--</div></div><button class="watchlist-item-remove" onclick="removeWatchlistSymbol(\'' + sym + '\')">&times;</button></div></div>';
-        }
-        var changeClass = q.change > 0 ? 'up' : q.change < 0 ? 'down' : 'flat';
-        var sign = q.change > 0 ? '+' : '';
-        return '<div class="watchlist-item' + pulseClass + '"><div class="watchlist-item-left"><div class="watchlist-item-symbol">' + sym + '</div>' + (name ? '<div class="watchlist-item-name">' + name + '</div>' : '') + '</div><div style="display:flex;align-items:center;"><div class="watchlist-item-right"><div class="watchlist-item-price">$' + formatNum(q.price) + '</div><div class="watchlist-item-change stock-change ' + changeClass + '">' + sign + '$' + formatNum(q.change) + ' (' + sign + formatNum(q.changePercent) + '%)</div></div><button class="watchlist-item-remove" onclick="removeWatchlistSymbol(\'' + sym + '\')">&times;</button></div></div>';
+        var price = q ? '$' + formatNum(q.price) : '--';
+        var changeClass = q && q.change > 0 ? 'up' : q && q.change < 0 ? 'down' : 'flat';
+        var sign = q && q.change > 0 ? '+' : '';
+        var changeText = q ? sign + '$' + formatNum(q.change) : '--';
+        var pctText = q ? sign + formatNum(q.changePercent) + '%' : '';
+        return '<tr>' +
+          '<td><button class="holding-symbol-btn">' + sym + '</button></td>' +
+          '<td style="font-size:0.78rem;color:var(--text-dim);">' + name + '</td>' +
+          '<td style="font-weight:600;color:#fff;">' + price + '</td>' +
+          '<td class="stock-change ' + changeClass + '">' + changeText + '</td>' +
+          '<td class="stock-change ' + changeClass + '" style="font-size:0.75rem;">' + pctText + '</td>' +
+          '<td><button class="watchlist-item-remove" style="opacity:1;font-size:1rem;" onclick="event.stopPropagation();removeWatchlistSymbol(\'' + sym + '\')">&times;</button></td>' +
+        '</tr>';
       }).join('');
+      container.innerHTML = '<table class="holdings-table" style="display:table;width:100%;"><tbody>' + rows + '</tbody></table>';
     }
 
     async function refreshWatchlistPrices() {
