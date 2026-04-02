@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-01-v13';
+    var APP_VERSION = '2026-04-01-v14';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -2386,7 +2386,7 @@
                 <button class="wish-chip" id="wishChipTime" onclick="activateWishChip('time')">⏰ Time</button>
               </div>
               <div class="wish-active-input-wrap" id="wishActiveInputWrap" style="display:none;">
-                <input class="wish-context-input visible" id="wishActiveInput" placeholder="" style="display:block;font-size:16px;" onkeydown="if(event.key==='Enter'){event.preventDefault();confirmWishChip();}" />
+                <input class="wish-context-input visible" id="wishActiveInput" placeholder="" style="display:block;font-size:16px;" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other" onkeydown="if(event.key==='Enter'){event.preventDefault();confirmWishChip();}" />
               </div>
               <!-- Hidden storage for values -->
               <input type="hidden" id="wishAge" />
