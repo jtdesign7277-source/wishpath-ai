@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-01-v4';
+    var APP_VERSION = '2026-04-01-v5';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -1213,7 +1213,7 @@
     .portfolio-stat-label { font-size: 11px; color: var(--kraken-text-dim); text-transform: uppercase; font-weight: 500; letter-spacing: 0.06em; margin-bottom: 8px; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
     .portfolio-stat-value { font-size: 22px; font-weight: 700; color: var(--kraken-text); letter-spacing: -0.3px; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
     .portfolio-stat-change { font-size: 12px; font-weight: 500; margin-top: 4px; }
-    .portfolio-add-panel { background: var(--kraken-surface1); border: 1px solid var(--kraken-border); border-radius: 16px; padding: 16px; margin-bottom: 16px; }
+    .portfolio-add-panel { padding: 0; margin-bottom: 16px; }
     .portfolio-add-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--kraken-text-dim); margin-bottom: 10px; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
     .add-holding-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end; }
     #fmPortfolioContent .markets-section-label { margin-bottom: 10px; color: var(--kraken-text-dim); font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
