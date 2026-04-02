@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-01-v6';
+    var APP_VERSION = '2026-04-01-v7';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -467,6 +467,27 @@
       .msg.ai { max-width: 92% !important; }
       .coach-right-wrapper { flex: 1 !important; min-height: 0 !important; border-left: none !important; border-top: none !important; overflow: hidden; }
       .coach-right { padding: 14px; }
+
+      /* ── Your Wish view — show form, hide empty right panel on mobile ── */
+      #newwishView .coach-layout { display: flex !important; flex-direction: column !important; }
+      #newwishView .coach-left { display: flex !important; flex: 1 !important; overflow-y: auto !important; }
+      #newwishView .coach-left > div:first-child { display: block !important; }
+      #newwishView .coach-right-wrapper { display: none !important; }
+      #newwishView .wish-form-card {
+        background: linear-gradient(165deg, rgba(120,80,220,0.12) 0%, rgba(30,30,30,0.95) 40%, rgba(0,201,167,0.06) 100%) !important;
+        border: 1px solid rgba(120,80,220,0.2) !important;
+        border-radius: 20px !important;
+        padding: 24px 20px !important;
+        box-shadow: 0 8px 40px rgba(0,0,0,0.4), 0 0 30px rgba(120,80,220,0.08) !important;
+      }
+      #newwishView .wish-label { font-size: 1.3rem !important; font-weight: 700 !important; color: rgb(145,107,230) !important; margin-bottom: 16px !important; }
+      #newwishView .wish-textarea { background: rgba(255,255,255,0.05) !important; border: 1px solid rgba(120,80,220,0.2) !important; border-radius: 14px !important; }
+      #newwishView .wish-textarea:focus { border-color: rgba(120,80,220,0.5) !important; box-shadow: 0 0 0 3px rgba(120,80,220,0.12) !important; }
+      #newwishView .wish-submit { background: var(--kraken-gradient-cta) !important; border-radius: 14px !important; font-size: 16px !important; padding: 14px 20px !important; }
+      #newwishView .wish-chip { border-color: rgba(120,80,220,0.2) !important; }
+      #newwishView .wish-chip:hover, #newwishView .wish-chip.active { background: rgba(120,80,220,0.12) !important; border-color: rgba(120,80,220,0.3) !important; color: rgb(145,107,230) !important; }
+      #newwishView .wish-context-input { background: rgba(255,255,255,0.05) !important; border: 1px solid rgba(120,80,220,0.15) !important; border-radius: 12px !important; }
+      #newwishView .wish-context-input:focus { border-color: rgba(120,80,220,0.4) !important; box-shadow: 0 0 0 2px rgba(120,80,220,0.1) !important; }
 
       /* iOS-style drag handle bar */
       .drag-handle-bar { display: flex; align-items: center; justify-content: center; flex-shrink: 0; height: 28px; cursor: ns-resize; touch-action: none; border-top: 1px solid rgba(255,255,255,0.08); border-bottom: 1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.015); }
