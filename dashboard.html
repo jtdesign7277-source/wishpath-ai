@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-01-v17';
+    var APP_VERSION = '2026-04-01-v18';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -247,6 +247,14 @@
     .wish-context-input.visible { display: block; }
     .wish-submit { display: block; width: 100%; padding: 16px; background: var(--accent); color: var(--bg); border: none; border-radius: 16px; font: inherit; font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 20px; box-shadow: 0 8px 32px rgba(120,80,220,0.3), 0 0 24px rgba(120,80,220,0.15); transition: all 0.3s ease; }
     .wish-submit:hover { box-shadow: 0 12px 40px rgba(120,80,220,0.4), 0 0 32px rgba(120,80,220,0.2); transform: translateY(-1px); }
+    /* Wish chat feed */
+    .wish-chat-feed { display: flex; flex-direction: column; gap: 10px; padding: 0 0 12px; }
+    .wish-chat-feed:empty { display: none; }
+    .wish-chat-msg { display: flex; gap: 10px; align-items: flex-start; animation: fadeInUp 0.25s ease; }
+    .wish-chat-msg.user { justify-content: flex-end; }
+    .wish-chat-bubble { max-width: 85%; padding: 10px 16px; border-radius: 16px; font-size: 0.9rem; line-height: 1.5; }
+    .wish-chat-msg.ai .wish-chat-bubble { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px 16px 16px 4px; color: rgba(255,255,255,0.85); }
+    .wish-chat-msg.user .wish-chat-bubble { background: rgba(120,80,220,0.18); border: 1px solid rgba(120,80,220,0.2); border-radius: 16px 16px 4px 16px; color: #fff; }
     .wish-submit:disabled { opacity: 0.5; cursor: not-allowed; }
 
     /* Todos */
@@ -2409,10 +2417,12 @@
       <!-- New Wish View -->
       <div class="view" id="newwishView">
         <div class="coach-layout">
-          <div class="coach-left" style="overflow-y:auto;">
+          <div class="coach-left" style="overflow-y:auto;" id="wishFormScroller">
+            <!-- Chat feed for collecting context -->
+            <div class="wish-chat-feed" id="wishChatFeed"></div>
             <div class="wish-form-card">
               <div class="wish-label"><span style="font-size:1.3rem;">&#x1FA84;</span> Your Wish</div>
-              <textarea class="wish-textarea" id="wishInput" placeholder="I want to start a side hustle with only 5 hours/week and $500 to invest. I have a background in marketing..." maxlength="800" oninput="document.getElementById('wishCharCount').textContent=this.value.length+' / 800'"></textarea>
+              <textarea class="wish-textarea" id="wishInput" placeholder="I want to start a side hustle with only 5 hours/week and $500 to invest. I have a background in marketing..." maxlength="800" oninput="document.getElementById('wishCharCount').textContent=this.value.length+' / 800'" onblur="onWishTextBlur()"></textarea>
               <div class="wish-char-count" id="wishCharCount">0 / 800</div>
               <div class="wish-context-label">Add optional context for a more personalized roadmap:</div>
               <div class="wish-context-chips" id="wishContextChips">
@@ -3275,6 +3285,12 @@
       if (view === 'notes') renderNotesList();
       if (view === 'todos') renderTodoSelect();
       if (view === 'cc') loadCommandCenters();
+      if (view === 'newwish') {
+        var feed = document.getElementById('wishChatFeed');
+        if (feed && feed.children.length === 0) {
+          addWishChatMsg('ai', '✨ Welcome! Tell me your wish above, then tap the chips below to add context — I\'ll collect everything before generating your roadmap.');
+        }
+      }
       if (view === 'fm' && !document.querySelector('#fmView .fm-sub-content.active')) {
         var firstBtn = document.querySelector('#fmView .fm-sub-tab');
         switchFMTab('fmMarkets', firstBtn);
@@ -4451,8 +4467,41 @@
       input.placeholder = meta.placeholder;
       input.value = hiddenInput.value || '';
       wrap.style.display = 'block';
-      setTimeout(function() { input.focus(); }, 50);
+      setTimeout(function() {
+        input.focus();
+        // Scroll input into view on mobile so keyboard doesn't hide it
+        setTimeout(function() { wrap.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 150);
+      }, 50);
     }
+
+    function addWishChatMsg(type, text) {
+      var feed = document.getElementById('wishChatFeed');
+      if (!feed) return;
+      var msg = document.createElement('div');
+      msg.className = 'wish-chat-msg ' + type;
+      msg.innerHTML = '<div class="wish-chat-bubble">' + text.replace(/</g, '&lt;') + '</div>';
+      feed.appendChild(msg);
+      var scroller = document.getElementById('wishFormScroller');
+      if (scroller) scroller.scrollTop = scroller.scrollHeight;
+    }
+
+    var _wishTextPosted = false;
+    function onWishTextBlur() {
+      var val = document.getElementById('wishInput').value.trim();
+      if (val && val.length >= 10 && !_wishTextPosted) {
+        _wishTextPosted = true;
+        addWishChatMsg('user', val);
+        setTimeout(function() { addWishChatMsg('ai', 'Great wish! Now add some context below to personalize your roadmap. Tap any chip to get started.'); }, 400);
+      }
+    }
+
+    // AI follow-up prompts for each chip
+    var _wishChipFollowUp = {
+      age: 'Got it! How about your location? Tap 📍 Location to add it.',
+      location: 'Nice! What\'s your budget for this? Tap 💰 Budget.',
+      budget: 'Great. How much time can you dedicate? Tap ⏰ Time.',
+      time: 'Perfect — I\'ve got all your context. Write your wish above and hit Generate when you\'re ready!'
+    };
 
     function confirmWishChip() {
       if (!_activeWishChip) return;
@@ -4466,6 +4515,9 @@
       if (val) {
         chip.classList.add('active');
         chip.innerHTML = meta.emoji + ' ' + val;
+        // Add to chat feed
+        addWishChatMsg('user', meta.emoji + ' ' + meta.label + ': ' + val);
+        setTimeout(function() { addWishChatMsg('ai', _wishChipFollowUp[field]); }, 400);
       } else {
         chip.classList.remove('active');
         chip.innerHTML = meta.emoji + ' ' + meta.label;
