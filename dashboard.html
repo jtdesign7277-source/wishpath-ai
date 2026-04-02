@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-01-v8';
+    var APP_VERSION = '2026-04-01-v9';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -482,13 +482,15 @@
         backdrop-filter: none !important;
         -webkit-backdrop-filter: none !important;
       }
-      #newwishView .wish-label { font-size: 1.1rem !important; font-weight: 700 !important; color: rgb(145,107,230) !important; margin-bottom: 20px !important; }
-      #newwishView .wish-textarea { background: rgba(255,255,255,0.05) !important; border: 1px solid rgba(120,80,220,0.18) !important; border-radius: 14px !important; min-height: 130px !important; font-size: 16px !important; }
+      #newwishView .wish-label { font-size: 1.3rem !important; font-weight: 700 !important; color: rgba(255,255,255,0.9) !important; margin-bottom: 20px !important; letter-spacing: 0.02em !important; }
+      #newwishView .wish-textarea { background: rgba(255,255,255,0.05) !important; border: 1px solid rgba(120,80,220,0.18) !important; border-radius: 14px !important; min-height: 150px !important; font-size: 16px !important; color: #fff !important; }
+      #newwishView .wish-char-count { color: rgba(255,255,255,0.35) !important; font-size: 0.8rem !important; }
       #newwishView .wish-textarea:focus { border-color: rgba(120,80,220,0.5) !important; box-shadow: 0 0 0 3px rgba(120,80,220,0.12) !important; }
       #newwishView .wish-submit { display: none !important; }
-      #newwishView .wish-context-label { color: rgba(255,255,255,0.45) !important; font-size: 0.85rem !important; }
-      #newwishView .wish-chip { border-color: rgba(120,80,220,0.2) !important; color: rgba(255,255,255,0.5) !important; }
-      #newwishView .wish-chip:hover, #newwishView .wish-chip.active { background: rgba(120,80,220,0.12) !important; border-color: rgba(120,80,220,0.3) !important; color: rgb(145,107,230) !important; }
+      #newwishView .wish-context-label { color: rgba(255,255,255,0.5) !important; font-size: 0.95rem !important; margin: 24px 0 14px !important; }
+      #newwishView .wish-context-chips { gap: 10px !important; }
+      #newwishView .wish-chip { border: 1.5px solid rgba(120,80,220,0.35) !important; border-radius: 99px !important; color: rgba(255,255,255,0.85) !important; font-size: 0.95rem !important; padding: 10px 18px !important; background: transparent !important; }
+      #newwishView .wish-chip:hover, #newwishView .wish-chip.active { background: rgba(120,80,220,0.12) !important; border-color: rgba(120,80,220,0.5) !important; color: #fff !important; }
       #newwishView .wish-context-input { background: rgba(255,255,255,0.05) !important; border: 1px solid rgba(120,80,220,0.15) !important; border-radius: 12px !important; }
       #newwishView .wish-context-input:focus { border-color: rgba(120,80,220,0.4) !important; box-shadow: 0 0 0 2px rgba(120,80,220,0.1) !important; }
       /* Purple nav pill when on Your Wish */
@@ -2364,10 +2366,10 @@
               <div class="wish-char-count" id="wishCharCount">0 / 800</div>
               <div class="wish-context-label">Add optional context for a more personalized roadmap:</div>
               <div class="wish-context-chips">
-                <button class="wish-chip" onclick="toggleWishContext('age', this)">+ Age</button>
-                <button class="wish-chip" onclick="toggleWishContext('location', this)">+ Location</button>
-                <button class="wish-chip" onclick="toggleWishContext('budget', this)">+ Budget</button>
-                <button class="wish-chip" onclick="toggleWishContext('time', this)">+ Time Available</button>
+                <button class="wish-chip" onclick="toggleWishContext('age', this)">🎂 Age</button>
+                <button class="wish-chip" onclick="toggleWishContext('location', this)">📍 Location</button>
+                <button class="wish-chip" onclick="toggleWishContext('budget', this)">💰 Budget</button>
+                <button class="wish-chip" onclick="toggleWishContext('time', this)">⏰ Time Available</button>
               </div>
               <input class="wish-context-input" id="wishAge" placeholder="Your age..." />
               <input class="wish-context-input" id="wishLocation" placeholder="City, State or Country..." />
