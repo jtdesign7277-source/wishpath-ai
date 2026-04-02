@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-01-v19';
+    var APP_VERSION = '2026-04-01-v20';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -1317,8 +1317,8 @@
     .holdings-table td { padding: 12px 12px; border-bottom: 1px solid var(--kraken-border); font-size: 13px; font-weight: 500; color: var(--kraken-text); vertical-align: middle; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
     .holdings-table tbody tr { transition: background 0.1s ease; }
     .holdings-table tbody tr:hover { background: rgba(148,151,169,0.06); }
-    .holding-symbol-btn { background: var(--kraken-purple-tint); border: none; color: var(--kraken-purple); font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; padding: 4px 10px; border-radius: 8px; display: inline-flex; align-items: center; gap: 4px; transition: background 0.15s ease; }
-    .holding-symbol-btn:hover { background: rgba(113,50,245,0.22); }
+    .holding-symbol-btn { background: var(--kraken-purple-tint); border: 1px solid rgba(120,80,220,0.35); color: #fff; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; padding: 4px 10px; border-radius: 8px; display: inline-flex; align-items: center; gap: 4px; transition: background 0.15s ease; }
+    .holding-symbol-btn:hover { background: rgba(113,50,245,0.22); border-color: rgba(120,80,220,0.5); }
     .holding-symbol-btn svg { width: 10px; height: 10px; opacity: 0.6; }
     .holdings-remove-btn { background: none; border: none; color: var(--kraken-text-muted); cursor: pointer; padding: 6px; border-radius: 8px; display: flex; align-items: center; justify-content: center; transition: color 0.15s ease, background 0.15s ease; }
     .holdings-remove-btn:hover { color: var(--kraken-red); background: rgba(209,29,69,0.1); }
