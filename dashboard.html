@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-01-v18';
+    var APP_VERSION = '2026-04-01-v19';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -236,7 +236,7 @@
     .wish-label { font-size: 0.78rem; font-weight: 700; color: var(--purple); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 18px; display: flex; align-items: center; gap: 10px; }
     .wish-textarea { width: 100%; min-height: 140px; padding: 16px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.04); border-radius: 12px; color: var(--text); font: inherit; font-size: 0.95rem; line-height: 1.6; outline: none; resize: none; box-shadow: inset 4px 4px 8px rgba(0,0,0,0.5), inset -2px -2px 6px rgba(255,255,255,0.02); transition: all 0.3s ease; }
     .wish-textarea:focus { border-color: rgba(120,80,220,0.3); box-shadow: inset 4px 4px 8px rgba(0,0,0,0.5), inset -2px -2px 6px rgba(255,255,255,0.02), 0 0 12px rgba(120,80,220,0.1); }
-    .wish-textarea::placeholder { color: var(--text-dim); }
+    .wish-textarea::placeholder { color: rgba(255,255,255,0.25); font-style: italic; }
     .wish-char-count { text-align: right; font-size: 0.75rem; color: var(--text-dim); margin-top: 6px; }
     .wish-context-label { text-align: center; font-size: 0.85rem; color: var(--text-muted); margin: 20px 0 12px; }
     .wish-context-chips { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-bottom: 20px; }
@@ -2422,7 +2422,7 @@
             <div class="wish-chat-feed" id="wishChatFeed"></div>
             <div class="wish-form-card">
               <div class="wish-label"><span style="font-size:1.3rem;">&#x1FA84;</span> Your Wish</div>
-              <textarea class="wish-textarea" id="wishInput" placeholder="I want to start a side hustle with only 5 hours/week and $500 to invest. I have a background in marketing..." maxlength="800" oninput="document.getElementById('wishCharCount').textContent=this.value.length+' / 800'" onblur="onWishTextBlur()"></textarea>
+              <textarea class="wish-textarea" id="wishInput" placeholder="Example: I want to start a side hustle with only 5 hours/week and $500 to invest. I have a background in marketing..." maxlength="800" oninput="document.getElementById('wishCharCount').textContent=this.value.length+' / 800'" onblur="onWishTextBlur()"></textarea>
               <div class="wish-char-count" id="wishCharCount">0 / 800</div>
               <div class="wish-context-label">Add optional context for a more personalized roadmap:</div>
               <div class="wish-context-chips" id="wishContextChips">
