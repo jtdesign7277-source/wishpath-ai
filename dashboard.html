@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-02-v27';
+    var APP_VERSION = '2026-04-02-v28';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -1303,6 +1303,14 @@
     .portfolio-stat-label { font-size: 11px; color: var(--kraken-text-dim); text-transform: uppercase; font-weight: 500; letter-spacing: 0.06em; margin-bottom: 8px; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
     .portfolio-stat-value { font-size: 22px; font-weight: 700; color: var(--kraken-text); letter-spacing: -0.3px; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
     .portfolio-stat-change { font-size: 12px; font-weight: 500; margin-top: 4px; }
+    /* Portfolio hero — clean single-column header like Robinhood */
+    .portfolio-hero { padding: 20px 4px 16px; margin-bottom: 16px; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+    .portfolio-hero-label { font-size: 13px; color: rgba(255,255,255,0.5); font-weight: 500; margin-bottom: 4px; }
+    .portfolio-hero-value { font-size: 36px; font-weight: 800; color: #fff; letter-spacing: -1px; line-height: 1.1; margin-bottom: 6px; }
+    .portfolio-hero-change { font-size: 13px; color: #34d399; font-weight: 500; display: flex; align-items: center; gap: 4px; }
+    .portfolio-hero-change.negative { color: #f87171; }
+    .portfolio-hero-arrow { font-size: 14px; }
+    .portfolio-hero-period { color: rgba(255,255,255,0.35); }
     .portfolio-add-panel { padding: 0; margin-bottom: 16px; }
     .portfolio-add-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--kraken-text-dim); margin-bottom: 10px; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
     .add-holding-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end; }
@@ -1643,6 +1651,7 @@
       .stock-price { font-size: 1rem; }
       .portfolio-summary { grid-template-columns: repeat(2, 1fr); gap: 10px; }
       .portfolio-stat-value { font-size: 18px !important; }
+      .portfolio-hero-value { font-size: 32px; }
       .add-holding-row { flex-direction: column; gap: 8px; }
       .add-holding-input { width: 100% !important; font-size: 16px !important; }
       .add-holding-btn { width: 100%; font-size: 16px !important; }
@@ -2070,11 +2079,18 @@
 
         <!-- FM: Portfolio -->
         <div class="fm-sub-content" id="fmPortfolioContent">
-          <div class="portfolio-summary" id="fmPortfolioSummary">
-            <div class="portfolio-stat"><div class="portfolio-stat-label">Total Value</div><div class="portfolio-stat-value" id="fmPortfolioTotalValue">$0.00</div></div>
-            <div class="portfolio-stat"><div class="portfolio-stat-label">Day P&L</div><div class="portfolio-stat-value" id="fmPortfolioDayPL">$0.00</div><div class="portfolio-stat-change" id="fmPortfolioDayPLPct"></div></div>
-            <div class="portfolio-stat"><div class="portfolio-stat-label">Total P&L</div><div class="portfolio-stat-value" id="fmPortfolioTotalPL">$0.00</div><div class="portfolio-stat-change" id="fmPortfolioTotalPLPct"></div></div>
-            <div class="portfolio-stat"><div class="portfolio-stat-label">Positions</div><div class="portfolio-stat-value" id="fmPortfolioPositionCount">0</div></div>
+          <div class="portfolio-hero" id="fmPortfolioSummary">
+            <div class="portfolio-hero-label">Portfolio value</div>
+            <div class="portfolio-hero-value" id="fmPortfolioTotalValue">$0.00</div>
+            <div class="portfolio-hero-change">
+              <span class="portfolio-hero-arrow" id="fmPortfolioArrow">&#x2197;</span>
+              <span id="fmPortfolioTotalPL">$0.00</span>
+              <span id="fmPortfolioTotalPLPct"></span>
+              <span class="portfolio-hero-period">this month</span>
+            </div>
+            <div id="fmPortfolioDayPL" style="display:none;"></div>
+            <div id="fmPortfolioDayPLPct" style="display:none;"></div>
+            <div id="fmPortfolioPositionCount" style="display:none;"></div>
           </div>
           <div style="text-align:center;margin:12px 0;">
             <button class="add-holding-btn" onclick="openAddHoldingModal()" style="width:100%;padding:12px 20px;">+ Add</button>
@@ -6390,8 +6406,14 @@
       var tpEl = document.getElementById(totalPLId);
       if (tpEl) { tpEl.textContent = (totalPL>=0?'+':'') + '$' + formatNum(totalPL); tpEl.style.color = totalPL>=0 ? '#22c55e' : '#ef4444'; }
       var tpPctEl = document.getElementById(totalPLPctId);
-      if (tpPctEl && totalCostBasis > 0) { var totalPct = (totalPL / totalCostBasis) * 100; tpPctEl.textContent = (totalPct>=0?'+':'') + totalPct.toFixed(2) + '%'; tpPctEl.style.color = totalPct>=0 ? '#22c55e' : '#ef4444'; }
+      if (tpPctEl && totalCostBasis > 0) { var totalPct = (totalPL / totalCostBasis) * 100; tpPctEl.textContent = '(' + (totalPct>=0?'+':'') + totalPct.toFixed(2) + '%)'; tpPctEl.style.color = totalPL>=0 ? '#22c55e' : '#ef4444'; }
       else if (tpPctEl) { tpPctEl.textContent = ''; }
+      // Update hero arrow and change color
+      var arrowId = totalPLId.replace('TotalPL', 'Arrow');
+      var arrowEl = document.getElementById(arrowId);
+      if (arrowEl) arrowEl.innerHTML = totalPL >= 0 ? '&#x2197;' : '&#x2198;';
+      var heroChange = tpEl && tpEl.closest('.portfolio-hero-change');
+      if (heroChange) { heroChange.classList.toggle('negative', totalPL < 0); }
       renderPortfolioChart(chartId);
     }
 
