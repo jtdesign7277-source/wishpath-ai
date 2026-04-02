@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-01-v7';
+    var APP_VERSION = '2026-04-01-v8';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -468,26 +468,33 @@
       .coach-right-wrapper { flex: 1 !important; min-height: 0 !important; border-left: none !important; border-top: none !important; overflow: hidden; }
       .coach-right { padding: 14px; }
 
-      /* ── Your Wish view — show form, hide empty right panel on mobile ── */
+      /* ── Your Wish view — full-screen native feel on mobile ── */
       #newwishView .coach-layout { display: flex !important; flex-direction: column !important; }
-      #newwishView .coach-left { display: flex !important; flex: 1 !important; overflow-y: auto !important; }
+      #newwishView .coach-left { display: flex !important; flex: 1 !important; overflow-y: auto !important; padding: 0 16px !important; }
       #newwishView .coach-left > div:first-child { display: block !important; }
       #newwishView .coach-right-wrapper { display: none !important; }
       #newwishView .wish-form-card {
-        background: linear-gradient(165deg, rgba(120,80,220,0.12) 0%, rgba(30,30,30,0.95) 40%, rgba(0,201,167,0.06) 100%) !important;
-        border: 1px solid rgba(120,80,220,0.2) !important;
-        border-radius: 20px !important;
-        padding: 24px 20px !important;
-        box-shadow: 0 8px 40px rgba(0,0,0,0.4), 0 0 30px rgba(120,80,220,0.08) !important;
+        background: transparent !important;
+        border: none !important;
+        border-radius: 0 !important;
+        padding: 20px 0 !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
       }
-      #newwishView .wish-label { font-size: 1.3rem !important; font-weight: 700 !important; color: rgb(145,107,230) !important; margin-bottom: 16px !important; }
-      #newwishView .wish-textarea { background: rgba(255,255,255,0.05) !important; border: 1px solid rgba(120,80,220,0.2) !important; border-radius: 14px !important; }
+      #newwishView .wish-label { font-size: 1.1rem !important; font-weight: 700 !important; color: rgb(145,107,230) !important; margin-bottom: 20px !important; }
+      #newwishView .wish-textarea { background: rgba(255,255,255,0.05) !important; border: 1px solid rgba(120,80,220,0.18) !important; border-radius: 14px !important; min-height: 130px !important; font-size: 16px !important; }
       #newwishView .wish-textarea:focus { border-color: rgba(120,80,220,0.5) !important; box-shadow: 0 0 0 3px rgba(120,80,220,0.12) !important; }
-      #newwishView .wish-submit { background: var(--kraken-gradient-cta) !important; border-radius: 14px !important; font-size: 16px !important; padding: 14px 20px !important; }
-      #newwishView .wish-chip { border-color: rgba(120,80,220,0.2) !important; }
+      #newwishView .wish-submit { display: none !important; }
+      #newwishView .wish-context-label { color: rgba(255,255,255,0.45) !important; font-size: 0.85rem !important; }
+      #newwishView .wish-chip { border-color: rgba(120,80,220,0.2) !important; color: rgba(255,255,255,0.5) !important; }
       #newwishView .wish-chip:hover, #newwishView .wish-chip.active { background: rgba(120,80,220,0.12) !important; border-color: rgba(120,80,220,0.3) !important; color: rgb(145,107,230) !important; }
       #newwishView .wish-context-input { background: rgba(255,255,255,0.05) !important; border: 1px solid rgba(120,80,220,0.15) !important; border-radius: 12px !important; }
       #newwishView .wish-context-input:focus { border-color: rgba(120,80,220,0.4) !important; box-shadow: 0 0 0 2px rgba(120,80,220,0.1) !important; }
+      /* Purple nav pill when on Your Wish */
+      body[data-active-view="newwish"] .mobile-nav-ask-pill { background: var(--kraken-gradient-cta) !important; border-color: transparent !important; }
+      body[data-active-view="newwish"] .nav-pill-label { color: #fff !important; }
+      body[data-active-view="newwish"] .nav-pill-icon svg { stroke: #fff !important; }
 
       /* iOS-style drag handle bar */
       .drag-handle-bar { display: flex; align-items: center; justify-content: center; flex-shrink: 0; height: 28px; cursor: ns-resize; touch-action: none; border-top: 1px solid rgba(255,255,255,0.08); border-bottom: 1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.015); }
@@ -2423,7 +2430,7 @@
     <button class="mobile-nav-side-btn" onclick="toggleMobileSidebar()" aria-label="Search">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     </button>
-    <div class="mobile-nav-ask-pill" id="mobileAskAIBtn" onclick="openFullScreenAI()">
+    <div class="mobile-nav-ask-pill" id="mobileAskAIBtn" onclick="handleMobileNavPill()">
       <span class="nav-pill-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.48 2 2 6 2 11c0 2.8 1.3 5.3 3.4 7l-.9 3.4a.5.5 0 00.7.6L9 20.4c1 .4 2 .6 3 .6 5.52 0 10-4 10-9s-4.48-9-10-9z"/></svg></span>
       <span class="nav-pill-label" id="navAskLabel">Ask AI</span>
     </div>
@@ -4841,10 +4848,18 @@
       return false;
     }
 
+    function handleMobileNavPill() {
+      var activeView = document.body.getAttribute('data-active-view');
+      if (activeView === 'newwish') { submitNewWish(); return; }
+      openFullScreenAI();
+    }
+
     function updateMobileNavLabel(view) {
       var label = document.getElementById('navAskLabel');
       if (!label) return;
-      if (_isOnPortfolioPage()) {
+      if (view === 'newwish') {
+        label.textContent = 'Generate my roadmap';
+      } else if (_isOnPortfolioPage()) {
         label.textContent = 'Ask about your portfolio';
       } else {
         label.textContent = 'Ask AI';
