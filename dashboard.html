@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-01-v21';
+    var APP_VERSION = '2026-04-01-v22';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -7256,22 +7256,21 @@
         container.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-dim);font-size:0.85rem;">Add symbols above to start tracking.</div>';
         return;
       }
-      // Render as table rows matching portfolio style
+      // Render as table rows matching portfolio style exactly
       var rows = wl.symbols.map(function(sym) {
         var q = watchlistPrices[sym];
         var name = STOCK_NAMES[sym] || '';
         var price = q ? '$' + formatNum(q.price) : '--';
         var changeClass = q && q.change > 0 ? 'up' : q && q.change < 0 ? 'down' : 'flat';
         var sign = q && q.change > 0 ? '+' : '';
-        var changeText = q ? sign + '$' + formatNum(q.change) : '--';
-        var pctText = q ? sign + formatNum(q.changePercent) + '%' : '';
-        return '<tr>' +
+        var changeText = q ? sign + formatNum(q.change) : '--';
+        var pctText = q ? '(' + sign + formatNum(q.changePercent) + '%)' : '';
+        return '<tr onclick="event.stopPropagation();" style="cursor:default;">' +
           '<td><button class="holding-symbol-btn">' + sym + '</button></td>' +
-          '<td style="font-size:0.78rem;color:var(--text-dim);">' + name + '</td>' +
-          '<td style="font-weight:600;color:#fff;">' + price + '</td>' +
-          '<td class="stock-change ' + changeClass + '">' + changeText + '</td>' +
-          '<td class="stock-change ' + changeClass + '" style="font-size:0.75rem;">' + pctText + '</td>' +
-          '<td><button class="watchlist-item-remove" style="opacity:1;font-size:1rem;" onclick="event.stopPropagation();removeWatchlistSymbol(\'' + sym + '\')">&times;</button></td>' +
+          '<td style="font-size:12px;color:var(--text-dim);max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + name + '</td>' +
+          '<td style="font-weight:700;color:#fff;text-align:right;">$' + (q ? formatNum(q.price) : '--') + '</td>' +
+          '<td class="stock-change ' + changeClass + '" style="text-align:right;">' + changeText + '<br><span style="font-size:11px;opacity:0.8;">' + pctText + '</span></td>' +
+          '<td style="width:28px;text-align:center;"><button style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:1.1rem;padding:4px;" onclick="event.stopPropagation();removeWatchlistSymbol(\'' + sym + '\')">&times;</button></td>' +
         '</tr>';
       }).join('');
       container.innerHTML = '<table class="holdings-table" style="display:table;width:100%;"><tbody>' + rows + '</tbody></table>';
