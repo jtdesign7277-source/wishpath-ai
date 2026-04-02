@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-01-v5';
+    var APP_VERSION = '2026-04-01-v6';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -1237,9 +1237,9 @@
     .holdings-remove-btn { background: none; border: none; color: var(--kraken-text-muted); cursor: pointer; padding: 6px; border-radius: 8px; display: flex; align-items: center; justify-content: center; transition: color 0.15s ease, background 0.15s ease; }
     .holdings-remove-btn:hover { color: var(--kraken-red); background: rgba(209,29,69,0.1); }
     .holdings-remove-btn svg { display: block; }
-    .holding-action-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.56); z-index: 1300; align-items: flex-end; justify-content: center; }
+    .holding-action-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.56); z-index: 1300; align-items: center; justify-content: center; padding: 20px; }
     .holding-action-overlay.active { display: flex; }
-    .holding-action-sheet { width: min(100%, 440px); background: #1e1e1e; border: 1px solid rgba(255,255,255,0.08); border-radius: 24px 24px 0 0; padding: 22px 20px calc(22px + env(safe-area-inset-bottom)); box-shadow: 0 -18px 48px rgba(0,0,0,0.52); }
+    .holding-action-sheet { width: min(100%, 440px); max-height: 85vh; overflow-y: auto; background: #1e1e1e; border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 22px 20px; box-shadow: 0 18px 48px rgba(0,0,0,0.52); }
     .holding-action-symbol { font-size: 1.3rem; font-weight: 800; color: var(--text); margin-bottom: 6px; }
     .holding-action-meta { font-size: 0.88rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 18px; }
     .holding-action-btns { display: flex; gap: 10px; }
