@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-01-v16';
+    var APP_VERSION = '2026-04-01-v17';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -375,7 +375,29 @@
       .main.expanded { margin-left: 0 !important; }
       .main.expanded .main-header { padding-left: 36px; }
       .mobile-sidebar-toggle { display: none !important; }
-      .mobile-fm-tabs-toggle { display: none !important; }
+      .mobile-fm-tabs-toggle {
+        display: none;
+        position: fixed;
+        top: calc(max(8px, env(safe-area-inset-top)) + 8px);
+        right: 12px;
+        z-index: 520;
+        width: 36px;
+        height: 36px;
+        border-radius: 12px;
+        border: 1px solid rgba(120,80,220,0.25);
+        background: linear-gradient(135deg, rgba(120,80,220,0.12) 0%, rgba(30,30,40,0.9) 100%);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        color: rgba(255,255,255,0.8);
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.3), 0 0 12px rgba(120,80,220,0.1);
+        transition: all 0.2s ease;
+      }
+      .mobile-fm-tabs-toggle svg { width: 14px; height: 14px; }
+      body[data-active-view="fm"] .mobile-fm-tabs-toggle { display: flex !important; }
+      body[data-active-view="fm"] .fm-sub-tabs { display: none !important; }
       .mobile-fm-menu-backdrop {
         display: none;
         position: fixed;
@@ -1704,8 +1726,8 @@
     </svg>
   </button>
   <button class="mobile-fm-tabs-toggle" id="mobileFMTabsToggle" onclick="toggleMobileFMMenu()" aria-label="Open Financial Markets menu" aria-expanded="false">
-    <svg viewBox="0 0 12 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M9 3 3 10l6 7"/>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
     </svg>
   </button>
   <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleMobileSidebar()"></div>
@@ -2790,12 +2812,11 @@
       if (!onMobile || !isFMActive || isHome) {
         document.body.classList.remove('fm-mobile-fullscreen');
         closeMobileFMMenu();
-        if (toggle) toggle.style.display = 'none';
         return;
       }
       if (shouldImmersive) document.body.classList.add('fm-mobile-fullscreen');
       else document.body.classList.remove('fm-mobile-fullscreen');
-      if (toggle) toggle.style.display = isSidebarOpen ? 'none' : 'flex';
+      if (toggle && isSidebarOpen) { toggle.style.display = 'none'; closeMobileFMMenu(); } else if (toggle) { toggle.style.display = ''; }
       if (isSidebarOpen) closeMobileFMMenu();
       syncMobileFMMenuState();
       applyFMWidgetHeight(activeTabId);
