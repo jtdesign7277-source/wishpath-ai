@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-02-v23';
+    var APP_VERSION = '2026-04-02-v24';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -234,8 +234,8 @@
     /* New Wish */
     .wish-form-card { background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 28px; box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.05); }
     .wish-label { font-size: 0.78rem; font-weight: 700; color: var(--purple); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 18px; display: flex; align-items: center; gap: 10px; }
-    .wish-textarea { width: 100%; min-height: 140px; padding: 16px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.04); border-radius: 12px; color: var(--text); font: inherit; font-size: 0.95rem; line-height: 1.6; outline: none; resize: none; box-shadow: inset 4px 4px 8px rgba(0,0,0,0.5), inset -2px -2px 6px rgba(255,255,255,0.02); transition: all 0.3s ease; }
-    .wish-textarea:focus { border-color: rgba(120,80,220,0.3); box-shadow: inset 4px 4px 8px rgba(0,0,0,0.5), inset -2px -2px 6px rgba(255,255,255,0.02), 0 0 12px rgba(120,80,220,0.1); }
+    .wish-textarea { width: 100%; min-height: 140px; padding: 16px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; color: var(--text); font: inherit; font-size: 0.95rem; line-height: 1.6; outline: none; resize: none; box-shadow: none; transition: all 0.3s ease; }
+    .wish-textarea:focus { border-color: rgba(120,80,220,0.3); box-shadow: 0 0 12px rgba(120,80,220,0.1); }
     .wish-textarea::placeholder { color: rgba(255,255,255,0.25); font-style: italic; }
     .wish-char-count { text-align: right; font-size: 0.75rem; color: var(--text-dim); margin-top: 6px; }
     .wish-context-label { text-align: center; font-size: 0.85rem; color: var(--text-muted); margin: 20px 0 12px; }
@@ -248,7 +248,7 @@
     .wish-submit { display: block; width: 100%; padding: 16px; background: var(--accent); color: var(--bg); border: none; border-radius: 16px; font: inherit; font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 20px; box-shadow: 0 8px 32px rgba(120,80,220,0.3), 0 0 24px rgba(120,80,220,0.15); transition: all 0.3s ease; }
     .wish-submit:hover { box-shadow: 0 12px 40px rgba(120,80,220,0.4), 0 0 32px rgba(120,80,220,0.2); transform: translateY(-1px); }
     /* Wish chat feed */
-    .wish-chat-feed { display: flex; flex-direction: column; gap: 10px; padding: 0 0 12px; }
+    .wish-chat-feed { display: flex; flex-direction: column; gap: 16px; padding: 0 0 16px; }
     .wish-chat-feed:empty { display: none; }
     .wish-chat-msg { display: flex; gap: 10px; align-items: flex-start; animation: fadeInUp 0.25s ease; }
     .wish-chat-msg.user { justify-content: flex-end; }
@@ -1532,7 +1532,7 @@
     /* Faster transitions for native feel */
     .wish-card, .cc-card, .stock-card, .news-feed-item { transition: transform 0.1s ease, box-shadow 0.1s ease, border-color 0.15s ease; }
     /* Input focus glow */
-    .coach-input:focus, .wish-textarea:focus, .note-title-input:focus, .note-body-input:focus { border-color: rgba(120,80,220,0.4) !important; box-shadow: inset 4px 4px 8px rgba(0,0,0,0.5), inset -2px -2px 6px rgba(255,255,255,0.02), 0 0 0 3px rgba(120,80,220,0.08) !important; }
+    .coach-input:focus, .wish-textarea:focus, .note-title-input:focus, .note-body-input:focus { border-color: rgba(120,80,220,0.4) !important; box-shadow: 0 0 0 3px rgba(120,80,220,0.08) !important; }
     /* Staggered thinking dots */
     .msg.ai .thinking-dots span:nth-child(1) { animation-delay: 0s; }
     .msg.ai .thinking-dots span:nth-child(2) { animation-delay: 0.15s; }
@@ -4504,7 +4504,7 @@
       age: 'Got it! How about your location? Tap 📍 Location to add it.',
       location: 'Nice! What\'s your budget for this? Tap 💰 Budget.',
       budget: 'Great. How much time can you dedicate? Tap ⏰ Time.',
-      time: 'Perfect — I\'ve got all your context. Write your wish above and hit Generate when you\'re ready!'
+      time: 'Perfect — I\'ve got all your context. Write your wish below and hit Generate when you\'re ready!'
     };
 
     function confirmWishChip() {
