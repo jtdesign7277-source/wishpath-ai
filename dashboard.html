@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-01-v15';
+    var APP_VERSION = '2026-04-01-v16';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -493,6 +493,20 @@
       #newwishView .wish-chip:hover, #newwishView .wish-chip.active { background: rgba(120,80,220,0.12) !important; border-color: rgba(120,80,220,0.5) !important; color: #fff !important; }
       #newwishView .wish-context-input { background: rgba(255,255,255,0.05) !important; border: 1px solid rgba(120,80,220,0.15) !important; border-radius: 12px !important; width: 100% !important; padding: 12px 14px !important; color: #fff !important; font-size: 16px !important; }
       #newwishView .wish-context-input:focus { border-color: rgba(120,80,220,0.4) !important; box-shadow: 0 0 0 2px rgba(120,80,220,0.1) !important; }
+      /* Kill iOS/Chrome autofill yellow background */
+      #newwishView .wish-context-input:-webkit-autofill,
+      #newwishView .wish-context-input:-webkit-autofill:hover,
+      #newwishView .wish-context-input:-webkit-autofill:focus,
+      #newwishView .wish-context-input:-webkit-autofill:active,
+      .wish-context-input:-webkit-autofill,
+      .wish-context-input:-webkit-autofill:hover,
+      .wish-context-input:-webkit-autofill:focus,
+      .wish-context-input:-webkit-autofill:active {
+        -webkit-box-shadow: 0 0 0 30px #1a1a2e inset !important;
+        -webkit-text-fill-color: #fff !important;
+        background-color: #1a1a2e !important;
+        transition: background-color 5000s ease-in-out 0s !important;
+      }
       #newwishView .wish-active-input-wrap { margin-top: 12px; }
       /* Purple nav pill when on Your Wish */
       body[data-active-view="newwish"] .mobile-nav-ask-pill { background: var(--kraken-gradient-cta) !important; border-color: transparent !important; }
@@ -2386,7 +2400,7 @@
                 <button class="wish-chip" id="wishChipTime" onclick="activateWishChip('time')">⏰ Time</button>
               </div>
               <div class="wish-active-input-wrap" id="wishActiveInputWrap" style="display:none;">
-                <input class="wish-context-input visible" id="wishActiveInput" placeholder="" style="display:block;font-size:16px;" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other" onkeydown="if(event.key==='Enter'){event.preventDefault();confirmWishChip();}" />
+                <input class="wish-context-input visible" id="wishActiveInput" name="wishchip_nofill" placeholder="" style="display:block;font-size:16px;background:#1a1a2e;color:#fff;border:1px solid rgba(120,80,220,0.25);border-radius:12px;padding:12px 14px;" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other" role="presentation" onkeydown="if(event.key==='Enter'){event.preventDefault();confirmWishChip();}" />
               </div>
               <!-- Hidden storage for values -->
               <input type="hidden" id="wishAge" />
