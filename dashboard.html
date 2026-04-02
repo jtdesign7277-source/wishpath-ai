@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-02-v25';
+    var APP_VERSION = '2026-04-02-v26';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -642,7 +642,7 @@
         flex: 1;
         display: flex; align-items: center; gap: 10px;
         background: #2a2a2a;
-        border: 1px solid rgba(255,255,255,0.1);
+        border: 1px solid rgba(120,80,220,0.35);
         border-radius: 22px;
         padding: 10px 14px;
         min-height: 42px;
@@ -1396,7 +1396,7 @@
     .saved-chart-item-meta { font-size: 0.7rem; color: var(--text-dim); margin-top: 2px; }
 
     /* ── Watchlist ── */
-    .watchlist-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .watchlist-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; gap: 12px; }
     .watchlist-title-input { font-size: 1.1rem; font-weight: 700; background: none; border: none; color: var(--text); outline: none; font-family: inherit; flex: 1; min-width: 0; }
     .watchlist-title-input::placeholder { color: var(--text-dim); }
     .watchlist-actions { display: flex; gap: 6px; }
@@ -7246,7 +7246,7 @@
       renderWatchlistSelector();
     }
 
-    var STOCK_NAMES = { AAPL:'Apple', MSFT:'Microsoft', GOOGL:'Alphabet', AMZN:'Amazon', NVDA:'NVIDIA', META:'Meta', TSLA:'Tesla', NFLX:'Netflix', AMD:'AMD', INTC:'Intel', CRM:'Salesforce', ORCL:'Oracle', ADBE:'Adobe', PYPL:'PayPal', SQ:'Block', SHOP:'Shopify', COIN:'Coinbase', PLTR:'Palantir', UBER:'Uber', ABNB:'Airbnb', DIS:'Disney', BA:'Boeing', JPM:'JPMorgan', BAC:'Bank of America', GS:'Goldman Sachs', V:'Visa', MA:'Mastercard', WMT:'Walmart', TGT:'Target', COST:'Costco', HD:'Home Depot', NKE:'Nike', SBUX:'Starbucks', MCD:"McDonald's", KO:'Coca-Cola', PEP:'PepsiCo', JNJ:'J&J', PFE:'Pfizer', UNH:'UnitedHealth', XOM:'Exxon', CVX:'Chevron', 'BTC/USD':'Bitcoin', 'ETH/USD':'Ethereum', 'SOL/USD':'Solana', DOGE:'Dogecoin', 'DOGE/USD':'Dogecoin' };
+    var STOCK_NAMES = { AAPL:'Apple', MSFT:'Microsoft', GOOGL:'Alphabet', GOOG:'Alphabet', AMZN:'Amazon', NVDA:'NVIDIA', META:'Meta', TSLA:'Tesla', NFLX:'Netflix', AMD:'AMD', INTC:'Intel', CRM:'Salesforce', ORCL:'Oracle', ADBE:'Adobe', PYPL:'PayPal', SQ:'Block', SHOP:'Shopify', COIN:'Coinbase', PLTR:'Palantir', UBER:'Uber', ABNB:'Airbnb', DIS:'Disney', BA:'Boeing', JPM:'JPMorgan', BAC:'Bank of America', GS:'Goldman Sachs', V:'Visa', MA:'Mastercard', WMT:'Walmart', TGT:'Target', COST:'Costco', HD:'Home Depot', NKE:'Nike', SBUX:'Starbucks', MCD:"McDonald's", KO:'Coca-Cola', PEP:'PepsiCo', JNJ:'J&J', PFE:'Pfizer', UNH:'UnitedHealth', XOM:'Exxon', CVX:'Chevron', FUBO:'fuboTV', TRUMP:'Trump Media', DJT:'Trump Media', 'BTC/USD':'Bitcoin', 'ETH/USD':'Ethereum', 'SOL/USD':'Solana', DOGE:'Dogecoin', 'DOGE/USD':'Dogecoin' };
 
     function renderWatchlistItems() {
       var wl = watchlists.find(function(w) { return w.id === activeWatchlistId; });
@@ -7260,11 +7260,12 @@
       var rows = wl.symbols.map(function(sym) {
         var q = watchlistPrices[sym];
         var name = STOCK_NAMES[sym] || '';
-        var price = q ? '$' + formatNum(q.price) : '--';
-        var changeClass = q && q.change > 0 ? 'up' : q && q.change < 0 ? 'down' : 'flat';
-        var sign = q && q.change > 0 ? '+' : '';
-        var changeText = q ? sign + formatNum(q.change) : '--';
-        var pctText = q ? sign + formatNum(q.changePercent) + '%' : '';
+        var hasPrice = q && q.price != null && !isNaN(q.price);
+        var price = hasPrice ? '$' + formatNum(q.price) : '--';
+        var changeClass = hasPrice && q.change > 0 ? 'up' : hasPrice && q.change < 0 ? 'down' : 'flat';
+        var sign = hasPrice && q.change > 0 ? '+' : '';
+        var changeText = hasPrice ? sign + formatNum(q.change) : '--';
+        var pctText = hasPrice ? sign + formatNum(q.changePercent) + '%' : '';
         return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.06);cursor:default;">' +
           '<div style="flex:0 0 auto;min-width:0;">' +
             '<div style="font-size:13px;font-weight:700;color:#fff;line-height:1.3;">' + sym + '</div>' +
