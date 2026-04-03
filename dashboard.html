@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-02-v28';
+    var APP_VERSION = '2026-04-02-v29';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -1120,6 +1120,9 @@
         min-height: 100% !important;
       }
       body.fm-mobile-fullscreen #fmView .fm-widget-container .chart-fs-btn { display: none !important; }
+      /* Floating exit-fullscreen button — always visible in fullscreen */
+      .fm-exit-fs-btn { display: none; position: fixed; top: calc(max(10px, env(safe-area-inset-top)) + 8px); left: 12px; z-index: 10001; background: rgba(20,20,28,0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(120,80,220,0.35); color: #fff; font-size: 0.78rem; font-weight: 600; padding: 8px 14px; border-radius: 20px; cursor: pointer; -webkit-tap-highlight-color: transparent; box-shadow: 0 4px 16px rgba(0,0,0,0.3); }
+      body.fm-mobile-fullscreen .fm-exit-fs-btn { display: flex; align-items: center; gap: 6px; }
 
       /* ── Unified Notion dark color scheme ── */
       body, .app-container, .main-content, .view, .coach-layout, .coach-left, .coach-right-wrapper {
@@ -1751,6 +1754,7 @@
       <path d="M9 4 3 10l6 6"/>
     </svg>
   </button>
+  <button class="fm-exit-fs-btn" id="fmExitFsBtn" onclick="exitMobileFullscreen()">&#x2190; Exit Full Screen</button>
   <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleMobileSidebar()"></div>
   <div class="mobile-fm-menu-backdrop" id="mobileFMTabsBackdrop" onclick="closeMobileFMMenu()"></div>
   <div class="mobile-fm-menu" id="mobileFMTabsMenu" aria-label="Financial Markets sections">
@@ -2793,6 +2797,14 @@
       var activeTabId = getActiveFMTabId();
       if (!isFMWidgetTab(activeTabId)) return;
       _fmMobileImmersive = !_fmMobileImmersive;
+      closeMobileFMMenu();
+      updateMobileFMChrome();
+      refreshActiveFMWidgetLayout(true);
+    }
+
+    function exitMobileFullscreen() {
+      _fmMobileImmersive = false;
+      document.body.classList.remove('fm-mobile-fullscreen');
       closeMobileFMMenu();
       updateMobileFMChrome();
       refreshActiveFMWidgetLayout(true);
