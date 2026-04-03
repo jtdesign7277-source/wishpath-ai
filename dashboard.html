@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-03-v36';
+    var APP_VERSION = '2026-04-03-v37';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -234,8 +234,12 @@
     /* New Wish */
     .wish-form-card { background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 28px; box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.05); }
     .wish-label { font-size: 0.78rem; font-weight: 700; color: var(--purple); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 18px; display: flex; align-items: center; gap: 10px; }
-    .wish-textarea { width: 100%; min-height: 140px; padding: 16px; background: rgba(255,255,255,0.03); border: 1px solid rgba(120,80,220,0.35); border-radius: 12px; color: var(--text); font: inherit; font-size: 0.95rem; line-height: 1.6; outline: none; resize: none; box-shadow: none; transition: all 0.3s ease; }
-    .wish-textarea:focus { border-color: rgba(120,80,220,0.3); box-shadow: 0 0 12px rgba(120,80,220,0.1); }
+    @keyframes wishBorderPulse {
+      0%, 100% { border-color: rgba(140,100,240,0.45); box-shadow: 0 0 8px rgba(120,80,220,0.1); }
+      50% { border-color: rgba(160,120,255,0.65); box-shadow: 0 0 16px rgba(120,80,220,0.2); }
+    }
+    .wish-textarea { width: 100%; min-height: 140px; padding: 16px; background: rgba(255,255,255,0.03); border: 1.5px solid rgba(140,100,240,0.5); border-radius: 12px; color: var(--text); font: inherit; font-size: 0.95rem; line-height: 1.6; outline: none; resize: none; box-shadow: 0 0 8px rgba(120,80,220,0.1); animation: wishBorderPulse 3s ease-in-out infinite; transition: all 0.3s ease; }
+    .wish-textarea:focus { border-color: rgba(160,120,255,0.7); box-shadow: 0 0 20px rgba(120,80,220,0.25); animation: none; }
     .wish-textarea::placeholder { color: rgba(255,255,255,0.25); font-style: italic; }
     .wish-char-count { text-align: right; font-size: 0.75rem; color: var(--text-dim); margin-top: 6px; }
     .wish-context-label { text-align: center; font-size: 0.85rem; color: var(--text-muted); margin: 20px 0 12px; }
@@ -245,8 +249,8 @@
     .wish-chip.active { border-color: rgba(120,80,220,0.2); background: linear-gradient(135deg, rgba(120,80,220,0.08) 0%, rgba(255,255,255,0.02) 100%); color: var(--accent); box-shadow: 0 0 16px rgba(120,80,220,0.1); }
     .wish-context-input { display: none; width: 100%; padding: 10px 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font: inherit; font-size: 0.88rem; outline: none; margin-top: 8px; }
     .wish-context-input.visible { display: block; }
-    .wish-submit { display: block; width: 100%; padding: 16px; background: var(--accent); color: var(--bg); border: none; border-radius: 16px; font: inherit; font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 20px; box-shadow: 0 8px 32px rgba(120,80,220,0.3), 0 0 24px rgba(120,80,220,0.15); transition: all 0.3s ease; }
-    .wish-submit:hover { box-shadow: 0 12px 40px rgba(120,80,220,0.4), 0 0 32px rgba(120,80,220,0.2); transform: translateY(-1px); }
+    .wish-submit { display: block; width: 100%; padding: 16px; background: transparent; color: rgba(120,80,220,0.9); border: 1.5px solid rgba(120,80,220,0.35); border-radius: 16px; font: inherit; font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 20px; box-shadow: none; transition: all 0.3s ease; }
+    .wish-submit:hover { background: rgba(120,80,220,0.08); border-color: rgba(120,80,220,0.55); color: rgb(145,107,230); }
     /* Wish chat feed */
     .wish-chat-feed { display: flex; flex-direction: column; gap: 16px; padding: 0 0 16px; }
     .wish-chat-feed:empty { display: none; }
@@ -517,9 +521,9 @@
         -webkit-backdrop-filter: none !important;
       }
       #newwishView .wish-label { font-size: 1.3rem !important; font-weight: 700 !important; color: rgba(255,255,255,0.9) !important; margin-bottom: 20px !important; letter-spacing: 0.02em !important; }
-      #newwishView .wish-textarea { background: rgba(255,255,255,0.05) !important; border: 1px solid rgba(120,80,220,0.18) !important; border-radius: 14px !important; min-height: 150px !important; font-size: 16px !important; color: #fff !important; }
+      #newwishView .wish-textarea { background: rgba(255,255,255,0.05) !important; border: 1.5px solid rgba(140,100,240,0.5) !important; border-radius: 14px !important; min-height: 150px !important; font-size: 16px !important; color: #fff !important; animation: wishBorderPulse 3s ease-in-out infinite !important; }
       #newwishView .wish-char-count { color: rgba(255,255,255,0.35) !important; font-size: 0.8rem !important; }
-      #newwishView .wish-textarea:focus { border-color: rgba(120,80,220,0.5) !important; box-shadow: 0 0 0 3px rgba(120,80,220,0.12) !important; }
+      #newwishView .wish-textarea:focus { border-color: rgba(160,120,255,0.7) !important; box-shadow: 0 0 20px rgba(120,80,220,0.25) !important; animation: none !important; }
       #newwishView .wish-submit { display: none !important; }
       #newwishView .wish-context-label { color: rgba(255,255,255,0.5) !important; font-size: 0.95rem !important; margin: 24px 0 14px !important; }
       #newwishView .wish-context-chips { gap: 10px !important; }
@@ -5343,11 +5347,46 @@
     }
 
     // Home wish form helpers (mirrors the existing newwish form)
+    var _homeWishChipMeta = {
+      age: { emoji: '🎂', label: 'Age', prompt: 'Age: ' },
+      location: { emoji: '📍', label: 'Location', prompt: 'Location: ' },
+      budget: { emoji: '💰', label: 'Budget', prompt: 'Budget: ' },
+      time: { emoji: '⏰', label: 'Time Available', prompt: 'Time: ' }
+    };
     function toggleHomeWishContext(field, btn) {
       var input = document.getElementById('homeWish' + field.charAt(0).toUpperCase() + field.slice(1));
+      var textarea = document.getElementById('homeWishInput');
+      // Toggle the hidden input for visibility
       btn.classList.toggle('active');
       input.classList.toggle('visible');
-      if (input.classList.contains('visible')) input.focus();
+      if (input.classList.contains('visible')) {
+        input.focus();
+        // When input loses focus or Enter is pressed, append to textarea
+        var confirmed = false;
+        function confirmChipValue() {
+          if (confirmed) return;
+          confirmed = true;
+          var val = input.value.trim();
+          if (val) {
+            var meta = _homeWishChipMeta[field];
+            var line = meta.prompt + val;
+            var current = textarea.value.trim();
+            textarea.value = current ? current + '\n' + line : line;
+            textarea.style.height = 'auto';
+            textarea.style.height = textarea.scrollHeight + 'px';
+            document.getElementById('homeWishCharCount').textContent = textarea.value.length + ' / 800';
+            btn.innerHTML = meta.emoji + ' ' + val;
+          }
+          input.classList.remove('visible');
+          input.removeEventListener('blur', confirmChipValue);
+          input.removeEventListener('keydown', onEnter);
+        }
+        function onEnter(e) {
+          if (e.key === 'Enter') { e.preventDefault(); confirmChipValue(); }
+        }
+        input.addEventListener('blur', confirmChipValue);
+        input.addEventListener('keydown', onEnter);
+      }
     }
 
     async function submitHomeWish() {
