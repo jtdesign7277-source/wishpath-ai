@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-03-v40';
+    var APP_VERSION = '2026-04-03-v42';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -2876,8 +2876,8 @@
           <div class="lc-messages" id="lcMessages"></div>
           <!-- Input bar -->
           <div class="lc-input-bar">
-            <button class="lc-input-plus" onclick="startNewLifeCoachChat()">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <button class="lc-input-plus" onclick="toggleMobileSidebar()" title="Open sidebar">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
             </button>
             <textarea class="lc-input" id="lcInput" placeholder="Ask anything..." rows="1" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendLifeCoachMsg();}"></textarea>
             <button class="lc-send-btn" onclick="sendLifeCoachMsg()">
@@ -5267,8 +5267,31 @@
       // Hide mobile nav bar in this view
       var navBar = document.getElementById('mobileNavBar');
       if (navBar) navBar.style.display = 'none';
-      // Show chat list first
-      showLCChatList();
+      // Check if user has any conversations
+      if (!currentUserId) {
+        // No user logged in, go straight to agent view
+        hideLCChatList();
+        return;
+      }
+      // Load conversations and check if empty
+      var sb = getSupabase();
+      sb.from('coach_conversations')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', currentUserId)
+        .is('wish_id', null)
+        .then(function(result) {
+          if (result.count && result.count > 0) {
+            // User has conversations, show the list
+            showLCChatList();
+          } else {
+            // No conversations, go straight to agent view
+            hideLCChatList();
+          }
+        })
+        .catch(function() {
+          // On error, default to agent view
+          hideLCChatList();
+        });
     }
 
     function closeLifeCoachView() {
@@ -5347,8 +5370,13 @@
         var thinking = document.getElementById('lcThinking');
         if (thinking) thinking.remove();
 
-        // Render AI response
-        var msgs = document.getElementById('lcMessages');
+        // Disable input during streaming
+        var lcInput = document.getElementById('lcInput');
+        var lcSendBtn = document.querySelector('.lc-send-btn');
+        if (lcInput) lcInput.disabled = true;
+        if (lcSendBtn) lcSendBtn.style.opacity = '0.5';
+
+        // Prepare HTML reply with formatting (matching existing style)
         var htmlReply = reply
           .replace(/</g, '&lt;')
           .replace(/\n/g, '<br>')
@@ -5357,16 +5385,62 @@
           .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#e6edf3;">$1</strong>')
           .replace(/^- (.+?)(<br>|$)/gm, '<div style="padding:3px 0 3px 16px;position:relative;"><span style="position:absolute;left:0;color:rgb(145,107,230);">•</span>$1</div>');
 
+        // Create Life Coach message container with bubble
+        var msgs = document.getElementById('lcMessages');
         var aiDiv = document.createElement('div');
         aiDiv.className = 'lc-msg lc-msg-ai';
-        aiDiv.innerHTML = '<div class="lc-bubble">' + htmlReply + '</div>' +
-          '<div class="lc-msg-actions">' +
-          '<button class="lc-msg-action-btn" onclick="lcCopyMsg(this)" title="Copy" aria-label="Copy message">📋</button>' +
-          '<button class="lc-msg-action-btn" onclick="lcLikeMsg(this)" title="Good response" aria-label="Good response">👍</button>' +
-          '<button class="lc-msg-action-btn" onclick="lcDislikeMsg(this)" title="Not helpful" aria-label="Not helpful">👎</button>' +
-          '</div>';
+        var bubble = document.createElement('div');
+        bubble.className = 'lc-bubble';
+        aiDiv.appendChild(bubble);
         msgs.appendChild(aiDiv);
-        msgs.scrollTop = aiDiv.offsetTop - 8;
+        msgs.scrollTop = msgs.scrollHeight;
+
+        // Stream text character-by-character into bubble
+        var i = 0;
+        var buffer = '';
+        var chars = htmlReply.split('');
+
+        function typeChar() {
+          if (i >= chars.length) {
+            bubble.innerHTML = htmlReply;
+            msgs.scrollTop = msgs.scrollHeight;
+
+            // After streaming completes, add action buttons
+            var actionsDiv = document.createElement('div');
+            actionsDiv.className = 'lc-msg-actions';
+            actionsDiv.innerHTML = '<button class="lc-msg-action-btn" onclick="lcCopyMsg(this)" title="Copy" aria-label="Copy message">📋</button>' +
+              '<button class="lc-msg-action-btn" onclick="lcLikeMsg(this)" title="Good response" aria-label="Good response">👍</button>' +
+              '<button class="lc-msg-action-btn" onclick="lcDislikeMsg(this)" title="Not helpful" aria-label="Not helpful">👎</button>';
+            aiDiv.appendChild(actionsDiv);
+
+            // Re-enable input
+            if (lcInput) lcInput.disabled = false;
+            if (lcSendBtn) lcSendBtn.style.opacity = '1';
+            return;
+          }
+
+          // Handle HTML tags — add whole tag at once
+          if (chars[i] === '<') {
+            var tagEnd = htmlReply.indexOf('>', i);
+            if (tagEnd !== -1) {
+              buffer += htmlReply.substring(i, tagEnd + 1);
+              i = tagEnd + 1;
+            } else {
+              buffer += chars[i];
+              i++;
+            }
+          } else {
+            buffer += chars[i];
+            i++;
+          }
+
+          bubble.innerHTML = buffer;
+          // Scroll every 5 chars to reduce jank
+          if (i % 5 === 0) msgs.scrollTop = msgs.scrollHeight;
+          requestAnimationFrame(function() { setTimeout(typeChar, 8); });
+        }
+
+        typeChar();
 
         incrementAgentUsage();
         saveLCConversation();
@@ -9153,8 +9227,9 @@
         var reply = data.reply || "Couldn't process that.";
         var typing = document.getElementById('ccCoachTyping-' + idx);
         if (typing) typing.remove();
-        msgsEl.innerHTML += '<div class="msg ai">' + reply.replace(/</g,'&lt;').replace(/\n/g,'<br>') + '</div>';
-        incrementAgentUsage();
+
+        // Stream the response using typewriter effect
+        typewriterEffect(msgsEl, reply, function() { incrementAgentUsage(); });
       } catch(e) {
         var typing = document.getElementById('ccCoachTyping-' + idx);
         if (typing) typing.remove();
