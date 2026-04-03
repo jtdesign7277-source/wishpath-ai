@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-03-v44';
+    var APP_VERSION = '2026-04-03-v45';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -5573,6 +5573,11 @@
 
     function closeLCChatList() {
       saveIfNeeded();
+      // Actually hide the chat list and lifecoach view
+      document.getElementById('lcChatList').classList.add('hidden');
+      document.getElementById('lcFullscreen').style.display = 'none';
+      document.getElementById('lifecoachView').style.display = 'none';
+      _lcShowingList = false;
       if (window.innerWidth <= 768) {
         showMobileHome();
         var navBar = document.getElementById('mobileNavBar');
