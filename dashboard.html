@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-03-v32';
+    var APP_VERSION = '2026-04-03-v33';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -1685,6 +1685,52 @@
       .fm-ticker-input-row { flex-direction: column; }
       .fm-ticker-input { width: 100%; font-size: 16px !important; min-height: 44px; }
       .fm-ticker-btn { width: 100%; min-height: 44px; }
+
+      /* ── Collapsible ticker input on mobile ── */
+      .fm-ticker-input-row {
+        max-height: 0;
+        overflow: hidden;
+        margin-bottom: 0;
+        opacity: 0;
+        transition: max-height 0.35s ease, opacity 0.25s ease, margin-bottom 0.35s ease;
+      }
+      .fm-ticker-input-row.fm-ticker-expanded {
+        max-height: 160px;
+        opacity: 1;
+        margin-bottom: 12px;
+      }
+      .fm-ticker-pull-tab {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 8px 0 4px;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        color: rgba(255,255,255,0.35);
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        transition: color 0.2s ease;
+      }
+      .fm-ticker-pull-tab:active { color: rgba(120,80,220,0.7); }
+      .fm-ticker-pull-tab .pull-chevron {
+        display: inline-block;
+        transition: transform 0.3s ease;
+        font-size: 0.65rem;
+      }
+      .fm-ticker-pull-tab.expanded .pull-chevron { transform: rotate(180deg); }
+
+      /* ── Auto-hide nav bar on scroll ── */
+      .mobile-nav-bar {
+        transition: transform 0.3s ease, opacity 0.3s ease;
+      }
+      .mobile-nav-bar.nav-hidden {
+        transform: translateY(100%);
+        opacity: 0;
+        pointer-events: none;
+      }
+
       /* News filter mobile — full width */
       .news-filter-bar { flex-direction: column; gap: 8px; }
       .news-filter-select { width: 100%; font-size: 16px !important; min-height: 44px; padding: 12px; }
@@ -2196,7 +2242,8 @@
 
         <!-- FM: TradingView Charts -->
         <div class="fm-sub-content" id="fmTVChartsContent">
-          <div class="fm-ticker-input-row">
+          <div class="fm-ticker-pull-tab" onclick="toggleFMTickerInput(this)"><span class="pull-chevron">&#x25BC;</span> Change Ticker</div>
+          <div class="fm-ticker-input-row" id="fmTVChartsTickerRow">
             <input class="fm-ticker-input" id="tvChartTicker" placeholder="Enter ticker (e.g. AAPL, BTCUSD)" value="AAPL" />
             <button class="fm-ticker-btn" onclick="loadTVChart()">Load Chart</button>
           </div>
@@ -2225,7 +2272,8 @@
 
         <!-- FM: Technical Analysis -->
         <div class="fm-sub-content" id="fmTechAnalysisContent">
-          <div class="fm-ticker-input-row">
+          <div class="fm-ticker-pull-tab" onclick="toggleFMTickerInput(this)"><span class="pull-chevron">&#x25BC;</span> Change Ticker</div>
+          <div class="fm-ticker-input-row" id="fmTechTickerRow">
             <input class="fm-ticker-input" id="tvTechTicker" placeholder="Enter ticker (e.g. AAPL)" value="AAPL" />
             <button class="fm-ticker-btn" onclick="loadTVTechAnalysis()">Analyze</button>
           </div>
@@ -2810,6 +2858,47 @@
       refreshActiveFMWidgetLayout(true);
     }
 
+    /* ── Collapsible ticker input toggle ── */
+    function toggleFMTickerInput(pullTab) {
+      var row = pullTab.nextElementSibling;
+      if (!row) return;
+      var isExpanded = row.classList.contains('fm-ticker-expanded');
+      row.classList.toggle('fm-ticker-expanded', !isExpanded);
+      pullTab.classList.toggle('expanded', !isExpanded);
+      if (!isExpanded) {
+        var inp = row.querySelector('.fm-ticker-input');
+        if (inp) setTimeout(function() { inp.focus(); }, 350);
+      }
+    }
+
+    /* ── Auto-hide nav bar on scroll (all views) ── */
+    var _navLastScrollY = 0;
+    var _navScrollTicking = false;
+    (function() {
+      window.addEventListener('scroll', function() {
+        if (_navScrollTicking) return;
+        _navScrollTicking = true;
+        requestAnimationFrame(function() {
+          var scrollY = window.pageYOffset || document.documentElement.scrollTop || 0;
+          var navBar = document.getElementById('mobileNavBar');
+          if (navBar && window.innerWidth <= 768) {
+            var activeView = document.body.getAttribute('data-active-view');
+            if (activeView === 'fm' || activeView === 'coach') {
+              // Auto-hide: scrolling down past 60px hides, scrolling up shows
+              if (scrollY > _navLastScrollY && scrollY > 60) {
+                navBar.classList.add('nav-hidden');
+              } else if (scrollY < _navLastScrollY) {
+                navBar.classList.remove('nav-hidden');
+              }
+            }
+          }
+          _navLastScrollY = scrollY;
+          _navScrollTicking = false;
+        });
+      }, { passive: true });
+    })();
+    function initFMScrollListener() { /* scroll handled by window listener above */ }
+
     function closeMobileFMMenu() {
       var menu = document.getElementById('mobileFMTabsMenu');
       var backdrop = document.getElementById('mobileFMTabsBackdrop');
@@ -3340,6 +3429,11 @@
       updateMobileFMChrome();
       if (view === 'fm') {
         refreshActiveFMWidgetLayout(window.innerWidth <= 768);
+        initFMScrollListener();
+      } else {
+        // Reset nav bar visibility when leaving FM
+        var nb = document.getElementById('mobileNavBar');
+        if (nb) nb.classList.remove('nav-hidden');
       }
     }
 
