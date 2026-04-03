@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-03-v34';
+    var APP_VERSION = '2026-04-03-v35';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -1846,6 +1846,16 @@
         transition: transform 0.15s ease;
       }
       .chat-history-fab:active { transform: scale(0.92); }
+
+      /* ── Hide chart action buttons on mobile, restyle fs btn as back ── */
+      .chart-actions { display: none !important; }
+      .chart-fs-btn {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        right: auto;
+        z-index: 10;
+      }
 
       /* ── Auto-hide nav bar on scroll ── */
       .mobile-nav-bar {
@@ -5634,13 +5644,33 @@
         plotOptions: { series: { borderWidth: 0 }, pie: { borderWidth: 0, dataLabels: { color: '#e6edf3', style: { fontSize: '11px', textOutline: 'none' } } } },
         navigation: { buttonOptions: { symbolStroke: '#8b949e', theme: { fill: '#161b22', stroke: '#30363d', states: { hover: { fill: '#1c2128' }, select: { fill: '#1c2128' } } } } },
         exporting: {
-          buttons: { contextButton: { menuItems: ['downloadPNG','downloadSVG','downloadPDF','downloadCSV','separator','viewFullscreen'] } },
+          buttons: { contextButton: {
+            menuItems: window.innerWidth <= 768
+              ? ['emailPdfItem','saveToNotesItem','separator','exitChartItem']
+              : ['downloadPNG','downloadSVG','downloadPDF','downloadCSV','separator','viewFullscreen']
+          } },
           menuItemDefinitions: {
             viewFullscreen: {
               text: 'View in full screen',
               onclick: function() {
                 if (this && this.renderTo && this.renderTo.id) openChartFullscreenById(this.renderTo.id);
               }
+            },
+            emailPdfItem: {
+              text: 'Email PDF',
+              onclick: function() {
+                if (this && this.renderTo && this.renderTo.id) emailChartToMe(this.renderTo.id);
+              }
+            },
+            saveToNotesItem: {
+              text: 'Save to Notes',
+              onclick: function() {
+                if (this && this.renderTo && this.renderTo.id) saveChartToNotes(this.renderTo.id);
+              }
+            },
+            exitChartItem: {
+              text: 'Exit Chart',
+              onclick: function() { exitChartView(); }
             }
           }
         },
@@ -9026,16 +9056,38 @@ function closeChartFullscreen() {
   _chartFsEl = null; _chartFsOrigParent = null; _chartFsOrigNext = null; _chartFsOrigStyles = null; _chartFsOrigChartHeights = [];
 }
 
+// Exit chart view — go back to FM Markets tab on mobile
+function exitChartView() {
+  // Close fullscreen if open
+  var overlay = document.getElementById('chartFsOverlay');
+  if (overlay && overlay.classList.contains('active')) closeChartFullscreen();
+  // Switch to FM Markets tab (default landing)
+  var firstBtn = document.querySelector('#fmView .fm-sub-tab');
+  switchFMTab('fmMarkets', firstBtn);
+  // Show the nav bar
+  var navBar = document.getElementById('mobileNavBar');
+  if (navBar) navBar.classList.remove('nav-hidden');
+  // Scroll to top
+  window.scrollTo(0, 0);
+}
+
 // Add fullscreen buttons to all chart containers
 function addChartFsButtons() {
+  var isMobile = window.innerWidth <= 768;
   document.querySelectorAll('.fm-widget-container, .chart-container, .cc-widget-body').forEach(function(el) {
     if (el.querySelector('.chart-fs-btn')) return;
     el.style.position = 'relative';
     var btn = document.createElement('button');
     btn.className = 'chart-fs-btn';
-    btn.title = 'Full screen';
-    btn.innerHTML = '⛶';
-    btn.onclick = function(e) { e.stopPropagation(); openChartFullscreen(this); };
+    if (isMobile) {
+      btn.title = 'Back';
+      btn.innerHTML = '&#x2190;';
+      btn.onclick = function(e) { e.stopPropagation(); exitChartView(); };
+    } else {
+      btn.title = 'Full screen';
+      btn.innerHTML = '⛶';
+      btn.onclick = function(e) { e.stopPropagation(); openChartFullscreen(this); };
+    }
     el.appendChild(btn);
   });
 }
