@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-03-v46';
+    var APP_VERSION = '2026-04-03-v47';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -5290,6 +5290,8 @@
 
     function openLifeCoachView() {
       hideMobileHome();
+      // Clear any inline display:none left by closeLCChatList
+      document.getElementById('lifecoachView').style.display = '';
       showView('lifecoach');
       // Hide mobile nav bar in this view
       var navBar = document.getElementById('mobileNavBar');
