@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-03-v45';
+    var APP_VERSION = '2026-04-03-v46';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -1193,6 +1193,8 @@
     .markets-refresh-btn { background: none; border: 1px solid var(--border); border-radius: 6px; padding: 4px 12px; color: var(--text-dim); font-size: 0.72rem; cursor: pointer; font-family: inherit; transition: all 0.15s; display: flex; align-items: center; gap: 4px; }
     .markets-refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
     .markets-refresh-btn.spinning .refresh-icon { animation: spin 0.8s linear infinite; }
+    .fm-search-icon-btn { background: none; border: none; padding: 6px; color: var(--text-dim); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; border-radius: 6px; }
+    .fm-search-icon-btn:hover { color: var(--accent); }
     @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     .stock-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; margin-bottom: 28px; }
     .stock-card { background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.05); transition: all 0.3s ease; position: relative; overflow: hidden; }
@@ -2444,7 +2446,7 @@
         <!-- FM: Markets -->
         <div class="fm-sub-content active" id="fmMarketsContent">
           <div class="markets-section-label"><span>&#x1F7E2; Magnificent 7 Tracker</span>
-            <button class="markets-refresh-btn" id="fmRefreshBtn" onclick="refreshMarkets()"><span class="refresh-icon" style="display:inline-block;">&#x21BB;</span> Refresh</button>
+            <button class="fm-search-icon-btn" id="fmSearchBtn" onclick="toggleFMTickerSearch()" title="Search ticker" aria-label="Search ticker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg></button>
           </div>
           <div class="markets-updated" id="fmMarketsUpdatedTime"></div>
           <div class="stock-grid" id="fmMag7Grid"></div>
@@ -3246,6 +3248,18 @@
       pullTab.classList.toggle('expanded', !isExpanded);
       if (!isExpanded) {
         var inp = row.querySelector('.fm-ticker-input');
+        if (inp) setTimeout(function() { inp.focus(); }, 350);
+      }
+    }
+
+    // Toggle ticker input from Markets search icon
+    function toggleFMTickerSearch() {
+      var tvChartsRow = document.getElementById('fmTVChartsTickerRow');
+      if (!tvChartsRow) return;
+      var isExpanded = tvChartsRow.classList.contains('fm-ticker-expanded');
+      tvChartsRow.classList.toggle('fm-ticker-expanded', !isExpanded);
+      if (!isExpanded) {
+        var inp = tvChartsRow.querySelector('.fm-ticker-input');
         if (inp) setTimeout(function() { inp.focus(); }, 350);
       }
     }
