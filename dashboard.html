@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-03-v33';
+    var APP_VERSION = '2026-04-03-v34';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -1721,6 +1721,132 @@
       }
       .fm-ticker-pull-tab.expanded .pull-chevron { transform: rotate(180deg); }
 
+      /* ── Chat History Panel (Claude-style) ── */
+      .chat-history-backdrop {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 10010;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .chat-history-backdrop.open { display: block; }
+      .chat-history-panel {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 88vw;
+        max-width: 380px;
+        background: #f5f5f0;
+        z-index: 10011;
+        transform: translateX(-100%);
+        transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+        display: flex;
+        flex-direction: column;
+        border-radius: 0 16px 16px 0;
+        overflow: hidden;
+      }
+      .chat-history-panel.open { transform: translateX(0); }
+      .chat-history-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: calc(max(14px, env(safe-area-inset-top)) + 8px) 16px 12px;
+        background: #f5f5f0;
+      }
+      .chat-history-close {
+        background: none;
+        border: none;
+        color: #333;
+        cursor: pointer;
+        padding: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .chat-history-brand {
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: #1a1a1a;
+      }
+      .chat-history-tab {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 20px;
+        margin: 0 12px 4px;
+        border-radius: 10px;
+        background: #eae8e3;
+        color: #333;
+        font-size: 0.92rem;
+        font-weight: 600;
+      }
+      .chat-history-tab svg { color: #555; }
+      .chat-history-list {
+        flex: 1;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        padding: 8px 0;
+      }
+      .chat-history-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 20px;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        transition: background 0.15s ease;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+      }
+      .chat-history-item:active { background: rgba(0,0,0,0.06); }
+      .chat-history-item-title {
+        font-size: 0.92rem;
+        font-weight: 500;
+        color: #1a1a1a;
+        line-height: 1.35;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 80%;
+      }
+      .chat-history-item-time {
+        font-size: 0.78rem;
+        color: #999;
+        margin-top: 3px;
+      }
+      .chat-history-item-arrow {
+        color: #bbb;
+        font-size: 0.85rem;
+        flex-shrink: 0;
+      }
+      .chat-history-empty {
+        text-align: center;
+        color: #999;
+        font-size: 0.88rem;
+        padding: 40px 20px;
+      }
+      .chat-history-fab {
+        position: absolute;
+        bottom: calc(20px + env(safe-area-inset-bottom));
+        right: 20px;
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, rgb(120,80,220), rgb(145,107,230));
+        color: #fff;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 4px 20px rgba(120,80,220,0.4), 0 2px 8px rgba(0,0,0,0.2);
+        -webkit-tap-highlight-color: transparent;
+        transition: transform 0.15s ease;
+      }
+      .chat-history-fab:active { transform: scale(0.92); }
+
       /* ── Auto-hide nav bar on scroll ── */
       .mobile-nav-bar {
         transition: transform 0.3s ease, opacity 0.3s ease;
@@ -2563,9 +2689,30 @@
     <div class="tmpl-scroll" id="tmplList"></div>
   </div>
 
+  <!-- Chat History Panel (Claude-style) -->
+  <div class="chat-history-backdrop" id="chatHistoryBackdrop" onclick="closeChatHistory()"></div>
+  <div class="chat-history-panel" id="chatHistoryPanel">
+    <div class="chat-history-header">
+      <button class="chat-history-close" onclick="closeChatHistory()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <span class="chat-history-brand">WishPath.ai</span>
+    </div>
+    <div class="chat-history-tab">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      Chats
+    </div>
+    <div class="chat-history-list" id="chatHistoryList">
+      <div class="chat-history-empty">No conversations yet</div>
+    </div>
+    <button class="chat-history-fab" id="chatHistoryFab" onclick="startNewChatFromPanel()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+  </div>
+
   <!-- Mobile Bottom Bar — Notion style: Search | Ask AI | Compose -->
   <nav class="mobile-nav-bar" id="mobileNavBar">
-    <button class="mobile-nav-side-btn" onclick="toggleMobileSidebar()" aria-label="Search">
+    <button class="mobile-nav-side-btn" onclick="openChatHistory()" aria-label="Chats">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     </button>
     <div class="mobile-nav-ask-pill" id="mobileAskAIBtn" onclick="handleMobileNavPill()">
@@ -4953,6 +5100,98 @@
         showView('coach');
         sendCoachMsg();
       }
+    }
+
+    // ── Chat History Panel ──
+    function openChatHistory() {
+      document.getElementById('chatHistoryBackdrop').classList.add('open');
+      document.getElementById('chatHistoryPanel').classList.add('open');
+      loadChatHistoryList();
+    }
+    function closeChatHistory() {
+      document.getElementById('chatHistoryBackdrop').classList.remove('open');
+      document.getElementById('chatHistoryPanel').classList.remove('open');
+    }
+    function timeAgo(dateStr) {
+      if (!dateStr) return '';
+      var diff = Date.now() - new Date(dateStr).getTime();
+      var mins = Math.floor(diff / 60000);
+      if (mins < 1) return 'Just now';
+      if (mins < 60) return mins + ' min ago';
+      var hrs = Math.floor(mins / 60);
+      if (hrs < 24) return hrs + ' hour' + (hrs > 1 ? 's' : '') + ' ago';
+      var days = Math.floor(hrs / 24);
+      if (days < 7) return days + ' day' + (days > 1 ? 's' : '') + ' ago';
+      var weeks = Math.floor(days / 7);
+      return weeks + ' week' + (weeks > 1 ? 's' : '') + ' ago';
+    }
+    async function loadChatHistoryList() {
+      var list = document.getElementById('chatHistoryList');
+      list.innerHTML = '<div class="chat-history-empty">Loading...</div>';
+      var items = [];
+
+      // Add current home chat if it exists
+      if (mobileHomeChatHistory.length > 0) {
+        var firstMsg = mobileHomeChatHistory.find(function(m) { return m.role === 'user'; });
+        items.push({
+          title: firstMsg ? firstMsg.content.substring(0, 60) : 'Current chat',
+          time: 'Active now',
+          action: function() { closeChatHistory(); showMobileHome(); }
+        });
+      }
+
+      // Load from Supabase
+      try {
+        if (currentUserId) {
+          var sb = getSupabase();
+          var { data } = await sb.from('coach_conversations')
+            .select('id, wish_id, title, updated_at, messages')
+            .eq('user_id', currentUserId)
+            .order('updated_at', { ascending: false })
+            .limit(50);
+          if (data) data.forEach(function(c) {
+            if (!c.messages || c.messages.length === 0) return;
+            var chatTitle = c.title || '';
+            if (!chatTitle) {
+              var firstUser = c.messages.find(function(m) { return m.role === 'user'; });
+              chatTitle = firstUser ? firstUser.content.substring(0, 60) : 'Untitled chat';
+            }
+            items.push({
+              title: chatTitle,
+              time: timeAgo(c.updated_at),
+              action: function() { closeChatHistory(); loadSavedChat(c.wish_id); }
+            });
+          });
+        }
+      } catch(e) { console.error('Chat history load error:', e); }
+
+      if (items.length === 0) {
+        list.innerHTML = '<div class="chat-history-empty">No conversations yet</div>';
+        return;
+      }
+
+      list.innerHTML = '';
+      items.forEach(function(item) {
+        var el = document.createElement('div');
+        el.className = 'chat-history-item';
+        el.onclick = item.action;
+        el.innerHTML = '<div><div class="chat-history-item-title">' + item.title.replace(/</g, '&lt;') + '</div><div class="chat-history-item-time">' + item.time + '</div></div><div class="chat-history-item-arrow">&#x203A;</div>';
+        list.appendChild(el);
+      });
+    }
+    function startNewChatFromPanel() {
+      closeChatHistory();
+      // Clear current home chat and go to home
+      mobileHomeChatHistory = [];
+      var msgs = document.getElementById('mobileChatMessages');
+      if (msgs) msgs.innerHTML = '';
+      var homeContent = document.getElementById('mobileHomeContent');
+      var chat = document.getElementById('mobileChat');
+      if (homeContent) homeContent.style.display = '';
+      if (chat) chat.style.display = 'none';
+      showMobileHome();
+      var input = document.getElementById('mobileHomeInput');
+      if (input) { input.value = ''; input.focus(); }
     }
 
     // ── Mobile Ask AI overlay ──
