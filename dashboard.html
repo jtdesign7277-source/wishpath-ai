@@ -861,18 +861,27 @@
       /* ── Notion-style bottom bar (3 elements: search, ask ai, compose) ── */
       .mobile-nav-bar {
         position: fixed; bottom: 0; left: 0; right: 0;
-        background: var(--bg, #191919);
+        background: transparent;
         z-index: 9998;
-        padding: 8px 12px calc(10px + env(safe-area-inset-bottom)) 12px;
+        padding: 0 12px calc(8px + env(safe-area-inset-bottom)) 12px;
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 6px;
         border-top: none;
         box-shadow: none;
       }
+      .mobile-nav-bar::before {
+        content: '';
+        position: absolute;
+        bottom: 0; left: 0; right: 0;
+        height: calc(100% + 32px);
+        background: linear-gradient(to bottom, transparent 0%, var(--bg, #191919) 32px);
+        pointer-events: none;
+        z-index: -1;
+      }
       .mobile-nav-side-btn {
         flex-shrink: 0;
-        width: 42px; height: 42px;
+        width: 36px; height: 36px;
         display: flex; align-items: center; justify-content: center;
         background: none; border: none;
         color: rgba(255,255,255,0.45);
@@ -880,36 +889,37 @@
         -webkit-tap-highlight-color: transparent;
       }
       .mobile-nav-side-btn:active { opacity: 0.6; }
-      .mobile-nav-side-btn svg { width: 22px; height: 22px; }
+      .mobile-nav-side-btn svg { width: 20px; height: 20px; }
       .mobile-nav-ask-pill {
         flex: 1;
-        display: flex; align-items: center; gap: 10px;
+        display: flex; align-items: center; gap: 8px;
         background: #2a2a2a;
         border: 1px solid rgba(120,80,220,0.2);
-        border-radius: 24px;
-        padding: 10px 14px;
-        min-height: 42px;
+        border-radius: 20px;
+        padding: 8px 12px;
+        min-height: 36px;
         cursor: pointer;
         -webkit-tap-highlight-color: transparent;
         transition: background 0.15s ease;
+        animation: inputPulse 2s ease-in-out infinite;
       }
       .mobile-nav-ask-pill:active { background: #333; }
       .mobile-nav-ask-pill .nav-pill-icon { display: none !important; }
       .mobile-nav-ask-pill .nav-pill-label {
         flex: 1;
-        font-size: 15px;
-        color: rgba(255,255,255,0.4);
+        font-size: 14px;
+        color: rgba(255,255,255,0.35);
       }
       .mobile-nav-ask-pill .nav-pill-send {
         flex-shrink: 0;
-        width: 32px; height: 32px;
+        width: 28px; height: 28px;
         border-radius: 0;
         background: none;
         display: flex; align-items: center; justify-content: center;
         color: rgb(120,80,220);
         box-shadow: none;
       }
-      .mobile-nav-ask-pill .nav-pill-send svg { width: 18px; height: 18px; stroke: rgb(120,80,220); }
+      .mobile-nav-ask-pill .nav-pill-send svg { width: 16px; height: 16px; stroke: rgb(120,80,220); }
 
       body.fm-mobile-fullscreen .mobile-sidebar-toggle,
       body.fm-mobile-fullscreen .mobile-fm-tabs-toggle {
@@ -7114,14 +7124,24 @@
     function updateMobileNavLabel(view) {
       var label = document.getElementById('navAskLabel');
       if (!label) return;
-      if (view === 'newwish') {
-        label.textContent = 'Generate my roadmap';
-      } else if (view === 'coach') {
-        label.textContent = 'AI Coach';
-      } else if (_isOnPortfolioPage()) {
+      var placeholders = {
+        home: "What's on your mind today?",
+        coach: "Continue the conversation...",
+        lifecoach: "Ask your life coach anything",
+        news: "Ask me to summarize a news story",
+        fm: "Ask about stocks, crypto, markets...",
+        wishes: "Tell me about your next goal",
+        newwish: "Generate my roadmap",
+        notes: "Help me write a note",
+        todos: "Add a task or ask for help",
+        library: "Search your saved content",
+        feedback: "Share your feedback",
+        cc: "Ask about your command center"
+      };
+      if (_isOnPortfolioPage()) {
         label.textContent = 'Ask about your portfolio';
       } else {
-        label.textContent = 'Ask AI';
+        label.textContent = placeholders[view] || "What's on your mind today?";
       }
     }
 
