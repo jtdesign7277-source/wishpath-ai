@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-04-v50';
+    var APP_VERSION = '2026-04-04-v51';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -5391,6 +5391,111 @@
       _lcSendToAPI(msg);
     }
 
+    // Format AI response with markdown table support and basic markdown
+    function formatAIResponse(text) {
+      // First, escape HTML tags in the original text
+      var escaped = text.replace(/</g, '&lt;');
+
+      // Detect and format markdown tables
+      var lines = escaped.split('\n');
+      var inTable = false;
+      var tableStart = -1;
+      var formatted = [];
+
+      for (var i = 0; i < lines.length; i++) {
+        var line = lines[i].trim();
+
+        // Check if this line is part of a markdown table (contains pipes)
+        if (line.match(/^\|.*\|$/)) {
+          if (!inTable) {
+            inTable = true;
+            tableStart = i;
+          }
+        } else {
+          if (inTable) {
+            inTable = false;
+            // Process the table lines collected so far
+            var tableLines = lines.slice(tableStart, i).map(function(l) { return l.trim(); });
+            var tableHtml = formatMarkdownTable(tableLines);
+            formatted.push(tableHtml);
+          }
+          formatted.push(lines[i]);
+        }
+      }
+
+      // Handle case where file ends with a table
+      if (inTable) {
+        var tableLines = lines.slice(tableStart).map(function(l) { return l.trim(); });
+        var tableHtml = formatMarkdownTable(tableLines);
+        formatted.push(tableHtml);
+      }
+
+      // If no tables found, work with original escaped text
+      if (formatted.length === 0) {
+        formatted = [escaped];
+      }
+
+      var result = formatted.join('\n');
+
+      // Format basic markdown
+      result = result
+        .replace(/\n/g, '<br>')
+        .replace(/###\s*(.+?)(<br>|$)/g, '<div style="font-weight:700;color:#e6edf3;font-size:0.95em;margin:12px 0 6px;">$1</div>')
+        .replace(/##\s*(.+?)(<br>|$)/g, '<div style="font-weight:700;color:rgb(145,107,230);font-size:1.05em;margin:14px 0 8px;">$1</div>')
+        .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#e6edf3;">$1</strong>')
+        .replace(/^- (.+?)(<br>|$)/gm, '<div style="padding:3px 0 3px 16px;position:relative;"><span style="position:absolute;left:0;color:rgb(145,107,230);">•</span>$1</div>');
+
+      return result;
+    }
+
+    // Helper function to format markdown tables into styled cards
+    function formatMarkdownTable(tableLines) {
+      if (tableLines.length < 2) return tableLines.join('\n');
+
+      var headerLine = tableLines[0];
+      var separatorLine = tableLines[1];
+
+      // Parse header
+      var headers = headerLine.split('|').map(function(h) { return h.trim(); }).filter(function(h) { return h; });
+
+      // Skip separator, process data rows
+      var dataLines = tableLines.slice(2);
+
+      if (dataLines.length === 0) return tableLines.join('\n');
+
+      // Emoji mapping for common column headers (stock data)
+      var emojiMap = {
+        'stock': '📊',
+        'price': '💰',
+        'day change': '📈',
+        'change': '📈',
+        'volume': '📦',
+        'eps': '📈',
+        'pe ratio': '📊',
+        'market cap': '💼'
+      };
+
+      // Build card HTML for each row
+      var cardHtml = '<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:12px;margin:8px 0;font-size:13px;line-height:1.6;">';
+
+      dataLines.forEach(function(dataLine) {
+        var cells = dataLine.split('|').map(function(c) { return c.trim(); }).filter(function(c) { return c; });
+        if (cells.length === headers.length) {
+          for (var j = 0; j < headers.length; j++) {
+            var header = headers[j].toLowerCase();
+            var emoji = emojiMap[header] || '•';
+            var value = cells[j];
+            cardHtml += '<div style="margin:6px 0;"><span style="color:rgb(145,107,230);margin-right:6px;">' + emoji + '</span>' +
+                        '<span style="color:#e6edf3;">' + (header.charAt(0).toUpperCase() + header.slice(1)) + ':</span> ' +
+                        '<span style="color:rgba(255,255,255,0.8);">' + value + '</span></div>';
+          }
+        }
+      });
+
+      cardHtml += '</div>';
+      return cardHtml;
+    }
+
     async function _lcSendToAPI(msg) {
       _lcHistory.push({ role: 'user', content: msg });
       try {
@@ -5414,14 +5519,8 @@
         if (lcInput) lcInput.disabled = true;
         if (lcSendBtn) lcSendBtn.style.opacity = '0.5';
 
-        // Prepare HTML reply with formatting (matching existing style)
-        var htmlReply = reply
-          .replace(/</g, '&lt;')
-          .replace(/\n/g, '<br>')
-          .replace(/###\s*(.+?)(<br>|$)/g, '<div style="font-weight:700;color:#e6edf3;font-size:0.95em;margin:12px 0 6px;">$1</div>')
-          .replace(/##\s*(.+?)(<br>|$)/g, '<div style="font-weight:700;color:rgb(145,107,230);font-size:1.05em;margin:14px 0 8px;">$1</div>')
-          .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#e6edf3;">$1</strong>')
-          .replace(/^- (.+?)(<br>|$)/gm, '<div style="padding:3px 0 3px 16px;position:relative;"><span style="position:absolute;left:0;color:rgb(145,107,230);">•</span>$1</div>');
+        // Prepare HTML reply with formatting (including markdown table support)
+        var htmlReply = formatAIResponse(reply);
 
         // Create Life Coach message container with bubble
         var msgs = document.getElementById('lcMessages');
@@ -5559,13 +5658,7 @@
           div.className = 'lc-msg lc-msg-user';
           div.innerHTML = '<div class="lc-bubble">' + m.content.replace(/</g, '&lt;') + '</div>';
         } else {
-          var htmlReply = m.content
-            .replace(/</g, '&lt;')
-            .replace(/\n/g, '<br>')
-            .replace(/###\s*(.+?)(<br>|$)/g, '<div style="font-weight:700;color:#e6edf3;font-size:0.95em;margin:12px 0 6px;">$1</div>')
-            .replace(/##\s*(.+?)(<br>|$)/g, '<div style="font-weight:700;color:rgb(145,107,230);font-size:1.05em;margin:14px 0 8px;">$1</div>')
-            .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#e6edf3;">$1</strong>')
-            .replace(/^- (.+?)(<br>|$)/gm, '<div style="padding:3px 0 3px 16px;position:relative;"><span style="position:absolute;left:0;color:rgb(145,107,230);">•</span>$1</div>');
+          var htmlReply = formatAIResponse(m.content);
           div.className = 'lc-msg lc-msg-ai';
           div.innerHTML = '<div class="lc-bubble">' + htmlReply + '</div>' +
             '<div class="lc-msg-actions">' +
