@@ -1395,6 +1395,10 @@
       /* Floating exit-fullscreen button — always visible in fullscreen */
       .fm-exit-fs-btn { display: none; position: fixed; top: calc(max(10px, env(safe-area-inset-top)) + 8px); left: 12px; z-index: 10001; background: rgba(20,20,28,0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(120,80,220,0.35); color: #fff; font-size: 0.78rem; font-weight: 600; padding: 8px 14px; border-radius: 20px; cursor: pointer; -webkit-tap-highlight-color: transparent; box-shadow: 0 4px 16px rgba(0,0,0,0.3); }
       body.fm-mobile-fullscreen .fm-exit-fs-btn { display: flex; align-items: center; gap: 6px; }
+      .fm-fs-toggle-btn { display: none; position: fixed; z-index: 10001; background: rgba(120,80,220,0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(120,80,220,0.5); color: #fff; padding: 10px; border-radius: 50%; cursor: pointer; -webkit-tap-highlight-color: transparent; box-shadow: 0 4px 16px rgba(120,80,220,0.3); transition: all 0.2s ease; }
+      .fm-fs-toggle-btn:active { transform: scale(0.9); }
+      .fm-fs-toggle-btn.visible { display: flex; align-items: center; justify-content: center; top: auto; bottom: 80px; right: 14px; }
+      body.fm-mobile-fullscreen .fm-fs-toggle-btn.visible { bottom: 20px; right: 14px; background: rgba(30,30,40,0.85); border-color: rgba(255,255,255,0.2); }
 
       /* ── Unified Notion dark color scheme ── */
       body, .app-container, .main-content, .view, .coach-layout, .coach-left, .coach-right-wrapper {
@@ -2796,6 +2800,11 @@
     </svg>
   </button>
   <button class="fm-exit-fs-btn" id="fmExitFsBtn" onclick="exitMobileFullscreen()">&#x2190; Exit Full Screen</button>
+  <button class="fm-fs-toggle-btn" id="fmFsToggleBtn" onclick="toggleActiveFMMobileImmersive()">
+    <svg id="fmFsToggleIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+      <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
+    </svg>
+  </button>
   <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleMobileSidebar()"></div>
   <div class="mobile-fm-menu-backdrop" id="mobileFMTabsBackdrop" onclick="closeMobileFMMenu()"></div>
   <div class="mobile-fm-menu" id="mobileFMTabsMenu" aria-label="Financial Markets sections">
@@ -3983,7 +3992,7 @@
     };
     var _fmWidgetRenderTimers = {};
     var _fmWidgetResizeTimer = null;
-    var _fmMobileImmersive = true;
+    var _fmMobileImmersive = false;
 
     function getActiveFMTabId() {
       var activeContent = document.querySelector('#fmView .fm-sub-content.active');
@@ -4208,13 +4217,26 @@
       var isSidebarOpen = !!(document.querySelector('.sidebar') && document.querySelector('.sidebar').classList.contains('open'));
       var activeTabId = getActiveFMTabId();
       var shouldImmersive = isFMActive && isFMWidgetTab(activeTabId) && _fmMobileImmersive;
+      var fsToggle = document.getElementById('fmFsToggleBtn');
+      var fsIcon = document.getElementById('fmFsToggleIcon');
       if (!onMobile || !isFMActive || isHome) {
         document.body.classList.remove('fm-mobile-fullscreen');
+        if (fsToggle) fsToggle.classList.remove('visible');
         closeMobileFMMenu();
         return;
       }
       if (shouldImmersive) document.body.classList.add('fm-mobile-fullscreen');
       else document.body.classList.remove('fm-mobile-fullscreen');
+      // Show/hide fullscreen toggle on widget tabs
+      var isWidget = isFMWidgetTab(activeTabId);
+      if (fsToggle) {
+        if (isWidget && !isSidebarOpen) { fsToggle.classList.add('visible'); } else { fsToggle.classList.remove('visible'); }
+      }
+      if (fsIcon) {
+        fsIcon.innerHTML = shouldImmersive
+          ? '<path d="M4 14h6v6M14 4h6v6M4 14l7-7M20 4l-7 7"/>'
+          : '<path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>';
+      }
       if (toggle && isSidebarOpen) { toggle.style.display = 'none'; closeMobileFMMenu(); } else if (toggle) { toggle.style.display = ''; }
       if (isSidebarOpen) closeMobileFMMenu();
       syncMobileFMMenuState();
@@ -9836,7 +9858,7 @@
       if (btn) btn.classList.add('active');
       var content = document.getElementById(tabId + 'Content');
       if (content) content.classList.add('active');
-      if (isFMWidgetTab(tabId)) _fmMobileImmersive = true;
+      /* Fullscreen is now user-controlled via toggle button */
       syncFMShortcutState(tabId);
       // Lazy-load widgets on first visit
       if (tabId === 'fmMarkets' && !window._fmMarketsLoaded) { refreshFMMarkets().then(function() { window._fmMarketsLoaded = true; }).catch(function() {}); }
