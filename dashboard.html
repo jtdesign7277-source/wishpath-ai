@@ -167,7 +167,8 @@
     .coach-input-row .chat-input-wrap { flex: 1; }
     .coach-input { flex: 1; padding: 12px 16px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.04); border-radius: 12px; color: var(--text); font: inherit; font-size: 0.9rem; outline: none; resize: none; min-height: 48px; max-height: 240px; overflow-y: auto; box-shadow: inset 4px 4px 8px rgba(0,0,0,0.5), inset -2px -2px 6px rgba(255,255,255,0.02); transition: all 0.3s ease; }
     .coach-input:focus { border-color: rgba(120,80,220,0.3); box-shadow: inset 4px 4px 8px rgba(0,0,0,0.5), inset -2px -2px 6px rgba(255,255,255,0.02), 0 0 12px rgba(120,80,220,0.1); }
-    .coach-send { padding: 0; background: var(--kraken-gradient-cta); color: #fff; border: none; border-radius: 50%; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; transition: opacity 0.15s ease, transform 0.1s ease; box-shadow: 0 2px 12px rgba(120,80,220,0.3); margin: 4px 4px 4px 0; }
+    .coach-send { padding: 0; background: none; color: rgb(120,80,220); border: none; border-radius: 0; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; transition: opacity 0.15s ease, transform 0.1s ease; box-shadow: none; margin: 4px 4px 4px 0; }
+    .coach-send svg { stroke: rgb(120,80,220); }
     .coach-send:hover { opacity: 0.92; }
     .coach-send svg { width: 18px; height: 18px; }
     .coach-send:disabled { opacity: 0.5; }
@@ -902,13 +903,13 @@
       .mobile-nav-ask-pill .nav-pill-send {
         flex-shrink: 0;
         width: 32px; height: 32px;
-        border-radius: 50%;
-        background: var(--kraken-gradient-cta);
+        border-radius: 0;
+        background: none;
         display: flex; align-items: center; justify-content: center;
-        color: #fff;
-        box-shadow: 0 2px 12px rgba(120,80,220,0.3);
+        color: rgb(120,80,220);
+        box-shadow: none;
       }
-      .mobile-nav-ask-pill .nav-pill-send svg { width: 16px; height: 16px; stroke: #fff; }
+      .mobile-nav-ask-pill .nav-pill-send svg { width: 18px; height: 18px; stroke: rgb(120,80,220); }
 
       body.fm-mobile-fullscreen .mobile-sidebar-toggle,
       body.fm-mobile-fullscreen .mobile-fm-tabs-toggle {
@@ -1161,8 +1162,9 @@
       }
       .mobile-home-input { width: 100%; padding: 16px 54px 16px 18px; background: transparent; border: none; border-radius: 20px; color: rgba(255,255,255,0.9); font: inherit; font-size: 16px; outline: none; resize: none; min-height: 56px; max-height: 120px; overflow-y: auto; display: block; line-height: 1.4; transition: all 0.2s ease; }
       .mobile-home-input::placeholder { color: rgba(255,255,255,0.3); }
-      .mobile-home-input-send { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, rgb(120,80,220), rgb(100,60,200)); border: none; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 12px rgba(120,80,220,0.3); transition: opacity 0.15s ease, transform 0.1s ease; }
-      .mobile-home-input-send:active { opacity: 0.75; transform: translateY(-50%) scale(0.96); }
+      .mobile-home-input-send { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 34px; height: 34px; border-radius: 0; background: none; border: none; color: rgb(120,80,220); cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: none; transition: opacity 0.15s ease, transform 0.1s ease; }
+      .mobile-home-input-send svg { stroke: rgb(120,80,220); }
+      .mobile-home-input-send:active { opacity: 0.6; transform: translateY(-50%) scale(0.9); }
       .mobile-chips-row {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1290,8 +1292,8 @@
       .view[id="coachView"].active ~ .mobile-nav-bar { display: none !important; }
       .coach-input { background: #2a2a2a !important; border: 1px solid rgba(255,255,255,0.1) !important; border-radius: 24px !important; padding: 12px 16px !important; font-size: 15px !important; color: rgba(255,255,255,0.85) !important; flex: 1 !important; min-height: 42px !important; }
       .coach-input::placeholder { color: rgba(255,255,255,0.35) !important; }
-      .coach-send { border-radius: 50% !important; width: 34px !important; height: 34px !important; box-shadow: 0 2px 12px rgba(120,80,220,0.3) !important; background: var(--kraken-gradient-cta) !important; color: #fff !important; padding: 0 !important; flex-shrink: 0 !important; display: flex !important; align-items: center !important; justify-content: center !important; margin: 4px 4px 4px 0 !important; }
-      .coach-send svg { width: 18px !important; height: 18px !important; }
+      .coach-send { border-radius: 0 !important; width: 34px !important; height: 34px !important; box-shadow: none !important; background: none !important; color: rgb(120,80,220) !important; padding: 0 !important; flex-shrink: 0 !important; display: flex !important; align-items: center !important; justify-content: center !important; margin: 4px 4px 4px 0 !important; }
+      .coach-send svg { width: 18px !important; height: 18px !important; stroke: rgb(120,80,220) !important; }
       .coach-send:active { opacity: 0.75 !important; transform: scale(0.96) !important; }
 
       /* Bottom nav always visible on mobile — no exceptions */
@@ -1930,8 +1932,9 @@
       .portfolio-coach-suggestions { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
       .portfolio-coach-chip { white-space: nowrap; flex-shrink: 0; }
       #homePortfolioTab .portfolio-coach-input-row, #fmPortfolioContent .portfolio-coach-input-row { display: flex !important; }
-      #homePortfolioTab .coach-send, #fmPortfolioContent .coach-send { border-radius: 50% !important; width: 34px !important; height: 34px !important; background: var(--kraken-gradient-cta) !important; color: #fff !important; opacity: 1 !important; box-shadow: 0 2px 12px rgba(120,80,220,0.3) !important; margin: 4px 4px 4px 0 !important; }
-      #homePortfolioTab .coach-send:active, #fmPortfolioContent .coach-send:active { opacity: 0.85 !important; transform: scale(0.96) !important; }
+      #homePortfolioTab .coach-send, #fmPortfolioContent .coach-send { border-radius: 0 !important; width: 34px !important; height: 34px !important; background: none !important; color: rgb(120,80,220) !important; opacity: 1 !important; box-shadow: none !important; margin: 4px 4px 4px 0 !important; }
+      #homePortfolioTab .coach-send svg, #fmPortfolioContent .coach-send svg { stroke: rgb(120,80,220) !important; }
+      #homePortfolioTab .coach-send:active, #fmPortfolioContent .coach-send:active { opacity: 0.6 !important; transform: scale(0.9) !important; }
       /* CC mobile */
       .cc-list { grid-template-columns: 1fr; gap: 12px; }
       .cc-card-actions { opacity: 1; }
@@ -2371,28 +2374,29 @@
       .chat-send-btn {
         width: 34px;
         height: 34px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, rgb(120,80,220), rgb(100,60,200));
-        color: #fff;
+        border-radius: 0;
+        background: none;
+        color: rgb(120,80,220);
         border: none;
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
         flex-shrink: 0;
-        box-shadow: 0 2px 12px rgba(120,80,220,0.3);
+        box-shadow: none;
         margin: 4px 4px 4px 0;
         transition: opacity 0.15s ease, transform 0.1s ease;
       }
-      .chat-send-btn:hover { opacity: 0.92; }
-      .chat-send-btn:active { opacity: 0.75; transform: scale(0.96); }
+      .chat-send-btn:hover { opacity: 0.8; }
+      .chat-send-btn:active { opacity: 0.6; transform: scale(0.9); }
+      .chat-send-btn svg { stroke: rgb(120,80,220); }
 
       .lc-send-btn {
         width: 34px;
         height: 34px;
-        border-radius: 50%;
-        background: var(--kraken-gradient-cta, linear-gradient(135deg, rgb(120,80,220), rgb(100,60,200)));
-        color: #fff;
+        border-radius: 0;
+        background: none;
+        color: rgb(120,80,220);
         border: none;
         display: flex;
         align-items: center;
@@ -2400,11 +2404,12 @@
         cursor: pointer;
         flex-shrink: 0;
         -webkit-tap-highlight-color: transparent;
-        box-shadow: 0 2px 12px rgba(120,80,220,0.3);
+        box-shadow: none;
         transition: opacity 0.15s ease, transform 0.1s ease;
         margin: 4px 4px 4px 0;
       }
-      .lc-send-btn:active { opacity: 0.75; transform: scale(0.96); }
+      .lc-send-btn:active { opacity: 0.6; transform: scale(0.9); }
+      .lc-send-btn svg { stroke: rgb(120,80,220); }
 
       /* ── Hide chart action buttons on mobile, restyle fs btn as back ── */
       .chart-actions { display: none !important; }
