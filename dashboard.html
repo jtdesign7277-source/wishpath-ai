@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-04-v67';
+    var APP_VERSION = '2026-04-04-v68';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -1420,9 +1420,10 @@
         top: 0 !important;
         left: 0 !important;
         right: 0 !important;
-        bottom: calc(56px + env(safe-area-inset-bottom)) !important;
+        bottom: 0 !important;
         padding: 0 !important;
         padding-top: env(safe-area-inset-top, 47px) !important;
+        padding-bottom: env(safe-area-inset-bottom, 34px) !important;
         margin: 0 !important;
         overflow: hidden !important;
         z-index: 9999;
@@ -1482,10 +1483,36 @@
       /* Exit fullscreen button — hidden, purple toggle replaces it */
       .fm-exit-fs-btn { display: none !important; }
       body.fm-mobile-fullscreen .fm-exit-fs-btn { display: none !important; }
-      .fm-fs-toggle-btn { display: none; position: fixed; z-index: 10001; background: rgba(113,50,245,0.55); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1.5px solid rgba(167,139,250,0.35); color: #fff; padding: 0; border-radius: 50%; cursor: pointer; -webkit-tap-highlight-color: transparent; box-shadow: 0 4px 16px rgba(113,50,245,0.25); transition: all 0.2s ease; width: 46px; height: 46px; align-items: center; justify-content: center; }
-      .fm-fs-toggle-btn:active { transform: scale(0.9); background: rgba(113,50,245,0.75); }
-      .fm-fs-toggle-btn.visible { display: flex; bottom: calc(20px + env(safe-area-inset-bottom)); right: 16px; }
-      body.fm-mobile-fullscreen .fm-fs-toggle-btn.visible { bottom: calc(20px + env(safe-area-inset-bottom)); right: 16px; background: rgba(113,50,245,0.55); border-color: rgba(167,139,250,0.3); box-shadow: 0 4px 16px rgba(113,50,245,0.2); }
+      /* ── TradingView Widget Bottom Nav — X-style scroll-triggered ── */
+      .fm-widget-nav {
+        display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 10002;
+        justify-content: space-around; align-items: center;
+        padding: 10px 0 calc(10px + env(safe-area-inset-bottom));
+        background: rgba(11,6,17,0.88);
+        backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+        border-top: 1px solid rgba(104,107,130,0.2);
+        transform: translateY(100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .fm-widget-nav.active { display: flex; }
+      .fm-widget-nav.visible { transform: translateY(0); }
+      .fm-widget-nav-btn {
+        display: flex; align-items: center; justify-content: center;
+        width: 48px; height: 48px;
+        background: none; border: none; color: rgba(240,239,245,0.6);
+        cursor: pointer; -webkit-tap-highlight-color: transparent;
+        transition: color 0.2s ease, transform 0.15s ease;
+        border-radius: 12px;
+      }
+      .fm-widget-nav-btn:active { transform: scale(0.88); color: rgba(240,239,245,0.9); }
+      .fm-widget-nav-wand {
+        width: 52px; height: 52px;
+        background: rgba(113,50,245,0.15);
+        border: 1px solid rgba(113,50,245,0.3);
+        border-radius: 16px;
+        color: rgba(167,139,250,0.9);
+      }
+      .fm-widget-nav-wand:active { background: rgba(113,50,245,0.3); transform: scale(0.9); }
 
       /* ── Unified Notion dark color scheme ── */
       body, .app-container, .main-content, .view, .coach-layout, .coach-left, .coach-right-wrapper {
@@ -2951,12 +2978,18 @@
       <path d="M3 3l6 7-6 7"/>
     </svg>
   </button>
-  <button class="fm-exit-fs-btn" id="fmExitFsBtn" onclick="exitMobileFullscreen()">&#x2190; Exit Full Screen</button>
-  <button class="fm-fs-toggle-btn" id="fmFsToggleBtn" onclick="toggleActiveFMMobileImmersive()">
-    <svg id="fmFsToggleIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
-      <path d="M2 7V2h5M17 2h5v5M22 17v5h-5M7 22H2v-5"/>
-    </svg>
-  </button>
+  <!-- TradingView Widget Nav — scroll-triggered, X-style -->
+  <nav class="fm-widget-nav" id="fmWidgetNav">
+    <button class="fm-widget-nav-btn" onclick="exitToHome()" aria-label="Home">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="24" height="24"><path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V19a1 1 0 001 1h4v-5h4v5h4a1 1 0 001-1V9.5"/></svg>
+    </button>
+    <button class="fm-widget-nav-btn fm-widget-nav-wand" onclick="openFMChat()" aria-label="Ask AI">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="26" height="26"><path d="M15 4V2M15 16v-2M8 9h2M20 9h2M17.8 11.8l1.4 1.4M17.8 6.2l1.4-1.4M10.2 11.8l-1.4 1.4M10.2 6.2L8.8 4.8"/><path d="M15 9a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2 22l10-10"/></svg>
+    </button>
+    <button class="fm-widget-nav-btn" onclick="toggleMobileSidebar()" aria-label="Search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="24" height="24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+    </button>
+  </nav>
   <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleMobileSidebar()"></div>
   <div class="mobile-fm-menu-backdrop" id="mobileFMTabsBackdrop" onclick="closeMobileFMMenu()"></div>
   <div class="mobile-fm-menu" id="mobileFMTabsMenu" aria-label="Financial Markets sections">
@@ -4392,35 +4425,29 @@
       var isHome = !!(document.getElementById('mobileHome') && document.getElementById('mobileHome').classList.contains('active'));
       var isSidebarOpen = !!(document.querySelector('.sidebar') && document.querySelector('.sidebar').classList.contains('open'));
       var activeTabId = getActiveFMTabId();
-      var shouldImmersive = isFMActive && isFMWidgetTab(activeTabId) && _fmMobileImmersive;
-      var fsToggle = document.getElementById('fmFsToggleBtn');
-      var fsIcon = document.getElementById('fmFsToggleIcon');
       var headerBack = document.getElementById('fmHeaderBackBtn');
+      var fmWidgetNav = document.getElementById('fmWidgetNav');
       if (!onMobile || !isFMActive || isHome) {
         document.body.classList.remove('fm-mobile-fullscreen');
         document.body.classList.remove('fm-widget-active');
-        if (fsToggle) fsToggle.classList.remove('visible');
         if (headerBack) headerBack.classList.remove('visible');
+        if (fmWidgetNav) fmWidgetNav.classList.remove('active');
         closeMobileFMMenu();
         return;
       }
-      if (shouldImmersive) document.body.classList.add('fm-mobile-fullscreen');
-      else document.body.classList.remove('fm-mobile-fullscreen');
-      // Show/hide fullscreen toggle and header back button on widget tabs
       var isWidget = isFMWidgetTab(activeTabId);
-      // Hide bottom ask bar on all TradingView widget tabs
-      if (isWidget) document.body.classList.add('fm-widget-active');
-      else document.body.classList.remove('fm-widget-active');
+      // All 6 TradingView widget tabs are always fullscreen on mobile
+      if (isWidget) {
+        document.body.classList.add('fm-mobile-fullscreen');
+        document.body.classList.add('fm-widget-active');
+        if (fmWidgetNav) fmWidgetNav.classList.add('active');
+      } else {
+        document.body.classList.remove('fm-mobile-fullscreen');
+        document.body.classList.remove('fm-widget-active');
+        if (fmWidgetNav) fmWidgetNav.classList.remove('active');
+      }
       if (headerBack) {
         if (isWidget && !isSidebarOpen) { headerBack.classList.add('visible'); } else { headerBack.classList.remove('visible'); }
-      }
-      if (fsToggle) {
-        if (isWidget && !isSidebarOpen) { fsToggle.classList.add('visible'); } else { fsToggle.classList.remove('visible'); }
-      }
-      if (fsIcon) {
-        fsIcon.innerHTML = shouldImmersive
-          ? '<path d="M9 2v5H4M20 9h-5V4M15 22v-5h5M4 15h5v5"/>'
-          : '<path d="M2 7V2h5M17 2h5v5M22 17v5h-5M7 22H2v-5"/>';
       }
       if (toggle && isSidebarOpen) { toggle.style.display = 'none'; closeMobileFMMenu(); } else if (toggle) { toggle.style.display = ''; }
       if (isSidebarOpen) closeMobileFMMenu();
@@ -11980,6 +12007,94 @@ function exitChartView() {
   var navBar = document.getElementById('mobileNavBar');
   if (navBar) navBar.classList.remove('nav-hidden');
   // Scroll to top
+  window.scrollTo(0, 0);
+}
+
+// ── Scroll-triggered widget nav (X/Twitter style) ──
+(function() {
+  var lastTouchY = 0;
+  var navVisible = false;
+  var navTimeout = null;
+
+  function showWidgetNav() {
+    var nav = document.getElementById('fmWidgetNav');
+    if (!nav || !nav.classList.contains('active')) return;
+    nav.classList.add('visible');
+    navVisible = true;
+    // Auto-hide after 3 seconds of no interaction
+    clearTimeout(navTimeout);
+    navTimeout = setTimeout(hideWidgetNav, 3000);
+  }
+
+  function hideWidgetNav() {
+    var nav = document.getElementById('fmWidgetNav');
+    if (!nav) return;
+    nav.classList.remove('visible');
+    navVisible = false;
+  }
+
+  document.addEventListener('touchstart', function(e) {
+    lastTouchY = e.touches[0].clientY;
+  }, { passive: true });
+
+  document.addEventListener('touchmove', function(e) {
+    if (!document.body.classList.contains('fm-widget-active')) return;
+    var deltaY = e.touches[0].clientY - lastTouchY;
+    if (Math.abs(deltaY) < 8) return;
+    if (deltaY < 0) {
+      // Scrolling down (finger moving up) — show nav
+      showWidgetNav();
+    } else {
+      // Scrolling up (finger moving down) — hide nav
+      hideWidgetNav();
+    }
+    lastTouchY = e.touches[0].clientY;
+  }, { passive: true });
+
+  // Also show on tap anywhere in fullscreen
+  document.addEventListener('touchend', function(e) {
+    if (!document.body.classList.contains('fm-widget-active')) return;
+    if (!navVisible) {
+      showWidgetNav();
+    } else {
+      // Reset auto-hide timer
+      clearTimeout(navTimeout);
+      navTimeout = setTimeout(hideWidgetNav, 3000);
+    }
+  }, { passive: true });
+
+  // Keep nav visible while interacting with it
+  var navEl = document.getElementById('fmWidgetNav');
+  if (navEl) {
+    navEl.addEventListener('touchstart', function(e) {
+      clearTimeout(navTimeout);
+    }, { passive: true });
+    navEl.addEventListener('touchend', function(e) {
+      clearTimeout(navTimeout);
+      navTimeout = setTimeout(hideWidgetNav, 3000);
+    }, { passive: true });
+  }
+})();
+
+function exitToHome() {
+  // Exit fullscreen, go to mobile home
+  document.body.classList.remove('fm-mobile-fullscreen');
+  document.body.classList.remove('fm-widget-active');
+  _fmMobileImmersive = false;
+  var fmWidgetNav = document.getElementById('fmWidgetNav');
+  if (fmWidgetNav) fmWidgetNav.classList.remove('active');
+  showView('home');
+  window.scrollTo(0, 0);
+}
+
+function openFMChat() {
+  // Exit fullscreen and open a fresh AI coach chat
+  document.body.classList.remove('fm-mobile-fullscreen');
+  document.body.classList.remove('fm-widget-active');
+  _fmMobileImmersive = false;
+  var fmWidgetNav = document.getElementById('fmWidgetNav');
+  if (fmWidgetNav) fmWidgetNav.classList.remove('active');
+  showView('coach');
   window.scrollTo(0, 0);
 }
 
