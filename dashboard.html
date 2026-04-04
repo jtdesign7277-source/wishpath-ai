@@ -2479,9 +2479,34 @@
       .lc-send-btn:active { opacity: 0.6; transform: scale(0.9); }
       .lc-send-btn svg { stroke: rgb(120,80,220); width: 16px; height: 16px; }
 
-      /* ── Hide chart action buttons on mobile, restyle fs btn as back ── */
+      /* ── Hide chart action buttons on mobile ── */
       .chart-actions { display: none !important; }
-      .chart-fs-btn {
+      /* Hide chart-fs-btn inside widget containers on mobile — we use the header back btn instead */
+      .fm-widget-container .chart-fs-btn { display: none !important; }
+      /* Header back button for FM widget tabs */
+      .fm-header-back-btn {
+        display: none;
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 5;
+        width: 32px;
+        height: 32px;
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 8px;
+        color: rgba(255,255,255,0.8);
+        cursor: pointer;
+        align-items: center;
+        justify-content: center;
+        font-size: 15px;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .fm-header-back-btn:active { background: rgba(120,80,220,0.2); }
+      body[data-active-view="fm"] .fm-header-back-btn.visible { display: flex; }
+      /* Non-fm-widget chart containers keep the overlay btn */
+      .chart-container .chart-fs-btn {
         position: absolute;
         top: 8px;
         left: 8px;
@@ -2963,6 +2988,7 @@
   <!-- Main -->
   <main class="main">
     <div class="main-header">
+      <button class="fm-header-back-btn" id="fmHeaderBackBtn" onclick="exitChartView()" aria-label="Back to Markets">&#x2190;</button>
       <h1 id="viewTitle">Home</h1>
       <button class="fm-widget-menu-btn" id="fmWidgetMenuBtn" onclick="toggleMobileFMMenu()" aria-label="Open Financial Markets menu">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -4248,16 +4274,21 @@
       var shouldImmersive = isFMActive && isFMWidgetTab(activeTabId) && _fmMobileImmersive;
       var fsToggle = document.getElementById('fmFsToggleBtn');
       var fsIcon = document.getElementById('fmFsToggleIcon');
+      var headerBack = document.getElementById('fmHeaderBackBtn');
       if (!onMobile || !isFMActive || isHome) {
         document.body.classList.remove('fm-mobile-fullscreen');
         if (fsToggle) fsToggle.classList.remove('visible');
+        if (headerBack) headerBack.classList.remove('visible');
         closeMobileFMMenu();
         return;
       }
       if (shouldImmersive) document.body.classList.add('fm-mobile-fullscreen');
       else document.body.classList.remove('fm-mobile-fullscreen');
-      // Show/hide fullscreen toggle on widget tabs
+      // Show/hide fullscreen toggle and header back button on widget tabs
       var isWidget = isFMWidgetTab(activeTabId);
+      if (headerBack) {
+        if (isWidget && !isSidebarOpen && !shouldImmersive) { headerBack.classList.add('visible'); } else { headerBack.classList.remove('visible'); }
+      }
       if (fsToggle) {
         if (isWidget && !isSidebarOpen) { fsToggle.classList.add('visible'); } else { fsToggle.classList.remove('visible'); }
       }
@@ -11580,6 +11611,8 @@ function addChartFsButtons() {
   var isMobile = window.innerWidth <= 768;
   document.querySelectorAll('.fm-widget-container, .chart-container, .cc-widget-body').forEach(function(el) {
     if (el.querySelector('.chart-fs-btn')) return;
+    // On mobile, skip fm-widget-container — we use the header back btn instead
+    if (isMobile && el.classList.contains('fm-widget-container')) return;
     el.style.position = 'relative';
     var btn = document.createElement('button');
     btn.className = 'chart-fs-btn';
