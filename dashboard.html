@@ -4174,13 +4174,15 @@
       var menu = document.getElementById('mobileFMTabsMenu');
       var backdrop = document.getElementById('mobileFMTabsBackdrop');
       var toggle = document.getElementById('mobileFMTabsToggle');
-      if (!menu || !backdrop || !toggle) return;
+      if (!menu || !backdrop) return;
       var isOpen = !menu.classList.contains('active');
       syncMobileFMMenuState();
       menu.classList.toggle('active', isOpen);
       backdrop.classList.toggle('active', isOpen);
-      toggle.classList.toggle('active', isOpen);
-      toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      if (toggle) {
+        toggle.classList.toggle('active', isOpen);
+        toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      }
     }
 
     function selectMobileFMTab(tabId) {
