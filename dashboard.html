@@ -1334,30 +1334,45 @@
       /* ── Content padding so nothing hides behind nav bar ── */
       .main-content { padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 16px) !important; }
 
+      /* === TRUE FULLSCREEN CHART — TradingView-style, zero waste at top === */
+      body.fm-mobile-fullscreen {
+        overflow: hidden;
+      }
       body.fm-mobile-fullscreen .main-content {
         padding: 0 !important;
       }
       body.fm-mobile-fullscreen #fmView {
+        position: fixed !important;
+        top: 0; left: 0; right: 0;
+        bottom: calc(56px + env(safe-area-inset-bottom)) !important;
         padding: 0 !important;
-        min-height: 100dvh;
+        padding-top: env(safe-area-inset-top, 44px) !important;
+        overflow: hidden;
+        z-index: 9999;
+        background: #191919;
       }
       body.fm-mobile-fullscreen #fmSubTabs { display: none !important; }
       body.fm-mobile-fullscreen #fmView .fm-sub-content {
         padding: 0 !important;
+        height: 100%;
       }
       body.fm-mobile-fullscreen #fmTVChartsContent.active,
       body.fm-mobile-fullscreen #fmTechAnalysisContent.active {
         display: flex;
         flex-direction: column;
-        gap: 12px;
-        min-height: 100dvh;
+        height: 100%;
         padding: 0 !important;
       }
       body.fm-mobile-fullscreen #fmTVChartsContent .fm-ticker-input-row,
       body.fm-mobile-fullscreen #fmTechAnalysisContent .fm-ticker-input-row {
-        padding: calc(max(6px, env(safe-area-inset-top)) + 20px) 12px 0;
+        padding: 6px 12px 0;
         margin-bottom: 0;
         z-index: 2;
+        flex-shrink: 0;
+        background: rgba(25,25,25,0.96);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border-bottom: 1px solid rgba(104,107,130,0.24);
       }
       body.fm-mobile-fullscreen #fmHeatMapContent.active,
       body.fm-mobile-fullscreen #fmScreenerContent.active,
@@ -1365,7 +1380,7 @@
       body.fm-mobile-fullscreen #fmCalendarContent.active {
         display: flex;
         flex-direction: column;
-        min-height: 100dvh;
+        height: 100%;
         padding: 0 !important;
       }
       body.fm-mobile-fullscreen #fmTVChartsContent .fm-widget-container,
@@ -1375,18 +1390,12 @@
       body.fm-mobile-fullscreen #fmOverviewContent .fm-widget-container,
       body.fm-mobile-fullscreen #fmCalendarContent .fm-widget-container {
         flex: 1 1 auto;
-        min-height: 100dvh;
-        height: 100dvh !important;
+        height: 100% !important;
         background: #0f1013;
         border: none;
         border-radius: 0;
         box-shadow: none;
         overflow: hidden;
-      }
-      body.fm-mobile-fullscreen #fmTVChartsContent .fm-widget-container,
-      body.fm-mobile-fullscreen #fmTechAnalysisContent .fm-widget-container {
-        min-height: calc(100dvh - 76px);
-        height: calc(100dvh - 76px) !important;
       }
       body.fm-mobile-fullscreen #fmView .fm-widget-container,
       body.fm-mobile-fullscreen #fmView .fm-widget-container > div,
