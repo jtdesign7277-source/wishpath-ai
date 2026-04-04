@@ -6161,7 +6161,11 @@
     var _feedbackCategory = null;
     var _feedbackRating = null;
 
+    var _feedbackPreviousView = null;
     function openFeedbackView() {
+      // Remember where the user came from so back button returns there
+      var current = document.body.getAttribute('data-active-view');
+      if (current && current !== 'feedback') _feedbackPreviousView = current;
       var feedbackFS = document.getElementById('feedbackFullscreen');
       var feedbackView = document.getElementById('feedbackView');
       if (feedbackFS) feedbackFS.style.display = 'flex';
@@ -6181,7 +6185,20 @@
       if (feedbackFS) feedbackFS.style.display = 'none';
       if (feedbackView) feedbackView.classList.remove('active');
       closeMobileSidebar();
-      showView('home');
+      if (_feedbackPreviousView) {
+        if (_feedbackPreviousView === 'home' && window.innerWidth <= 768) {
+          showMobileHome();
+        } else {
+          showView(_feedbackPreviousView);
+        }
+        _feedbackPreviousView = null;
+      } else {
+        if (window.innerWidth <= 768) {
+          showMobileHome();
+        } else {
+          showView('home');
+        }
+      }
     }
 
     function resetFeedbackForm() {
