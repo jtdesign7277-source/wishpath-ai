@@ -84,7 +84,7 @@
     .main.expanded { margin-left: 0; }
     .main.expanded .main-header { padding-left: 60px; }
     .sidebar-logo a { text-decoration: none; background: linear-gradient(135deg, rgb(145,107,230), #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-    .sidebar-nav { flex: 1; padding: 8px 12px; display: flex; flex-direction: column; gap: 2px; }
+    .sidebar-nav { flex: 1; padding: 8px 12px; display: flex; flex-direction: column; gap: 2px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
     .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; font-size: 0.88rem; font-weight: 500; color: var(--text-muted); cursor: pointer; transition: all 0.15s; text-decoration: none; min-height: 48px; }
     .nav-item:hover { background: rgba(255,255,255,0.04); color: var(--text); }
     .nav-item.active { background: linear-gradient(135deg, rgba(120,80,220,0.08) 0%, rgba(255,255,255,0.02) 100%); color: rgb(145,107,230); border: 1px solid rgba(120,80,220,0.2); box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 20px rgba(120,80,220,0.1); }
