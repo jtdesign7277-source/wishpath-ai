@@ -7998,24 +7998,24 @@
     function renderMarketCards() {
       var mag7Html = MAG7.map(function(stock) {
         var q = marketsCache[stock.symbol];
-        if (!q) return '<div class="stock-card"><div class="stock-symbol">' + stock.symbol + '</div><div class="stock-name">' + stock.name + '</div><div class="stock-price" style="color:var(--text-dim);">--</div><div class="stock-change flat">Loading...</div></div>';
+        if (!q) return '<div class="stock-card" onclick="openTickerChart(\'' + stock.symbol + '\')" style="cursor:pointer;"><div class="stock-symbol">' + stock.symbol + '</div><div class="stock-name">' + stock.name + '</div><div class="stock-price" style="color:var(--text-dim);">--</div><div class="stock-change flat">Loading...</div></div>';
         var changeClass = q.change > 0 ? 'up' : q.change < 0 ? 'down' : 'flat';
         var arrow = q.change > 0 ? '&#x25B2;' : q.change < 0 ? '&#x25BC;' : '';
         var sign = q.change > 0 ? '+' : '';
         var liveClass = q._live ? ' crypto-live' : '';
         var liveDot = q._live ? '<div class="crypto-live-dot"></div>' : '';
-        return '<div class="stock-card' + liveClass + '"><div class="stock-symbol">' + stock.symbol + '</div><div class="stock-name">' + stock.name + '</div>' +
+        return '<div class="stock-card' + liveClass + '" onclick="openTickerChart(\'' + stock.symbol + '\')" style="cursor:pointer;"><div class="stock-symbol">' + stock.symbol + '</div><div class="stock-name">' + stock.name + '</div>' +
           '<div class="stock-price">$' + formatNum(q.price) + '</div>' +
           '<div class="stock-change ' + changeClass + '">' + arrow + ' ' + sign + formatNum(q.change) + ' (' + sign + formatNum(q.changePercent) + '%)</div>' + liveDot + '</div>';
       }).join('');
 
       var cryptoHtml = CRYPTO.map(function(coin) {
         var q = marketsCache[coin.symbol];
-        if (!q) return '<div class="stock-card"><div class="stock-symbol">' + coin.display + '</div><div class="stock-name">' + coin.name + '</div><div class="stock-price" style="color:var(--text-dim);">--</div><div class="stock-change flat">Loading...</div></div>';
+        if (!q) return '<div class="stock-card" onclick="openTickerChart(\'' + coin.display + '\')" style="cursor:pointer;"><div class="stock-symbol">' + coin.display + '</div><div class="stock-name">' + coin.name + '</div><div class="stock-price" style="color:var(--text-dim);">--</div><div class="stock-change flat">Loading...</div></div>';
         var changeClass = q.change > 0 ? 'up' : q.change < 0 ? 'down' : 'flat';
         var arrow = q.change > 0 ? '&#x25B2;' : q.change < 0 ? '&#x25BC;' : '';
         var sign = q.change > 0 ? '+' : '';
-        return '<div class="stock-card"><div class="stock-symbol">' + coin.display + '</div><div class="stock-name">' + coin.name + '</div>' +
+        return '<div class="stock-card" onclick="openTickerChart(\'' + coin.display + '\')" style="cursor:pointer;"><div class="stock-symbol">' + coin.display + '</div><div class="stock-name">' + coin.name + '</div>' +
           '<div class="stock-price">$' + formatNum(q.price) + '</div>' +
           '<div class="stock-change ' + changeClass + '">' + arrow + ' ' + sign + formatNum(q.change) + ' (' + sign + formatNum(q.changePercent) + '%)</div></div>';
       }).join('');
@@ -10311,6 +10311,27 @@
     // ── TRADINGVIEW WIDGETS
     // ════════════════════════════════
 
+    // Open a ticker in TradingView fullscreen chart from any card tap
+    function openTickerChart(symbol) {
+      // Convert crypto symbols: BTC/USD → BTCUSD, ETH → ETHUSD
+      var tvSymbol = symbol.replace('/', '');
+      // If it's a short crypto symbol (BTC, ETH, SOL) without USD suffix, add it
+      var cryptoShorts = ['BTC', 'ETH', 'SOL', 'DOGE', 'ADA', 'XRP', 'AVAX', 'DOT', 'MATIC', 'LINK'];
+      if (cryptoShorts.indexOf(tvSymbol) !== -1) tvSymbol = tvSymbol + 'USD';
+      // Set the ticker input
+      var input = document.getElementById('tvChartTicker');
+      if (input) input.value = tvSymbol;
+      // Switch to Charts tab
+      var chartsBtn = document.querySelector('.fm-sub-tab[onclick*="fmTVCharts"]');
+      switchFMTab('fmTVCharts', chartsBtn);
+      // Load the chart with this ticker
+      loadTVChart();
+      // Enter fullscreen mode
+      _fmMobileImmersive = true;
+      updateMobileFMChrome();
+      refreshActiveFMWidgetLayout(true);
+    }
+
     function loadTVChart() {
       var ticker = (document.getElementById('tvChartTicker').value || 'AAPL').toUpperCase();
       var container = document.getElementById('tvChartWidget');
@@ -11356,11 +11377,11 @@
     function renderCryptoCards() {
       var cryptoHtml = CRYPTO.map(function(coin) {
         var q = marketsCache[coin.symbol];
-        if (!q) return '<div class="stock-card"><div class="stock-symbol">' + coin.display + '</div><div class="stock-name">' + coin.name + '</div><div class="stock-price" style="color:var(--text-dim);">--</div><div class="stock-change flat">Loading...</div></div>';
+        if (!q) return '<div class="stock-card" onclick="openTickerChart(\'' + coin.display + '\')" style="cursor:pointer;"><div class="stock-symbol">' + coin.display + '</div><div class="stock-name">' + coin.name + '</div><div class="stock-price" style="color:var(--text-dim);">--</div><div class="stock-change flat">Loading...</div></div>';
         var changeClass = q.change > 0 ? 'up' : q.change < 0 ? 'down' : 'flat';
         var arrow = q.change > 0 ? '&#x25B2;' : q.change < 0 ? '&#x25BC;' : '';
         var sign = q.change > 0 ? '+' : '';
-        return '<div class="stock-card crypto-live"><div class="stock-symbol">' + coin.display + '</div><div class="stock-name">' + coin.name + '</div>' +
+        return '<div class="stock-card crypto-live" onclick="openTickerChart(\'' + coin.display + '\')" style="cursor:pointer;"><div class="stock-symbol">' + coin.display + '</div><div class="stock-name">' + coin.name + '</div>' +
           '<div class="stock-price">$' + formatNum(q.price) + '</div>' +
           '<div class="stock-change ' + changeClass + '">' + arrow + ' ' + sign + formatNum(q.change) + ' (' + sign + formatNum(q.changePercent) + '%)</div>' +
           '<div class="crypto-live-dot"></div></div>';
