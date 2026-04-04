@@ -724,8 +724,8 @@
       .sidebar-expand-btn { display: none !important; }
       .sidebar-collapse-btn { display: none; }
       .main-header { padding: max(4px, env(safe-area-inset-top)) 46px 4px !important; margin-bottom: 0 !important; min-height: 48px !important; display: flex !important; align-items: center !important; justify-content: center !important; position: relative !important; }
-      .main-header h1, .main-header h2 { font-size: 1.02rem; margin-bottom: 0 !important; width: 100%; text-align: center; }
-      body[data-active-view="fm"] .fm-widget-menu-btn { display: flex; position: absolute; right: 12px; bottom: 6px; z-index: 5; }
+      .main-header h1, .main-header h2 { font-size: 1.02rem; margin-bottom: 0 !important; width: 100%; text-align: center; pointer-events: none; }
+      body[data-active-view="fm"] .fm-widget-menu-btn { display: flex; position: absolute; right: 12px; bottom: 6px; z-index: 10; pointer-events: auto; }
       .mobile-home.active { padding-top: max(0px, env(safe-area-inset-top)) !important; }
       .main-content { padding: 6px 12px 12px; }
       .tab-bar { margin-top: 0 !important; padding-top: 0 !important; padding: 4px 8px !important; margin-left: -12px !important; margin-right: -12px !important; overflow-x: auto !important; }
@@ -3162,9 +3162,7 @@
 
         <!-- FM: Markets -->
         <div class="fm-sub-content active" id="fmMarketsContent">
-          <div class="markets-section-label"><span>&#x1F7E2; Magnificent 7 Tracker</span>
-            <button class="fm-search-icon-btn" id="fmSearchBtn" onclick="toggleMobileFMMenu()" title="Financial Markets menu" aria-label="Open Financial Markets menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg></button>
-          </div>
+          <div class="markets-section-label"><span>&#x1F7E2; Magnificent 7 Tracker</span></div>
           <div class="markets-updated" id="fmMarketsUpdatedTime"></div>
           <div class="stock-grid" id="fmMag7Grid"></div>
           <div class="markets-section-label" style="margin-top:20px;"><span>&#x1FA99; Crypto</span></div>
