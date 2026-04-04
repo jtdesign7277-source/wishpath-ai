@@ -190,6 +190,10 @@
 
     /* Sidebar saved chats */
     .sidebar-section { padding: 8px 12px 4px; font-size: 0.7rem; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 8px; }
+    .sidebar-collapsible { display: flex; align-items: center; justify-content: space-between; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: color 0.15s; }
+    .sidebar-collapsible:active { color: var(--text-muted); }
+    .sidebar-collapse-arrow { font-size: 0.55rem; transition: transform 0.25s ease; }
+    .sidebar-collapse-arrow.collapsed { transform: rotate(-90deg); }
     .sidebar-folder { padding: 0 8px; }
     .sidebar-folder-head { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border-radius: 6px; font-size: 0.8rem; color: var(--text-muted); cursor: pointer; transition: background 0.15s; }
     .sidebar-folder-head:hover { background: rgba(255,255,255,0.04); }
@@ -1781,8 +1785,8 @@
     .sidebar-fm-toggle:hover { opacity: 0.85; }
     .sidebar-fm-toggle.active { opacity: 1; }
     .sidebar-fm-toggle svg { width: 20px; height: 20px; flex-shrink: 0; stroke: rgb(145,107,230); }
-    .sidebar-fm-arrow { font-size: 0.6rem; margin-left: auto; transition: transform 0.2s; -webkit-text-fill-color: rgb(145,107,230); }
-    .sidebar-fm-arrow.open { transform: rotate(90deg); }
+    .sidebar-fm-arrow { font-size: 0.55rem; margin-left: auto; transition: transform 0.25s ease; -webkit-text-fill-color: rgb(145,107,230); }
+    .sidebar-fm-arrow.open { transform: rotate(180deg); }
     .sidebar-fm-items { display: none; padding-left: 14px; }
     .sidebar-fm-items.open { display: block; }
     .sidebar-fm-sub { display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 6px; font-size: 0.78rem; color: var(--text-dim); cursor: pointer; transition: all 0.15s; }
@@ -2948,7 +2952,7 @@
         <div class="sidebar-fm-toggle" id="sidebarFMToggle" onclick="toggleFMSidebar()">
           <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 14l4-4 3 3 7-7"/><path d="M14 6h3v3"/></svg>
           Financial Markets
-          <span class="sidebar-fm-arrow" id="sidebarFMArrow">&#x25B6;</span>
+          <span class="sidebar-fm-arrow" id="sidebarFMArrow">&#x25BC;</span>
         </div>
         <div class="sidebar-fm-items" id="sidebarFMItems">
           <div class="sidebar-fm-sub" onclick="openFMTab('fmMarkets')">&#x1F4C8; Markets</div>
@@ -2965,9 +2969,15 @@
           <div id="sidebarFMWatchlists" style="border-top:1px solid rgba(255,255,255,0.06);margin-top:6px;padding-top:6px;"></div>
         </div>
       </div>
-      <div class="sidebar-section" id="savedTemplatesLabel" style="display:none;">📊 Saved Charts</div>
+      <div class="sidebar-section sidebar-collapsible" id="savedTemplatesLabel" style="display:none;" onclick="toggleSidebarSection('savedTemplates')">
+        <span>📊 Saved Charts</span>
+        <span class="sidebar-collapse-arrow" id="savedTemplatesArrow">&#x25BC;</span>
+      </div>
       <div id="savedTemplatesList"></div>
-      <div class="sidebar-section" id="savedChatsLabel" style="display:none;">Saved Chats</div>
+      <div class="sidebar-section sidebar-collapsible" id="savedChatsLabel" style="display:none;" onclick="toggleSidebarSection('savedChats')">
+        <span>Saved Chats</span>
+        <span class="sidebar-collapse-arrow" id="savedChatsArrow">&#x25BC;</span>
+      </div>
       <div id="savedChatsList"></div>
       <a class="nav-item" data-view="newwish" onclick="showView('newwish')" style="margin-top: 12px;">
         <span style="font-size:1.1rem;flex-shrink:0;">&#x1FA84;</span>
@@ -10231,6 +10241,20 @@
       var isOpen = items.classList.toggle('open');
       if (arrow) arrow.classList.toggle('open', isOpen);
       if (toggle) toggle.classList.toggle('active', isOpen);
+    }
+
+    function toggleSidebarSection(sectionId) {
+      var list = document.getElementById(sectionId + 'List');
+      var arrow = document.getElementById(sectionId + 'Arrow');
+      if (!list) return;
+      var isCollapsed = arrow && !arrow.classList.contains('collapsed');
+      if (isCollapsed) {
+        list.style.display = 'none';
+        if (arrow) arrow.classList.add('collapsed');
+      } else {
+        list.style.display = '';
+        if (arrow) arrow.classList.remove('collapsed');
+      }
     }
 
     function syncFMShortcutState(tabId) {
