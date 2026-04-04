@@ -7625,15 +7625,22 @@
     (function initHighchartsDarkTheme() {
       if (typeof Highcharts === 'undefined') return;
       Highcharts.setOptions({
-        colors: ['#a78bfa','rgb(145,107,230)','#3b82f6','#f59e0b','#ef4444','#ec4899','#06b6d4','#84cc16','#f97316','#8b5cf6'],
-        chart: { backgroundColor: '#161b22', style: { fontFamily: 'Inter, system-ui, sans-serif' }, borderRadius: 8 },
+        colors: ['#22c55e','#3b82f6','#f59e0b','#ef4444','#a78bfa','#06b6d4','#ec4899','#f97316','#84cc16','#8b5cf6','#14b8a6','#e879f9'],
+        chart: { backgroundColor: '#161b22', style: { fontFamily: 'Inter, system-ui, sans-serif' }, borderRadius: 8, animation: { duration: 800, easing: 'easeOutQuart' } },
         title: { style: { color: '#e6edf3', fontSize: '14px', fontWeight: '700' } },
         subtitle: { style: { color: '#8b949e', fontSize: '12px' } },
         xAxis: { gridLineColor: 'rgba(48,54,61,0.5)', lineColor: '#30363d', tickColor: '#30363d', labels: { style: { color: '#8b949e', fontSize: '11px' } }, title: { style: { color: '#8b949e' } } },
         yAxis: { gridLineColor: 'rgba(48,54,61,0.5)', lineColor: '#30363d', tickColor: '#30363d', labels: { style: { color: '#8b949e', fontSize: '11px' } }, title: { style: { color: '#8b949e' } } },
-        legend: { itemStyle: { color: '#e6edf3', fontSize: '12px' }, itemHoverStyle: { color: 'rgb(145,107,230)' }, itemHiddenStyle: { color: '#484f58' } },
-        tooltip: { backgroundColor: '#1c2128', borderColor: '#30363d', style: { color: '#e6edf3', fontSize: '12px' } },
-        plotOptions: { series: { borderWidth: 0 }, pie: { borderWidth: 0, dataLabels: { color: '#e6edf3', style: { fontSize: '11px', textOutline: 'none' } } } },
+        legend: { itemStyle: { color: '#e6edf3', fontSize: '12px' }, itemHoverStyle: { color: '#22c55e' }, itemHiddenStyle: { color: '#484f58' } },
+        tooltip: { backgroundColor: '#1c2128', borderColor: '#30363d', style: { color: '#e6edf3', fontSize: '12px' }, shadow: { color: 'rgba(0,0,0,0.4)', offsetX: 0, offsetY: 4, width: 12 } },
+        plotOptions: {
+          series: { borderWidth: 0, animation: { duration: 1000, easing: 'easeOutBounce' } },
+          column: { borderWidth: 0, borderRadius: 4, animation: { duration: 900 } },
+          bar: { borderWidth: 0, borderRadius: 4, animation: { duration: 900 } },
+          pie: { borderWidth: 0, animation: { duration: 1200 }, dataLabels: { color: '#e6edf3', style: { fontSize: '11px', textOutline: 'none' } } },
+          line: { lineWidth: 3, marker: { radius: 4, lineWidth: 2, lineColor: '#161b22' }, animation: { duration: 1200 } },
+          area: { fillOpacity: 0.25, lineWidth: 3, marker: { radius: 4, lineWidth: 2, lineColor: '#161b22' }, animation: { duration: 1200 } }
+        },
         navigation: { buttonOptions: { symbolStroke: '#8b949e', theme: { fill: '#161b22', stroke: '#30363d', states: { hover: { fill: '#1c2128' }, select: { fill: '#1c2128' } } } } },
         exporting: {
           buttons: { contextButton: {
@@ -9631,7 +9638,7 @@
     function buildTemplateChartConfig(template) {
       var clickHandler = getTemplateChartClickHandler(template.name);
       var baseConfig = {
-        chart: { height: 320, animation: false, events: { click: clickHandler } },
+        chart: { height: 320, animation: true, events: { click: clickHandler } },
         title: { text: template.name + ' Template' },
         subtitle: { text: 'Tap chart to ask AI to fill in your numbers' },
         credits: { enabled: false }
@@ -9650,8 +9657,8 @@
             xAxis: { categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'] },
             yAxis: { title: { text: 'Portfolio Value ($)' } },
             series: [
-              { name: 'Portfolio', data: [12000, 12650, 13400, 14150, 14720, 15380] },
-              { name: 'Benchmark', data: [12000, 12240, 12820, 13310, 13850, 14410] }
+              { name: 'Portfolio', color: '#22c55e', data: [12000, 12650, 13400, 14150, 14720, 15380] },
+              { name: 'Benchmark', color: '#8b949e', data: [12000, 12240, 12820, 13310, 13850, 14410] }
             ]
           });
         case 'Asset Allocation Pie':
@@ -9670,8 +9677,8 @@
             xAxis: { categories: ['Housing', 'Food', 'Transport', 'Savings'] },
             yAxis: { title: { text: 'Amount ($)' } },
             series: [
-              { name: 'Budget', data: [1800, 700, 250, 600] },
-              { name: 'Actual', data: [1750, 740, 230, 500] }
+              { name: 'Budget', color: '#3b82f6', data: [1800, 700, 250, 600] },
+              { name: 'Actual', color: '#22c55e', data: [1750, 740, 230, 500] }
             ]
           });
         case 'Expense Waterfall':
@@ -9687,7 +9694,7 @@
             chart: Object.assign({}, baseConfig.chart, { type: 'area' }),
             xAxis: { categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'] },
             yAxis: { title: { text: 'Net Worth ($)' } },
-            series: [{ name: 'Net Worth', data: [25000, 26400, 27950, 29100, 30850, 32400] }]
+            series: [{ name: 'Net Worth', color: '#22c55e', data: [25000, 26400, 27950, 29100, 30850, 32400] }]
           });
         case 'Cash Flow Timeline':
           return Object.assign({}, baseConfig, {
@@ -9695,8 +9702,8 @@
             xAxis: { categories: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6'] },
             yAxis: { title: { text: 'Cash ($)' } },
             series: [
-              { name: 'Inflow', data: [1800, 1500, 2200, 2100, 2400, 2000] },
-              { name: 'Outflow', data: [1100, 1250, 1360, 1290, 1500, 1425] }
+              { name: 'Inflow', color: '#22c55e', data: [1800, 1500, 2200, 2100, 2400, 2000] },
+              { name: 'Outflow', color: '#ef4444', data: [1100, 1250, 1360, 1290, 1500, 1425] }
             ]
           });
         case 'Savings Goal Progress':
@@ -9706,8 +9713,8 @@
             yAxis: { min: 0, title: { text: 'Amount ($)' }, stackLabels: { enabled: true } },
             plotOptions: { series: { stacking: 'normal' } },
             series: [
-              { name: 'Saved', data: [6200] },
-              { name: 'Remaining', data: [3800] }
+              { name: 'Saved', color: '#22c55e', data: [6200] },
+              { name: 'Remaining', color: '#374151', data: [3800] }
             ]
           });
         case 'Debt Payoff Plan':
@@ -9715,7 +9722,7 @@
             chart: Object.assign({}, baseConfig.chart, { type: 'line' }),
             xAxis: { categories: ['Month 1', 'Month 2', 'Month 3', 'Month 4', 'Month 5', 'Month 6'] },
             yAxis: { title: { text: 'Balance ($)' } },
-            series: [{ name: 'Debt Balance', data: [18400, 16950, 15320, 13840, 12150, 10620] }]
+            series: [{ name: 'Debt Balance', color: '#ef4444', data: [18400, 16950, 15320, 13840, 12150, 10620] }]
           });
         case 'Revenue Dashboard':
           return Object.assign({}, baseConfig, {
@@ -9723,8 +9730,8 @@
             xAxis: { categories: ['Q1', 'Q2', 'Q3', 'Q4'] },
             yAxis: { title: { text: 'Amount ($)' } },
             series: [
-              { name: 'Revenue', data: [24000, 27800, 32400, 36900] },
-              { name: 'Profit', data: [6200, 7400, 9800, 11850] }
+              { name: 'Revenue', color: '#3b82f6', data: [24000, 27800, 32400, 36900] },
+              { name: 'Profit', color: '#22c55e', data: [6200, 7400, 9800, 11850] }
             ]
           });
         case 'P&L Statement':
