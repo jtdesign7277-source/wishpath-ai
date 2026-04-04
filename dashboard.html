@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-04-v60';
+    var APP_VERSION = '2026-04-04-v62';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -164,9 +164,10 @@
     .msg.ai .thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
     @keyframes dotPulse { 0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); } 40% { opacity: 1; transform: scale(1.1); } }
     .coach-input-row { display: flex; gap: 8px; flex-shrink: 0; align-items: flex-end; }
+    .coach-input-row .chat-input-wrap { flex: 1; }
     .coach-input { flex: 1; padding: 12px 16px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.04); border-radius: 12px; color: var(--text); font: inherit; font-size: 0.9rem; outline: none; resize: none; min-height: 48px; max-height: 240px; overflow-y: auto; box-shadow: inset 4px 4px 8px rgba(0,0,0,0.5), inset -2px -2px 6px rgba(255,255,255,0.02); transition: all 0.3s ease; }
     .coach-input:focus { border-color: rgba(120,80,220,0.3); box-shadow: inset 4px 4px 8px rgba(0,0,0,0.5), inset -2px -2px 6px rgba(255,255,255,0.02), 0 0 12px rgba(120,80,220,0.1); }
-    .coach-send { padding: 0; background: var(--kraken-gradient-cta); color: #fff; border: none; border-radius: 50%; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; width: 38px; height: 38px; transition: opacity 0.15s ease, transform 0.1s ease; box-shadow: 0 2px 12px rgba(120,80,220,0.3); }
+    .coach-send { padding: 0; background: var(--kraken-gradient-cta); color: #fff; border: none; border-radius: 50%; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; transition: opacity 0.15s ease, transform 0.1s ease; box-shadow: 0 2px 12px rgba(120,80,220,0.3); margin: 4px 4px 4px 0; }
     .coach-send:hover { opacity: 0.92; }
     .coach-send svg { width: 18px; height: 18px; }
     .coach-send:disabled { opacity: 0.5; }
@@ -455,56 +456,14 @@
       background: var(--bg, #0a0a0a);
     }
     .notes-ai-wrap {
-      flex: 1;
-      position: relative;
-      display: flex;
-      align-items: flex-end;
-      background: #2a2a2a;
-      border: 1px solid rgba(120,80,220,0.2);
-      border-radius: 24px;
-      animation: inputPulse 2s ease-in-out infinite;
-      transition: all 0.3s ease;
-    }
-    .notes-ai-wrap:focus-within {
-      border-color: rgba(120,80,220,0.5);
-      box-shadow: 0 0 12px rgba(120,80,220,0.15);
-      animation: none;
+      /* Use shared chat-input-wrap styles */
     }
     .notes-ai-input {
-      flex: 1;
-      background: transparent;
-      border: none;
-      border-radius: 24px;
-      color: rgba(255,255,255,0.9);
-      font: inherit;
-      font-size: 15px;
-      padding: 10px 16px;
-      outline: none;
-      resize: none;
-      min-height: 42px;
-      max-height: 120px;
-      overflow-y: auto;
-      line-height: 1.4;
+      /* Use shared chat-input-field styles */
     }
-    .notes-ai-input::placeholder { color: rgba(255,255,255,0.35); }
     .notes-ai-send {
-      width: 34px;
-      height: 34px;
-      border-radius: 50%;
-      background: var(--kraken-gradient-cta, linear-gradient(135deg, rgb(120,80,220), rgb(100,60,200)));
-      color: #fff;
-      border: none;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      flex-shrink: 0;
-      -webkit-tap-highlight-color: transparent;
-      box-shadow: 0 2px 12px rgba(120,80,220,0.3);
-      transition: opacity 0.15s ease, transform 0.1s ease;
-      margin: 4px 4px 4px 0;
+      /* Use shared chat-send-btn styles */
     }
-    .notes-ai-send:active { opacity: 0.75; transform: scale(0.96); }
 
     /* New Wish */
     .wish-form-card { background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 28px; box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.05); }
@@ -1327,7 +1286,7 @@
       .view[id="coachView"].active ~ .mobile-nav-bar { display: none !important; }
       .coach-input { background: #2a2a2a !important; border: 1px solid rgba(255,255,255,0.1) !important; border-radius: 24px !important; padding: 12px 16px !important; font-size: 15px !important; color: rgba(255,255,255,0.85) !important; flex: 1 !important; min-height: 42px !important; }
       .coach-input::placeholder { color: rgba(255,255,255,0.35) !important; }
-      .coach-send { border-radius: 50% !important; width: 38px !important; height: 38px !important; box-shadow: 0 2px 12px rgba(120,80,220,0.3) !important; background: var(--kraken-gradient-cta) !important; color: #fff !important; padding: 0 !important; flex-shrink: 0 !important; display: flex !important; align-items: center !important; justify-content: center !important; }
+      .coach-send { border-radius: 50% !important; width: 34px !important; height: 34px !important; box-shadow: 0 2px 12px rgba(120,80,220,0.3) !important; background: var(--kraken-gradient-cta) !important; color: #fff !important; padding: 0 !important; flex-shrink: 0 !important; display: flex !important; align-items: center !important; justify-content: center !important; margin: 4px 4px 4px 0 !important; }
       .coach-send svg { width: 18px !important; height: 18px !important; }
       .coach-send:active { opacity: 0.75 !important; transform: scale(0.96) !important; }
 
@@ -1664,8 +1623,10 @@
     .portfolio-coach-sub { font-size: 12px; color: var(--kraken-text-dim); margin-bottom: 14px; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
     .portfolio-coach-messages { max-height: 400px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; padding: 4px 0; }
     .portfolio-coach-input-row { display: flex; gap: 8px; align-items: flex-end; }
-    .portfolio-coach-input { flex: 1; padding: 12px 16px; background: var(--kraken-surface2); border: 1px solid var(--kraken-border); border-radius: 12px; color: var(--kraken-text); font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 14px; outline: none; resize: none; min-height: 44px; max-height: 160px; transition: border-color 0.15s cubic-bezier(0.4,0,0.2,1), box-shadow 0.15s cubic-bezier(0.4,0,0.2,1); }
-    .portfolio-coach-input:focus { border-color: var(--kraken-purple); box-shadow: 0 0 0 3px rgba(113,50,245,0.15); }
+    .portfolio-coach-input-row .chat-input-wrap { flex: 1; }
+    .portfolio-coach-input { flex: 1; padding: 10px 16px; background: transparent; border: none; border-radius: 24px; color: rgba(255,255,255,0.9); font-family: inherit; font-size: 15px; outline: none; resize: none; min-height: 42px; max-height: 120px; overflow-y: auto; line-height: 1.4; }
+    .portfolio-coach-input::placeholder { color: rgba(255,255,255,0.35); }
+    .portfolio-coach-input:focus { border: none; box-shadow: none; }
     .portfolio-coach-suggestions { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
     .portfolio-coach-chip { padding: 6px 14px; border: 1px solid var(--kraken-border); border-radius: 9999px; color: var(--kraken-text-dim); font-size: 12px; font-weight: 500; cursor: pointer; background: var(--kraken-card-bg); font-family: 'IBM Plex Sans', system-ui, sans-serif; transition: all 0.15s cubic-bezier(0.4,0,0.2,1); }
     .portfolio-coach-chip:hover { background: var(--kraken-purple-tint); color: var(--kraken-purple); border-color: rgba(113,50,245,0.3); }
@@ -1947,7 +1908,7 @@
       .portfolio-coach-suggestions { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
       .portfolio-coach-chip { white-space: nowrap; flex-shrink: 0; }
       #homePortfolioTab .portfolio-coach-input-row, #fmPortfolioContent .portfolio-coach-input-row { display: flex !important; }
-      #homePortfolioTab .coach-send, #fmPortfolioContent .coach-send { border-radius: 50% !important; width: 38px !important; height: 38px !important; background: var(--kraken-gradient-cta) !important; color: #fff !important; opacity: 1 !important; box-shadow: 0 2px 12px rgba(120,80,220,0.3) !important; }
+      #homePortfolioTab .coach-send, #fmPortfolioContent .coach-send { border-radius: 50% !important; width: 34px !important; height: 34px !important; background: var(--kraken-gradient-cta) !important; color: #fff !important; opacity: 1 !important; box-shadow: 0 2px 12px rgba(120,80,220,0.3) !important; margin: 4px 4px 4px 0 !important; }
       #homePortfolioTab .coach-send:active, #fmPortfolioContent .coach-send:active { opacity: 0.85 !important; transform: scale(0.96) !important; }
       /* CC mobile */
       .cc-list { grid-template-columns: 1fr; gap: 12px; }
@@ -2243,6 +2204,51 @@
         transition: color 0.15s ease;
       }
       .lc-msg-action-btn:active { color: rgba(120,80,220,0.9); }
+      .lc-scroll-bottom {
+        display: none;
+        position: absolute;
+        bottom: 80px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: rgba(40,40,45,0.95);
+        border: 1px solid rgba(255,255,255,0.12);
+        color: rgba(255,255,255,0.7);
+        cursor: pointer;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+        -webkit-tap-highlight-color: transparent;
+        transition: opacity 0.2s ease;
+      }
+      .lc-scroll-bottom.visible { display: flex; }
+      .lc-scroll-bottom:active { opacity: 0.7; }
+      /* Generic scroll-to-bottom button for all chat surfaces */
+      .scroll-to-bottom-btn {
+        display: none;
+        position: absolute;
+        bottom: 80px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: rgba(40,40,45,0.95);
+        border: 1px solid rgba(255,255,255,0.12);
+        color: rgba(255,255,255,0.7);
+        cursor: pointer;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+        -webkit-tap-highlight-color: transparent;
+        transition: opacity 0.2s ease;
+      }
+      .scroll-to-bottom-btn.visible { display: flex; }
+      .scroll-to-bottom-btn:active { opacity: 0.7; }
       .lc-input-bar {
         display: flex;
         align-items: flex-end;
@@ -2303,6 +2309,62 @@
         0%, 100% { box-shadow: 0 0 0 0 rgba(120,80,220,0.3); }
         50% { box-shadow: 0 0 0 2px rgba(120,80,220,0.2); }
       }
+
+      /* ── Shared chat input standardization ── */
+      .chat-input-wrap {
+        flex: 1;
+        position: relative;
+        display: flex;
+        align-items: flex-end;
+        background: #2a2a2a;
+        border: 1px solid rgba(120,80,220,0.2);
+        border-radius: 24px;
+        animation: inputPulse 2s ease-in-out infinite;
+        transition: all 0.3s ease;
+      }
+      .chat-input-wrap:focus-within {
+        border-color: rgba(120,80,220,0.5);
+        box-shadow: 0 0 12px rgba(120,80,220,0.15);
+        animation: none;
+      }
+      .chat-input-field {
+        flex: 1;
+        background: transparent;
+        border: none;
+        border-radius: 24px;
+        color: rgba(255,255,255,0.9);
+        font: inherit;
+        font-size: 15px;
+        padding: 10px 16px;
+        outline: none;
+        resize: none;
+        min-height: 42px;
+        max-height: 120px;
+        overflow-y: auto;
+        line-height: 1.4;
+      }
+      .chat-input-field::placeholder {
+        color: rgba(255,255,255,0.35);
+      }
+      .chat-send-btn {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, rgb(120,80,220), rgb(100,60,200));
+        color: #fff;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        flex-shrink: 0;
+        box-shadow: 0 2px 12px rgba(120,80,220,0.3);
+        margin: 4px 4px 4px 0;
+        transition: opacity 0.15s ease, transform 0.1s ease;
+      }
+      .chat-send-btn:hover { opacity: 0.92; }
+      .chat-send-btn:active { opacity: 0.75; transform: scale(0.96); }
+
       .lc-send-btn {
         width: 34px;
         height: 34px;
@@ -2358,6 +2420,261 @@
       .cc-widget-picker { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
       /* Toast above nav bar */
       .toast { bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 12px) !important; }
+    }
+
+    /* ── Feedback View Styles ── */
+    #feedbackView { padding: 0 !important; }
+    .feedback-fullscreen {
+      position: fixed;
+      inset: 0;
+      z-index: 601;
+      background: var(--bg, #0a0a0a);
+      display: flex;
+      flex-direction: column;
+    }
+    .feedback-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: calc(max(12px, env(safe-area-inset-top)) + 4px) 16px 10px;
+      flex-shrink: 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .feedback-back-btn {
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.6);
+      cursor: pointer;
+      padding: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+      border-radius: 10px;
+      transition: all 0.15s ease;
+    }
+    .feedback-back-btn:active { background: rgba(255,255,255,0.06); color: #fff; }
+    .feedback-topbar-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.85);
+    }
+    .feedback-content {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 20px 16px calc(20px + env(safe-area-inset-bottom));
+    }
+    .feedback-form-section {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .feedback-welcome {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      text-align: center;
+      padding: 20px 0;
+    }
+    .feedback-welcome-icon {
+      font-size: 2.5rem;
+    }
+    .feedback-welcome-text {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.85);
+    }
+    .feedback-category-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.5);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin: 8px 0 -12px;
+    }
+    .feedback-category-chips {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .feedback-chip {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 14px;
+      background: transparent;
+      border: 1.5px solid rgba(120,80,220,0.3);
+      border-radius: 12px;
+      color: rgba(255,255,255,0.6);
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: all 0.15s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .feedback-chip:active { transform: scale(0.96); }
+    .feedback-chip.active {
+      background: rgba(120,80,220,0.15);
+      border-color: rgba(120,80,220,0.6);
+      color: rgb(145,107,230);
+      box-shadow: 0 0 12px rgba(120,80,220,0.2);
+    }
+    .feedback-rating-section {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .feedback-rating-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.5);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .feedback-rating-stars {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+    .feedback-star {
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.3);
+      cursor: pointer;
+      font-size: 2rem;
+      transition: all 0.15s ease;
+      -webkit-tap-highlight-color: transparent;
+      padding: 4px;
+    }
+    .feedback-star:active { transform: scale(1.1); }
+    .feedback-star.active,
+    .feedback-star:hover { color: #fbbf24; }
+    .feedback-textarea {
+      width: 100%;
+      min-height: 150px;
+      padding: 14px 16px;
+      background: rgba(255,255,255,0.03);
+      border: 1.5px solid rgba(120,80,220,0.3);
+      border-radius: 12px;
+      color: rgba(255,255,255,0.9);
+      font: inherit;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      outline: none;
+      resize: vertical;
+      transition: all 0.15s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .feedback-textarea:focus {
+      border-color: rgba(120,80,220,0.6);
+      box-shadow: 0 0 12px rgba(120,80,220,0.15);
+      background: rgba(255,255,255,0.05);
+    }
+    .feedback-textarea::placeholder {
+      color: rgba(255,255,255,0.35);
+    }
+    .feedback-submit {
+      width: 100%;
+      padding: 14px 20px;
+      background: linear-gradient(135deg, rgb(120,80,220), rgb(100,60,200));
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      -webkit-tap-highlight-color: transparent;
+      box-shadow: 0 4px 12px rgba(120,80,220,0.3);
+    }
+    .feedback-submit:active { opacity: 0.85; transform: scale(0.98); }
+    .feedback-submit:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .feedback-error {
+      padding: 12px 16px;
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.3);
+      border-radius: 8px;
+      color: #fca5a5;
+      font-size: 0.9rem;
+    }
+    .feedback-success {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 40px 20px;
+      min-height: 300px;
+    }
+    .feedback-success-icon {
+      font-size: 3rem;
+      color: #34d399;
+      animation: checkmark 0.5s ease;
+    }
+    @keyframes checkmark {
+      0% { transform: scale(0); opacity: 0; }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .feedback-success-text {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.85);
+      text-align: center;
+    }
+    .feedback-past-section {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    .feedback-past-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.5);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 12px;
+    }
+    .feedback-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .feedback-item {
+      padding: 14px 16px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 10px;
+      transition: all 0.15s ease;
+    }
+    .feedback-item:hover { background: rgba(255,255,255,0.04); }
+    .feedback-item-category {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: rgb(145,107,230);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+    .feedback-item-text {
+      font-size: 0.9rem;
+      color: rgba(255,255,255,0.7);
+      line-height: 1.4;
+      margin-bottom: 8px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .feedback-item-time {
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.4);
     }
   </style>
   <!-- Meta Pixel Code -->
@@ -2492,6 +2809,10 @@
       <a class="nav-item" data-view="todos" onclick="showView('todos')">
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 5h12M4 10h12M4 15h8"/><path d="M2 5l1 1 2-2M2 10l1 1 2-2"/></svg>
         To-Dos
+      </a>
+      <a class="nav-item" data-view="feedback" onclick="openFeedbackView();if(window.innerWidth<=768)toggleMobileSidebar();">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        Feedback
       </a>
       <!-- Command Center expandable section -->
       <div class="sidebar-cc-section">
@@ -2694,9 +3015,15 @@
             <div class="portfolio-coach-messages" id="portfolioCoachMessages">
               <div class="msg ai">Hi! I'm your Portfolio AI Coach. Add some holdings above and I can analyze your portfolio, suggest improvements, and help you make better investment decisions.</div>
             </div>
+            <!-- Scroll to bottom arrow for Portfolio Coach -->
+            <button class="scroll-to-bottom-btn" id="portfolioCoachScrollBottom" onclick="document.getElementById('portfolioCoachMessages').scrollTop=document.getElementById('portfolioCoachMessages').scrollHeight;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+            </button>
             <div class="portfolio-coach-input-row">
-              <textarea class="portfolio-coach-input" id="portfolioCoachInput" placeholder="Ask about your portfolio..." rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendPortfolioCoachMsg();}"></textarea>
-              <button class="coach-send" onclick="sendPortfolioCoachMsg()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
+              <div class="chat-input-wrap">
+                <textarea class="chat-input-field portfolio-coach-input" id="portfolioCoachInput" placeholder="Ask about your portfolio..." rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendPortfolioCoachMsg();}"></textarea>
+                <button class="chat-send-btn coach-send" onclick="sendPortfolioCoachMsg()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+              </div>
             </div>
           </div>
         </div>
@@ -2766,9 +3093,15 @@
             <div class="portfolio-coach-messages" id="fmPortfolioCoachMessages">
               <div class="msg ai">Hi! I'm your Portfolio AI Coach. Add holdings and I can analyze your portfolio, suggest improvements, and answer investment questions.</div>
             </div>
+            <!-- Scroll to bottom arrow for FM Portfolio Coach -->
+            <button class="scroll-to-bottom-btn" id="fmPortfolioCoachScrollBottom" onclick="document.getElementById('fmPortfolioCoachMessages').scrollTop=document.getElementById('fmPortfolioCoachMessages').scrollHeight;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+            </button>
             <div class="portfolio-coach-input-row">
-              <textarea class="portfolio-coach-input" id="fmPortfolioCoachInput" placeholder="Ask about your portfolio..." rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendPortfolioCoachMsg();}"></textarea>
-              <button class="coach-send" onclick="sendPortfolioCoachMsg()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
+              <div class="chat-input-wrap">
+                <textarea class="chat-input-field portfolio-coach-input" id="fmPortfolioCoachInput" placeholder="Ask about your portfolio..." rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendPortfolioCoachMsg();}"></textarea>
+                <button class="chat-send-btn coach-send" onclick="sendPortfolioCoachMsg()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+              </div>
             </div>
           </div>
         </div>
@@ -2788,10 +3121,16 @@
           <div class="portfolio-coach-messages" id="chartStudioMessages">
             <div class="msg ai">Welcome to Chart Studio! Ask me to create any financial chart and I'll build it with Highcharts. Try "Show my portfolio allocation as a pie chart" or "Compare tech stocks."</div>
           </div>
+          <!-- Scroll to bottom arrow for Chart Studio -->
+          <button class="scroll-to-bottom-btn" id="chartStudioScrollBottom" onclick="document.getElementById('chartStudioMessages').scrollTop=document.getElementById('chartStudioMessages').scrollHeight;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+          </button>
           <div id="chartStudioChartArea"></div>
           <div class="portfolio-coach-input-row" style="margin-top:12px;">
-            <textarea class="portfolio-coach-input" id="chartStudioInput" placeholder="Describe a chart to create..." rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChartStudioMsg();}"></textarea>
-            <button class="coach-send" onclick="sendChartStudioMsg()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
+            <div class="chat-input-wrap">
+              <textarea class="chat-input-field portfolio-coach-input" id="chartStudioInput" placeholder="Describe a chart to create..." rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChartStudioMsg();}"></textarea>
+              <button class="chat-send-btn coach-send" onclick="sendChartStudioMsg()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+            </div>
           </div>
           <div class="markets-section-label" style="margin-top:24px;"><span>Saved Charts</span></div>
           <div id="savedChartsList" style="color:var(--text-dim);font-size:0.85rem;">No saved charts yet.</div>
@@ -2988,12 +3327,18 @@
               </div>
             </div>
             <div class="coach-messages" id="coachMessages"></div>
+            <!-- Scroll to bottom arrow for AI Coach -->
+            <button class="scroll-to-bottom-btn" id="coachScrollBottom" onclick="document.getElementById('coachMessages').scrollTop=document.getElementById('coachMessages').scrollHeight;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+            </button>
             <div class="coach-input-row">
               <button class="coach-sidebar-btn" onclick="toggleMobileSidebar()" aria-label="Search" style="flex-shrink:0;width:36px;height:36px;border:none;border-radius:10px;background:transparent;color:rgba(255,255,255,0.5);display:none;align-items:center;justify-content:center;cursor:pointer;">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
               </button>
-              <textarea class="coach-input" id="coachInput" placeholder="AI Coach" rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendCoachMsg();}"></textarea>
-              <button class="coach-send" id="coachSendBtn" onclick="sendCoachMsg()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+              <div class="chat-input-wrap">
+                <textarea class="chat-input-field coach-input" id="coachInput" placeholder="Ask AI" rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendCoachMsg();}"></textarea>
+                <button class="chat-send-btn coach-send" id="coachSendBtn" onclick="sendCoachMsg()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+              </div>
             </div>
             <div style="display:flex;align-items:center;gap:8px;margin-top:6px;flex-shrink:0;">
               <button class="save-btn" id="saveConvoBtn" onclick="manualSaveConversation()" title="Save conversation">&#x1F4BE; Save Chat</button>
@@ -3073,9 +3418,9 @@
             <div class="notes-editor-meta" id="notesMeta"></div>
           </div>
           <div class="notes-ai-bar">
-            <div class="notes-ai-wrap">
-              <textarea class="notes-ai-input" id="notesAIInput" placeholder="Ask AI" rows="1" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendNotesAIMsg();}"></textarea>
-              <button class="notes-ai-send" onclick="sendNotesAIMsg()">
+            <div class="chat-input-wrap notes-ai-wrap">
+              <textarea class="chat-input-field notes-ai-input" id="notesAIInput" placeholder="Ask AI" rows="1" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendNotesAIMsg();}"></textarea>
+              <button class="chat-send-btn notes-ai-send" onclick="sendNotesAIMsg()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
               </button>
             </div>
@@ -3094,11 +3439,17 @@
             <div class="coach-messages" id="todoCoachMessages">
               <div class="msg ai">I'm your to-do assistant. Ask me to create a to-do list, spreadsheet, checklist, or any structured content — I'll build it and show it on the right automatically. Try: "Create a weekly trading checklist" or "Build me a budget spreadsheet."</div>
             </div>
+            <!-- Scroll to bottom arrow for To-Dos AI -->
+            <button class="scroll-to-bottom-btn" id="todoCoachScrollBottom" onclick="document.getElementById('todoCoachMessages').scrollTop=document.getElementById('todoCoachMessages').scrollHeight;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+            </button>
             <div class="coach-input-row">
               <button class="save-btn" onclick="manualSaveTodoConvo()" title="Save chat">&#x1F4BE; Save Chat</button>
               <span style="font-size:16px;flex-shrink:0;padding-left:4px;">✨</span>
-              <textarea class="coach-input" id="todoCoachInput" placeholder="Ask AI" rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendTodoCoachMsg();}"></textarea>
-              <button class="coach-send" id="todoCoachSendBtn" onclick="sendTodoCoachMsg()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
+              <div class="chat-input-wrap">
+                <textarea class="chat-input-field coach-input" id="todoCoachInput" placeholder="Ask AI" rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendTodoCoachMsg();}"></textarea>
+                <button class="chat-send-btn coach-send" id="todoCoachSendBtn" onclick="sendTodoCoachMsg()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+              </div>
             </div>
           </div>
           <div class="drag-handle-bar" data-drag-handle><div class="drag-handle-pill"></div></div>
@@ -3186,6 +3537,10 @@
           </div>
           <!-- Messages -->
           <div class="lc-messages" id="lcMessages"></div>
+          <!-- Scroll to bottom arrow -->
+          <button class="lc-scroll-bottom" id="lcScrollBottom" onclick="document.getElementById('lcMessages').scrollTop=document.getElementById('lcMessages').scrollHeight;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+          </button>
           <!-- Input bar -->
           <div class="lc-input-bar">
             <div class="lc-input-wrap">
@@ -3198,6 +3553,87 @@
         </div>
         <!-- End Agent Chat View -->
       </div>
+
+      <!-- Feedback View -->
+      <div class="view" id="feedbackView">
+        <div class="feedback-fullscreen" id="feedbackFullscreen" style="display:none;">
+          <!-- Top bar -->
+          <div class="feedback-topbar">
+            <button class="feedback-back-btn" onclick="closeFeedbackView()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            </button>
+            <span class="feedback-topbar-title">Feedback</span>
+            <div style="width:20px;"></div>
+          </div>
+
+          <!-- Content area (scrollable) -->
+          <div class="feedback-content" id="feedbackContent">
+            <!-- Form section -->
+            <div class="feedback-form-section" id="feedbackFormSection" style="display:flex;">
+              <!-- Welcome text -->
+              <div class="feedback-welcome">
+                <div class="feedback-welcome-icon">💬</div>
+                <div class="feedback-welcome-text">Help us make WishPath better</div>
+              </div>
+
+              <!-- Category selector -->
+              <div class="feedback-category-label">Category</div>
+              <div class="feedback-category-chips">
+                <button class="feedback-chip" onclick="selectFeedbackCategory('feature_request')" data-category="feature_request">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                  Feature Request
+                </button>
+                <button class="feedback-chip" onclick="selectFeedbackCategory('bug_report')" data-category="bug_report">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01"/></svg>
+                  Bug Report
+                </button>
+                <button class="feedback-chip" onclick="selectFeedbackCategory('love_it')" data-category="love_it">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                  Love It
+                </button>
+                <button class="feedback-chip" onclick="selectFeedbackCategory('other')" data-category="other">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20c4.418 0 8-3.582 8-8s-3.582-8-8-8-8 3.582-8 8 3.582 8 8 8M12 16v.01M12 12c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1"/></svg>
+                  Other
+                </button>
+              </div>
+
+              <!-- Rating -->
+              <div class="feedback-rating-section">
+                <div class="feedback-rating-label">Rate your experience (optional)</div>
+                <div class="feedback-rating-stars">
+                  <button class="feedback-star" onclick="setFeedbackRating(1)" data-rating="1">★</button>
+                  <button class="feedback-star" onclick="setFeedbackRating(2)" data-rating="2">★</button>
+                  <button class="feedback-star" onclick="setFeedbackRating(3)" data-rating="3">★</button>
+                  <button class="feedback-star" onclick="setFeedbackRating(4)" data-rating="4">★</button>
+                  <button class="feedback-star" onclick="setFeedbackRating(5)" data-rating="5">★</button>
+                </div>
+              </div>
+
+              <!-- Text area -->
+              <textarea class="feedback-textarea" id="feedbackTextarea" placeholder="Tell us what's on your mind..." rows="6"></textarea>
+
+              <!-- Submit button -->
+              <button class="feedback-submit" onclick="submitFeedback()">Send Feedback</button>
+
+              <!-- Error message -->
+              <div class="feedback-error" id="feedbackError" style="display:none;"></div>
+            </div>
+
+            <!-- Success state -->
+            <div class="feedback-success" id="feedbackSuccess" style="display:none;">
+              <div class="feedback-success-icon">✓</div>
+              <div class="feedback-success-text">Thank you! Your feedback has been sent.</div>
+            </div>
+
+            <!-- Past feedback section -->
+            <div class="feedback-past-section" id="feedbackPastSection" style="display:none;">
+              <div class="feedback-past-label">Your Feedback</div>
+              <div class="feedback-list" id="feedbackList"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- End Feedback View -->
 
     </div>
   </main>
@@ -3970,7 +4406,7 @@
     }
 
     // View switching
-    var viewTitles = { home: 'Home', lifecoach: 'Life Coach', news: 'News', fm: 'Financial Markets', cc: 'Command Center', wishes: 'My Wishes', coach: 'AI Coach', library: 'Library', notes: 'Notes', todos: 'To-Dos', newwish: 'Your Wish' };
+    var viewTitles = { home: 'Home', lifecoach: 'Life Coach', news: 'News', fm: 'Financial Markets', cc: 'Command Center', wishes: 'My Wishes', coach: 'AI Coach', library: 'Library', notes: 'Notes', todos: 'To-Dos', feedback: 'Feedback', newwish: 'Your Wish' };
     // ── iOS-style drag handle for chat/content split ──
     (function initDragHandles() {
       if (window.innerWidth > 768) return;
@@ -4106,9 +4542,9 @@
         closeMobileSidebar();
         hideMobileHome();
         setMobileNavActive(view);
-        // Show bottom bar on all views except coach (coach has search built into its input row)
+        // Show bottom bar on all views except coach/lifecoach/feedback (these have their own input/controls)
         var navBar = document.getElementById('mobileNavBar');
-        if (navBar) navBar.style.display = (view === 'coach' || view === 'lifecoach') ? 'none' : 'flex';
+        if (navBar) navBar.style.display = (view === 'coach' || view === 'lifecoach' || view === 'feedback') ? 'none' : 'flex';
         updateMobileNavLabel(view);
       }
       updateMobileFMChrome();
@@ -5621,6 +6057,200 @@
       showLCChatList();
     }
 
+    // ── Feedback View Functions ──
+    var _feedbackCategory = null;
+    var _feedbackRating = null;
+
+    function openFeedbackView() {
+      var feedbackFS = document.getElementById('feedbackFullscreen');
+      var feedbackView = document.getElementById('feedbackView');
+      if (feedbackFS) feedbackFS.style.display = 'flex';
+      if (feedbackView) feedbackView.classList.add('active');
+      resetFeedbackForm();
+      loadUserFeedback();
+      closeMobileSidebar();
+    }
+
+    function closeFeedbackView() {
+      var feedbackFS = document.getElementById('feedbackFullscreen');
+      var feedbackView = document.getElementById('feedbackView');
+      if (feedbackFS) feedbackFS.style.display = 'none';
+      if (feedbackView) feedbackView.classList.remove('active');
+      closeMobileSidebar();
+      showView('home');
+    }
+
+    function resetFeedbackForm() {
+      _feedbackCategory = null;
+      _feedbackRating = null;
+      document.getElementById('feedbackTextarea').value = '';
+      document.querySelectorAll('.feedback-chip').forEach(function(c) { c.classList.remove('active'); });
+      document.querySelectorAll('.feedback-star').forEach(function(s) { s.classList.remove('active'); });
+      var err = document.getElementById('feedbackError');
+      var success = document.getElementById('feedbackSuccess');
+      var form = document.getElementById('feedbackFormSection');
+      if (err) err.style.display = 'none';
+      if (success) success.style.display = 'none';
+      if (form) form.style.display = 'flex';
+    }
+
+    function selectFeedbackCategory(cat) {
+      _feedbackCategory = cat;
+      document.querySelectorAll('.feedback-chip').forEach(function(c) {
+        c.classList.toggle('active', c.getAttribute('data-category') === cat);
+      });
+    }
+
+    function setFeedbackRating(n) {
+      _feedbackRating = n;
+      document.querySelectorAll('.feedback-star').forEach(function(s) {
+        var rating = parseInt(s.getAttribute('data-rating'));
+        s.classList.toggle('active', rating <= n);
+      });
+    }
+
+    async function submitFeedback() {
+      var textarea = document.getElementById('feedbackTextarea');
+      var message = textarea.value.trim();
+      var btn = document.querySelector('.feedback-submit');
+
+      if (!_feedbackCategory) {
+        showFeedbackError('Please select a category');
+        return;
+      }
+      if (!message) {
+        showFeedbackError('Please tell us what\'s on your mind');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Sending...';
+
+      try {
+        var user = await getUser();
+        if (!user) throw new Error('Not authenticated');
+
+        var sb = getSupabase();
+        var { error } = await sb.from('feedback').insert({
+          user_id: user.id,
+          category: _feedbackCategory,
+          rating: _feedbackRating,
+          message: message,
+          email: user.email
+        });
+
+        if (error) throw error;
+
+        // Send email to Jeff
+        await sendFeedbackEmail(user.email, _feedbackCategory, _feedbackRating, message);
+
+        // Show success state
+        showFeedbackSuccess();
+
+        // Reset after 3 seconds
+        setTimeout(function() {
+          resetFeedbackForm();
+          loadUserFeedback();
+        }, 3000);
+      } catch (err) {
+        showFeedbackError('Error submitting feedback. Please try again.');
+        console.error('Feedback submission error:', err);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Send Feedback';
+      }
+    }
+
+    function showFeedbackError(msg) {
+      var errEl = document.getElementById('feedbackError');
+      if (errEl) {
+        errEl.textContent = msg;
+        errEl.style.display = 'block';
+        setTimeout(function() { errEl.style.display = 'none'; }, 5000);
+      }
+    }
+
+    function showFeedbackSuccess() {
+      var formSection = document.getElementById('feedbackFormSection');
+      var successSection = document.getElementById('feedbackSuccess');
+      if (formSection) formSection.style.display = 'none';
+      if (successSection) successSection.style.display = 'flex';
+    }
+
+    async function sendFeedbackEmail(userEmail, category, rating, message) {
+      // Email sending is optional — feedback is already saved to database
+      // TODO: Wire up edge function to send email notifications to Jeff
+      // For now, just log that feedback was captured
+      console.log('Feedback captured and saved:', { userEmail, category, rating });
+    }
+
+    async function loadUserFeedback() {
+      try {
+        var user = await getUser();
+        if (!user) return;
+
+        var sb = getSupabase();
+        var { data, error } = await sb.from('feedback')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(10);
+
+        if (error || !data || data.length === 0) {
+          var pastSection = document.getElementById('feedbackPastSection');
+          if (pastSection) pastSection.style.display = 'none';
+          return;
+        }
+
+        renderFeedbackList(data);
+      } catch (err) {
+        console.error('Error loading feedback:', err);
+      }
+    }
+
+    function renderFeedbackList(items) {
+      var pastSection = document.getElementById('feedbackPastSection');
+      var list = document.getElementById('feedbackList');
+      if (!pastSection || !list) return;
+
+      var categoryLabels = {
+        'feature_request': 'Feature Request',
+        'bug_report': 'Bug Report',
+        'love_it': 'Love It',
+        'other': 'Other'
+      };
+
+      list.innerHTML = items.map(function(item) {
+        var catLabel = categoryLabels[item.category] || item.category;
+        var timeAgo = getTimeAgo(item.created_at);
+        var preview = (item.message || '').substring(0, 100);
+        if (preview.length === 100) preview += '...';
+        return '<div class="feedback-item">' +
+          '<div class="feedback-item-category">' + catLabel + (item.rating ? ' • ' + item.rating + '★' : '') + '</div>' +
+          '<div class="feedback-item-text">' + preview.replace(/</g, '&lt;') + '</div>' +
+          '<div class="feedback-item-time">' + timeAgo + '</div>' +
+          '</div>';
+      }).join('');
+
+      pastSection.style.display = 'block';
+    }
+
+    function getTimeAgo(isoDate) {
+      var date = new Date(isoDate);
+      var now = new Date();
+      var seconds = Math.floor((now - date) / 1000);
+      if (seconds < 60) return 'Just now';
+      var minutes = Math.floor(seconds / 60);
+      if (minutes < 60) return minutes + 'm ago';
+      var hours = Math.floor(minutes / 60);
+      if (hours < 24) return hours + 'h ago';
+      var days = Math.floor(hours / 24);
+      if (days < 7) return days + 'd ago';
+      var weeks = Math.floor(days / 7);
+      if (weeks < 4) return weeks + 'w ago';
+      return date.toLocaleDateString();
+    }
+
     function updateLCState() {
       var empty = document.getElementById('lcEmptyState');
       var msgs = document.getElementById('lcMessages');
@@ -5632,6 +6262,78 @@
         msgs.classList.add('has-messages');
       }
     }
+
+    // Scroll-to-bottom button for Life Coach
+    (function() {
+      var msgs = document.getElementById('lcMessages');
+      var btn = document.getElementById('lcScrollBottom');
+      if (msgs && btn) {
+        msgs.addEventListener('scroll', function() {
+          var gap = msgs.scrollHeight - msgs.scrollTop - msgs.clientHeight;
+          btn.classList.toggle('visible', gap > 120);
+        });
+      }
+    })();
+
+    // Scroll-to-bottom button for AI Coach
+    (function() {
+      var msgs = document.getElementById('coachMessages');
+      var btn = document.getElementById('coachScrollBottom');
+      if (msgs && btn) {
+        msgs.addEventListener('scroll', function() {
+          var gap = msgs.scrollHeight - msgs.scrollTop - msgs.clientHeight;
+          btn.classList.toggle('visible', gap > 120);
+        });
+      }
+    })();
+
+    // Scroll-to-bottom button for Portfolio Coach
+    (function() {
+      var msgs = document.getElementById('portfolioCoachMessages');
+      var btn = document.getElementById('portfolioCoachScrollBottom');
+      if (msgs && btn) {
+        msgs.addEventListener('scroll', function() {
+          var gap = msgs.scrollHeight - msgs.scrollTop - msgs.clientHeight;
+          btn.classList.toggle('visible', gap > 120);
+        });
+      }
+    })();
+
+    // Scroll-to-bottom button for FM Portfolio Coach
+    (function() {
+      var msgs = document.getElementById('fmPortfolioCoachMessages');
+      var btn = document.getElementById('fmPortfolioCoachScrollBottom');
+      if (msgs && btn) {
+        msgs.addEventListener('scroll', function() {
+          var gap = msgs.scrollHeight - msgs.scrollTop - msgs.clientHeight;
+          btn.classList.toggle('visible', gap > 120);
+        });
+      }
+    })();
+
+    // Scroll-to-bottom button for Chart Studio
+    (function() {
+      var msgs = document.getElementById('chartStudioMessages');
+      var btn = document.getElementById('chartStudioScrollBottom');
+      if (msgs && btn) {
+        msgs.addEventListener('scroll', function() {
+          var gap = msgs.scrollHeight - msgs.scrollTop - msgs.clientHeight;
+          btn.classList.toggle('visible', gap > 120);
+        });
+      }
+    })();
+
+    // Scroll-to-bottom button for To-Dos AI
+    (function() {
+      var msgs = document.getElementById('todoCoachMessages');
+      var btn = document.getElementById('todoCoachScrollBottom');
+      if (msgs && btn) {
+        msgs.addEventListener('scroll', function() {
+          var gap = msgs.scrollHeight - msgs.scrollTop - msgs.clientHeight;
+          btn.classList.toggle('visible', gap > 120);
+        });
+      }
+    })();
 
     function startNewLifeCoachChat() {
       // Save current convo first
