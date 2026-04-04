@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-03-v48';
+    var APP_VERSION = '2026-04-04-v49';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -6128,39 +6128,54 @@
       time: { emoji: '⏰', label: 'Time Available', prompt: 'Time: ' }
     };
     function toggleHomeWishContext(field, btn) {
-      var input = document.getElementById('homeWish' + field.charAt(0).toUpperCase() + field.slice(1));
+      var inputId = 'homeWish' + field.charAt(0).toUpperCase() + field.slice(1);
+      var input = document.getElementById(inputId);
       var textarea = document.getElementById('homeWishInput');
-      // Toggle the hidden input for visibility
-      btn.classList.toggle('active');
-      input.classList.toggle('visible');
+      var meta = _homeWishChipMeta[field];
+      // If already visible, hide it
       if (input.classList.contains('visible')) {
-        input.focus();
-        // When input loses focus or Enter is pressed, append to textarea
-        var confirmed = false;
-        function confirmChipValue() {
-          if (confirmed) return;
-          confirmed = true;
-          var val = input.value.trim();
-          if (val) {
-            var meta = _homeWishChipMeta[field];
-            var line = meta.prompt + val;
-            var current = textarea.value.trim();
-            textarea.value = current ? current + '\n' + line : line;
-            textarea.style.height = 'auto';
-            textarea.style.height = textarea.scrollHeight + 'px';
-            document.getElementById('homeWishCharCount').textContent = textarea.value.length + ' / 800';
-            btn.innerHTML = meta.emoji + ' ' + val;
-          }
-          input.classList.remove('visible');
-          input.removeEventListener('blur', confirmChipValue);
-          input.removeEventListener('keydown', onEnter);
-        }
-        function onEnter(e) {
-          if (e.key === 'Enter') { e.preventDefault(); confirmChipValue(); }
-        }
-        input.addEventListener('blur', confirmChipValue);
-        input.addEventListener('keydown', onEnter);
+        input.classList.remove('visible');
+        btn.classList.remove('active');
+        return;
       }
+      // Show the input
+      btn.classList.add('active');
+      input.classList.add('visible');
+      input.value = '';
+      setTimeout(function() { input.focus(); }, 50);
+      // Remove old listeners to prevent stacking
+      input.onblur = null;
+      input.onkeydown = null;
+      var done = false;
+      function commitValue() {
+        if (done) return;
+        done = true;
+        var val = input.value.trim();
+        if (val) {
+          // Build the line like "Age: 28"
+          var line = meta.prompt + val;
+          // Remove any existing line for this field from textarea
+          var lines = textarea.value.split('\n').filter(function(l) {
+            return l.indexOf(meta.prompt) !== 0;
+          });
+          lines.push(line);
+          textarea.value = lines.filter(function(l) { return l.trim(); }).join('\n');
+          textarea.style.height = 'auto';
+          textarea.style.height = Math.max(textarea.scrollHeight, 100) + 'px';
+          document.getElementById('homeWishCharCount').textContent = textarea.value.length + ' / 800';
+          // Update chip label to show the value
+          btn.innerHTML = meta.emoji + ' ' + val;
+        }
+        input.classList.remove('visible');
+        input.onblur = null;
+        input.onkeydown = null;
+      }
+      input.onkeydown = function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+      };
+      input.onblur = function() {
+        setTimeout(commitValue, 100);
+      };
     }
 
     async function submitHomeWish() {
