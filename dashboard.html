@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-04-v68';
+    var APP_VERSION = '2026-04-04-v69';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -1494,8 +1494,8 @@
         transform: translateY(100%);
         transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       }
-      .fm-widget-nav.active { display: flex; }
-      .fm-widget-nav.visible { transform: translateY(0); }
+      .fm-widget-nav.active { display: flex; transform: translateY(0); }
+      .fm-widget-nav.hidden { transform: translateY(100%); }
       .fm-widget-nav-btn {
         display: flex; align-items: center; justify-content: center;
         width: 48px; height: 48px;
@@ -4440,7 +4440,9 @@
       if (isWidget) {
         document.body.classList.add('fm-mobile-fullscreen');
         document.body.classList.add('fm-widget-active');
-        if (fmWidgetNav) fmWidgetNav.classList.add('active');
+        if (fmWidgetNav) { fmWidgetNav.classList.add('active'); fmWidgetNav.classList.remove('hidden'); }
+        // Show nav immediately, auto-hide after 4s
+        if (typeof showWidgetNav === 'function') showWidgetNav();
       } else {
         document.body.classList.remove('fm-mobile-fullscreen');
         document.body.classList.remove('fm-widget-active');
@@ -12010,68 +12012,39 @@ function exitChartView() {
   window.scrollTo(0, 0);
 }
 
-// ── Scroll-triggered widget nav (X/Twitter style) ──
+// ── Widget nav show/hide (X/Twitter style) ──
+// Nav shows by default when widget tab is active.
+// Auto-hides after 4s, reappears on any tap outside the iframe.
+var _widgetNavTimeout = null;
+function showWidgetNav() {
+  var nav = document.getElementById('fmWidgetNav');
+  if (!nav || !nav.classList.contains('active')) return;
+  nav.classList.remove('hidden');
+  clearTimeout(_widgetNavTimeout);
+  _widgetNavTimeout = setTimeout(hideWidgetNav, 4000);
+}
+function hideWidgetNav() {
+  var nav = document.getElementById('fmWidgetNav');
+  if (!nav) return;
+  nav.classList.add('hidden');
+}
+// Tap anywhere on the page (outside iframe) toggles the nav
+document.addEventListener('click', function(e) {
+  if (!document.body.classList.contains('fm-widget-active')) return;
+  // If tapping the nav itself, don't toggle
+  var nav = document.getElementById('fmWidgetNav');
+  if (nav && nav.contains(e.target)) return;
+  var isHidden = nav && nav.classList.contains('hidden');
+  if (isHidden) { showWidgetNav(); } else { hideWidgetNav(); }
+}, true);
+// Keep nav visible while hovering/touching it
 (function() {
-  var lastTouchY = 0;
-  var navVisible = false;
-  var navTimeout = null;
-
-  function showWidgetNav() {
-    var nav = document.getElementById('fmWidgetNav');
-    if (!nav || !nav.classList.contains('active')) return;
-    nav.classList.add('visible');
-    navVisible = true;
-    // Auto-hide after 3 seconds of no interaction
-    clearTimeout(navTimeout);
-    navTimeout = setTimeout(hideWidgetNav, 3000);
-  }
-
-  function hideWidgetNav() {
-    var nav = document.getElementById('fmWidgetNav');
-    if (!nav) return;
-    nav.classList.remove('visible');
-    navVisible = false;
-  }
-
-  document.addEventListener('touchstart', function(e) {
-    lastTouchY = e.touches[0].clientY;
-  }, { passive: true });
-
-  document.addEventListener('touchmove', function(e) {
-    if (!document.body.classList.contains('fm-widget-active')) return;
-    var deltaY = e.touches[0].clientY - lastTouchY;
-    if (Math.abs(deltaY) < 8) return;
-    if (deltaY < 0) {
-      // Scrolling down (finger moving up) — show nav
-      showWidgetNav();
-    } else {
-      // Scrolling up (finger moving down) — hide nav
-      hideWidgetNav();
-    }
-    lastTouchY = e.touches[0].clientY;
-  }, { passive: true });
-
-  // Also show on tap anywhere in fullscreen
-  document.addEventListener('touchend', function(e) {
-    if (!document.body.classList.contains('fm-widget-active')) return;
-    if (!navVisible) {
-      showWidgetNav();
-    } else {
-      // Reset auto-hide timer
-      clearTimeout(navTimeout);
-      navTimeout = setTimeout(hideWidgetNav, 3000);
-    }
-  }, { passive: true });
-
-  // Keep nav visible while interacting with it
   var navEl = document.getElementById('fmWidgetNav');
   if (navEl) {
-    navEl.addEventListener('touchstart', function(e) {
-      clearTimeout(navTimeout);
-    }, { passive: true });
-    navEl.addEventListener('touchend', function(e) {
-      clearTimeout(navTimeout);
-      navTimeout = setTimeout(hideWidgetNav, 3000);
+    navEl.addEventListener('touchstart', function() { clearTimeout(_widgetNavTimeout); }, { passive: true });
+    navEl.addEventListener('touchend', function() {
+      clearTimeout(_widgetNavTimeout);
+      _widgetNavTimeout = setTimeout(hideWidgetNav, 4000);
     }, { passive: true });
   }
 })();
