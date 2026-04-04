@@ -1274,6 +1274,9 @@
       .cs-gallery-cats { display: flex; gap: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 12px; margin-bottom: 4px; }
       .cs-gallery-cats::-webkit-scrollbar { display: none; }
       .cs-gallery-grid { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+      .cs-source-btn { display: flex; align-items: center; gap: 10px; width: 100%; padding: 12px 14px; margin-bottom: 8px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: rgba(255,255,255,0.85); font-size: 13px; font-weight: 500; font-family: 'IBM Plex Sans', system-ui, sans-serif; cursor: pointer; transition: all 0.15s ease; -webkit-tap-highlight-color: transparent; text-align: left; }
+      .cs-source-btn:active { transform: scale(0.97); border-color: rgba(120,80,220,0.3); background: rgba(120,80,220,0.08); }
+      .cs-source-icon { font-size: 18px; flex-shrink: 0; }
 
       /* Hide coach dropdown selector on mobile when empty state is showing */
       .coach-left > div:first-child { display: none !important; }
@@ -7168,6 +7171,11 @@
       return false;
     }
 
+    function _isOnChartStudioPage() {
+      var fmContent = document.getElementById('fmChartStudioContent');
+      return !!(fmContent && fmContent.classList.contains('active'));
+    }
+
     function handleNavSearchBtn() {
       var activeView = document.body.getAttribute('data-active-view');
       if (activeView === 'fm') {
@@ -7180,6 +7188,21 @@
     function handleMobileNavPill() {
       var activeView = document.body.getAttribute('data-active-view');
       if (activeView === 'newwish') { submitNewWish(); return; }
+      if (activeView === 'fm' && _isOnChartStudioPage()) {
+        // Hide gallery and show messages/input for Chart Studio
+        var gallery = document.getElementById('csTemplateGallery');
+        var csMsgs = document.getElementById('chartStudioMessages');
+        if (gallery && gallery.style.display !== 'none') {
+          gallery.style.display = 'none';
+          if (csMsgs) csMsgs.style.display = '';
+        }
+        var csInput = document.getElementById('chartStudioInput');
+        if (csInput) {
+          csInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          setTimeout(function() { csInput.focus(); }, 200);
+          return;
+        }
+      }
       openFullScreenAI();
     }
 
@@ -7202,6 +7225,8 @@
       };
       if (_isOnPortfolioPage()) {
         label.textContent = 'Ask about your portfolio';
+      } else if (view === 'fm' && _isOnChartStudioPage()) {
+        label.textContent = "Let's create a custom chart...";
       } else {
         label.textContent = placeholders[view] || "What's on your mind today?";
       }
@@ -9283,10 +9308,61 @@
       var msgs = getChartStudioMessagesEl();
       if (!msgs || !template) return;
       var escapedName = template.name.replace(/'/g, "\\'");
+      // Build data source picker (portfolio + watchlists)
+      var sourceOptions = '<div class="cs-data-sources" style="margin-top:14px;">' +
+        '<div style="font-size:12px;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:0.06em;font-weight:600;margin-bottom:8px;">Choose a data source</div>';
+      // Portfolio option
+      if (portfolioHoldings.length) {
+        sourceOptions += '<button class="cs-source-btn" onclick="fillTemplateFromPortfolio(\'' + escapedName + '\')"><span class="cs-source-icon">&#x1F4BC;</span> My Portfolio (' + portfolioHoldings.length + ' holdings)</button>';
+      }
+      // Watchlist options
+      if (watchlists.length) {
+        watchlists.forEach(function(wl) {
+          if (wl.symbols && wl.symbols.length) {
+            sourceOptions += '<button class="cs-source-btn" onclick="fillTemplateFromWatchlist(\'' + escapedName + '\', \'' + wl.id + '\')"><span class="cs-source-icon">&#x1F4CB;</span> ' + (wl.name || 'Untitled').replace(/</g,'&lt;') + ' (' + wl.symbols.length + ' symbols)</button>';
+          }
+        });
+      }
+      // Manual / custom option
+      sourceOptions += '<button class="cs-source-btn" onclick="primeChartStudioTemplateAssist(\'' + escapedName + '\', true, true)"><span class="cs-source-icon">&#x270F;&#xFE0F;</span> Enter my own data</button>';
+      sourceOptions += '</div>';
+
       msgs.innerHTML = '<div style="margin-bottom:8px;"><button class="portfolio-coach-chip" onclick="showCSGallery()" style="font-size:12px;padding:4px 12px;">&#x2190; All Templates</button></div>' +
         '<div class="msg ai"><strong>' + template.name.replace(/</g, '&lt;') + ' template loaded.</strong><br>' +
         template.helpText.replace(/</g, '&lt;') +
-        '<div style="margin-top:12px;"><button class="portfolio-coach-chip" onclick="primeChartStudioTemplateAssist(\'' + escapedName + '\', true, true)">Ask AI to fill this template</button></div></div>';
+        sourceOptions + '</div>';
+    }
+
+    function fillTemplateFromPortfolio(templateName) {
+      var holdingsCtx = portfolioHoldings.map(function(h) {
+        var p = portfolioPrices[h.symbol] || {};
+        return h.symbol + ': ' + h.qty + ' shares @ $' + (p.price || 0).toFixed(2) + ' (avg cost: $' + (h.avgCost || 0).toFixed(2) + ')';
+      }).join(', ');
+      var input = getChartStudioInputEl();
+      if (input) {
+        input.value = 'Fill this ' + templateName + ' template with my portfolio data: ' + holdingsCtx;
+        input.style.height = 'auto';
+        input.style.height = input.scrollHeight + 'px';
+      }
+      _activeChartStudioTemplate = templateName;
+      sendChartStudioMsg();
+    }
+
+    function fillTemplateFromWatchlist(templateName, watchlistId) {
+      var wl = watchlists.find(function(w) { return w.id === watchlistId; });
+      if (!wl) return;
+      var symbolsCtx = wl.symbols.map(function(s) {
+        var p = marketsCache[s] || watchlistPrices[s] || {};
+        return s + (p.price ? ' ($' + p.price.toFixed(2) + ')' : '');
+      }).join(', ');
+      var input = getChartStudioInputEl();
+      if (input) {
+        input.value = 'Fill this ' + templateName + ' template using my "' + (wl.name || 'Untitled') + '" watchlist: ' + symbolsCtx;
+        input.style.height = 'auto';
+        input.style.height = input.scrollHeight + 'px';
+      }
+      _activeChartStudioTemplate = templateName;
+      sendChartStudioMsg();
     }
 
     function primeChartStudioTemplateAssist(name, preserveExistingText, focusInput) {
