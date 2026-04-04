@@ -1335,81 +1335,83 @@
       .main-content { padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 16px) !important; }
 
       /* === TRUE FULLSCREEN CHART — TradingView-style, zero waste at top === */
+      /* ══════ FULLSCREEN CHART MODE ══════
+         When active, the TradingView widget is the ONLY thing on screen.
+         No pull-tab, no ticker row, no sub-tabs, no headers — just the chart
+         from status bar to bottom nav, identical to a native trading app. */
       body.fm-mobile-fullscreen {
-        overflow: hidden;
+        overflow: hidden !important;
       }
       body.fm-mobile-fullscreen .main-content {
         padding: 0 !important;
+        margin: 0 !important;
+      }
+      body.fm-mobile-fullscreen .main-header {
+        display: none !important;
       }
       body.fm-mobile-fullscreen #fmView {
         position: fixed !important;
-        top: 0; left: 0; right: 0;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
         bottom: calc(56px + env(safe-area-inset-bottom)) !important;
         padding: 0 !important;
-        padding-top: 0 !important;
-        overflow: hidden;
+        margin: 0 !important;
+        overflow: hidden !important;
         z-index: 9999;
-        background: #191919;
+        background: #0f1013 !important;
       }
-      body.fm-mobile-fullscreen #fmSubTabs { display: none !important; }
+      /* Kill every non-chart element inside the fullscreen view */
+      body.fm-mobile-fullscreen #fmSubTabs,
+      body.fm-mobile-fullscreen .fm-ticker-pull-tab,
+      body.fm-mobile-fullscreen .fm-ticker-input-row,
+      body.fm-mobile-fullscreen .fm-exit-fs-btn,
+      body.fm-mobile-fullscreen .chart-fs-btn {
+        display: none !important;
+        height: 0 !important;
+        max-height: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border: none !important;
+        overflow: hidden !important;
+      }
       body.fm-mobile-fullscreen #fmView .fm-sub-content {
         padding: 0 !important;
-        height: 100%;
-      }
-      body.fm-mobile-fullscreen #fmTVChartsContent.active,
-      body.fm-mobile-fullscreen #fmTechAnalysisContent.active {
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-        padding: 0 !important;
-      }
-      body.fm-mobile-fullscreen #fmTVChartsContent .fm-ticker-input-row,
-      body.fm-mobile-fullscreen #fmTechAnalysisContent .fm-ticker-input-row {
-        padding: 6px 12px 0;
-        margin-bottom: 0;
-        z-index: 2;
-        flex-shrink: 0;
-        background: rgba(25,25,25,0.96);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border-bottom: 1px solid rgba(104,107,130,0.24);
-      }
-      body.fm-mobile-fullscreen #fmHeatMapContent.active,
-      body.fm-mobile-fullscreen #fmScreenerContent.active,
-      body.fm-mobile-fullscreen #fmOverviewContent.active,
-      body.fm-mobile-fullscreen #fmCalendarContent.active {
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-        padding: 0 !important;
-      }
-      body.fm-mobile-fullscreen #fmTVChartsContent .fm-widget-container,
-      body.fm-mobile-fullscreen #fmTechAnalysisContent .fm-widget-container,
-      body.fm-mobile-fullscreen #fmHeatMapContent .fm-widget-container,
-      body.fm-mobile-fullscreen #fmScreenerContent .fm-widget-container,
-      body.fm-mobile-fullscreen #fmOverviewContent .fm-widget-container,
-      body.fm-mobile-fullscreen #fmCalendarContent .fm-widget-container {
-        flex: 1 1 auto;
+        margin: 0 !important;
         height: 100% !important;
-        background: #0f1013;
-        border: none;
-        border-radius: 0;
-        box-shadow: none;
-        overflow: hidden;
       }
-      body.fm-mobile-fullscreen #fmView .fm-widget-container,
-      body.fm-mobile-fullscreen #fmView .fm-widget-container > div,
-      body.fm-mobile-fullscreen #fmView .fm-widget-container .tradingview-widget-container,
-      body.fm-mobile-fullscreen #fmView .fm-widget-container .tradingview-widget-container__widget,
-      body.fm-mobile-fullscreen #fmView .fm-widget-container iframe {
+      /* All sub-content tabs: flex column, fill 100% */
+      body.fm-mobile-fullscreen .fm-sub-content.active {
+        display: flex !important;
+        flex-direction: column !important;
+        height: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        gap: 0 !important;
+      }
+      /* Widget container: fill all remaining space */
+      body.fm-mobile-fullscreen .fm-widget-container {
+        flex: 1 1 0% !important;
+        height: 100% !important;
+        min-height: 0 !important;
+        background: #0f1013 !important;
+        border: none !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+      }
+      /* Widget internals: fill 100% */
+      body.fm-mobile-fullscreen .fm-widget-container > *,
+      body.fm-mobile-fullscreen .fm-widget-container .tradingview-widget-container,
+      body.fm-mobile-fullscreen .fm-widget-container .tradingview-widget-container__widget,
+      body.fm-mobile-fullscreen .fm-widget-container iframe {
         width: 100% !important;
         height: 100% !important;
         min-height: 100% !important;
+        border: none !important;
       }
-      body.fm-mobile-fullscreen #fmView .fm-widget-container .chart-fs-btn { display: none !important; }
-      /* Hide pull tab + ticker row in fullscreen — chart fills entire space */
-      body.fm-mobile-fullscreen .fm-ticker-pull-tab { display: none !important; }
-      body.fm-mobile-fullscreen .fm-ticker-input-row { display: none !important; }
       /* Exit fullscreen button — hidden, purple toggle replaces it */
       .fm-exit-fs-btn { display: none !important; }
       body.fm-mobile-fullscreen .fm-exit-fs-btn { display: none !important; }
