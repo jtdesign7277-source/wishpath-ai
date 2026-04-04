@@ -1875,6 +1875,24 @@
     .news-filter-select { padding: 8px 12px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.04); border-radius: 12px; color: var(--text); font: inherit; font-size: 0.8rem; outline: none; min-width: 140px; appearance: none; -webkit-appearance: none; box-shadow: inset 4px 4px 8px rgba(0,0,0,0.5), inset -2px -2px 6px rgba(255,255,255,0.02); transition: all 0.3s ease; }
     .news-filter-select:focus { border-color: rgba(120,80,220,0.3); box-shadow: inset 4px 4px 8px rgba(0,0,0,0.5), inset -2px -2px 6px rgba(255,255,255,0.02), 0 0 12px rgba(120,80,220,0.1); }
     .news-filter-landing { text-align: center; padding: 20px; color: var(--text-dim); font-size: 0.82rem; margin-bottom: 12px; }
+    /* ── News Customize Dropdown ── */
+    .news-customize-wrap { position: relative; }
+    .news-customize-btn { display: flex; align-items: center; gap: 6px; padding: 6px 14px; background: rgba(120,80,220,0.08); border: 1px solid rgba(120,80,220,0.25); border-radius: 12px; color: rgb(145,107,230); font: inherit; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; -webkit-tap-highlight-color: transparent; }
+    .news-customize-btn:active { background: rgba(120,80,220,0.15); }
+    .news-customize-btn svg { width: 14px; height: 14px; transition: transform 0.2s ease; }
+    .news-customize-btn.open svg { transform: rotate(180deg); }
+    .news-customize-dropdown { position: absolute; top: calc(100% + 8px); right: 0; z-index: 200; min-width: 280px; background: #1a1a1a; border: 1px solid rgba(120,80,220,0.2); border-radius: 16px; padding: 16px; box-shadow: 0 12px 40px rgba(0,0,0,0.6), 0 0 20px rgba(120,80,220,0.08); opacity: 0; visibility: hidden; transform: translateY(-8px) scale(0.96); transition: all 0.2s ease; }
+    .news-customize-dropdown.open { opacity: 1; visibility: visible; transform: translateY(0) scale(1); }
+    .news-customize-dropdown .ncd-label { font-size: 0.72rem; font-weight: 700; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+    .news-customize-dropdown .ncd-label:not(:first-child) { margin-top: 14px; }
+    .news-customize-dropdown select { width: 100%; padding: 10px 14px; background: #242424; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; color: #fff; font: inherit; font-size: 0.85rem; outline: none; appearance: none; -webkit-appearance: none; transition: border-color 0.2s ease; }
+    .news-customize-dropdown select:focus { border-color: rgba(120,80,220,0.4); }
+    .news-customize-dropdown .ncd-apply { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; margin-top: 16px; padding: 10px; background: linear-gradient(135deg, rgb(120,80,220), rgb(100,60,200)); border: none; border-radius: 12px; color: #fff; font: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: opacity 0.15s ease; }
+    .news-customize-dropdown .ncd-apply:active { opacity: 0.8; }
+    .news-customize-overlay { display: none; position: fixed; inset: 0; z-index: 199; }
+    .news-customize-overlay.open { display: block; }
+    .news-active-pill { display: inline-flex; align-items: center; gap: 2px; padding: 5px 12px; background: rgba(120,80,220,0.1); border: 1px solid rgba(120,80,220,0.2); border-radius: 20px; color: rgb(145,107,230); font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.15s ease; -webkit-tap-highlight-color: transparent; }
+    .news-active-pill:active { background: rgba(120,80,220,0.2); }
 
     /* ── Mobile home tabs + polish ── */
     @media (max-width: 768px) {
@@ -2407,6 +2425,8 @@
       /* News filter mobile — full width */
       .news-filter-bar { flex-direction: column; gap: 8px; }
       .news-filter-select { width: 100%; font-size: 16px !important; min-height: 44px; padding: 12px; }
+      .news-customize-dropdown { left: auto; right: 0; min-width: min(280px, calc(100vw - 32px)); }
+      .news-customize-dropdown select { font-size: 16px !important; min-height: 44px; padding: 12px; }
       .news-feed-item { margin-bottom: 12px; }
       .news-feed-img, .news-feed-img-placeholder { height: 160px; }
       .news-carousel .news-feed-item { min-width: 260px; max-width: 300px; }
@@ -3156,18 +3176,99 @@
         <!-- FM: News Feed -->
         <div class="fm-sub-content" id="fmNewsFeedContent">
           <div class="markets-section-label"><span>&#x1F4F0; Personalized News Feed</span>
-            <button class="markets-refresh-btn" id="newsFeedRefreshBtn" onclick="refreshNewsFeed()" style="border-color:#3b82f6;color:#3b82f6;"><span class="refresh-icon" style="display:inline-block;">&#x21BB;</span> Refresh</button>
+            <div class="news-customize-wrap">
+              <button class="news-customize-btn" id="newsCustomizeBtn" onclick="toggleNewsCustomize()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v1m0 16v1m8.66-13.5l-.87.5M4.21 16l-.87.5M20.66 16l-.87-.5M4.21 8l-.87-.5M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                Customize
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+              </button>
+              <div class="news-customize-overlay" id="newsCustomizeOverlay" onclick="toggleNewsCustomize()"></div>
+              <div class="news-customize-dropdown" id="newsCustomizeDropdown">
+                <div class="ncd-label">Country</div>
+                <select id="newsCountryFilter">
+                  <option value="">All Countries</option>
+                  <option value="ar">&#x1F1E6;&#x1F1F7; Argentina</option>
+                  <option value="au">&#x1F1E6;&#x1F1FA; Australia</option>
+                  <option value="at">&#x1F1E6;&#x1F1F9; Austria</option>
+                  <option value="be">&#x1F1E7;&#x1F1EA; Belgium</option>
+                  <option value="br">&#x1F1E7;&#x1F1F7; Brazil</option>
+                  <option value="bg">&#x1F1E7;&#x1F1EC; Bulgaria</option>
+                  <option value="ca">&#x1F1E8;&#x1F1E6; Canada</option>
+                  <option value="cn">&#x1F1E8;&#x1F1F3; China</option>
+                  <option value="co">&#x1F1E8;&#x1F1F4; Colombia</option>
+                  <option value="cu">&#x1F1E8;&#x1F1FA; Cuba</option>
+                  <option value="cz">&#x1F1E8;&#x1F1FF; Czech Republic</option>
+                  <option value="eg">&#x1F1EA;&#x1F1EC; Egypt</option>
+                  <option value="fr">&#x1F1EB;&#x1F1F7; France</option>
+                  <option value="de">&#x1F1E9;&#x1F1EA; Germany</option>
+                  <option value="gr">&#x1F1EC;&#x1F1F7; Greece</option>
+                  <option value="hk">&#x1F1ED;&#x1F1F0; Hong Kong</option>
+                  <option value="hu">&#x1F1ED;&#x1F1FA; Hungary</option>
+                  <option value="in">&#x1F1EE;&#x1F1F3; India</option>
+                  <option value="id">&#x1F1EE;&#x1F1E9; Indonesia</option>
+                  <option value="ie">&#x1F1EE;&#x1F1EA; Ireland</option>
+                  <option value="il">&#x1F1EE;&#x1F1F1; Israel</option>
+                  <option value="it">&#x1F1EE;&#x1F1F9; Italy</option>
+                  <option value="jp">&#x1F1EF;&#x1F1F5; Japan</option>
+                  <option value="kr">&#x1F1F0;&#x1F1F7; Korea</option>
+                  <option value="lv">&#x1F1F1;&#x1F1FB; Latvia</option>
+                  <option value="lt">&#x1F1F1;&#x1F1F9; Lithuania</option>
+                  <option value="my">&#x1F1F2;&#x1F1FE; Malaysia</option>
+                  <option value="mx">&#x1F1F2;&#x1F1FD; Mexico</option>
+                  <option value="ma">&#x1F1F2;&#x1F1E6; Morocco</option>
+                  <option value="nl">&#x1F1F3;&#x1F1F1; Netherlands</option>
+                  <option value="nz">&#x1F1F3;&#x1F1FF; New Zealand</option>
+                  <option value="ng">&#x1F1F3;&#x1F1EC; Nigeria</option>
+                  <option value="no">&#x1F1F3;&#x1F1F4; Norway</option>
+                  <option value="ph">&#x1F1F5;&#x1F1ED; Philippines</option>
+                  <option value="pl">&#x1F1F5;&#x1F1F1; Poland</option>
+                  <option value="pt">&#x1F1F5;&#x1F1F9; Portugal</option>
+                  <option value="ro">&#x1F1F7;&#x1F1F4; Romania</option>
+                  <option value="ru">&#x1F1F7;&#x1F1FA; Russia</option>
+                  <option value="sa">&#x1F1F8;&#x1F1E6; Saudi Arabia</option>
+                  <option value="rs">&#x1F1F7;&#x1F1F8; Serbia</option>
+                  <option value="sg">&#x1F1F8;&#x1F1EC; Singapore</option>
+                  <option value="sk">&#x1F1F8;&#x1F1F0; Slovakia</option>
+                  <option value="si">&#x1F1F8;&#x1F1EE; Slovenia</option>
+                  <option value="za">&#x1F1FF;&#x1F1E6; South Africa</option>
+                  <option value="es">&#x1F1EA;&#x1F1F8; Spain</option>
+                  <option value="se">&#x1F1F8;&#x1F1EA; Sweden</option>
+                  <option value="ch">&#x1F1E8;&#x1F1ED; Switzerland</option>
+                  <option value="tw">&#x1F1F9;&#x1F1FC; Taiwan</option>
+                  <option value="th">&#x1F1F9;&#x1F1ED; Thailand</option>
+                  <option value="tr">&#x1F1F9;&#x1F1F7; Turkey</option>
+                  <option value="ae">&#x1F1E6;&#x1F1EA; UAE</option>
+                  <option value="ua">&#x1F1FA;&#x1F1E6; Ukraine</option>
+                  <option value="gb">&#x1F1EC;&#x1F1E7; United Kingdom</option>
+                  <option value="us">&#x1F1FA;&#x1F1F8; United States</option>
+                  <option value="ve">&#x1F1FB;&#x1F1EA; Venezuela</option>
+                </select>
+                <div class="ncd-label">Industry</div>
+                <select id="newsIndustryFilter">
+                  <option value="">All Industries</option>
+                  <option value="Basic Materials">Basic Materials</option>
+                  <option value="Communication Services">Communication Services</option>
+                  <option value="Consumer Cyclical">Consumer Cyclical</option>
+                  <option value="Consumer Defensive">Consumer Defensive</option>
+                  <option value="Energy">Energy</option>
+                  <option value="Financial">Financial</option>
+                  <option value="Financial Services">Financial Services</option>
+                  <option value="Healthcare">Healthcare</option>
+                  <option value="Industrial Goods">Industrial Goods</option>
+                  <option value="Industrials">Industrials</option>
+                  <option value="Real Estate">Real Estate</option>
+                  <option value="Materials">Materials</option>
+                  <option value="Technology">Technology</option>
+                  <option value="Utilities">Utilities</option>
+                </select>
+                <button class="ncd-apply" onclick="applyNewsFilters()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M21 12a9 9 0 11-6.219-8.56"/><path d="M22 3v6h-6"/></svg>
+                  Apply &amp; Refresh
+                </button>
+              </div>
+            </div>
           </div>
-          <div class="news-filter-bar" id="newsFilterBar" style="display:none;">
-            <select class="news-filter-select" id="newsCountryFilter" onchange="refreshNewsFeed()">
-              <option value="">All Countries</option>
-              <option value="ar">&#x1F1E6;&#x1F1F7; Argentina</option><option value="au">&#x1F1E6;&#x1F1FA; Australia</option><option value="be">&#x1F1E7;&#x1F1EA; Belgium</option><option value="br">&#x1F1E7;&#x1F1F7; Brazil</option><option value="ca">&#x1F1E8;&#x1F1E6; Canada</option><option value="cn">&#x1F1E8;&#x1F1F3; China</option><option value="cz">&#x1F1E8;&#x1F1FF; Czech Republic</option><option value="eg">&#x1F1EA;&#x1F1EC; Egypt</option><option value="fr">&#x1F1EB;&#x1F1F7; France</option><option value="de">&#x1F1E9;&#x1F1EA; Germany</option><option value="gr">&#x1F1EC;&#x1F1F7; Greece</option><option value="hk">&#x1F1ED;&#x1F1F0; Hong Kong</option><option value="hu">&#x1F1ED;&#x1F1FA; Hungary</option><option value="in">&#x1F1EE;&#x1F1F3; India</option><option value="ie">&#x1F1EE;&#x1F1EA; Ireland</option><option value="il">&#x1F1EE;&#x1F1F1; Israel</option><option value="it">&#x1F1EE;&#x1F1F9; Italy</option><option value="jp">&#x1F1EF;&#x1F1F5; Japan</option><option value="kr">&#x1F1F0;&#x1F1F7; Korea</option><option value="es">&#x1F1EA;&#x1F1F8; Spain</option><option value="ch">&#x1F1E8;&#x1F1ED; Switzerland</option><option value="gb">&#x1F1EC;&#x1F1E7; United Kingdom</option><option value="us">&#x1F1FA;&#x1F1F8; United States</option>
-            </select>
-            <select class="news-filter-select" id="newsIndustryFilter" onchange="refreshNewsFeed()">
-              <option value="">All Industries</option>
-              <option value="Basic Materials">Basic Materials</option><option value="Communication Services">Communication Services</option><option value="Consumer Cyclical">Consumer Cyclical</option><option value="Consumer Defensive">Consumer Defensive</option><option value="Energy">Energy</option><option value="Financial">Financial</option><option value="Healthcare">Healthcare</option><option value="Industrial Goods">Industrial Goods</option><option value="Industrials">Industrials</option><option value="Real Estate">Real Estate</option><option value="Materials">Materials</option><option value="Technology">Technology</option><option value="Utilities">Utilities</option>
-            </select>
-          </div>
+          <div id="newsActiveFilters"></div>
           <div id="newsFeedContainer"><div style="text-align:center;padding:40px;color:var(--text-dim);">Loading your personalized news...</div></div>
         </div>
 
@@ -9699,6 +9800,45 @@
     // ── NEWS FEED (MarketAux + AI)
     // ════════════════════════════════
 
+    // ── News Customize Dropdown ──
+    function toggleNewsCustomize() {
+      var btn = document.getElementById('newsCustomizeBtn');
+      var dropdown = document.getElementById('newsCustomizeDropdown');
+      var overlay = document.getElementById('newsCustomizeOverlay');
+      var isOpen = dropdown.classList.contains('open');
+      if (isOpen) {
+        dropdown.classList.remove('open');
+        overlay.classList.remove('open');
+        btn.classList.remove('open');
+      } else {
+        dropdown.classList.add('open');
+        overlay.classList.add('open');
+        btn.classList.add('open');
+      }
+    }
+
+    function applyNewsFilters() {
+      toggleNewsCustomize();
+      updateNewsActiveFilters();
+      refreshNewsFeed();
+    }
+
+    function updateNewsActiveFilters() {
+      var countryEl = document.getElementById('newsCountryFilter');
+      var industryEl = document.getElementById('newsIndustryFilter');
+      var container = document.getElementById('newsActiveFilters');
+      if (!container) return;
+      var pills = [];
+      if (countryEl && countryEl.value) {
+        var cText = countryEl.options[countryEl.selectedIndex].textContent.replace(/^[^\w]+/, '').trim();
+        pills.push('<span class="news-active-pill" onclick="document.getElementById(\'newsCountryFilter\').value=\'\';applyNewsFilters();">' + cText + ' <span style="opacity:0.5;margin-left:4px;">&#x2715;</span></span>');
+      }
+      if (industryEl && industryEl.value) {
+        pills.push('<span class="news-active-pill" onclick="document.getElementById(\'newsIndustryFilter\').value=\'\';applyNewsFilters();">' + industryEl.value + ' <span style="opacity:0.5;margin-left:4px;">&#x2715;</span></span>');
+      }
+      container.innerHTML = pills.length ? '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">' + pills.join('') + '</div>' : '';
+    }
+
     function getSelectedNewsCountryLabel(countryCode) {
       if (!countryCode) return '';
       var countryEl = document.getElementById('newsCountryFilter');
@@ -9766,8 +9906,8 @@
 
     async function refreshNewsFeed(overrideCountry, overrideIndustry) {
       var container = document.getElementById('newsFeedContainer');
-      var btn = document.getElementById('newsFeedRefreshBtn');
-      if (btn) btn.classList.add('spinning');
+      var customizeBtn = document.getElementById('newsCustomizeBtn');
+      if (customizeBtn) customizeBtn.style.opacity = '0.5';
       container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-dim);">Loading personalized news...</div>';
 
       // Get filter values
@@ -9821,7 +9961,7 @@
         }
         container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-dim);">Connection error loading news. <button onclick="window._newsFeedRetried=false;refreshNewsFeed();" style="color:var(--accent);background:none;border:1px solid var(--accent);border-radius:8px;padding:6px 14px;cursor:pointer;font-size:0.85rem;margin-top:8px;">Retry</button></div>';
       }
-      if (btn) btn.classList.remove('spinning');
+      if (customizeBtn) customizeBtn.style.opacity = '1';
     }
 
     function renderNewsFeed(articles, userTickers) {
