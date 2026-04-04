@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-04-v65';
+    var APP_VERSION = '2026-04-04-v66';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -2863,25 +2863,17 @@
       color: rgba(255,255,255,0.4);
     }
 
-    /* ── Streak Counter — Duolingo-style dopamine ── */
+    /* ── Streak Counter — clean, no pill ── */
     .streak-container {
-      display: flex; align-items: center; gap: 6px;
-      background: rgba(37,37,37,0.9);
-      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(113,50,245,0.3);
-      border-radius: 9999px;
-      padding: 5px 12px;
+      display: flex; align-items: center; gap: 4px;
+      background: none; border: none; box-shadow: none;
+      padding: 0;
       cursor: pointer;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
       user-select: none; -webkit-user-select: none;
       -webkit-tap-highlight-color: transparent;
       flex-shrink: 0;
     }
-    .streak-container:active {
-      transform: scale(1.08);
-      box-shadow: 0 0 20px rgba(113,50,245,0.4);
-    }
+    .streak-container:active { transform: scale(1.08); }
     .streak-flame {
       font-size: 18px; line-height: 1;
       animation: flame-flicker 1.2s infinite alternate ease-in-out;
@@ -2891,7 +2883,7 @@
       font-variant-numeric: tabular-nums; line-height: 1;
     }
     .streak-label {
-      font-size: 10px; color: #9497A9;
+      font-size: 10px; color: rgba(148,151,169,0.5);
       text-transform: uppercase; letter-spacing: 0.5px; line-height: 1;
     }
     @keyframes flame-flicker {
@@ -2905,13 +2897,8 @@
     }
     .streak-count.pop { animation: streak-pop 400ms ease-out; }
     /* Streak zero state — dim until first claim */
-    .streak-container.streak-zero { opacity: 0.5; border-color: rgba(255,255,255,0.1); }
+    .streak-container.streak-zero { opacity: 0.4; }
     .streak-container.streak-zero .streak-flame { animation: none; }
-    /* Milestone glow at 7, 30, 100 */
-    .streak-container.streak-milestone {
-      border-color: rgba(255,183,77,0.5);
-      box-shadow: 0 0 16px rgba(255,183,77,0.25), 0 4px 12px rgba(0,0,0,0.3);
-    }
     @media (max-width: 768px) {
       .main-header .streak-container { display: none; }
     }
