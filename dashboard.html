@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-04-v64';
+    var APP_VERSION = '2026-04-04-v65';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -2862,6 +2862,59 @@
       font-size: 0.8rem;
       color: rgba(255,255,255,0.4);
     }
+
+    /* ── Streak Counter — Duolingo-style dopamine ── */
+    .streak-container {
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(37,37,37,0.9);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(113,50,245,0.3);
+      border-radius: 9999px;
+      padding: 5px 12px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      user-select: none; -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      flex-shrink: 0;
+    }
+    .streak-container:active {
+      transform: scale(1.08);
+      box-shadow: 0 0 20px rgba(113,50,245,0.4);
+    }
+    .streak-flame {
+      font-size: 18px; line-height: 1;
+      animation: flame-flicker 1.2s infinite alternate ease-in-out;
+    }
+    .streak-count {
+      font-size: 16px; font-weight: 700; color: #F0EFF5;
+      font-variant-numeric: tabular-nums; line-height: 1;
+    }
+    .streak-label {
+      font-size: 10px; color: #9497A9;
+      text-transform: uppercase; letter-spacing: 0.5px; line-height: 1;
+    }
+    @keyframes flame-flicker {
+      0%   { transform: scale(1) rotate(-6deg); }
+      100% { transform: scale(1.12) rotate(6deg); }
+    }
+    @keyframes streak-pop {
+      0%   { transform: scale(0.6); }
+      50%  { transform: scale(1.4); }
+      100% { transform: scale(1); }
+    }
+    .streak-count.pop { animation: streak-pop 400ms ease-out; }
+    /* Streak zero state — dim until first claim */
+    .streak-container.streak-zero { opacity: 0.5; border-color: rgba(255,255,255,0.1); }
+    .streak-container.streak-zero .streak-flame { animation: none; }
+    /* Milestone glow at 7, 30, 100 */
+    .streak-container.streak-milestone {
+      border-color: rgba(255,183,77,0.5);
+      box-shadow: 0 0 16px rgba(255,183,77,0.25), 0 4px 12px rgba(0,0,0,0.3);
+    }
+    @media (max-width: 768px) {
+      .main-header .streak-container { display: none; }
+    }
   </style>
   <!-- Meta Pixel Code -->
   <script>
@@ -3060,6 +3113,12 @@
     <div class="main-header">
       <button class="fm-header-back-btn" id="fmHeaderBackBtn" onclick="exitChartView()" aria-label="Back to Markets">&#x2190;</button>
       <h1 id="viewTitle">Home</h1>
+      <!-- Daily Streak Counter -->
+      <div id="streak-counter" class="streak-container" onclick="claimDailyStreak()">
+        <div class="streak-flame">&#x1F525;</div>
+        <div class="streak-count" id="streak-count">0</div>
+        <div class="streak-label">day streak</div>
+      </div>
       <button class="fm-widget-menu-btn" id="fmWidgetMenuBtn" onclick="toggleMobileFMMenu()" aria-label="Open Financial Markets menu">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
       </button>
@@ -4036,6 +4095,11 @@
     <div id="mobileHomeContent">
       <!-- Top bar: minimal, no wand — content starts immediately -->
       <div class="mobile-home-topbar" style="height:auto;padding:8px 16px 4px;">
+        <div id="streak-counter-mobile" class="streak-container streak-mobile" onclick="claimDailyStreak()">
+          <div class="streak-flame">&#x1F525;</div>
+          <div class="streak-count streak-count-mobile" id="streak-count-mobile">0</div>
+          <div class="streak-label">day streak</div>
+        </div>
         <div style="flex:1;"></div>
         <button class="mobile-info-btn" title="About WishPath">ⓘ</button>
       </div>
@@ -4551,6 +4615,86 @@
       } catch(e) {}
     }
 
+    // ── Daily Streak System ──
+    var _streakCount = 0;
+    var _streakLastDate = null;
+
+    function loadStreak() {
+      try {
+        var stored = JSON.parse(localStorage.getItem('wp_streak') || '{}');
+        _streakCount = stored.count || 0;
+        _streakLastDate = stored.lastDate || null;
+        // Check if streak is still alive (must have claimed yesterday or today)
+        if (_streakLastDate) {
+          var last = new Date(_streakLastDate);
+          var now = new Date();
+          var diffDays = Math.floor((now.setHours(0,0,0,0) - last.setHours(0,0,0,0)) / 86400000);
+          if (diffDays > 1) {
+            // Streak broken — reset
+            _streakCount = 0;
+            _streakLastDate = null;
+            saveStreakLocal();
+          }
+        }
+        updateStreakUI();
+      } catch(e) { _streakCount = 0; updateStreakUI(); }
+    }
+
+    function saveStreakLocal() {
+      try {
+        localStorage.setItem('wp_streak', JSON.stringify({ count: _streakCount, lastDate: _streakLastDate }));
+      } catch(e) {}
+    }
+
+    function claimDailyStreak() {
+      var today = new Date().toISOString().split('T')[0];
+      if (_streakLastDate === today) {
+        // Already claimed today — just do a little bounce
+        var flames = document.querySelectorAll('.streak-flame');
+        flames.forEach(function(f) { f.style.transform = 'scale(1.5)'; setTimeout(function() { f.style.transform = ''; }, 300); });
+        return;
+      }
+      // Check if continuing streak (claimed yesterday) or starting fresh
+      if (_streakLastDate) {
+        var last = new Date(_streakLastDate);
+        var now = new Date(today);
+        var diff = Math.floor((now - last) / 86400000);
+        if (diff > 1) _streakCount = 0; // Streak broken
+      }
+      _streakCount++;
+      _streakLastDate = today;
+      saveStreakLocal();
+      updateStreakUI();
+      // Pop animation on all streak count elements
+      document.querySelectorAll('.streak-count').forEach(function(el) {
+        el.classList.add('pop');
+        setTimeout(function() { el.classList.remove('pop'); }, 500);
+      });
+      // Flame celebration
+      document.querySelectorAll('.streak-flame').forEach(function(f) {
+        f.style.transform = 'scale(1.6)';
+        setTimeout(function() { f.style.transform = ''; }, 300);
+      });
+    }
+
+    function updateStreakUI() {
+      var counts = document.querySelectorAll('.streak-count');
+      counts.forEach(function(el) { el.textContent = _streakCount; });
+      // Zero state styling
+      var containers = document.querySelectorAll('.streak-container');
+      containers.forEach(function(c) {
+        c.classList.toggle('streak-zero', _streakCount === 0);
+        c.classList.toggle('streak-milestone', _streakCount === 7 || _streakCount === 30 || _streakCount === 100 || _streakCount === 365);
+      });
+      // Update label for milestones
+      var labels = document.querySelectorAll('.streak-label');
+      if (_streakCount >= 100) {
+        labels.forEach(function(l) { l.textContent = 'day streak!'; });
+      } else {
+        labels.forEach(function(l) { l.textContent = 'day streak'; });
+      }
+    }
+
     function checkAgentLimit() {
       if (userIsPro) return true;
       if (agentMessagesUsed >= FREE_MESSAGE_LIMIT) {
@@ -4578,6 +4722,7 @@
       }
       await loadUserPlan();
       if (userIsPro) document.getElementById('planBadge').textContent = 'Pro';
+      loadStreak();
       loadWishes();
       // Auto-load markets data so it's ready when user taps Markets tab
       refreshMarkets();
