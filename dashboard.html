@@ -10828,8 +10828,8 @@
     function selectTicker(item, input, dropdown) {
       input.value = item.getAttribute('data-symbol');
       dropdown.style.display = 'none';
-      // Focus next input (quantity)
-      var scope = input.closest('.add-holding-row') || input.parentElement;
+      // Focus next input (quantity) — search up through modal or inline row
+      var scope = input.closest('.holding-edit-fields') || input.closest('.add-holding-row') || input.closest('.holding-action-sheet') || input.parentElement;
       var next = scope.querySelectorAll('input');
       for (var i = 0; i < next.length; i++) {
         if (next[i] === input && next[i + 1]) { next[i + 1].focus(); break; }
@@ -10837,9 +10837,7 @@
     }
 
     // Init autocomplete on all symbol inputs
-    initTickerAutocomplete('holdingSymbolInput');
-    initTickerAutocomplete('fmHoldingSymbolInput');
-    initTickerAutocomplete('mobileHoldingSymbol');
+    initTickerAutocomplete('holdingEditSymbol');
     initTickerAutocomplete('watchlistAddInput');
     initTickerAutocomplete('fmWatchlistAddInput');
 
