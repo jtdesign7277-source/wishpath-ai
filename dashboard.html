@@ -6597,7 +6597,7 @@
       if (msgs && btn) {
         msgs.addEventListener('scroll', function() {
           var gap = msgs.scrollHeight - msgs.scrollTop - msgs.clientHeight;
-          btn.classList.toggle('visible', gap > 120);
+          btn.classList.toggle('visible', gap > 300);
         });
       }
     })();
