@@ -1283,6 +1283,21 @@
       .cs-gallery-grid { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
       .cs-source-btn { display: flex; align-items: center; gap: 10px; width: 100%; padding: 12px 14px; margin-bottom: 8px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: rgba(255,255,255,0.85); font-size: 13px; font-weight: 500; font-family: 'IBM Plex Sans', system-ui, sans-serif; cursor: pointer; transition: all 0.15s ease; -webkit-tap-highlight-color: transparent; text-align: left; }
       .cs-source-btn:active { transform: scale(0.97); border-color: rgba(120,80,220,0.3); background: rgba(120,80,220,0.08); }
+      /* ── Custom Data Entry Form ── */
+      .cs-data-form { margin-top: 12px; padding: 14px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; }
+      .cs-data-form-title { font-size: 12px; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; margin-bottom: 10px; }
+      .cs-data-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+      .cs-data-row input { flex: 1; padding: 10px 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; color: #fff; font-size: 14px; font-family: inherit; outline: none; transition: border-color 0.15s; }
+      .cs-data-row input:focus { border-color: rgba(120,80,220,0.5); }
+      .cs-data-row input::placeholder { color: rgba(255,255,255,0.25); }
+      .cs-data-row .cs-label-input { flex: 2; }
+      .cs-data-row .cs-value-input { flex: 1; text-align: right; }
+      .cs-data-row .cs-remove-btn { width: 32px; height: 32px; flex-shrink: 0; background: none; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; color: rgba(255,255,255,0.3); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: all 0.15s; -webkit-tap-highlight-color: transparent; }
+      .cs-data-row .cs-remove-btn:active { background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.3); color: #ef4444; }
+      .cs-add-row-btn { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 8px; background: none; border: 1px dashed rgba(255,255,255,0.1); border-radius: 10px; color: rgba(255,255,255,0.4); font-size: 13px; font-family: inherit; cursor: pointer; transition: all 0.15s; margin-bottom: 12px; -webkit-tap-highlight-color: transparent; }
+      .cs-add-row-btn:active { border-color: rgba(120,80,220,0.3); color: rgba(120,80,220,0.7); }
+      .cs-generate-btn { width: 100%; padding: 12px; background: linear-gradient(135deg, rgb(120,80,220), #3b82f6); border: none; border-radius: 12px; color: #fff; font-size: 15px; font-weight: 700; font-family: inherit; cursor: pointer; transition: all 0.15s; box-shadow: 0 4px 16px rgba(120,80,220,0.3); -webkit-tap-highlight-color: transparent; }
+      .cs-generate-btn:active { transform: scale(0.97); opacity: 0.9; }
       .cs-source-icon { font-size: 18px; flex-shrink: 0; }
       .cs-save-bar { display: flex; align-items: center; gap: 10px; padding: 10px 0; margin-top: 8px; }
       .cs-save-name-input { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 10px 14px; color: #fff; font-size: 14px; font-family: 'IBM Plex Sans', system-ui, sans-serif; outline: none; transition: border-color 0.15s ease; }
@@ -9756,9 +9771,11 @@
           }
         });
       }
-      // Manual / custom option
-      sourceOptions += '<button class="cs-source-btn" onclick="primeChartStudioTemplateAssist(\'' + escapedName + '\', true, true)"><span class="cs-source-icon">&#x270F;&#xFE0F;</span> Enter my own data</button>';
+      // Manual / custom data entry
+      sourceOptions += '<button class="cs-source-btn" onclick="showCustomDataForm(\'' + escapedName + '\')"><span class="cs-source-icon">&#x270F;&#xFE0F;</span> Enter my own data</button>';
       sourceOptions += '</div>';
+      // Placeholder for the custom data form (shown on demand)
+      sourceOptions += '<div id="csCustomDataForm" style="display:none;"></div>';
 
       msgs.innerHTML = '<div style="margin-bottom:8px;"><button class="portfolio-coach-chip" onclick="showCSGallery()" style="font-size:12px;padding:4px 12px;">&#x2190; All Templates</button></div>' +
         '<div class="msg ai"><strong>' + template.name.replace(/</g, '&lt;') + ' template loaded.</strong><br>' +
@@ -9796,6 +9813,99 @@
       }
       _activeChartStudioTemplate = templateName;
       sendChartStudioMsg();
+    }
+
+    // ── Custom Data Entry Form ──
+    var _csFormTemplateName = '';
+    function showCustomDataForm(templateName) {
+      _csFormTemplateName = templateName;
+      var container = document.getElementById('csCustomDataForm');
+      if (!container) return;
+      // Figure out default labels from the template
+      var template = getTemplateByName(templateName);
+      var defaults = getTemplateDefaultLabels(template);
+      var rowsHtml = defaults.map(function(d, i) {
+        return buildDataRowHtml(i, d.label, d.value);
+      }).join('');
+      container.style.display = '';
+      container.innerHTML =
+        '<div class="cs-data-form">' +
+          '<div class="cs-data-form-title">Enter your data</div>' +
+          '<div id="csDataRows">' + rowsHtml + '</div>' +
+          '<button class="cs-add-row-btn" onclick="addCustomDataRow()">+ Add row</button>' +
+          '<button class="cs-generate-btn" onclick="generateCustomChart()">Generate Chart</button>' +
+        '</div>';
+      container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    function buildDataRowHtml(idx, label, value) {
+      return '<div class="cs-data-row">' +
+        '<input class="cs-label-input" type="text" placeholder="Category name" value="' + (label || '') + '" />' +
+        '<input class="cs-value-input" type="number" placeholder="$0" value="' + (value || '') + '" />' +
+        '<button class="cs-remove-btn" onclick="this.parentNode.remove()">×</button>' +
+      '</div>';
+    }
+    function addCustomDataRow() {
+      var container = document.getElementById('csDataRows');
+      if (!container) return;
+      var count = container.querySelectorAll('.cs-data-row').length;
+      container.insertAdjacentHTML('beforeend', buildDataRowHtml(count, '', ''));
+      var inputs = container.querySelectorAll('.cs-data-row:last-child input');
+      if (inputs[0]) inputs[0].focus();
+    }
+    function getTemplateDefaultLabels(template) {
+      if (!template) return [{ label: '', value: '' }, { label: '', value: '' }, { label: '', value: '' }];
+      var config = buildTemplateChartConfig(template);
+      // For pie/donut charts, extract from series data
+      if (config.series && config.series[0] && config.series[0].data && config.series[0].data[0] && config.series[0].data[0].name) {
+        return config.series[0].data.map(function(d) { return { label: d.name, value: '' }; });
+      }
+      // For bar/column/line, extract from categories
+      if (config.xAxis && config.xAxis.categories) {
+        return config.xAxis.categories.map(function(c) { return { label: c, value: '' }; });
+      }
+      // For multi-series, use series names
+      if (config.series && config.series.length > 1) {
+        return config.series.map(function(s) { return { label: s.name, value: '' }; });
+      }
+      return [{ label: '', value: '' }, { label: '', value: '' }, { label: '', value: '' }];
+    }
+    function generateCustomChart() {
+      var rows = document.querySelectorAll('#csDataRows .cs-data-row');
+      var data = [];
+      rows.forEach(function(row) {
+        var inputs = row.querySelectorAll('input');
+        var label = (inputs[0] || {}).value || '';
+        var val = parseFloat((inputs[1] || {}).value) || 0;
+        if (label.trim()) data.push({ label: label.trim(), value: val });
+      });
+      if (!data.length) return;
+      var template = getTemplateByName(_csFormTemplateName);
+      if (!template) return;
+      _activeChartStudioTemplate = _csFormTemplateName;
+      // Build a chart config from user data
+      var config = buildTemplateChartConfig(template);
+      // Replace placeholder data with user's real data
+      if (config.series && config.series[0] && config.series[0].data && config.series[0].data[0] && config.series[0].data[0].name) {
+        // Pie/donut chart
+        config.series[0].data = data.map(function(d) { return { name: d.label, y: d.value }; });
+      } else if (config.xAxis && config.xAxis.categories) {
+        // Bar/column/line chart
+        config.xAxis.categories = data.map(function(d) { return d.label; });
+        if (config.series && config.series[0]) config.series[0].data = data.map(function(d) { return d.value; });
+      }
+      // Update title
+      config.title = { text: template.name };
+      config.subtitle = { text: 'Your custom data' };
+      // Render
+      renderHighchart('chartStudioChartArea', config);
+      // Show save bar
+      showCSSaveBar();
+      // Hide the form
+      var form = document.getElementById('csCustomDataForm');
+      if (form) form.style.display = 'none';
+      // Scroll to chart
+      var chartArea = document.getElementById('chartStudioChartArea');
+      if (chartArea) chartArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     function primeChartStudioTemplateAssist(name, preserveExistingText, focusInput) {
