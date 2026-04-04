@@ -2924,7 +2924,7 @@
           <div id="sidebarFMWatchlists" style="border-top:1px solid rgba(255,255,255,0.06);margin-top:6px;padding-top:6px;"></div>
         </div>
       </div>
-      <div class="sidebar-section" id="savedTemplatesLabel" style="display:none;">Saved Templates</div>
+      <div class="sidebar-section" id="savedTemplatesLabel" style="display:none;">📊 Saved Charts</div>
       <div id="savedTemplatesList"></div>
       <div class="sidebar-section" id="savedChatsLabel" style="display:none;">Saved Chats</div>
       <div id="savedChatsList"></div>
@@ -7585,9 +7585,9 @@
               }
             },
             saveToNotesItem: {
-              text: 'Save to Notes',
+              text: 'Save Chart',
               onclick: function() {
-                if (this && this.renderTo && this.renderTo.id) saveChartToNotes(this.renderTo.id);
+                if (this && this.renderTo && this.renderTo.id) saveChartToSavedCharts(this.renderTo.id);
               }
             },
             exitChartItem: {
@@ -7617,7 +7617,7 @@
         setTimeout(showCSSaveBar, 50);
       }
       actionsHtml +=
-        '<button class="chart-action-btn" onclick="saveChartToNotes(\'' + containerId + '-chart\')">&#x1F4DD; Save to Notes</button>' +
+        '<button class="chart-action-btn" onclick="saveChartToSavedCharts(\'' + containerId + '-chart\')">&#x1F4CA; Save Chart</button>' +
         '<button class="chart-action-btn" onclick="emailChartToMe(\'' + containerId + '-chart\')">&#x1F4E7; Email to Me</button>';
       chartActions.innerHTML = actionsHtml;
       el.appendChild(chartActions);
@@ -7644,6 +7644,22 @@
         await sb.from('user_notes').insert({ user_id: user.id, title: 'Chart Studio: ' + title, content: 'Chart exported from WishPath Chart Studio.\n\nData: ' + JSON.stringify(chart.series.map(function(s) { return { name: s.name, data: s.options.data }; })) });
         alert('Saved to Notes!');
       } catch(e) { alert('Save failed: ' + e.message); }
+    }
+    async function saveChartToSavedCharts(chartId) {
+      var chart = Highcharts.charts.find(function(c) { return c && c.renderTo && c.renderTo.id === chartId; });
+      if (!chart) { showToast('No chart to save.'); return; }
+      var record = buildSavedChartRecord(chart, _activeChartStudioTemplate);
+      savedChartTemplates = savedChartTemplates.filter(function(item) { return item.id !== record.id; });
+      savedChartTemplates.unshift(record);
+      try {
+        await persistSavedChartTemplate(record);
+        renderSavedChartTemplates();
+        renderSidebarSavedChartTemplates();
+        showToast('Chart saved!');
+      } catch(e) {
+        console.error('Save chart error:', e);
+        showToast('Unable to save chart.');
+      }
     }
     async function emailChartToMe(chartId) {
       var chart = Highcharts.charts.find(function(c) { return c && c.renderTo && c.renderTo.id === chartId; });
@@ -9161,6 +9177,70 @@
     }
 
     function openSavedChartTemplate(savedId) {
+      var entry = savedChartTemplates.find(function(item) { return item.id === savedId; });
+      if (!entry) return;
+      var hydrated = applySavedTemplateInteractions(entry);
+      _activeChartStudioTemplate = hydrated.templateName || null;
+      chartStudioHistory = [];
+      // Close sidebar on mobile
+      if (window.innerWidth <= 768) toggleMobileSidebar();
+      // Render fullscreen overlay
+      openSavedChartFullscreen(hydrated, entry);
+    }
+
+    function openSavedChartFullscreen(hydrated, entry) {
+      // Remove existing overlay if any
+      var existing = document.getElementById('savedChartFSOverlay');
+      if (existing) existing.remove();
+
+      var overlay = document.createElement('div');
+      overlay.id = 'savedChartFSOverlay';
+      overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:#0d0f1a;z-index:10000;display:flex;flex-direction:column;overflow:hidden;';
+
+      var title = getSavedChartTitle(entry).replace(/</g, '&lt;');
+      var templateLabel = (entry.templateName || 'Custom Chart').replace(/</g, '&lt;');
+
+      overlay.innerHTML =
+        '<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:rgba(255,255,255,0.04);border-bottom:1px solid rgba(255,255,255,0.08);flex-shrink:0;">' +
+          '<div style="display:flex;flex-direction:column;">' +
+            '<span style="font-size:1rem;font-weight:600;color:#fff;">' + title + '</span>' +
+            '<span style="font-size:0.75rem;color:rgba(255,255,255,0.5);margin-top:2px;">' + templateLabel + '</span>' +
+          '</div>' +
+          '<div style="display:flex;gap:8px;align-items:center;">' +
+            '<button onclick="editSavedChartInStudio(\'' + entry.id + '\')" style="background:rgba(168,85,247,0.15);color:#c084fc;border:1px solid rgba(168,85,247,0.3);border-radius:8px;padding:6px 14px;font-size:0.8rem;cursor:pointer;">Edit in Chart Studio</button>' +
+            '<button onclick="closeSavedChartFullscreen()" style="background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.12);border-radius:8px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;cursor:pointer;">&times;</button>' +
+          '</div>' +
+        '</div>' +
+        '<div id="savedChartFSContainer" style="flex:1;padding:12px;overflow:auto;"></div>';
+
+      document.body.appendChild(overlay);
+
+      // Render chart into the fullscreen container
+      setTimeout(function() {
+        var container = document.getElementById('savedChartFSContainer');
+        if (!container) return;
+        container.innerHTML = '<div id="savedChartFSRender" style="width:100%;height:100%;min-height:300px;"></div>';
+        var config = JSON.parse(JSON.stringify(hydrated.config || {}));
+        // Override chart dimensions for fullscreen
+        config.chart = config.chart || {};
+        config.chart.height = null; // Let it fill container
+        config.chart.backgroundColor = 'transparent';
+        config.credits = { enabled: false };
+        try {
+          Highcharts.chart('savedChartFSRender', config);
+        } catch(e) {
+          container.innerHTML = '<div style="color:var(--text-dim);text-align:center;padding:40px;">Unable to render this chart. Try editing it in Chart Studio.</div>';
+        }
+      }, 60);
+    }
+
+    function closeSavedChartFullscreen() {
+      var overlay = document.getElementById('savedChartFSOverlay');
+      if (overlay) overlay.remove();
+    }
+
+    function editSavedChartInStudio(savedId) {
+      closeSavedChartFullscreen();
       var entry = savedChartTemplates.find(function(item) { return item.id === savedId; });
       if (!entry) return;
       var hydrated = applySavedTemplateInteractions(entry);
