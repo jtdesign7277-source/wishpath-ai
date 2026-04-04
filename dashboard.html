@@ -1949,6 +1949,15 @@
       .add-holding-input { width: 100% !important; font-size: 16px !important; }
       .add-holding-btn:not(.add-holding-btn-small) { width: 100%; font-size: 16px !important; }
       .add-holding-row .ticker-ac-anchor { width: 100%; }
+      /* Mobile holdings table — fit screen without horizontal scroll */
+      .holdings-table { min-width: 0 !important; }
+      .holdings-table th, .holdings-table td { padding: 10px 6px !important; font-size: 12px !important; }
+      .holdings-table th:nth-child(6), .holdings-table td:nth-child(6) { display: none; }
+      #holdingsTableWrap, #mobileHoldingsTableWrap { overflow-x: hidden !important; }
+      #fmPortfolioContent { overflow-x: hidden; }
+      #holdingsTable, #fmHoldingsTable, #mobileHoldingsTable { min-width: 0 !important; }
+      .holding-symbol-badge, .holding-symbol-btn { font-size: 11px !important; padding: 3px 7px !important; }
+      .qty-label { display: none; }
       .portfolio-coach-input { font-size: 16px !important; }
       .portfolio-coach-suggestions { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
       .portfolio-coach-chip { white-space: nowrap; flex-shrink: 0; }
@@ -3027,7 +3036,7 @@
           </div>
 
           <div id="holdingsTableWrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:16px;">
-            <table class="holdings-table" id="holdingsTable" style="display:none;min-width:640px;">
+            <table class="holdings-table" id="holdingsTable" style="display:none;">
               <thead>
                 <tr>
                   <th>Symbol</th>
@@ -3116,7 +3125,7 @@
             <button class="add-holding-btn add-holding-btn-small" onclick="openAddHoldingModal()">+ Add</button>
           </div>
           <table class="holdings-table" id="fmHoldingsTable" style="display:none;">
-            <thead><tr><th>Symbol</th><th>Qty</th><th>Price</th><th>Value</th><th>Day P&L</th><th>Total P&L</th><th></th></tr></thead>
+            <thead><tr><th>Symbol</th><th>Qty</th><th>Price</th><th>Value</th><th>Day P&L</th><th>Total P&L</th></tr></thead>
             <tbody id="fmHoldingsBody"></tbody>
           </table>
           <div id="fmHoldingsEmpty" style="text-align:center;padding:32px;color:var(--text-dim);font-size:0.88rem;">No holdings yet. Add a stock or crypto above.</div>
@@ -8624,7 +8633,7 @@
         if (hasPrice && h.avgCost > 0) { totalPL += totalItemPL; totalCostBasis += costBasis; }
         var dayClass = dayPLVal > 0 ? 'up' : dayPLVal < 0 ? 'down' : 'flat';
         var totalClass = totalItemPL > 0 ? 'up' : totalItemPL < 0 ? 'down' : 'flat';
-        return '<tr onclick="openHoldingActions(' + i + ')" style="cursor:pointer;"><td><button class="holding-symbol-btn" onclick="openHoldingActions(' + i + ')">' + h.symbol + '</button></td><td>' + h.qty + ' shares</td><td>' + (hasPrice ? '$' + formatNum(price) : '--') + '</td><td style="font-weight:600;color:#fff;">' + (hasPrice ? '$' + formatNum(value) : '--') + '</td><td class="stock-change ' + dayClass + '">' + (hasPrice ? (dayPLVal>0?'+':'') + '$' + formatNum(dayPLVal) : '--') + '</td><td class="stock-change ' + totalClass + '">' + (hasPrice && h.avgCost>0 ? (totalItemPL>0?'+':'') + '$' + formatNum(totalItemPL) : '--') + '</td></tr>';
+        return '<tr onclick="openHoldingActions(' + i + ')" style="cursor:pointer;"><td><button class="holding-symbol-btn" onclick="openHoldingActions(' + i + ')">' + h.symbol + '</button></td><td>' + h.qty + '<span class="qty-label"> shares</span></td><td>' + (hasPrice ? '$' + formatNum(price) : '--') + '</td><td style="font-weight:600;color:#fff;">' + (hasPrice ? '$' + formatNum(value) : '--') + '</td><td class="stock-change ' + dayClass + '">' + (hasPrice ? (dayPLVal>0?'+':'') + '$' + formatNum(dayPLVal) : '--') + '</td><td class="stock-change ' + totalClass + '">' + (hasPrice && h.avgCost>0 ? (totalItemPL>0?'+':'') + '$' + formatNum(totalItemPL) : '--') + '</td></tr>';
       }).join('');
 
       var tvEl = document.getElementById(totalValId); if (tvEl) tvEl.textContent = '$' + formatNum(totalValue);
@@ -8906,7 +8915,7 @@
           '<button class="add-holding-btn add-holding-btn-small" onclick="openAddHoldingModal()">+ Add</button>' +
         '</div>' +
         '<div id="mobileHoldingsTableWrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:16px;">' +
-          '<table class="holdings-table" id="mobileHoldingsTable" style="display:none;min-width:560px;">' +
+          '<table class="holdings-table" id="mobileHoldingsTable" style="display:none;">' +
             '<thead><tr><th>Symbol</th><th>Qty</th><th>Price</th><th>Value</th><th>Day P&L</th></tr></thead>' +
             '<tbody id="mobileHoldingsBody"></tbody>' +
           '</table>' +
