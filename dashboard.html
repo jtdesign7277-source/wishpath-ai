@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-04-v59';
+    var APP_VERSION = '2026-04-04-v60';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -230,6 +230,281 @@
     .note-save-bar { display: flex; gap: 8px; align-items: center; padding-top: 12px; flex-shrink: 0; }
     .note-save-btn { padding: 10px 24px; background: var(--accent); color: var(--bg); border: none; border-radius: 8px; font: inherit; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
     .note-save-status { font-size: 0.78rem; color: var(--text-dim); }
+
+    /* Notes full-screen view */
+    #notesView { padding: 0 !important; }
+    .notes-list {
+      position: fixed;
+      inset: 0;
+      z-index: 602;
+      background: var(--bg, #0a0a0a);
+      display: flex;
+      flex-direction: column;
+    }
+    .notes-list.hidden { display: none; }
+    .notes-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: calc(max(12px, env(safe-area-inset-top)) + 4px) 16px 10px;
+      flex-shrink: 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .notes-back-btn {
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.6);
+      cursor: pointer;
+      padding: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+      border-radius: 10px;
+      transition: all 0.15s ease;
+    }
+    .notes-back-btn:active { background: rgba(255,255,255,0.06); color: #fff; }
+    .notes-topbar-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.85);
+      flex: 1;
+      text-align: center;
+    }
+    .notes-new-btn {
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.6);
+      cursor: pointer;
+      padding: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+      border-radius: 10px;
+      transition: all 0.15s ease;
+    }
+    .notes-new-btn:active { background: rgba(255,255,255,0.06); color: #fff; }
+    .notes-scroll {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .notes-list-empty {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 40px 20px;
+      color: rgba(255,255,255,0.5);
+    }
+    .notes-list-empty-icon {
+      font-size: 2.5rem;
+      opacity: 0.5;
+    }
+    .notes-list-empty-text {
+      font-size: 0.95rem;
+      text-align: center;
+    }
+    .notes-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      cursor: pointer;
+      transition: background 0.15s ease;
+      gap: 12px;
+    }
+    .notes-item:active { background: rgba(255,255,255,0.04); }
+    .notes-item-info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .notes-item-title {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: rgba(255,255,255,0.85);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .notes-item-preview {
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.35);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .notes-item-time {
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.35);
+    }
+    .notes-item-chevron {
+      color: rgba(255,255,255,0.25);
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+
+    /* Notes editor fullscreen */
+    .notes-editor {
+      position: fixed;
+      inset: 0;
+      z-index: 601;
+      background: var(--bg, #0a0a0a);
+      display: none;
+      flex-direction: column;
+    }
+    .notes-editor.active { display: flex; }
+    .notes-editor-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: calc(max(12px, env(safe-area-inset-top)) + 4px) 16px 10px;
+      flex-shrink: 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .notes-editor-back-btn {
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.6);
+      cursor: pointer;
+      padding: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+      border-radius: 10px;
+      transition: all 0.15s ease;
+    }
+    .notes-editor-back-btn:active { background: rgba(255,255,255,0.06); color: #fff; }
+    .notes-editor-topbar-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.85);
+    }
+    .notes-editor-more-btn {
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.6);
+      cursor: pointer;
+      padding: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+      border-radius: 10px;
+      transition: all 0.15s ease;
+    }
+    .notes-editor-more-btn:active { background: rgba(255,255,255,0.06); color: #fff; }
+    .notes-editor-body {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 0 16px;
+    }
+    .notes-editor-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--text);
+      background: transparent;
+      border: none;
+      outline: none;
+      padding: 20px 0 8px 0;
+      font-family: inherit;
+      width: 100%;
+      margin-bottom: 12px;
+      transition: all 0.3s ease;
+    }
+    .notes-editor-title:focus { color: rgba(120,80,220,0.9); }
+    .notes-editor-title::placeholder { color: rgba(255,255,255,0.25); }
+    .notes-editor-content {
+      font-size: 0.95rem;
+      line-height: 1.7;
+      color: rgba(255,255,255,0.8);
+      background: transparent;
+      border: none;
+      outline: none;
+      padding: 0;
+      font-family: inherit;
+      width: 100%;
+      resize: none;
+      min-height: 200px;
+      transition: all 0.3s ease;
+    }
+    .notes-editor-content:focus { color: rgba(255,255,255,0.95); }
+    .notes-editor-content::placeholder { color: rgba(255,255,255,0.2); }
+    .notes-editor-meta {
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.25);
+      margin-top: 24px;
+      padding-bottom: 12px;
+    }
+    .notes-ai-bar {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      padding: 12px 12px calc(12px + env(safe-area-inset-bottom)) 12px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      flex-shrink: 0;
+      background: var(--bg, #0a0a0a);
+    }
+    .notes-ai-wrap {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: flex-end;
+      background: #2a2a2a;
+      border: 1px solid rgba(120,80,220,0.2);
+      border-radius: 24px;
+      animation: inputPulse 2s ease-in-out infinite;
+      transition: all 0.3s ease;
+    }
+    .notes-ai-wrap:focus-within {
+      border-color: rgba(120,80,220,0.5);
+      box-shadow: 0 0 12px rgba(120,80,220,0.15);
+      animation: none;
+    }
+    .notes-ai-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      border-radius: 24px;
+      color: rgba(255,255,255,0.9);
+      font: inherit;
+      font-size: 15px;
+      padding: 10px 16px;
+      outline: none;
+      resize: none;
+      min-height: 42px;
+      max-height: 120px;
+      overflow-y: auto;
+      line-height: 1.4;
+    }
+    .notes-ai-input::placeholder { color: rgba(255,255,255,0.35); }
+    .notes-ai-send {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: var(--kraken-gradient-cta, linear-gradient(135deg, rgb(120,80,220), rgb(100,60,200)));
+      color: #fff;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      -webkit-tap-highlight-color: transparent;
+      box-shadow: 0 2px 12px rgba(120,80,220,0.3);
+      transition: opacity 0.15s ease, transform 0.1s ease;
+      margin: 4px 4px 4px 0;
+    }
+    .notes-ai-send:active { opacity: 0.75; transform: scale(0.96); }
 
     /* New Wish */
     .wish-form-card { background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 28px; box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.05); }
@@ -2760,28 +3035,49 @@
         </table>
       </div>
 
-      <!-- Notes View (split: AI agent left, note editor right) -->
+      <!-- Notes View (full-screen) -->
       <div class="view" id="notesView">
-        <div class="coach-layout">
-          <div class="coach-left">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-shrink:0;">
-              <select class="coach-select" id="noteSelect" style="margin-bottom:0;flex:1;"><option value="">Select a note...</option></select>
-              <button class="new-page-btn" onclick="createNewNote()" style="font-size:0.78rem;padding:8px 14px;white-space:nowrap;">+ New</button>
-            </div>
-            <div class="coach-messages" id="noteCoachMessages">
-              <div class="msg ai">I'm your notes assistant. Select or create a note on the right, and I can help you write, brainstorm, or organize your thoughts. Just ask!</div>
-            </div>
-            <div class="coach-input-row">
-              <button class="save-btn" id="noteCoachSaveBtn" onclick="manualSaveNoteConvo()" title="Save conversation">&#x1F4BE;</button>
-              <span style="font-size:16px;flex-shrink:0;padding-left:4px;">✨</span>
-              <textarea class="coach-input" id="noteCoachInput" placeholder="Ask AI" rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendNoteCoachMsg();}"></textarea>
-              <button class="coach-send" id="noteCoachSendBtn" onclick="sendNoteCoachMsg()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
+        <!-- Notes List Page -->
+        <div class="notes-list" id="notesList">
+          <div class="notes-topbar">
+            <button class="notes-back-btn" onclick="closeNotesList();toggleMobileSidebar();">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            </button>
+            <span class="notes-topbar-title">Notes</span>
+            <button class="notes-new-btn" onclick="startNewNote()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+          </div>
+          <div class="notes-scroll" id="notesListScroll">
+            <div class="notes-list-empty" id="notesListEmpty">
+              <div class="notes-list-empty-icon">📝</div>
+              <div class="notes-list-empty-text">No notes yet</div>
             </div>
           </div>
-          <div class="drag-handle-bar" data-drag-handle><div class="drag-handle-pill"></div></div>
-          <div class="coach-right-wrapper">
-            <div class="coach-right" id="noteEditorPanel">
-              <div class="coach-right-empty">Select a note or create a new one.</div>
+        </div>
+
+        <!-- Notes Editor View -->
+        <div class="notes-editor" id="notesEditor">
+          <div class="notes-editor-topbar">
+            <button class="notes-editor-back-btn" onclick="closeNotesEditor()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            </button>
+            <span class="notes-editor-topbar-title" id="notesEditorTitle">Note</span>
+            <button class="notes-editor-more-btn" id="notesEditorMoreBtn" onclick="toggleNoteMenu(event)">
+              <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
+            </button>
+          </div>
+          <div class="notes-editor-body">
+            <input class="notes-editor-title" id="notesTitle" placeholder="Untitled note..." />
+            <textarea class="notes-editor-content" id="notesContent" placeholder="Start writing..."></textarea>
+            <div class="notes-editor-meta" id="notesMeta"></div>
+          </div>
+          <div class="notes-ai-bar">
+            <div class="notes-ai-wrap">
+              <textarea class="notes-ai-input" id="notesAIInput" placeholder="Ask AI" rows="1" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendNotesAIMsg();}"></textarea>
+              <button class="notes-ai-send" onclick="sendNotesAIMsg()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+              </button>
             </div>
           </div>
         </div>
@@ -3792,7 +4088,7 @@
       document.getElementById('viewTitle').textContent = viewTitles[view] || view;
       if (view === 'wishes') closeViewer();
       if (view === 'library') renderLibrary();
-      if (view === 'notes') renderNotesList();
+      if (view === 'notes') { renderNotesListPage(); document.getElementById('notesList').classList.remove('hidden'); document.getElementById('notesEditor').classList.remove('active'); }
       if (view === 'todos') renderTodoSelect();
       if (view === 'cc') loadCommandCenters();
       if (view === 'newwish') {
@@ -4272,171 +4568,171 @@
       window.libraryItems = items.map(function(item) { return item.action; });
     }
 
-    // ── Notes ──
+    // ── Notes (full-screen) ──
     var currentNoteId = null;
+    var notesAIHistory = [];
 
-    async function renderNotesList() {
-      var sel = document.getElementById('noteSelect');
+    async function renderNotesListPage() {
+      var scrollEl = document.getElementById('notesListScroll');
       try {
         var sb = getSupabase();
         var { data } = await sb.from('user_notes').select('*').eq('user_id', currentUserId).order('updated_at', { ascending: false });
         if (!data || data.length === 0) {
-          sel.innerHTML = '<option value="">No notes yet — click + New</option>';
+          scrollEl.innerHTML = '<div class="notes-list-empty"><div class="notes-list-empty-icon">📝</div><div class="notes-list-empty-text">No notes yet</div></div>';
           return;
         }
-        window._notesData = data;
-        sel.innerHTML = data.map(function(n) {
-          return '<option value="' + n.id + '"' + (n.id === currentNoteId ? ' selected' : '') + '>' + (n.title || 'Untitled') + '</option>';
+        scrollEl.innerHTML = data.map(function(n) {
+          var preview = n.content ? n.content.substring(0, 50) : 'No content';
+          var timeAgo = getTimeAgo(new Date(n.updated_at));
+          return '<div class="notes-item" onclick="openNotesEditor(' + n.id + ')">' +
+            '<div class="notes-item-info">' +
+              '<div class="notes-item-title">' + (n.title || 'Untitled').replace(/</g,'&lt;') + '</div>' +
+              '<div class="notes-item-preview">' + preview.replace(/</g,'&lt;') + '</div>' +
+            '</div>' +
+            '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">' +
+              '<div class="notes-item-time">' + timeAgo + '</div>' +
+              '<div class="notes-item-chevron">></div>' +
+            '</div>' +
+          '</div>';
         }).join('');
-      } catch(e) {}
+      } catch(e) { console.error('Error rendering notes list:', e); }
     }
 
-    document.getElementById('noteSelect').addEventListener('change', function() {
-      if (this.value) openNote(this.value);
-    });
+    function closeNotesList() {
+      document.getElementById('notesList').classList.add('hidden');
+    }
 
-    async function createNewNote() {
+    async function startNewNote() {
       var sb = getSupabase();
-      var { data, error } = await sb.from('user_notes').insert({ user_id: currentUserId, title: 'Untitled', content: '' }).select('id').single();
-      if (data) {
-        showView('notes');
-        openNote(data.id);
-        renderNotesList();
-      }
+      try {
+        var { data, error } = await sb.from('user_notes').insert({ user_id: currentUserId, title: 'Untitled', content: '' }).select('id').single();
+        if (error) throw error;
+        if (data) {
+          showView('notes');
+          await openNotesEditor(data.id);
+          renderNotesListPage();
+        }
+      } catch(e) { console.error('Error creating note:', e); alert('Failed to create note'); }
     }
 
-    async function openNote(noteId) {
+    async function openNotesEditor(noteId) {
       currentNoteId = noteId;
       var sb = getSupabase();
-      var { data } = await sb.from('user_notes').select('*').eq('id', noteId).single();
-      if (!data) return;
+      try {
+        var { data } = await sb.from('user_notes').select('*').eq('id', noteId).single();
+        if (!data) return;
 
-      var created = new Date(data.created_at).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
-      var updated = new Date(data.updated_at).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+        document.getElementById('notesList').classList.add('hidden');
+        var editor = document.getElementById('notesEditor');
+        editor.classList.add('active');
 
-      var panel = document.getElementById('noteEditorPanel');
-      panel.innerHTML = '<div class="note-editor">' +
-        '<div style="font-size:0.75rem;color:var(--text-dim);margin-bottom:8px;">Created: ' + created + '</div>' +
-        '<div style="font-size:0.75rem;color:var(--text-dim);margin-bottom:16px;">Last saved: ' + updated + '</div>' +
-        '<input class="note-title-input" id="noteTitleInput" value="' + (data.title || '').replace(/"/g, '&quot;') + '" placeholder="Note title..." />' +
-        '<textarea class="note-body-input" id="noteBodyInput" placeholder="Start writing...">' + (data.content || '') + '</textarea>' +
-        '<div class="note-save-bar">' +
-          '<button class="note-save-btn" onclick="saveCurrentNote()">Save Note</button>' +
-          '<span class="note-save-status" id="noteSaveStatus"></span>' +
-          '<button onclick="deleteCurrentNote()" style="margin-left:auto;background:none;border:1px solid rgba(248,81,73,0.3);color:var(--red);padding:8px 16px;border-radius:8px;font:inherit;font-size:0.82rem;cursor:pointer;">Delete</button>' +
-        '</div>' +
-      '</div>';
-      // Update dropdown selection
-      document.getElementById('noteSelect').value = noteId;
+        // Load note content
+        document.getElementById('notesTitle').value = data.title || '';
+        document.getElementById('notesContent').value = data.content || '';
+        document.getElementById('notesEditorTitle').textContent = data.title || 'Note';
+
+        // Show metadata
+        var created = new Date(data.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        var updated = new Date(data.updated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        document.getElementById('notesMeta').textContent = 'Created: ' + created + ' · Updated: ' + updated;
+
+        notesAIHistory = [];
+      } catch(e) { console.error('Error opening note:', e); }
     }
 
-    async function openNoteInSplit(noteId) {
-      showView('notes');
-      await openNote(noteId);
-    }
-
-    async function openTodoInSplit(todoId) {
-      showView('todos');
-      await openTodoList(todoId);
+    function closeNotesEditor() {
+      // Auto-save first
+      if (currentNoteId) saveCurrentNote();
+      currentNoteId = null;
+      notesAIHistory = [];
+      document.getElementById('notesEditor').classList.remove('active');
+      document.getElementById('notesList').classList.remove('hidden');
+      renderNotesListPage();
     }
 
     async function saveCurrentNote() {
       if (!currentNoteId) return;
-      var title = document.getElementById('noteTitleInput').value.trim() || 'Untitled';
-      var content = document.getElementById('noteBodyInput').value;
+      var title = document.getElementById('notesTitle').value.trim() || 'Untitled';
+      var content = document.getElementById('notesContent').value;
       var sb = getSupabase();
-      await sb.from('user_notes').update({ title: title, content: content, updated_at: new Date().toISOString() }).eq('id', currentNoteId);
-      var status = document.getElementById('noteSaveStatus');
-      status.textContent = 'Saved!';
-      setTimeout(function() { status.textContent = ''; }, 2000);
-      renderNotesList();
+      try {
+        await sb.from('user_notes').update({ title: title, content: content, updated_at: new Date().toISOString() }).eq('id', currentNoteId);
+        document.getElementById('notesEditorTitle').textContent = title;
+      } catch(e) { console.error('Error saving note:', e); }
     }
 
-    var noteCoachHistory = [];
-    async function sendNoteCoachMsg() {
+    function toggleNoteMenu(e) {
+      e.preventDefault();
+      if (!confirm('Delete this note?')) return;
+      deleteCurrentNote();
+    }
+
+    async function deleteCurrentNote() {
+      if (!currentNoteId) return;
+      var sb = getSupabase();
+      try {
+        await sb.from('user_notes').delete().eq('id', currentNoteId);
+        closeNotesEditor();
+      } catch(e) { console.error('Error deleting note:', e); alert('Failed to delete note'); }
+    }
+
+    async function sendNotesAIMsg() {
       if (!checkAgentLimit()) return;
-      var input = document.getElementById('noteCoachInput');
+      var input = document.getElementById('notesAIInput');
       var msg = input.value.trim();
       if (!msg) return;
       input.value = '';
       input.style.height = 'auto';
 
-      var msgs = document.getElementById('noteCoachMessages');
-      msgs.innerHTML += '<div class="msg user">' + msg.replace(/</g,'&lt;') + '</div>';
-      msgs.innerHTML += '<div class="msg ai" id="noteCoachTyping"></div>';
-      showThinking('noteCoachMessages', 'noteCoachTyping');
-      msgs.scrollTop = msgs.scrollHeight;
+      // Save note before querying AI
+      if (currentNoteId) saveCurrentNote();
 
-      var btn = document.getElementById('noteCoachSendBtn');
-      btn.disabled = true;
-      noteCoachHistory.push({ role: 'user', content: msg });
+      notesAIHistory.push({ role: 'user', content: msg });
 
-      var noteCtx = '';
-      var titleEl = document.getElementById('noteTitleInput');
-      var bodyEl = document.getElementById('noteBodyInput');
-      if (titleEl && bodyEl) {
-        noteCtx = '\n\nCurrent note title: "' + titleEl.value + '"\nCurrent note content: "' + bodyEl.value.substring(0, 2000) + '"';
-      }
+      var noteCtx = '\n\nCurrent note title: "' + document.getElementById('notesTitle').value + '"\nCurrent note content: "' + document.getElementById('notesContent').value.substring(0, 2000) + '"';
 
       try {
         var systemPrompt = 'You are a helpful notes assistant for WishPath.ai. Help the user write, brainstorm, organize, or improve their notes. Be concise and practical. If they ask you to write something, provide it in a format they can easily copy and paste.' + noteCtx;
         var res = await fetch(EDGE_FN, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ coachMode: true, model: 'claude-sonnet-4-20250514', systemPrompt: systemPrompt, messages: noteCoachHistory.slice(-10) }),
+          body: JSON.stringify({ coachMode: true, model: 'claude-sonnet-4-20250514', systemPrompt: systemPrompt, messages: notesAIHistory.slice(-10) }),
         });
         var data = await res.json();
         var reply = data.reply || 'I couldn\'t process that. Try again.';
-        noteCoachHistory.push({ role: 'assistant', content: reply });
-        stopThinking('noteCoachTyping');
-        typewriterEffect(msgs, reply, function(msgDiv) { wrapAiTables(msgDiv); incrementAgentUsage(); });
+        notesAIHistory.push({ role: 'assistant', content: reply });
+
+        // Show reply in a toast or inline
+        showToast('AI: ' + reply.substring(0, 100));
+        incrementAgentUsage();
       } catch(e) {
-        stopThinking('noteCoachTyping');
-        msgs.innerHTML += '<div class="msg ai" style="color:#f85149;">Connection error. Please try again.</div>';
+        console.error('Notes AI error:', e);
+        showToast('Connection error. Try again.');
       }
-      btn.disabled = false;
-      msgs.scrollTop = msgs.scrollHeight;
     }
 
-    async function manualSaveNoteConvo() {
-      var btn = document.getElementById('noteCoachSaveBtn');
-      if (!currentUserId) { alert('Please log in to save chats.'); return; }
-      if (!noteCoachHistory || noteCoachHistory.length === 0) { btn.innerHTML = '&#x274C; No chat'; setTimeout(function() { btn.innerHTML = '&#x1F4BE;'; }, 2000); return; }
-      btn.disabled = true;
-      btn.innerHTML = '&#x23F3;';
-      try {
-        var sb = getSupabase();
-        var wishId = 'note-' + (currentNoteId || 'general');
-        var firstMsg = noteCoachHistory.find(function(m) { return m.role === 'user'; });
-        var title = firstMsg ? firstMsg.content.substring(0, 60) : 'Notes Chat';
-        var summary = noteCoachHistory.slice(-6).map(function(m) { return m.role + ': ' + m.content.substring(0, 100); }).join('\n');
-        var { data: existing } = await sb.from('coach_conversations').select('id').eq('user_id', currentUserId).eq('wish_id', wishId).limit(1);
-        if (existing && existing.length > 0) {
-          var { error } = await sb.from('coach_conversations').update({ messages: noteCoachHistory, summary: summary, title: title, updated_at: new Date().toISOString() }).eq('id', existing[0].id);
-          if (error) throw error;
-        } else {
-          var { error } = await sb.from('coach_conversations').insert({ user_id: currentUserId, wish_id: wishId, messages: noteCoachHistory, summary: summary, title: title });
-          if (error) throw error;
-        }
-        btn.innerHTML = '&#x2705;';
-        setTimeout(function() { btn.innerHTML = '&#x1F4BE;'; }, 2000);
-        renderSavedChatsSidebar();
-      } catch(e) {
-        console.error('Save note convo error:', e);
-        btn.innerHTML = '&#x274C;';
-        setTimeout(function() { btn.innerHTML = '&#x1F4BE;'; }, 2000);
-        alert('Save failed: ' + (e.message || e));
-      }
-      btn.disabled = false;
+    // Helper: time ago formatting
+    function getTimeAgo(date) {
+      var now = new Date();
+      var diff = now - date;
+      var mins = Math.floor(diff / 60000);
+      var hours = Math.floor(diff / 3600000);
+      var days = Math.floor(diff / 86400000);
+      if (mins < 1) return 'now';
+      if (mins < 60) return mins + 'm ago';
+      if (hours < 24) return hours + 'h ago';
+      if (days < 7) return days + 'd ago';
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     }
 
-    async function deleteCurrentNote() {
-      if (!currentNoteId || !confirm('Delete this note?')) return;
-      var sb = getSupabase();
-      await sb.from('user_notes').delete().eq('id', currentNoteId);
-      currentNoteId = null;
-      document.getElementById('noteEditorPanel').innerHTML = '<div class="coach-right-empty">Note deleted. Select another or create a new one.</div>';
-      renderNotesList();
+    async function openNoteInSplit(noteId) {
+      showView('notes');
+      await openNotesEditor(noteId);
+    }
+
+    async function openTodoInSplit(todoId) {
+      showView('todos');
+      await openTodoList(todoId);
     }
 
     // ── To-Dos ──
