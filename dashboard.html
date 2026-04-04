@@ -725,7 +725,7 @@
       .sidebar-collapse-btn { display: none; }
       .main-header { padding: max(4px, env(safe-area-inset-top)) 46px 4px !important; margin-bottom: 0 !important; min-height: 48px !important; display: flex !important; align-items: center !important; justify-content: center !important; position: relative !important; }
       .main-header h1, .main-header h2 { font-size: 1.02rem; margin-bottom: 0 !important; width: 100%; text-align: center; }
-      body[data-active-view="fm"] .fm-widget-menu-btn { display: flex; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); z-index: 5; }
+      body[data-active-view="fm"] .fm-widget-menu-btn { display: flex; position: absolute; right: 12px; bottom: 6px; z-index: 5; }
       .mobile-home.active { padding-top: max(0px, env(safe-area-inset-top)) !important; }
       .main-content { padding: 6px 12px 12px; }
       .tab-bar { margin-top: 0 !important; padding-top: 0 !important; padding: 4px 8px !important; margin-left: -12px !important; margin-right: -12px !important; overflow-x: auto !important; }
@@ -1280,6 +1280,12 @@
       .cs-source-btn { display: flex; align-items: center; gap: 10px; width: 100%; padding: 12px 14px; margin-bottom: 8px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: rgba(255,255,255,0.85); font-size: 13px; font-weight: 500; font-family: 'IBM Plex Sans', system-ui, sans-serif; cursor: pointer; transition: all 0.15s ease; -webkit-tap-highlight-color: transparent; text-align: left; }
       .cs-source-btn:active { transform: scale(0.97); border-color: rgba(120,80,220,0.3); background: rgba(120,80,220,0.08); }
       .cs-source-icon { font-size: 18px; flex-shrink: 0; }
+      .cs-save-bar { display: flex; align-items: center; gap: 10px; padding: 10px 0; margin-top: 8px; }
+      .cs-save-name-input { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 10px 14px; color: #fff; font-size: 14px; font-family: 'IBM Plex Sans', system-ui, sans-serif; outline: none; transition: border-color 0.15s ease; }
+      .cs-save-name-input:focus { border-color: rgba(120,80,220,0.5); }
+      .cs-save-name-input::placeholder { color: rgba(255,255,255,0.3); }
+      .cs-save-btn { display: flex; align-items: center; gap: 6px; padding: 10px 18px; background: var(--kraken-gradient-cta); color: #fff; border: none; border-radius: 10px; font-size: 13px; font-weight: 600; font-family: 'IBM Plex Sans', system-ui, sans-serif; cursor: pointer; white-space: nowrap; transition: opacity 0.15s ease, transform 0.1s ease; -webkit-tap-highlight-color: transparent; }
+      .cs-save-btn:active { transform: scale(0.96); opacity: 0.9; }
 
       /* Hide coach dropdown selector on mobile when empty state is showing */
       .coach-left > div:first-child { display: none !important; }
@@ -3201,6 +3207,14 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
           </button>
           <div id="chartStudioChartArea"></div>
+          <!-- Save Chart Bar -->
+          <div class="cs-save-bar" id="csSaveBar" style="display:none;">
+            <input class="cs-save-name-input" id="csSaveNameInput" type="text" placeholder="Name your chart..." />
+            <button class="cs-save-btn" onclick="saveChartWithName()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Save
+            </button>
+          </div>
           <div class="portfolio-coach-input-row" style="margin-top:12px;">
             <div class="chat-input-wrap">
               <textarea class="chat-input-field portfolio-coach-input" id="chartStudioInput" placeholder="Describe a chart to create..." rows="1" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChartStudioMsg();}"></textarea>
@@ -7600,6 +7614,7 @@
         '<button class="chart-action-btn" onclick="downloadChartPng(\'' + containerId + '-chart\')">&#x1F4E5; Download PNG</button>';
       if (containerId === 'chartStudioChartArea') {
         actionsHtml += '<button class="chart-action-btn" onclick="saveActiveTemplateChart()">&#x1F4BE; ' + saveLabel + '</button>';
+        setTimeout(showCSSaveBar, 50);
       }
       actionsHtml +=
         '<button class="chart-action-btn" onclick="saveChartToNotes(\'' + containerId + '-chart\')">&#x1F4DD; Save to Notes</button>' +
@@ -9170,23 +9185,40 @@
     }
 
     async function saveActiveTemplateChart() {
+      saveChartWithName();
+    }
+
+    async function saveChartWithName() {
       var chart = Highcharts && Highcharts.charts.find(function(c) { return c && c.renderTo && c.renderTo.id === 'chartStudioChartArea-chart'; });
       if (!chart) {
         showToast('No chart to save yet.');
         return;
       }
+      var nameInput = document.getElementById('csSaveNameInput');
+      var customName = nameInput ? nameInput.value.trim() : '';
       var record = buildSavedChartRecord(chart, _activeChartStudioTemplate);
+      if (customName) record.title = customName;
       savedChartTemplates = savedChartTemplates.filter(function(item) { return item.id !== record.id; });
       savedChartTemplates.unshift(record);
       try {
         await persistSavedChartTemplate(record);
         renderSavedChartTemplates();
         renderSidebarSavedChartTemplates();
-        showToast('Template saved to sidebar.');
+        if (nameInput) nameInput.value = '';
+        showToast('Chart saved! Check the sidebar.');
       } catch(e) {
         console.error('Save chart template error:', e);
-        showToast('Unable to save template.');
+        showToast('Unable to save chart.');
       }
+    }
+
+    function showCSSaveBar() {
+      var bar = document.getElementById('csSaveBar');
+      if (bar) bar.style.display = 'flex';
+    }
+    function hideCSSaveBar() {
+      var bar = document.getElementById('csSaveBar');
+      if (bar) bar.style.display = 'none';
     }
 
     function getChartStudioMessagesEl() {
@@ -9506,6 +9538,7 @@
       chartStudioHistory = [];
       var chartArea = document.getElementById('chartStudioChartArea');
       if (chartArea) chartArea.innerHTML = '';
+      hideCSSaveBar();
       var input = getChartStudioInputEl();
       if (input) { input.value = ''; input.placeholder = 'Describe a chart to create...'; input.style.height = 'auto'; }
       renderCSGallery();
