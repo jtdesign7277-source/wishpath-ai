@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-04-v56';
+    var APP_VERSION = '2026-04-04-v57';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -2371,25 +2371,18 @@
 
         <!-- Portfolio Tab -->
         <div class="home-tab-content" id="homePortfolioTab">
-          <div class="portfolio-summary" id="portfolioSummary">
-            <div class="portfolio-stat">
-              <div class="portfolio-stat-label">Total Value</div>
-              <div class="portfolio-stat-value" id="portfolioTotalValue">$0.00</div>
+          <div class="portfolio-hero" id="portfolioSummary">
+            <div class="portfolio-hero-label">Portfolio value</div>
+            <div class="portfolio-hero-value" id="portfolioTotalValue">$0.00</div>
+            <div class="portfolio-hero-change">
+              <span class="portfolio-hero-arrow" id="portfolioArrow">&#x2197;</span>
+              <span id="portfolioTotalPL">$0.00</span>
+              <span id="portfolioTotalPLPct"></span>
+              <span class="portfolio-hero-period">this month</span>
             </div>
-            <div class="portfolio-stat">
-              <div class="portfolio-stat-label">Day P&L</div>
-              <div class="portfolio-stat-value" id="portfolioDayPL">$0.00</div>
-              <div class="portfolio-stat-change" id="portfolioDayPLPct"></div>
-            </div>
-            <div class="portfolio-stat">
-              <div class="portfolio-stat-label">Total P&L</div>
-              <div class="portfolio-stat-value" id="portfolioTotalPL">$0.00</div>
-              <div class="portfolio-stat-change" id="portfolioTotalPLPct"></div>
-            </div>
-            <div class="portfolio-stat">
-              <div class="portfolio-stat-label">Positions</div>
-              <div class="portfolio-stat-value" id="portfolioPositionCount">0</div>
-            </div>
+            <div id="portfolioDayPL" style="display:none;"></div>
+            <div id="portfolioDayPLPct" style="display:none;"></div>
+            <div id="portfolioPositionCount" style="display:none;"></div>
           </div>
 
           <div class="portfolio-add-panel" style="text-align:center;">
