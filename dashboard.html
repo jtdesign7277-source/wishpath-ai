@@ -7749,6 +7749,167 @@
     var marketsCache = {};
     var SUPABASE_FN = 'https://mszilrexlupzthauoaxb.supabase.co/functions/v1';
 
+    // ── Alpaca WebSocket Streaming (primary) ──
+    var alpacaWS = {
+      stockSocket: null,
+      cryptoSocket: null,
+      connected: false,
+      stockConnected: false,
+      cryptoConnected: false,
+      credentials: null,
+      reconnectDelay: 1000,
+      maxReconnectDelay: 30000,
+      renderDebounce: null,
+
+      async fetchCredentials() {
+        try {
+          var res = await fetch(SUPABASE_FN + '/alpaca-stream-auth');
+          var data = await res.json();
+          if (data.error) { console.warn('Alpaca auth:', data.error, data.hint || ''); return null; }
+          return data;
+        } catch(e) { console.warn('Alpaca auth fetch failed:', e); return null; }
+      },
+
+      async init() {
+        this.credentials = await this.fetchCredentials();
+        if (!this.credentials) {
+          console.warn('Alpaca credentials not available — falling back to polling');
+          return;
+        }
+        this.connectStocks();
+        this.connectCrypto();
+      },
+
+      connectStocks() {
+        if (!this.credentials) return;
+        var self = this;
+        try {
+          this.stockSocket = new WebSocket(this.credentials.stocksUrl);
+          this.stockSocket.onopen = function() {
+            console.log('[Alpaca Stocks] Connected, authenticating...');
+            self.stockSocket.send(JSON.stringify({ action: 'auth', key: self.credentials.key, secret: self.credentials.secret }));
+          };
+          this.stockSocket.onmessage = function(event) { self.handleStockMessage(JSON.parse(event.data)); };
+          this.stockSocket.onclose = function(e) {
+            console.warn('[Alpaca Stocks] Disconnected:', e.code, e.reason);
+            self.stockConnected = false;
+            self.connected = self.stockConnected || self.cryptoConnected;
+            self.scheduleReconnect('stocks');
+          };
+          this.stockSocket.onerror = function(e) { console.error('[Alpaca Stocks] Error:', e); };
+        } catch(e) { console.error('[Alpaca Stocks] Connect failed:', e); }
+      },
+
+      connectCrypto() {
+        if (!this.credentials) return;
+        var self = this;
+        try {
+          this.cryptoSocket = new WebSocket(this.credentials.cryptoUrl);
+          this.cryptoSocket.onopen = function() {
+            console.log('[Alpaca Crypto] Connected, authenticating...');
+            self.cryptoSocket.send(JSON.stringify({ action: 'auth', key: self.credentials.key, secret: self.credentials.secret }));
+          };
+          this.cryptoSocket.onmessage = function(event) { self.handleCryptoMessage(JSON.parse(event.data)); };
+          this.cryptoSocket.onclose = function(e) {
+            console.warn('[Alpaca Crypto] Disconnected:', e.code, e.reason);
+            self.cryptoConnected = false;
+            self.connected = self.stockConnected || self.cryptoConnected;
+            self.scheduleReconnect('crypto');
+          };
+          this.cryptoSocket.onerror = function(e) { console.error('[Alpaca Crypto] Error:', e); };
+        } catch(e) { console.error('[Alpaca Crypto] Connect failed:', e); }
+      },
+
+      handleStockMessage(messages) {
+        var self = this;
+        if (!Array.isArray(messages)) messages = [messages];
+        messages.forEach(function(msg) {
+          if (msg.T === 'success' && msg.msg === 'authenticated') {
+            console.log('[Alpaca Stocks] Authenticated — subscribing to MAG7');
+            self.stockConnected = true;
+            self.connected = true;
+            self.reconnectDelay = 1000;
+            var symbols = MAG7.map(function(s) { return s.symbol; });
+            self.stockSocket.send(JSON.stringify({ action: 'subscribe', trades: symbols }));
+          } else if (msg.T === 'error') {
+            console.error('[Alpaca Stocks] Error:', msg.code, msg.msg);
+          } else if (msg.T === 't') {
+            self.handleTrade(msg.S, msg.p);
+          }
+        });
+      },
+
+      handleCryptoMessage(messages) {
+        var self = this;
+        if (!Array.isArray(messages)) messages = [messages];
+        messages.forEach(function(msg) {
+          if (msg.T === 'success' && msg.msg === 'authenticated') {
+            console.log('[Alpaca Crypto] Authenticated — subscribing to crypto');
+            self.cryptoConnected = true;
+            self.connected = true;
+            self.reconnectDelay = 1000;
+            var symbols = CRYPTO.map(function(c) { return c.symbol; });
+            self.cryptoSocket.send(JSON.stringify({ action: 'subscribe', trades: symbols }));
+          } else if (msg.T === 'error') {
+            console.error('[Alpaca Crypto] Error:', msg.code, msg.msg);
+          } else if (msg.T === 't') {
+            self.handleTrade(msg.S, msg.p);
+          }
+        });
+      },
+
+      handleTrade(symbol, price) {
+        if (!symbol || !Number.isFinite(price)) return;
+        var cached = marketsCache[symbol];
+        var prevClose = cached ? (cached.previousClose || cached.price) : price;
+        var change = price - prevClose;
+        var changePercent = prevClose !== 0 ? (change / prevClose) * 100 : 0;
+        marketsCache[symbol] = {
+          symbol: symbol,
+          name: cached ? cached.name : symbol,
+          price: price,
+          change: change,
+          changePercent: changePercent,
+          previousClose: prevClose,
+          _live: true
+        };
+        this.debouncedRender(symbol);
+      },
+
+      debouncedRender(symbol) {
+        if (this.renderDebounce) clearTimeout(this.renderDebounce);
+        this.renderDebounce = setTimeout(function() {
+          var isStock = MAG7.some(function(s) { return s.symbol === symbol; });
+          var isCrypto = CRYPTO.some(function(c) { return c.symbol === symbol; });
+          if (isStock) renderMarketCards();
+          if (isCrypto) renderCryptoCards();
+          var ts = document.getElementById('marketsUpdatedTime');
+          var fmTs = document.getElementById('fmMarketsUpdatedTime');
+          var timeStr = 'Live via Alpaca \u2022 ' + new Date().toLocaleTimeString();
+          if (ts) ts.textContent = timeStr;
+          if (fmTs) fmTs.textContent = timeStr;
+        }, 150);
+      },
+
+      scheduleReconnect(type) {
+        var self = this;
+        console.log('[Alpaca] Reconnecting ' + type + ' in ' + self.reconnectDelay + 'ms...');
+        setTimeout(function() {
+          if (type === 'stocks') self.connectStocks();
+          else self.connectCrypto();
+        }, self.reconnectDelay);
+        self.reconnectDelay = Math.min(self.reconnectDelay * 2, self.maxReconnectDelay);
+      },
+
+      disconnect() {
+        if (this.stockSocket) { try { this.stockSocket.close(); } catch(e) {} }
+        if (this.cryptoSocket) { try { this.cryptoSocket.close(); } catch(e) {} }
+        this.stockConnected = false;
+        this.cryptoConnected = false;
+        this.connected = false;
+      }
+    };
+
     async function refreshMarkets() {
       var btn = document.getElementById('marketsRefreshBtn');
       var fmBtn = document.getElementById('fmRefreshBtn');
@@ -7768,7 +7929,8 @@
               name: q.name,
               price: q.price,
               change: q.change,
-              changePercent: q.percentChange
+              changePercent: q.percentChange,
+              previousClose: q.previousClose || (q.price - (q.change || 0))
             };
           });
         }
@@ -7795,9 +7957,11 @@
         var changeClass = q.change > 0 ? 'up' : q.change < 0 ? 'down' : 'flat';
         var arrow = q.change > 0 ? '&#x25B2;' : q.change < 0 ? '&#x25BC;' : '';
         var sign = q.change > 0 ? '+' : '';
-        return '<div class="stock-card"><div class="stock-symbol">' + stock.symbol + '</div><div class="stock-name">' + stock.name + '</div>' +
+        var liveClass = q._live ? ' crypto-live' : '';
+        var liveDot = q._live ? '<div class="crypto-live-dot"></div>' : '';
+        return '<div class="stock-card' + liveClass + '"><div class="stock-symbol">' + stock.symbol + '</div><div class="stock-name">' + stock.name + '</div>' +
           '<div class="stock-price">$' + formatNum(q.price) + '</div>' +
-          '<div class="stock-change ' + changeClass + '">' + arrow + ' ' + sign + formatNum(q.change) + ' (' + sign + formatNum(q.changePercent) + '%)</div></div>';
+          '<div class="stock-change ' + changeClass + '">' + arrow + ' ' + sign + formatNum(q.change) + ' (' + sign + formatNum(q.changePercent) + '%)</div>' + liveDot + '</div>';
       }).join('');
 
       var cryptoHtml = CRYPTO.map(function(coin) {
@@ -11092,8 +11256,9 @@
       renderSidebarSavedChartTemplates();
     };
 
-    // ── Auto-refresh: markets every 60s, watchlist every 30s ──
+    // ── Auto-refresh: Twelve Data polling as FALLBACK (only when Alpaca WS is disconnected) ──
     setInterval(function() {
+      if (alpacaWS.stockConnected) return; // Alpaca streaming is live, skip polling
       var marketsActive = document.getElementById('homeMarketsTab');
       var fmActive = document.getElementById('fmMarketsContent');
       if ((marketsActive && marketsActive.classList.contains('active')) || (fmActive && fmActive.classList.contains('active'))) {
@@ -11112,8 +11277,9 @@
       }
     }, 30000);
 
-    // ── Live Crypto Refresh (every 10s — crypto markets are 24/7) ──
+    // ── Live Crypto Refresh — fallback polling (only when Alpaca WS is disconnected) ──
     async function refreshCryptoPrices() {
+      if (alpacaWS.cryptoConnected) return; // Alpaca streaming is live, skip polling
       var cryptoSymbols = CRYPTO.map(function(c) { return c.symbol; });
       try {
         var res = await fetch(SUPABASE_FN + '/watchlist-quotes?symbols=' + encodeURIComponent(cryptoSymbols.join(',')));
@@ -11122,7 +11288,7 @@
           var changed = false;
           data.data.forEach(function(q) {
             var prev = marketsCache[q.symbol];
-            var newEntry = { symbol: q.symbol, name: q.name, price: q.price, change: q.change, changePercent: q.percentChange };
+            var newEntry = { symbol: q.symbol, name: q.name, price: q.price, change: q.change, changePercent: q.percentChange, previousClose: q.previousClose || (q.price - (q.change || 0)) };
             if (!prev || prev.price !== q.price) changed = true;
             marketsCache[q.symbol] = newEntry;
           });
@@ -11150,6 +11316,27 @@
     }
 
     setInterval(refreshCryptoPrices, 10000);
+
+    // ── Initialize Alpaca WebSocket after initial data load ──
+    (function() {
+      var origMarketsLoaded = false;
+      var checkAndInitAlpaca = setInterval(function() {
+        if (window._marketsLoaded && !origMarketsLoaded) {
+          origMarketsLoaded = true;
+          clearInterval(checkAndInitAlpaca);
+          console.log('[Alpaca] Initial market data loaded, starting WebSocket streams...');
+          alpacaWS.init();
+        }
+      }, 500);
+      setTimeout(function() {
+        if (!origMarketsLoaded) {
+          origMarketsLoaded = true;
+          clearInterval(checkAndInitAlpaca);
+          console.log('[Alpaca] Timeout — starting WebSocket streams without baseline data');
+          alpacaWS.init();
+        }
+      }, 5000);
+    })();
 
     // ── Ticker Autocomplete ──
     var _acDebounce = null;
