@@ -1592,11 +1592,13 @@
     .add-holding-btn { padding: 10px 20px; background: var(--kraken-gradient-cta); color: #fff; border: none; border-radius: 12px; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity 0.15s cubic-bezier(0.4,0,0.2,1), transform 0.1s ease; white-space: nowrap; }
     .add-holding-btn:hover { opacity: 0.92; }
     .add-holding-btn:active { transform: scale(0.97); opacity: 0.9; }
+    .add-holding-btn-small { width: auto !important; padding: 8px 20px !important; font-size: 13px !important; border-radius: 10px; }
     .holdings-table { width: 100%; border-collapse: collapse; background: transparent; }
     .holdings-table th { text-align: left; font-size: 11px; font-weight: 500; color: var(--kraken-text-muted); text-transform: uppercase; letter-spacing: 0.06em; padding: 8px 12px; border-bottom: 1px solid var(--kraken-border); font-family: 'IBM Plex Sans', system-ui, sans-serif; }
     .holdings-table td { padding: 12px 12px; border-bottom: 1px solid var(--kraken-border); font-size: 13px; font-weight: 500; color: var(--kraken-text); vertical-align: middle; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
     .holdings-table tbody tr { transition: background 0.1s ease; }
     .holdings-table tbody tr:hover { background: rgba(148,151,169,0.06); }
+    .holding-symbol-badge { background: var(--kraken-purple-tint); border: 1px solid rgba(120,80,220,0.35); color: #fff; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 8px; display: inline-block; }
     .holding-symbol-btn { background: var(--kraken-purple-tint); border: 1px solid rgba(120,80,220,0.35); color: #fff; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; padding: 4px 10px; border-radius: 8px; display: inline-flex; align-items: center; gap: 4px; transition: background 0.15s ease; }
     .holding-symbol-btn:hover { background: rgba(113,50,245,0.22); border-color: rgba(120,80,220,0.5); }
     .holding-symbol-btn svg { width: 10px; height: 10px; opacity: 0.6; }
@@ -1942,7 +1944,7 @@
       .portfolio-hero-value { font-size: 32px; }
       .add-holding-row { flex-direction: column; gap: 8px; }
       .add-holding-input { width: 100% !important; font-size: 16px !important; }
-      .add-holding-btn { width: 100%; font-size: 16px !important; }
+      .add-holding-btn:not(.add-holding-btn-small) { width: 100%; font-size: 16px !important; }
       .add-holding-row .ticker-ac-anchor { width: 100%; }
       .portfolio-coach-input { font-size: 16px !important; }
       .portfolio-coach-suggestions { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
@@ -3017,8 +3019,8 @@
             <div id="portfolioPositionCount" style="display:none;"></div>
           </div>
 
-          <div class="portfolio-add-panel" style="text-align:center;">
-            <button class="add-holding-btn" onclick="openAddHoldingModal()" style="width:100%;padding:12px 20px;">+ Add</button>
+          <div class="portfolio-add-panel" style="text-align:left;">
+            <button class="add-holding-btn add-holding-btn-small" onclick="openAddHoldingModal()">+ Add</button>
           </div>
 
           <div id="holdingsTableWrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:16px;">
@@ -3107,8 +3109,8 @@
             <div id="fmPortfolioDayPLPct" style="display:none;"></div>
             <div id="fmPortfolioPositionCount" style="display:none;"></div>
           </div>
-          <div style="text-align:center;margin:12px 0;">
-            <button class="add-holding-btn" onclick="openAddHoldingModal()" style="width:100%;padding:12px 20px;">+ Add</button>
+          <div style="text-align:left;margin:12px 0;">
+            <button class="add-holding-btn add-holding-btn-small" onclick="openAddHoldingModal()">+ Add</button>
           </div>
           <table class="holdings-table" id="fmHoldingsTable" style="display:none;">
             <thead><tr><th>Symbol</th><th>Qty</th><th>Price</th><th>Value</th><th>Day P&L</th><th>Total P&L</th><th></th></tr></thead>
@@ -8879,15 +8881,26 @@
       '</div>';
 
       var portfolioContent = '<div id="mobilePortfolioTab" style="display:none;">' +
-        '<div class="portfolio-summary" id="mobilePortfolioSummary" style="margin-bottom:16px;">' +
-          '<div class="portfolio-stat"><div class="portfolio-stat-label">Total Value</div><div class="portfolio-stat-value" id="mobilePortfolioValue">$0.00</div></div>' +
-          '<div class="portfolio-stat"><div class="portfolio-stat-label">Day P&L</div><div class="portfolio-stat-value" id="mobilePortfolioPL">$0.00</div></div>' +
-          '<div class="portfolio-stat"><div class="portfolio-stat-label">Total P&L</div><div class="portfolio-stat-value" id="mobilePortfolioTotalPL">$0.00</div></div>' +
+        '<div class="portfolio-hero" id="mobilePortfolioHero">' +
+          '<div class="portfolio-hero-label">Portfolio value</div>' +
+          '<div class="portfolio-hero-value" id="mobilePortfolioValue">$0.00</div>' +
+          '<div class="portfolio-hero-change" id="mobilePortfolioChange">' +
+            '<span class="portfolio-hero-arrow" id="mobilePortfolioArrow">&#x2197;</span>' +
+            '<span id="mobilePortfolioTotalPL">$0.00</span>' +
+            '<span id="mobilePortfolioTotalPLPct"></span>' +
+            '<span class="portfolio-hero-period">this month</span>' +
+          '</div>' +
         '</div>' +
-        '<div class="portfolio-add-panel" style="text-align:center;">' +
-          '<button class="add-holding-btn" onclick="openAddHoldingModal()" style="width:100%;padding:12px 20px;">+ Add</button>' +
+        '<div style="margin:12px 0;">' +
+          '<button class="add-holding-btn add-holding-btn-small" onclick="openAddHoldingModal()">+ Add</button>' +
         '</div>' +
-        '<div id="mobileHoldingsList" style="margin-bottom:20px;"></div>' +
+        '<div id="mobileHoldingsTableWrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:16px;">' +
+          '<table class="holdings-table" id="mobileHoldingsTable" style="display:none;min-width:560px;">' +
+            '<thead><tr><th>Symbol</th><th>Qty</th><th>Price</th><th>Value</th><th>Day P&L</th></tr></thead>' +
+            '<tbody id="mobileHoldingsBody"></tbody>' +
+          '</table>' +
+          '<div id="mobileHoldingsEmpty" style="text-align:center;padding:32px 24px;color:var(--kraken-text-muted);font-size:14px;font-family:\'IBM Plex Sans\',system-ui,sans-serif;background:var(--kraken-card-bg);border-radius:16px;border:1px dashed var(--kraken-border);">No holdings yet. Add a stock or crypto above.</div>' +
+        '</div>' +
         '<div class="portfolio-coach-section" style="border-top:1px solid rgba(255,255,255,0.08);padding-top:16px;">' +
           '<div class="portfolio-coach-header">&#x1F916; Portfolio Coach</div>' +
           '<div class="portfolio-coach-suggestions" style="margin:10px 0;">' +
@@ -9360,36 +9373,49 @@
     }
 
     function renderMobilePortfolio() {
-      var list = document.getElementById('mobileHoldingsList');
+      var tableEl = document.getElementById('mobileHoldingsTable');
+      var bodyEl = document.getElementById('mobileHoldingsBody');
+      var emptyEl = document.getElementById('mobileHoldingsEmpty');
       var valueEl = document.getElementById('mobilePortfolioValue');
-      var plEl = document.getElementById('mobilePortfolioPL');
       var totalPlEl = document.getElementById('mobilePortfolioTotalPL');
-      if (!list) return;
+      var totalPlPctEl = document.getElementById('mobilePortfolioTotalPLPct');
+      var arrowEl = document.getElementById('mobilePortfolioArrow');
+      var changeRow = document.getElementById('mobilePortfolioChange');
+      if (!bodyEl) return;
       if (!portfolioHoldings.length) {
-        list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-dim);font-size:0.85rem;">No holdings yet</div>';
+        if (tableEl) tableEl.style.display = 'none';
+        if (emptyEl) emptyEl.style.display = 'block';
         if (valueEl) valueEl.textContent = '$0.00';
-        if (plEl) plEl.textContent = '$0.00';
         if (totalPlEl) totalPlEl.textContent = '$0.00';
+        if (totalPlPctEl) totalPlPctEl.textContent = '';
         return;
       }
-      var totalVal = 0, totalDayPL = 0, totalPL = 0;
-      list.innerHTML = portfolioHoldings.map(function(h, i) {
+      var totalVal = 0, totalDayPL = 0, totalPL = 0, totalCostBasis = 0;
+      var rows = portfolioHoldings.map(function(h, i) {
         var p = portfolioPrices[h.symbol] || {};
         var hasPrice = (p.price || 0) > 0;
         var val = hasPrice ? (p.price || 0) * h.qty : 0;
         var dayPL = hasPrice ? (p.change || 0) * h.qty : 0;
         var totalItemPL = hasPrice && h.avgCost > 0 ? val - (h.avgCost * h.qty) : 0;
         totalVal += val; totalDayPL += dayPL;
-        if (hasPrice && h.avgCost > 0) totalPL += totalItemPL;
-        var cls = dayPL > 0 ? 'up' : dayPL < 0 ? 'down' : 'flat';
-        return '<div onclick="openHoldingActions(' + i + ')" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.06);">' +
-          '<div><div style="font-weight:600;color:var(--text);">' + h.symbol + '</div><div style="font-size:0.75rem;color:var(--text-dim);">' + h.qty + ' shares @ $' + formatNum(h.avgCost || 0) + '</div></div>' +
-          '<div style="text-align:right;"><div style="font-weight:600;color:#fff;">' + (hasPrice ? '$' + formatNum(val) : '--') + '</div><div class="stock-change ' + cls + '" style="font-size:0.75rem;">' + (hasPrice ? (dayPL >= 0 ? '+' : '') + '$' + formatNum(dayPL) : '--') + '</div></div>' +
-        '</div>';
-      }).join('');
+        if (hasPrice && h.avgCost > 0) { totalPL += totalItemPL; totalCostBasis += h.avgCost * h.qty; }
+        var dayClass = dayPL > 0 ? 'color:#22c55e' : dayPL < 0 ? 'color:#ef4444' : 'color:var(--kraken-text-dim)';
+        return '<tr onclick="openHoldingActions(' + i + ')" style="cursor:pointer;">' +
+          '<td><span class="holding-symbol-badge">' + h.symbol + '</span></td>' +
+          '<td>' + h.qty + '</td>' +
+          '<td>' + (hasPrice ? '$' + formatNum(p.price) : '--') + '</td>' +
+          '<td>' + (hasPrice ? '$' + formatNum(val) : '--') + '</td>' +
+          '<td style="' + dayClass + '">' + (hasPrice ? (dayPL >= 0 ? '+' : '') + '$' + formatNum(dayPL) : '--') + '</td>' +
+        '</tr>';
+      });
+      bodyEl.innerHTML = rows.join('');
+      if (tableEl) tableEl.style.display = 'table';
+      if (emptyEl) emptyEl.style.display = 'none';
       if (valueEl) valueEl.textContent = '$' + formatNum(totalVal);
-      if (plEl) { plEl.textContent = (totalDayPL >= 0 ? '+' : '') + '$' + formatNum(totalDayPL); plEl.style.color = totalDayPL >= 0 ? '#22c55e' : '#ef4444'; }
       if (totalPlEl) { totalPlEl.textContent = (totalPL >= 0 ? '+' : '') + '$' + formatNum(totalPL); totalPlEl.style.color = totalPL >= 0 ? '#22c55e' : '#ef4444'; }
+      if (totalPlPctEl && totalCostBasis > 0) { var pct = (totalPL / totalCostBasis) * 100; totalPlPctEl.textContent = '(' + (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%)'; totalPlPctEl.style.color = totalPL >= 0 ? '#22c55e' : '#ef4444'; }
+      if (arrowEl) arrowEl.innerHTML = totalPL >= 0 ? '&#x2197;' : '&#x2198;';
+      if (changeRow) changeRow.classList.toggle('negative', totalPL < 0);
     }
 
     async function addMobileHolding() {
