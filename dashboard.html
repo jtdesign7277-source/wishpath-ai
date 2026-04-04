@@ -9441,7 +9441,7 @@
     }
 
     async function createNewWatchlist() {
-      var wl = { id: 'wl-' + Date.now(), name: 'New Watchlist', symbols: [], created: new Date().toISOString() };
+      var wl = { id: 'wl-' + Date.now(), name: '', symbols: [], created: new Date().toISOString() };
       watchlists.push(wl);
       await _saveWatchlist(wl);
       renderSidebarWatchlists();
@@ -9476,7 +9476,7 @@
       container.innerHTML = watchlists.map(function(wl) {
         var cls = wl.id === activeWatchlistId ? 'portfolio-coach-chip' : 'portfolio-coach-chip';
         var style = wl.id === activeWatchlistId ? 'border-color:var(--accent);color:var(--accent);' : '';
-        return '<button class="' + cls + '" style="' + style + '" onclick="openWatchlist(\'' + wl.id + '\')">' + wl.name + ' (' + wl.symbols.length + ')</button>';
+        return '<button class="' + cls + '" style="' + style + '" onclick="openWatchlist(\'' + wl.id + '\')">' + (wl.name || 'Untitled') + ' (' + wl.symbols.length + ')</button>';
       }).join('');
     }
 
