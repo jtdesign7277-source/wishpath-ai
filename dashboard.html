@@ -98,6 +98,8 @@
     .main { margin-left: 240px; flex: 1; min-height: 100vh; }
     .main-header { padding: 24px 32px; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: space-between; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
     .main-header h1 { font-size: 1.4rem; font-weight: 700; }
+    .fm-widget-menu-btn { display: none; background: none; border: 1px solid rgba(120,80,220,0.35); border-radius: 10px; padding: 6px 8px; color: var(--accent); cursor: pointer; transition: all 0.15s ease; -webkit-tap-highlight-color: transparent; }
+    .fm-widget-menu-btn:active { background: rgba(120,80,220,0.15); transform: scale(0.95); }
     .main-content { padding: 32px; }
 
     /* View toggle */
@@ -723,6 +725,7 @@
       .sidebar-collapse-btn { display: none; }
       .main-header { padding: max(4px, env(safe-area-inset-top)) 46px 4px !important; margin-bottom: 0 !important; min-height: 48px !important; display: flex !important; align-items: center !important; justify-content: center !important; position: relative !important; }
       .main-header h1, .main-header h2 { font-size: 1.02rem; margin-bottom: 0 !important; width: 100%; text-align: center; }
+      body[data-active-view="fm"] .fm-widget-menu-btn { display: flex; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); z-index: 5; }
       .mobile-home.active { padding-top: max(0px, env(safe-area-inset-top)) !important; }
       .main-content { padding: 6px 12px 12px; }
       .tab-bar { margin-top: 0 !important; padding-top: 0 !important; padding: 4px 8px !important; margin-left: -12px !important; margin-right: -12px !important; overflow-x: auto !important; }
@@ -2931,6 +2934,9 @@
   <main class="main">
     <div class="main-header">
       <h1 id="viewTitle">Home</h1>
+      <button class="fm-widget-menu-btn" id="fmWidgetMenuBtn" onclick="toggleMobileFMMenu()" aria-label="Open Financial Markets menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      </button>
     </div>
     <div class="main-content">
 
@@ -7177,12 +7183,7 @@
     }
 
     function handleNavSearchBtn() {
-      var activeView = document.body.getAttribute('data-active-view');
-      if (activeView === 'fm') {
-        toggleMobileFMMenu();
-      } else {
-        toggleMobileSidebar();
-      }
+      toggleMobileSidebar();
     }
 
     function handleMobileNavPill() {
