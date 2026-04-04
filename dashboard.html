@@ -9764,23 +9764,28 @@
       if (!msgs || !template) return;
       var escapedName = template.name.replace(/'/g, "\\'");
       // Build data source picker (portfolio + watchlists)
-      var sourceOptions = '<div class="cs-data-sources" style="margin-top:14px;">' +
-        '<div style="font-size:12px;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:0.06em;font-weight:600;margin-bottom:8px;">Choose a data source</div>';
+      // Build collapsible data source picker
+      var innerSources = '';
       // Portfolio option
       if (portfolioHoldings.length) {
-        sourceOptions += '<button class="cs-source-btn" onclick="fillTemplateFromPortfolio(\'' + escapedName + '\')"><span class="cs-source-icon">&#x1F4BC;</span> My Portfolio (' + portfolioHoldings.length + ' holdings)</button>';
+        innerSources += '<button class="cs-source-btn" onclick="fillTemplateFromPortfolio(\'' + escapedName + '\')"><span class="cs-source-icon">&#x1F4BC;</span> My Portfolio (' + portfolioHoldings.length + ' holdings)</button>';
       }
       // Watchlist options
       if (watchlists.length) {
         watchlists.forEach(function(wl) {
           if (wl.symbols && wl.symbols.length) {
-            sourceOptions += '<button class="cs-source-btn" onclick="fillTemplateFromWatchlist(\'' + escapedName + '\', \'' + wl.id + '\')"><span class="cs-source-icon">&#x1F4CB;</span> ' + (wl.name || 'Untitled').replace(/</g,'&lt;') + ' (' + wl.symbols.length + ' symbols)</button>';
+            innerSources += '<button class="cs-source-btn" onclick="fillTemplateFromWatchlist(\'' + escapedName + '\', \'' + wl.id + '\')"><span class="cs-source-icon">&#x1F4CB;</span> ' + (wl.name || 'Untitled').replace(/</g,'&lt;') + ' (' + wl.symbols.length + ' symbols)</button>';
           }
         });
       }
-      // Manual / custom data entry
-      sourceOptions += '<button class="cs-source-btn" onclick="showCustomDataForm(\'' + escapedName + '\')"><span class="cs-source-icon">&#x270F;&#xFE0F;</span> Enter my own data</button>';
-      sourceOptions += '</div>';
+      var sourceOptions = '<div class="cs-data-sources" style="margin-top:14px;">' +
+        '<div class="cs-ds-header" onclick="toggleCSDataSources()" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:8px 0;">' +
+          '<span style="font-size:12px;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:0.06em;font-weight:600;">Choose a data source</span>' +
+          '<span class="cs-ds-arrow" id="csDsArrow" style="font-size:11px;color:rgba(255,255,255,0.35);transition:transform 0.25s ease;">&#x25BC;</span>' +
+        '</div>' +
+        '<div class="cs-ds-body" id="csDsBody" style="display:none;overflow:hidden;">' + innerSources + '</div>' +
+        '<button class="cs-source-btn" style="margin-top:8px;" onclick="showCustomDataForm(\'' + escapedName + '\')"><span class="cs-source-icon">&#x270F;&#xFE0F;</span> Enter my own data</button>' +
+      '</div>';
       // Placeholder for the custom data form (shown on demand)
       sourceOptions += '<div id="csCustomDataForm" style="display:none;"></div>';
 
@@ -9824,6 +9829,15 @@
 
     // ── Custom Data Entry Form ──
     var _csFormTemplateName = '';
+    function toggleCSDataSources() {
+      var body = document.getElementById('csDsBody');
+      var arrow = document.getElementById('csDsArrow');
+      if (!body) return;
+      var isOpen = body.style.display !== 'none';
+      body.style.display = isOpen ? 'none' : '';
+      if (arrow) arrow.style.transform = isOpen ? '' : 'rotate(180deg)';
+    }
+
     function showCustomDataForm(templateName) {
       _csFormTemplateName = templateName;
       var container = document.getElementById('csCustomDataForm');
