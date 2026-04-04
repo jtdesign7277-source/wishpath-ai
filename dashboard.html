@@ -1777,11 +1777,11 @@
     }
     /* Sidebar Financial Markets section */
     .sidebar-fm-section { padding: 0 8px; }
-    .sidebar-fm-toggle { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 8px; font-size: 0.88rem; font-weight: 500; color: var(--text-muted); cursor: pointer; transition: all 0.15s; width: 100%; }
-    .sidebar-fm-toggle:hover { background: rgba(255,255,255,0.04); color: var(--text); }
-    .sidebar-fm-toggle.active { background: var(--accent-dim); color: var(--accent); }
-    .sidebar-fm-toggle svg { width: 18px; height: 18px; flex-shrink: 0; }
-    .sidebar-fm-arrow { font-size: 0.6rem; margin-left: auto; transition: transform 0.2s; color: var(--text-dim); }
+    .sidebar-fm-toggle { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 8px; font-size: 1.1rem; font-weight: 800; background: linear-gradient(135deg, rgb(145,107,230), #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; cursor: pointer; transition: all 0.15s; width: 100%; }
+    .sidebar-fm-toggle:hover { opacity: 0.85; }
+    .sidebar-fm-toggle.active { opacity: 1; }
+    .sidebar-fm-toggle svg { width: 20px; height: 20px; flex-shrink: 0; stroke: rgb(145,107,230); }
+    .sidebar-fm-arrow { font-size: 0.6rem; margin-left: auto; transition: transform 0.2s; -webkit-text-fill-color: rgb(145,107,230); }
     .sidebar-fm-arrow.open { transform: rotate(90deg); }
     .sidebar-fm-items { display: none; padding-left: 14px; }
     .sidebar-fm-items.open { display: block; }
