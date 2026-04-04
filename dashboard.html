@@ -1284,19 +1284,19 @@
       .cs-source-btn { display: flex; align-items: center; gap: 10px; width: 100%; padding: 12px 14px; margin-bottom: 8px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: rgba(255,255,255,0.85); font-size: 13px; font-weight: 500; font-family: 'IBM Plex Sans', system-ui, sans-serif; cursor: pointer; transition: all 0.15s ease; -webkit-tap-highlight-color: transparent; text-align: left; }
       .cs-source-btn:active { transform: scale(0.97); border-color: rgba(120,80,220,0.3); background: rgba(120,80,220,0.08); }
       /* ── Custom Data Entry Form ── */
-      .cs-data-form { margin-top: 12px; padding: 14px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; }
-      .cs-data-form-title { font-size: 12px; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; margin-bottom: 10px; }
-      .cs-data-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
-      .cs-data-row input { flex: 1; padding: 10px 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; color: #fff; font-size: 14px; font-family: inherit; outline: none; transition: border-color 0.15s; }
+      .cs-data-form { margin-top: 12px; padding: 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; }
+      .cs-data-form-title { font-size: 11px; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; margin-bottom: 8px; }
+      .cs-data-row { display: flex; gap: 6px; margin-bottom: 6px; align-items: center; }
+      .cs-data-row input { padding: 8px 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; color: #fff; font-size: 13px; font-family: inherit; outline: none; transition: border-color 0.15s; min-width: 0; }
       .cs-data-row input:focus { border-color: rgba(120,80,220,0.5); }
       .cs-data-row input::placeholder { color: rgba(255,255,255,0.25); }
-      .cs-data-row .cs-label-input { flex: 2; }
-      .cs-data-row .cs-value-input { flex: 1; text-align: right; }
-      .cs-data-row .cs-remove-btn { width: 32px; height: 32px; flex-shrink: 0; background: none; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; color: rgba(255,255,255,0.3); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: all 0.15s; -webkit-tap-highlight-color: transparent; }
+      .cs-data-row .cs-label-input { flex: 1 1 55%; min-width: 0; }
+      .cs-data-row .cs-value-input { flex: 0 0 72px; width: 72px; text-align: right; }
+      .cs-data-row .cs-remove-btn { width: 28px; height: 28px; flex-shrink: 0; background: none; border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; color: rgba(255,255,255,0.3); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: all 0.15s; -webkit-tap-highlight-color: transparent; padding: 0; }
       .cs-data-row .cs-remove-btn:active { background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.3); color: #ef4444; }
-      .cs-add-row-btn { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 8px; background: none; border: 1px dashed rgba(255,255,255,0.1); border-radius: 10px; color: rgba(255,255,255,0.4); font-size: 13px; font-family: inherit; cursor: pointer; transition: all 0.15s; margin-bottom: 12px; -webkit-tap-highlight-color: transparent; }
+      .cs-add-row-btn { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 7px; background: none; border: 1px dashed rgba(255,255,255,0.1); border-radius: 8px; color: rgba(255,255,255,0.4); font-size: 12px; font-family: inherit; cursor: pointer; transition: all 0.15s; margin-bottom: 10px; -webkit-tap-highlight-color: transparent; }
       .cs-add-row-btn:active { border-color: rgba(120,80,220,0.3); color: rgba(120,80,220,0.7); }
-      .cs-generate-btn { width: 100%; padding: 12px; background: linear-gradient(135deg, rgb(120,80,220), #3b82f6); border: none; border-radius: 12px; color: #fff; font-size: 15px; font-weight: 700; font-family: inherit; cursor: pointer; transition: all 0.15s; box-shadow: 0 4px 16px rgba(120,80,220,0.3); -webkit-tap-highlight-color: transparent; }
+      .cs-generate-btn { width: 100%; padding: 11px; background: linear-gradient(135deg, rgb(120,80,220), #3b82f6); border: none; border-radius: 10px; color: #fff; font-size: 14px; font-weight: 700; font-family: inherit; cursor: pointer; transition: all 0.15s; box-shadow: 0 4px 16px rgba(120,80,220,0.3); -webkit-tap-highlight-color: transparent; }
       .cs-generate-btn:active { transform: scale(0.97); opacity: 0.9; }
       .cs-source-icon { font-size: 18px; flex-shrink: 0; }
       .cs-save-bar { display: flex; align-items: center; gap: 10px; padding: 10px 0; margin-top: 8px; }
@@ -9839,8 +9839,8 @@
     }
     function buildDataRowHtml(idx, label, value) {
       return '<div class="cs-data-row">' +
-        '<input class="cs-label-input" type="text" placeholder="Category name" value="' + (label || '') + '" />' +
-        '<input class="cs-value-input" type="number" placeholder="$0" value="' + (value || '') + '" />' +
+        '<input class="cs-label-input" type="text" placeholder="Category" value="' + (label || '') + '" />' +
+        '<input class="cs-value-input" type="number" inputmode="decimal" placeholder="$" value="' + (value || '') + '" />' +
         '<button class="cs-remove-btn" onclick="this.parentNode.remove()">×</button>' +
       '</div>';
     }
