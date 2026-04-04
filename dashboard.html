@@ -6154,6 +6154,10 @@
       var feedbackView = document.getElementById('feedbackView');
       if (feedbackFS) feedbackFS.style.display = 'flex';
       if (feedbackView) feedbackView.classList.add('active');
+      document.body.setAttribute('data-active-view', 'feedback');
+      // Hide bottom nav bar on mobile — feedback has its own full-screen UI
+      var navBar = document.getElementById('mobileNavBar');
+      if (navBar && window.innerWidth <= 768) navBar.style.display = 'none';
       resetFeedbackForm();
       loadUserFeedback();
       closeMobileSidebar();
