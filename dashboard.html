@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-04-v55';
+    var APP_VERSION = '2026-04-04-v56';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -553,7 +553,7 @@
       /* Purple nav pill when on Your Wish */
       body[data-active-view="newwish"] .mobile-nav-ask-pill { background: var(--kraken-gradient-cta) !important; border-color: transparent !important; }
       body[data-active-view="newwish"] .nav-pill-label { color: #fff !important; }
-      body[data-active-view="newwish"] .nav-pill-icon svg { stroke: #fff !important; }
+      body[data-active-view="newwish"] .nav-pill-icon { display: none !important; }
 
       /* iOS-style drag handle bar */
       .drag-handle-bar { display: flex; align-items: center; justify-content: center; flex-shrink: 0; height: 20px; cursor: ns-resize; touch-action: none; border-top: 1px solid rgba(120,80,220,0.3); border-bottom: 1px solid rgba(120,80,220,0.25); background: rgba(120,80,220,0.04); }
@@ -659,8 +659,7 @@
         transition: background 0.15s ease;
       }
       .mobile-nav-ask-pill:active { background: #333; }
-      .mobile-nav-ask-pill .nav-pill-icon { display: flex; color: rgba(255,255,255,0.35); }
-      .mobile-nav-ask-pill .nav-pill-icon svg { width: 18px; height: 18px; }
+      .mobile-nav-ask-pill .nav-pill-icon { display: none !important; }
       .mobile-nav-ask-pill .nav-pill-label {
         flex: 1;
         font-size: 15px;
