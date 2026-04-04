@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-04-v66';
+    var APP_VERSION = '2026-04-04-v67';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -1384,6 +1384,8 @@
       /* Hide bottom nav when full-screen AI is active */
       body[data-active-view="coach"] .mobile-nav-bar { display: none !important; }
       body[data-active-view="lifecoach"] .mobile-nav-bar { display: none !important; }
+      /* Hide bottom ask bar on TradingView widget tabs */
+      body.fm-widget-active .mobile-nav-bar { display: none !important; }
       .coach-input { background: transparent !important; border: none !important; border-radius: 20px !important; padding: 8px 16px !important; font-size: 14px !important; color: rgba(255,255,255,0.9) !important; flex: 1 !important; min-height: 36px !important; }
       .coach-input::placeholder { color: rgba(255,255,255,0.35) !important; }
       .coach-send { border-radius: 0 !important; width: 28px !important; height: 28px !important; box-shadow: none !important; background: none !important; color: rgb(120,80,220) !important; padding: 0 !important; flex-shrink: 0 !important; display: flex !important; align-items: center !important; justify-content: center !important; margin: 4px 4px 4px 0 !important; }
@@ -1480,10 +1482,10 @@
       /* Exit fullscreen button — hidden, purple toggle replaces it */
       .fm-exit-fs-btn { display: none !important; }
       body.fm-mobile-fullscreen .fm-exit-fs-btn { display: none !important; }
-      .fm-fs-toggle-btn { display: none; position: fixed; z-index: 10001; background: rgba(113,50,245,0.9); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1.5px solid rgba(167,139,250,0.5); color: #fff; padding: 0; border-radius: 50%; cursor: pointer; -webkit-tap-highlight-color: transparent; box-shadow: 0 4px 20px rgba(113,50,245,0.4), inset 0 1px 0 rgba(255,255,255,0.12); transition: all 0.2s ease; width: 46px; height: 46px; align-items: center; justify-content: center; }
-      .fm-fs-toggle-btn:active { transform: scale(0.9); background: rgba(113,50,245,1); }
-      .fm-fs-toggle-btn.visible { display: flex; bottom: calc(68px + env(safe-area-inset-bottom)); right: 16px; }
-      body.fm-mobile-fullscreen .fm-fs-toggle-btn.visible { bottom: calc(68px + env(safe-area-inset-bottom)); right: 16px; background: rgba(113,50,245,0.85); border-color: rgba(167,139,250,0.4); box-shadow: 0 4px 20px rgba(113,50,245,0.35); }
+      .fm-fs-toggle-btn { display: none; position: fixed; z-index: 10001; background: rgba(113,50,245,0.55); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1.5px solid rgba(167,139,250,0.35); color: #fff; padding: 0; border-radius: 50%; cursor: pointer; -webkit-tap-highlight-color: transparent; box-shadow: 0 4px 16px rgba(113,50,245,0.25); transition: all 0.2s ease; width: 46px; height: 46px; align-items: center; justify-content: center; }
+      .fm-fs-toggle-btn:active { transform: scale(0.9); background: rgba(113,50,245,0.75); }
+      .fm-fs-toggle-btn.visible { display: flex; bottom: calc(20px + env(safe-area-inset-bottom)); right: 16px; }
+      body.fm-mobile-fullscreen .fm-fs-toggle-btn.visible { bottom: calc(20px + env(safe-area-inset-bottom)); right: 16px; background: rgba(113,50,245,0.55); border-color: rgba(167,139,250,0.3); box-shadow: 0 4px 16px rgba(113,50,245,0.2); }
 
       /* ── Unified Notion dark color scheme ── */
       body, .app-container, .main-content, .view, .coach-layout, .coach-left, .coach-right-wrapper {
@@ -2951,8 +2953,8 @@
   </button>
   <button class="fm-exit-fs-btn" id="fmExitFsBtn" onclick="exitMobileFullscreen()">&#x2190; Exit Full Screen</button>
   <button class="fm-fs-toggle-btn" id="fmFsToggleBtn" onclick="toggleActiveFMMobileImmersive()">
-    <svg id="fmFsToggleIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">
-      <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
+    <svg id="fmFsToggleIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+      <path d="M2 7V2h5M17 2h5v5M22 17v5h-5M7 22H2v-5"/>
     </svg>
   </button>
   <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleMobileSidebar()"></div>
@@ -4396,6 +4398,7 @@
       var headerBack = document.getElementById('fmHeaderBackBtn');
       if (!onMobile || !isFMActive || isHome) {
         document.body.classList.remove('fm-mobile-fullscreen');
+        document.body.classList.remove('fm-widget-active');
         if (fsToggle) fsToggle.classList.remove('visible');
         if (headerBack) headerBack.classList.remove('visible');
         closeMobileFMMenu();
@@ -4405,16 +4408,19 @@
       else document.body.classList.remove('fm-mobile-fullscreen');
       // Show/hide fullscreen toggle and header back button on widget tabs
       var isWidget = isFMWidgetTab(activeTabId);
+      // Hide bottom ask bar on all TradingView widget tabs
+      if (isWidget) document.body.classList.add('fm-widget-active');
+      else document.body.classList.remove('fm-widget-active');
       if (headerBack) {
-        if (isWidget && !isSidebarOpen && !shouldImmersive) { headerBack.classList.add('visible'); } else { headerBack.classList.remove('visible'); }
+        if (isWidget && !isSidebarOpen) { headerBack.classList.add('visible'); } else { headerBack.classList.remove('visible'); }
       }
       if (fsToggle) {
         if (isWidget && !isSidebarOpen) { fsToggle.classList.add('visible'); } else { fsToggle.classList.remove('visible'); }
       }
       if (fsIcon) {
         fsIcon.innerHTML = shouldImmersive
-          ? '<path d="M4 14h6v6M14 4h6v6M4 14l7-7M20 4l-7 7"/>'
-          : '<path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>';
+          ? '<path d="M9 2v5H4M20 9h-5V4M15 22v-5h5M4 15h5v5"/>'
+          : '<path d="M2 7V2h5M17 2h5v5M22 17v5h-5M7 22H2v-5"/>';
       }
       if (toggle && isSidebarOpen) { toggle.style.display = 'none'; closeMobileFMMenu(); } else if (toggle) { toggle.style.display = ''; }
       if (isSidebarOpen) closeMobileFMMenu();
