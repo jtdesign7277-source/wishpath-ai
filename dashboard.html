@@ -9560,7 +9560,7 @@
       if (!items) return;
       var isOpen = items.classList.toggle('open');
       if (arrow) arrow.classList.toggle('open', isOpen);
-      if (isOpen) { showView('fm'); if (toggle) toggle.classList.add('active'); }
+      if (toggle) toggle.classList.toggle('active', isOpen);
     }
 
     function syncFMShortcutState(tabId) {
@@ -9580,6 +9580,17 @@
       showView('fm');
       var btn = document.querySelector('.fm-sub-tab[onclick*="' + tabId + '"]');
       switchFMTab(tabId, btn);
+      // Keep sidebar FM section visually open/active
+      var items = document.getElementById('sidebarFMItems');
+      var arrow = document.getElementById('sidebarFMArrow');
+      var toggle = document.getElementById('sidebarFMToggle');
+      if (items) items.classList.add('open');
+      if (arrow) arrow.classList.add('open');
+      if (toggle) toggle.classList.add('active');
+      // Highlight active sub-item
+      document.querySelectorAll('.sidebar-fm-sub').forEach(function(s) { s.classList.remove('active'); });
+      var activeSub = document.querySelector('.sidebar-fm-sub[onclick*="' + tabId + '"]');
+      if (activeSub) activeSub.classList.add('active');
       if (window.innerWidth <= 768) closeMobileSidebar();
     }
 
