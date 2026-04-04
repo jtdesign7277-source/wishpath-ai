@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-04-v58';
+    var APP_VERSION = '2026-04-04-v59';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -416,7 +416,7 @@
       }
       .mobile-fm-tabs-toggle:active { background: linear-gradient(180deg, rgba(120,80,220,0.4) 0%, rgba(80,50,180,0.5) 100%); }
       .mobile-fm-tabs-toggle svg { width: 10px; height: 10px; }
-      body[data-active-view="fm"] .mobile-fm-tabs-toggle { display: flex !important; }
+      body[data-active-view="fm"] .mobile-fm-tabs-toggle { display: none !important; }
       body[data-active-view="fm"] .fm-sub-tabs { display: none !important; }
       .mobile-fm-menu-backdrop {
         display: none;
