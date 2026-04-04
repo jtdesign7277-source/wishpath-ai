@@ -1271,6 +1271,9 @@
       .tmpl-meta { font-size: 12px; color: rgba(255,255,255,0.4); display: flex; gap: 8px; align-items: center; }
       .tmpl-badge { background: rgba(120,80,220,0.1); color: var(--accent); border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 600; }
       .tmpl-arrow { color: rgba(255,255,255,0.25); font-size: 18px; flex-shrink: 0; }
+      .cs-gallery-cats { display: flex; gap: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 12px; margin-bottom: 4px; }
+      .cs-gallery-cats::-webkit-scrollbar { display: none; }
+      .cs-gallery-grid { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
 
       /* Hide coach dropdown selector on mobile when empty state is showing */
       .coach-left > div:first-child { display: none !important; }
@@ -3147,25 +3150,33 @@
         <div class="fm-sub-content" id="fmChartStudioContent">
           <div style="margin-bottom:16px;">
             <div class="portfolio-coach-header" style="font-size:1.1rem;">&#x1F4CA; Chart Studio</div>
-            <div class="portfolio-coach-sub">Ask the AI to create any chart — allocation, performance, comparisons, and more. Powered by Highcharts.</div>
+            <div class="portfolio-coach-sub">Choose a template below or describe any chart and AI will build it with Highcharts.</div>
           </div>
-          <div class="portfolio-coach-suggestions" style="margin-bottom:16px;">
-            <button class="portfolio-coach-chip" onclick="askChartStudio('Create a pie chart of my portfolio allocation')">Portfolio allocation</button>
-            <button class="portfolio-coach-chip" onclick="askChartStudio('Compare Mag 7 stock performance this year')">Mag 7 comparison</button>
-            <button class="portfolio-coach-chip" onclick="askChartStudio('Show sector breakdown of my holdings')">Sector breakdown</button>
-            <button class="portfolio-coach-chip" onclick="askChartStudio('Create a risk vs return scatter plot for my portfolio')">Risk vs Return</button>
+
+          <!-- Template Gallery -->
+          <div id="csTemplateGallery">
+            <div class="cs-gallery-cats" id="csGalleryCats">
+              <button class="tmpl-cat active" onclick="filterCSGallery('All', this)">All</button>
+              <button class="tmpl-cat" onclick="filterCSGallery('Investing', this)">Investing</button>
+              <button class="tmpl-cat" onclick="filterCSGallery('Budgeting', this)">Budgeting</button>
+              <button class="tmpl-cat" onclick="filterCSGallery('Finance', this)">Finance</button>
+              <button class="tmpl-cat" onclick="filterCSGallery('Goals', this)">Goals</button>
+              <button class="tmpl-cat" onclick="filterCSGallery('Business', this)">Business</button>
+            </div>
+            <div class="cs-gallery-grid" id="csGalleryGrid"></div>
           </div>
-          <div class="portfolio-coach-messages" id="chartStudioMessages">
-            <div class="msg ai">Welcome to Chart Studio! Ask me to create any financial chart and I'll build it with Highcharts. Try "Show my portfolio allocation as a pie chart" or "Compare tech stocks."</div>
+
+          <div class="portfolio-coach-messages" id="chartStudioMessages" style="display:none;">
+            <div class="msg ai">Welcome to Chart Studio! Ask me to create any financial chart and I'll build it with Highcharts.</div>
           </div>
           <!-- Scroll to bottom arrow for Chart Studio -->
-          <button class="scroll-to-bottom-btn" id="chartStudioScrollBottom" onclick="document.getElementById('chartStudioMessages').scrollTop=document.getElementById('chartStudioMessages').scrollHeight;">
+          <button class="scroll-to-bottom-btn" id="chartStudioScrollBottom" onclick="document.getElementById('chartStudioMessages').scrollTop=document.getElementById('chartStudioMessages').scrollHeight;" style="display:none;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
           </button>
           <div id="chartStudioChartArea"></div>
           <div class="portfolio-coach-input-row" style="margin-top:12px;">
             <div class="chat-input-wrap">
-              <textarea class="chat-input-field portfolio-coach-input" id="chartStudioInput" placeholder="Ask AI" rows="1" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChartStudioMsg();}"></textarea>
+              <textarea class="chat-input-field portfolio-coach-input" id="chartStudioInput" placeholder="Describe a chart to create..." rows="1" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChartStudioMsg();}"></textarea>
               <button class="chat-send-btn coach-send" onclick="sendChartStudioMsg()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
             </div>
           </div>
@@ -9261,7 +9272,8 @@
       var msgs = getChartStudioMessagesEl();
       if (!msgs || !template) return;
       var escapedName = template.name.replace(/'/g, "\\'");
-      msgs.innerHTML = '<div class="msg ai"><strong>' + template.name.replace(/</g, '&lt;') + ' template loaded.</strong><br>' +
+      msgs.innerHTML = '<div style="margin-bottom:8px;"><button class="portfolio-coach-chip" onclick="showCSGallery()" style="font-size:12px;padding:4px 12px;">&#x2190; All Templates</button></div>' +
+        '<div class="msg ai"><strong>' + template.name.replace(/</g, '&lt;') + ' template loaded.</strong><br>' +
         template.helpText.replace(/</g, '&lt;') +
         '<div style="margin-top:12px;"><button class="portfolio-coach-chip" onclick="primeChartStudioTemplateAssist(\'' + escapedName + '\', true, true)">Ask AI to fill this template</button></div></div>';
     }
@@ -9288,6 +9300,13 @@
       _activeChartStudioTemplate = template.name;
       chartStudioHistory = [];
       closeMobileTemplates();
+      // Hide gallery, show messages area
+      var gallery = document.getElementById('csTemplateGallery');
+      var msgs = document.getElementById('chartStudioMessages');
+      var scrollBtn = document.getElementById('chartStudioScrollBottom');
+      if (gallery) gallery.style.display = 'none';
+      if (msgs) msgs.style.display = '';
+      if (scrollBtn) scrollBtn.style.display = '';
       openFMTab('fmChartStudio');
       setTimeout(function() {
         renderChartStudioTemplate(template);
@@ -9334,6 +9353,52 @@
     }
     function useTemplate(name) {
       openChartStudioTemplate(name);
+    }
+
+    var _csGalleryCat = 'All';
+    function filterCSGallery(cat, btn) {
+      _csGalleryCat = cat;
+      var cats = document.getElementById('csGalleryCats');
+      if (cats) cats.querySelectorAll('.tmpl-cat').forEach(function(b) { b.classList.remove('active'); });
+      if (btn) btn.classList.add('active');
+      renderCSGallery();
+    }
+    function renderCSGallery() {
+      var grid = document.getElementById('csGalleryGrid');
+      if (!grid) return;
+      var filtered = TEMPLATES.filter(function(t) {
+        return _csGalleryCat === 'All' || t.cat === _csGalleryCat;
+      });
+      grid.innerHTML = filtered.map(function(t) {
+        return '<div class="tmpl-card" onclick="selectCSTemplate(\'' + t.name.replace(/'/g,"\\'") + '\')">' +
+          '<div class="tmpl-thumb">' + t.icon + '</div>' +
+          '<div class="tmpl-info"><div class="tmpl-name">' + t.name + '</div>' +
+          '<div class="tmpl-meta">' + t.cat + ' &nbsp;⭐ ' + t.rating + ' &nbsp;<span class="tmpl-badge">Free</span></div></div>' +
+          '<div class="tmpl-arrow">›</div></div>';
+      }).join('');
+    }
+    function selectCSTemplate(name) {
+      // Hide gallery, show messages
+      var gallery = document.getElementById('csTemplateGallery');
+      var msgs = document.getElementById('chartStudioMessages');
+      var scrollBtn = document.getElementById('chartStudioScrollBottom');
+      if (gallery) gallery.style.display = 'none';
+      if (msgs) msgs.style.display = '';
+      if (scrollBtn) scrollBtn.style.display = '';
+      openChartStudioTemplate(name);
+    }
+    function showCSGallery() {
+      var gallery = document.getElementById('csTemplateGallery');
+      var msgs = document.getElementById('chartStudioMessages');
+      if (gallery) gallery.style.display = '';
+      if (msgs) { msgs.style.display = 'none'; }
+      _activeChartStudioTemplate = null;
+      chartStudioHistory = [];
+      var chartArea = document.getElementById('chartStudioChartArea');
+      if (chartArea) chartArea.innerHTML = '';
+      var input = getChartStudioInputEl();
+      if (input) { input.value = ''; input.placeholder = 'Describe a chart to create...'; input.style.height = 'auto'; }
+      renderCSGallery();
     }
 
     function switchMobileHomeTab(tab, btn) {
@@ -9696,6 +9761,7 @@
       if (tabId === 'fmOverview' && !window._tvOverviewLoaded) { loadTVOverview(); window._tvOverviewLoaded = true; }
       if (tabId === 'fmCalendar' && !window._tvCalendarLoaded) { loadTVCalendar(); window._tvCalendarLoaded = true; }
       if (tabId === 'fmTechAnalysis' && !window._tvTechLoaded) { loadTVTechAnalysis(); window._tvTechLoaded = true; }
+      if (tabId === 'fmChartStudio' && !_activeChartStudioTemplate) { showCSGallery(); }
       syncMobileFMMenuState();
       updateMobileFMChrome();
       if (isFMWidgetTab(tabId)) {
@@ -9848,8 +9914,14 @@
       var input = document.getElementById('chartStudioInput');
       var msg = input.value.trim();
       if (!msg) return;
+      // Hide gallery, show messages when user sends freeform message
+      var gallery = document.getElementById('csTemplateGallery');
+      var scrollBtn = document.getElementById('chartStudioScrollBottom');
+      if (gallery) gallery.style.display = 'none';
+      if (scrollBtn) scrollBtn.style.display = '';
       input.value = ''; input.style.height = 'auto';
       var msgs = document.getElementById('chartStudioMessages');
+      if (msgs) msgs.style.display = '';
       msgs.innerHTML += '<div class="msg user">' + msg.replace(/</g,'&lt;') + '</div>';
       msgs.innerHTML += '<div class="msg ai" id="chartStudioTyping"></div>';
       showThinking('chartStudioMessages', 'chartStudioTyping');
