@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-04-v54';
+    var APP_VERSION = '2026-04-04-v55';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -1610,7 +1610,7 @@
     .cc-widget-body .news-feed-item { padding: 12px; margin-bottom: 8px; }
     .cc-widget-body .fm-widget-container { min-height: 350px; border: none; border-radius: 0; }
     /* CC widget settings modal */
-    .cc-settings-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 9000; justify-content: center; align-items: center; }
+    .cc-settings-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 99999; justify-content: center; align-items: center; }
     .cc-settings-overlay.active { display: flex; }
     .cc-settings-modal { background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 24px; max-width: 480px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 16px 64px rgba(0,0,0,0.6), 0 4px 16px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08); }
     .cc-settings-title { font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 16px; }
