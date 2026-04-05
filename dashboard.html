@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <title>Dashboard — WishPath.ai</title>
   <meta name="theme-color" content="#0B0611" />
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-04-v72';
+    var APP_VERSION = '2026-04-04-v73';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -7416,22 +7416,22 @@
       document.body.classList.remove('mobile-ai-open');
       updateMobileFMChrome();
     }
+    // Track actual layout width to ignore pinch-zoom resize events
+    var _lastLayoutWidth = window.innerWidth;
     window.addEventListener('resize', function() {
+      var newWidth = window.innerWidth;
+      // Pinch-zoom doesn't change innerWidth — skip if width is the same
+      if (newWidth === _lastLayoutWidth) return;
+      _lastLayoutWidth = newWidth;
       closeMobileFMMenu();
       updateMobileFMChrome();
       clearTimeout(_fmWidgetResizeTimer);
       _fmWidgetResizeTimer = setTimeout(function() {
         refreshActiveFMWidgetLayout(window.innerWidth <= 768);
-      }, 120);
+      }, 200);
     });
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', function() {
-        clearTimeout(_fmWidgetResizeTimer);
-        _fmWidgetResizeTimer = setTimeout(function() {
-          refreshActiveFMWidgetLayout(window.innerWidth <= 768);
-        }, 120);
-      });
-    }
+    // visualViewport resize fires on pinch-zoom — ignore it entirely for widget layout
+
     document.body.setAttribute('data-active-view', document.querySelector('.view.active') ? document.querySelector('.view.active').id.replace('View', '') : 'home');
     setTimeout(updateMobileFMChrome, 0);
     function sendMobileAskAI() {
@@ -12010,6 +12010,8 @@ function addChartFsButtons() {
 setInterval(addChartFsButtons, 3000);
 setTimeout(addChartFsButtons, 1500);
 window.addEventListener('resize', function() {
+  // Only act on real layout changes, not pinch-zoom
+  if (window.innerWidth === _lastLayoutWidth) return;
   if (document.getElementById('chartFsOverlay').classList.contains('active')) {
     setTimeout(reflowFullscreenChart, 90);
   }
