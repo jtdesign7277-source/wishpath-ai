@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-05-v105';
+    var APP_VERSION = '2026-04-05-v106';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -11069,42 +11069,26 @@
       return sym.replace('/USD','').substring(0,1);
     }
 
-    // Authentic company logo URLs — maps ticker to logo image
-    var STOCK_LOGO_DOMAINS = {
-      AAPL:'apple.com', MSFT:'microsoft.com', GOOGL:'google.com', GOOG:'google.com',
-      AMZN:'amazon.com', NVDA:'nvidia.com', META:'meta.com', TSLA:'tesla.com',
-      NFLX:'netflix.com', AMD:'amd.com', INTC:'intel.com', CRM:'salesforce.com',
-      ORCL:'oracle.com', ADBE:'adobe.com', PYPL:'paypal.com', SQ:'block.xyz',
-      SHOP:'shopify.com', COIN:'coinbase.com', PLTR:'palantir.com', UBER:'uber.com',
-      ABNB:'airbnb.com', DIS:'disney.com', BA:'boeing.com', JPM:'jpmorganchase.com',
-      BAC:'bankofamerica.com', GS:'goldmansachs.com', V:'visa.com', MA:'mastercard.com',
-      WMT:'walmart.com', TGT:'target.com', COST:'costco.com', HD:'homedepot.com',
-      NKE:'nike.com', SBUX:'starbucks.com', MCD:'mcdonalds.com', KO:'coca-cola.com',
-      PEP:'pepsico.com', JNJ:'jnj.com', PFE:'pfizer.com', UNH:'unitedhealthgroup.com',
-      XOM:'exxonmobil.com', CVX:'chevron.com', FUBO:'fubo.tv',
-      TRUMP:'truthsocial.com', DJT:'truthsocial.com', ELF:'elfcosmetics.com',
-      NIO:'nio.com', ENPH:'enphase.com', HIMS:'forhims.com', CELH:'celsius.com',
-      BABA:'alibaba.com', RIVN:'rivian.com', SOFI:'sofi.com', SNAP:'snap.com',
-      RBLX:'roblox.com', ROKU:'roku.com', DKNG:'draftkings.com', CRWD:'crowdstrike.com',
-      PANW:'paloaltonetworks.com', ZS:'zscaler.com', NET:'cloudflare.com',
-      SNOW:'snowflake.com', MSTR:'microstrategy.com', RIOT:'riotplatforms.com',
-      MARA:'mara.com', SPOT:'spotify.com', SQ:'squareup.com', HOOD:'robinhood.com',
-      LCID:'lucidmotors.com', F:'ford.com', GM:'gm.com', T:'att.com', VZ:'verizon.com',
-      WFC:'wellsfargo.com', C:'citigroup.com', MS:'morganstanley.com', SCHW:'schwab.com'
-    };
+    // Authentic company logos — ticker-based API with multi-source fallback
     function getStockLogoUrl(sym) {
-      var clean = sym.replace('/USD','');
-      var domain = STOCK_LOGO_DOMAINS[clean];
-      if (domain) return 'https://logo.clearbit.com/' + domain + '?size=80';
-      return '';
+      var clean = sym.replace('/USD','').toUpperCase();
+      // Primary: EODHD — free, no key, 40K+ ticker logos
+      return 'https://eodhd.com/img/logos/US/' + clean + '.png';
+    }
+    function getStockLogoFallbackUrl(sym) {
+      var clean = sym.replace('/USD','').toUpperCase();
+      // Fallback: Logo.dev ticker API (free tier, no key needed for basic use)
+      return 'https://img.logo.dev/ticker/' + clean + '?format=png&size=80';
     }
     function buildWatchlistLogo(sym) {
-      var logoUrl = getStockLogoUrl(sym);
-      if (logoUrl) {
-        return '<img class="wl-logo" src="' + logoUrl + '" alt="' + sym + '" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';" />' +
-          '<div class="wl-logo-fallback" style="display:none;background:' + getSymbolColor(sym) + ';">' + getSymbolInitial(sym) + '</div>';
-      }
-      return '<div class="wl-logo-fallback" style="background:' + getSymbolColor(sym) + ';">' + getSymbolInitial(sym) + '</div>';
+      var primary = getStockLogoUrl(sym);
+      var fallback = getStockLogoFallbackUrl(sym);
+      var color = getSymbolColor(sym);
+      var initial = getSymbolInitial(sym);
+      // Try primary logo → fallback logo → colored initial
+      return '<img class="wl-logo" src="' + primary + '" alt="' + sym + '" ' +
+        'onerror="this.onerror=function(){this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';};this.src=\'' + fallback + '\';" />' +
+        '<div class="wl-logo-fallback" style="display:none;background:' + color + ';">' + initial + '</div>';
     }
 
     function renderWatchlistItems() {
