@@ -2369,7 +2369,7 @@
       .lc-scroll-bottom {
         display: none;
         position: absolute;
-        bottom: 80px;
+        bottom: 110px;
         left: 50%;
         transform: translateX(-50%);
         width: 36px;
@@ -3877,7 +3877,7 @@
           <!-- Input bar -->
           <div class="lc-input-bar">
             <div class="lc-input-wrap">
-              <textarea class="lc-input" id="lcInput" placeholder="Ask AI" rows="1" autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false" enterkeyhint="send" inputmode="text" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendLifeCoachMsg();}"></textarea>
+              <textarea class="lc-input" id="lcInput" placeholder="Ask your life coach anything" rows="1" autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false" enterkeyhint="send" inputmode="text" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendLifeCoachMsg();}"></textarea>
               <button class="lc-send-btn" onclick="sendLifeCoachMsg()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
               </button>
@@ -6750,7 +6750,7 @@
       if (msgs && btn) {
         msgs.addEventListener('scroll', function() {
           var gap = msgs.scrollHeight - msgs.scrollTop - msgs.clientHeight;
-          btn.classList.toggle('visible', gap > 120);
+          btn.classList.toggle('visible', gap > 300);
         });
       }
     })();
