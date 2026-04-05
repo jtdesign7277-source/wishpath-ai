@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-05-v95';
+    var APP_VERSION = '2026-04-05-v96';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -182,7 +182,7 @@
     /* Notion-style tab bar */
     .tab-bar { display: flex; align-items: center; gap: 8px; background: linear-gradient(180deg, var(--kraken-surface1) 0%, rgba(22,18,31,0.97) 100%); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-bottom: 1px solid var(--kraken-border); flex-shrink: 0; overflow-x: auto; padding: 0 4px; }
     .tab-bar::-webkit-scrollbar { height: 0; }
-    .tab-item { display: flex; align-items: center; gap: 6px; padding: 8px 14px; font-size: 0.78rem; font-weight: 500; color: var(--text-dim); cursor: pointer; white-space: nowrap; border-bottom: 2px solid transparent; transition: all 0.15s; position: relative; max-width: 200px; }
+    .tab-item { display: flex; align-items: center; gap: 6px; padding: 8px 14px; font-size: 0.78rem; font-weight: 500; color: var(--text-dim); cursor: pointer; white-space: nowrap; border-bottom: 2px solid transparent; transition: all 0.15s; position: relative; max-width: 200px; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
     .tab-item:hover { color: var(--text-muted); background: rgba(255,255,255,0.03); }
     .tab-item.active { color: var(--text); border-bottom-color: var(--accent); background: linear-gradient(135deg, rgba(120,80,220,0.08) 0%, rgba(255,255,255,0.02) 100%); box-shadow: 0 0 12px rgba(120,80,220,0.08); }
     .tab-item .tab-icon { font-size: 0.85rem; flex-shrink: 0; }
@@ -3736,10 +3736,13 @@
 
       <!-- Coach View — Split Panel with Tabs -->
       <div class="view" id="coachView">
-        <!-- Mobile back button + tabs (single row) -->
-        <div class="coach-mobile-header" id="coachMobileHeader">
-          <button class="coach-mobile-back" onclick="closeFullScreenAI()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 8 8 12 12 16"/><line x1="16" y1="12" x2="8" y2="12"/></svg></button>
-          <div class="tab-bar" id="tabBar" style="flex:1;margin:0;border-bottom:none;"></div>
+        <!-- Mobile header: title row + tab row -->
+        <div class="coach-mobile-header" id="coachMobileHeader" style="flex-direction:column;align-items:stretch;gap:0;">
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 12px 4px;">
+            <button class="coach-mobile-back" onclick="closeFullScreenAI()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 8 8 12 12 16"/><line x1="16" y1="12" x2="8" y2="12"/></svg></button>
+            <span style="font-size:15px;font-weight:600;color:rgba(255,255,255,0.9);">AI Coach</span>
+          </div>
+          <div class="tab-bar" id="tabBar" style="margin:0;border-bottom:none;"></div>
         </div>
         <div class="coach-layout">
           <div class="coach-left">
@@ -5226,7 +5229,7 @@
       renderActiveTab();
     }
 
-    async function switchTab(id) {
+    function switchTab(id) {
       activeTabId = id;
       renderTabBar();
       renderActiveTab();
@@ -5238,13 +5241,17 @@
         if (wish) {
           var sel = document.getElementById('coachSelect');
           if (sel.value != idx) {
-            // Auto-save current conversation before switching
-            if (currentWishId && coachHistory.length > 0) {
-              await saveConversation(currentWishId);
-            }
             sel.value = idx;
-            currentWishId = wish.id;
-            await loadConversation(wish.id);
+            // Save + load in background — don't block the tab switch
+            (async function() {
+              try {
+                if (currentWishId && coachHistory.length > 0) {
+                  await saveConversation(currentWishId);
+                }
+                currentWishId = wish.id;
+                await loadConversation(wish.id);
+              } catch(e) {}
+            })();
           }
         }
       }
