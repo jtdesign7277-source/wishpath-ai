@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-05-v96';
+    var APP_VERSION = '2026-04-05-v97';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -5627,7 +5627,7 @@
         try {
           var sb = getSupabase();
           var { data } = await sb.from('user_notes').select('*').eq('user_id', currentUserId).order('updated_at', { ascending: false });
-          if (data) data.forEach(function(n) {
+          if (data) data.filter(function(n) { return !(n.title || '').startsWith('__WP_'); }).forEach(function(n) {
             items.push({ name: n.title || 'Untitled', icon: '&#x1F4DD;', type: 'Note', edited: n.updated_at, created: n.created_at, action: function() { openNoteInSplit(n.id); } });
           });
         } catch(e) {}
@@ -5676,14 +5676,19 @@
       try {
         var sb = getSupabase();
         var { data } = await sb.from('user_notes').select('*').eq('user_id', currentUserId).order('updated_at', { ascending: false });
-        if (!data || data.length === 0) {
+        // Filter out internal magic-prefix notes (portfolio, watchlists, charts, command centers)
+        var visible = (data || []).filter(function(n) {
+          var t = n.title || '';
+          return !t.startsWith('__WP_');
+        });
+        if (visible.length === 0) {
           scrollEl.innerHTML = '<div class="notes-list-empty"><div class="notes-list-empty-icon">📝</div><div class="notes-list-empty-text">No notes yet</div></div>';
           return;
         }
-        scrollEl.innerHTML = data.map(function(n) {
+        scrollEl.innerHTML = visible.map(function(n) {
           var preview = n.content ? n.content.substring(0, 50) : 'No content';
           var timeAgo = getTimeAgo(new Date(n.updated_at));
-          return '<div class="notes-item" onclick="openNotesEditor(' + n.id + ')">' +
+          return '<div class="notes-item" onclick="openNotesEditor(\'' + n.id + '\')">' +
             '<div class="notes-item-info">' +
               '<div class="notes-item-title">' + (n.title || 'Untitled').replace(/</g,'&lt;') + '</div>' +
               '<div class="notes-item-preview">' + preview.replace(/</g,'&lt;') + '</div>' +
