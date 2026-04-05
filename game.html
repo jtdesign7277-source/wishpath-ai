@@ -100,6 +100,7 @@ let particles = [];
 let bgParticles = [];
 
 // Screen shake
+let health = 3, invincTimer = 0, hitFlashTimer = 0, damageLevel = 0;
 let shakeX = 0, shakeY = 0, shakeDur = 0;
 let screenFlash = 0, screenFlashColor = '#FFD700';
 let floatingTexts = [];
@@ -230,223 +231,6 @@ function drawStars(time) {
     }
   }
   ctx.globalAlpha = 1;
-}
-
-// ─── PERMANENT MOON ─────────────────────────────────────────────
-const MOON = { x: 0, y: 0, r: 32 };
-function initMoon() {
-  MOON.x = W * 0.82;
-  MOON.y = H * 0.1;
-}
-initMoon();
-
-function drawMoon() {
-  const mx = MOON.x, my = MOON.y, mr = MOON.r;
-
-  // Soft outer glow
-  const glowGrad = ctx.createRadialGradient(mx, my, mr * 0.8, mx, my, mr * 2.5);
-  glowGrad.addColorStop(0, 'rgba(210, 200, 180, 0.08)');
-  glowGrad.addColorStop(1, 'transparent');
-  ctx.fillStyle = glowGrad;
-  ctx.fillRect(mx - mr * 3, my - mr * 3, mr * 6, mr * 6);
-
-  // Moon body — 3D gradient
-  const bodyGrad = ctx.createRadialGradient(mx - mr * 0.25, my - mr * 0.25, mr * 0.1, mx, my, mr);
-  bodyGrad.addColorStop(0, '#E0D8CC');
-  bodyGrad.addColorStop(0.5, '#C4BAA8');
-  bodyGrad.addColorStop(0.85, '#A09484');
-  bodyGrad.addColorStop(1, '#7A6E60');
-  ctx.fillStyle = bodyGrad;
-  ctx.beginPath();
-  ctx.arc(mx, my, mr, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Craters with depth
-  const craters = [
-    { ox: 0.3, oy: -0.25, r: 0.2 },
-    { ox: -0.35, oy: 0.25, r: 0.16 },
-    { ox: 0.05, oy: 0.35, r: 0.13 },
-    { ox: -0.2, oy: -0.15, r: 0.11 },
-    { ox: 0.25, oy: 0.1, r: 0.09 },
-    { ox: -0.1, oy: 0.05, r: 0.07 },
-    { ox: 0.4, oy: 0.2, r: 0.06 },
-  ];
-  for (const c of craters) {
-    const cx = mx + c.ox * mr, cy = my + c.oy * mr, cr = c.r * mr;
-    // Crater shadow (darker ring)
-    ctx.fillStyle = 'rgba(80, 70, 55, 0.5)';
-    ctx.beginPath();
-    ctx.arc(cx, cy, cr, 0, Math.PI * 2);
-    ctx.fill();
-    // Crater floor (slightly lighter)
-    ctx.fillStyle = 'rgba(140, 128, 110, 0.4)';
-    ctx.beginPath();
-    ctx.arc(cx + cr * 0.15, cy + cr * 0.15, cr * 0.7, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  // Subtle rim highlight (top-left lit edge)
-  ctx.strokeStyle = 'rgba(240, 235, 220, 0.15)';
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.arc(mx, my, mr - 1, -Math.PI * 0.8, -Math.PI * 0.1);
-  ctx.stroke();
-}
-
-// ─── ROCKET CYCLE (lands/takes off from permanent moon) ─────────
-let rocketState = { phase: 'waiting', timer: 0, trail: [] };
-// Phases: waiting → arriving → parked → departing → waiting
-const ROCKET_CYCLE_TIME = 300; // ~5 min between events
-
-function updateRocket(dt) {
-  if (state !== STATE.PLAYING) return;
-  const rs = rocketState;
-  rs.timer += dt;
-
-  if (rs.phase === 'waiting') {
-    if (rs.timer >= ROCKET_CYCLE_TIME) {
-      rs.phase = 'arriving';
-      rs.timer = 0;
-      rs.fromLeft = Math.random() < 0.5;
-      rs.rx = rs.fromLeft ? -20 : W + 20;
-      rs.ry = H * 0.4;
-      rs.flyDur = 3.0;
-      rs.trail = [];
-    }
-  } else if (rs.phase === 'arriving') {
-    const t = clamp(rs.timer / rs.flyDur, 0, 1);
-    const startX = rs.fromLeft ? -20 : W + 20;
-    const startY = H * 0.4;
-    const targetX = MOON.x + MOON.r * 0.35;
-    const targetY = MOON.y - MOON.r - 8;
-    const cpX = (startX + targetX) / 2;
-    const cpY = Math.min(startY, targetY) - H * 0.18;
-    const mt = 1 - t;
-    rs.rx = mt * mt * startX + 2 * mt * t * cpX + t * t * targetX;
-    rs.ry = mt * mt * startY + 2 * mt * t * cpY + t * t * targetY;
-    // Landing deceleration = bigger flames near end
-    const flameSize = 1 + t * 2;
-    if (Math.random() < 0.85) {
-      for (let i = 0; i < 2; i++) {
-        rs.trail.push({
-          x: rs.rx + rand(-3, 3), y: rs.ry + rand(5, 10),
-          vx: rand(-0.8, 0.8), vy: rand(0.8, 2.5) * flameSize,
-          life: rand(0.3, 0.7), maxLife: 0.7, size: rand(2, 4) * flameSize,
-          type: Math.random() < 0.3 ? 'smoke' : 'fire',
-        });
-      }
-    }
-    if (t >= 1) { rs.phase = 'parked'; rs.timer = 0; }
-  } else if (rs.phase === 'parked') {
-    if (rs.timer >= ROCKET_CYCLE_TIME) {
-      rs.phase = 'departing';
-      rs.timer = 0;
-      rs.rx = MOON.x + MOON.r * 0.35;
-      rs.ry = MOON.y - MOON.r - 8;
-      rs.exitLeft = Math.random() < 0.5;
-      rs.flyDur = 3.0;
-      rs.trail = [];
-      // Big liftoff smoke burst
-      for (let i = 0; i < 15; i++) {
-        rs.trail.push({
-          x: rs.rx + rand(-5, 5), y: rs.ry + rand(5, 12),
-          vx: rand(-1.5, 1.5), vy: rand(0.5, 3),
-          life: rand(0.5, 1.2), maxLife: 1.2, size: rand(3, 6),
-          type: 'smoke',
-        });
-      }
-    }
-  } else if (rs.phase === 'departing') {
-    const t = clamp(rs.timer / rs.flyDur, 0, 1);
-    const startX = MOON.x + MOON.r * 0.35;
-    const startY = MOON.y - MOON.r - 8;
-    const endX = rs.exitLeft ? -30 : W + 30;
-    const endY = H * 0.45;
-    const cpX = (startX + endX) / 2;
-    const cpY = Math.min(startY, endY) - H * 0.2;
-    const mt = 1 - t;
-    rs.rx = mt * mt * startX + 2 * mt * t * cpX + t * t * endX;
-    rs.ry = mt * mt * startY + 2 * mt * t * cpY + t * t * endY;
-    // Big flames on takeoff, reducing as it flies
-    const flameSize = Math.max(0.5, 3 - t * 2.5);
-    if (Math.random() < 0.9) {
-      for (let i = 0; i < 3; i++) {
-        rs.trail.push({
-          x: rs.rx + rand(-3, 3), y: rs.ry + rand(5, 10),
-          vx: rand(-1, 1), vy: rand(1, 3) * flameSize,
-          life: rand(0.3, 0.8), maxLife: 0.8, size: rand(2, 5) * flameSize,
-          type: Math.random() < 0.25 ? 'smoke' : 'fire',
-        });
-      }
-    }
-    if (t >= 1) { rs.phase = 'waiting'; rs.timer = 0; rs.trail = []; }
-  }
-
-  // Update trail particles
-  for (let i = rs.trail.length - 1; i >= 0; i--) {
-    const p = rs.trail[i];
-    p.x += p.vx * dt * 60; p.y += p.vy * dt * 60;
-    p.vy *= 0.98; // slight drag
-    p.life -= dt;
-    if (p.life <= 0) rs.trail.splice(i, 1);
-  }
-}
-
-function drawRocketShip(rx, ry) {
-  // Body
-  ctx.fillStyle = '#E8E0D8';
-  ctx.beginPath();
-  ctx.moveTo(rx, ry - 10); ctx.lineTo(rx - 5, ry + 6); ctx.lineTo(rx + 5, ry + 6);
-  ctx.closePath();
-  ctx.fill();
-  // Nose cone
-  ctx.fillStyle = '#f87171';
-  ctx.beginPath();
-  ctx.moveTo(rx, ry - 10); ctx.lineTo(rx - 3, ry - 3); ctx.lineTo(rx + 3, ry - 3);
-  ctx.closePath();
-  ctx.fill();
-  // Window
-  ctx.fillStyle = '#60A5FA';
-  ctx.beginPath();
-  ctx.arc(rx, ry - 1, 2, 0, Math.PI * 2);
-  ctx.fill();
-  // Fins
-  ctx.fillStyle = '#f87171';
-  ctx.beginPath();
-  ctx.moveTo(rx - 5, ry + 3); ctx.lineTo(rx - 8, ry + 8); ctx.lineTo(rx - 3, ry + 6);
-  ctx.closePath();
-  ctx.fill();
-  ctx.beginPath();
-  ctx.moveTo(rx + 5, ry + 3); ctx.lineTo(rx + 8, ry + 8); ctx.lineTo(rx + 3, ry + 6);
-  ctx.closePath();
-  ctx.fill();
-}
-
-function drawRocket() {
-  const rs = rocketState;
-
-  // Draw trail
-  for (const p of rs.trail) {
-    const a = clamp(p.life / p.maxLife, 0, 1);
-    ctx.globalAlpha = a * 0.75;
-    if (p.type === 'smoke') {
-      ctx.fillStyle = `rgba(180, 170, 160, ${a * 0.5})`;
-    } else {
-      const t = 1 - p.life / p.maxLife;
-      ctx.fillStyle = t < 0.25 ? '#FFEC80' : t < 0.5 ? '#FFD700' : t < 0.75 ? '#FF6B35' : '#FF3333';
-    }
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, p.size * a, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  ctx.globalAlpha = 1;
-
-  // Draw rocket in flying or parked states
-  if (rs.phase === 'arriving' || rs.phase === 'departing') {
-    drawRocketShip(rs.rx, rs.ry);
-  } else if (rs.phase === 'parked') {
-    drawRocketShip(MOON.x + MOON.r * 0.35, MOON.y - MOON.r - 8);
-  }
 }
 
 function updateParticles(dt) {
@@ -784,8 +568,31 @@ function updatePlayer(dt) {
     }
   }
 
+  // Invincibility + hit flash timers
+  if (invincTimer > 0) invincTimer -= dt;
+  if (hitFlashTimer > 0) hitFlashTimer -= dt;
+
   // Anim
   player.animPhase += dt * 5;
+
+  // Damage smoke particles
+  if (state === STATE.PLAYING && damageLevel > 0) {
+    const smokeRate = damageLevel === 1 ? 0.3 : 0.7;
+    if (Math.random() < smokeRate) {
+      const smokeCol = damageLevel === 1 ? 'rgba(180,180,180,0.6)' : 'rgba(80,80,80,0.8)';
+      spawnParticle(
+        player.x + rand(-8, 8), player.y + player.jumpY + rand(-10, 5),
+        smokeCol, rand(-0.8, 0.8), rand(-1.5, -0.3), rand(0.3, 0.7), rand(3, 6), 0.03
+      );
+    }
+    // Sparks at damage level 2
+    if (damageLevel >= 2 && Math.random() < 0.25) {
+      spawnParticle(
+        player.x + rand(-12, 12), player.y + player.jumpY + rand(-15, 0),
+        '#FF6B35', rand(-2, 2), rand(-2, 0), rand(0.1, 0.25), rand(1, 2.5), 0.02
+      );
+    }
+  }
 
   // Engine flame particles
   if (state === STATE.PLAYING) {
@@ -815,9 +622,20 @@ function drawPlayer() {
   const bob = Math.sin(player.animPhase) * 1.5;
   const tilt = Math.sin(player.animPhase * 0.7) * 0.04;
 
+  // Invincibility blink — skip drawing every other frame
+  if (invincTimer > 0 && Math.sin(invincTimer * 20) > 0.3) {
+    return;
+  }
+
   ctx.save();
   ctx.translate(x, y + bob);
   ctx.rotate(tilt);
+
+  // Red flash overlay on hit
+  if (hitFlashTimer > 0) {
+    ctx.globalAlpha = hitFlashTimer / 0.25;
+    ctx.fillStyle = 'rgba(255, 80, 80, 0.5)';
+  }
 
   const w = player.width * s;
   const h = player.height * s;
@@ -947,17 +765,23 @@ function checkCollisions() {
 
     if (o.type === 'tall') {
       if (player.isJumping && player.jumpY < -20) continue; // jumped over
-      gameOver();
-      return;
+      takeDamage();
+      if (state === STATE.DEAD) return;
+      o.z = -1; // mark as hit so it doesn't re-trigger
+      continue;
     } else if (o.type === 'low') {
       if (player.isSliding) continue; // slid under
       if (player.isJumping) continue; // also safe if jumping
-      gameOver();
-      return;
+      takeDamage();
+      if (state === STATE.DEAD) return;
+      o.z = -1;
+      continue;
     } else if (o.type === 'gap') {
       if (player.isJumping) continue; // jumped over gap
-      gameOver();
-      return;
+      takeDamage();
+      if (state === STATE.DEAD) return;
+      o.z = -1;
+      continue;
     }
   }
 
@@ -1025,6 +849,34 @@ function checkCollisions() {
   }
 }
 
+// ─── DAMAGE / HEALTH ────────────────────────────────────────────
+function takeDamage() {
+  if (invincTimer > 0) return; // still invincible
+  health--;
+  damageLevel = 3 - health; // 1 after first hit, 2 after second
+  hitFlashTimer = 0.25;
+  invincTimer = 1.5;
+  shakeDur = 0.25;
+  screenFlash = 0.3;
+  screenFlashColor = COL.red;
+
+  // Damage sparks
+  spawnBurst(player.x, player.y, COL.red, 20, 4, 0.6, 4);
+  spawnBurst(player.x, player.y, '#FF8800', 12, 3, 0.4, 3);
+
+  if (health <= 0) {
+    // Final explosion — bigger than normal
+    spawnBurst(player.x, player.y, COL.red, 50, 6, 1.0, 6);
+    spawnBurst(player.x, player.y, '#FF4400', 30, 5, 0.8, 5);
+    spawnBurst(player.x, player.y, COL.violet, 20, 4, 0.7, 4);
+    spawnBurst(player.x, player.y, COL.white, 10, 3, 0.5, 2);
+    floatingTexts.push({ text: 'DESTROYED!', x: player.x, y: player.y - 40, life: 2, maxLife: 2, color: COL.red, size: 32 });
+    gameOver();
+  } else {
+    floatingTexts.push({ text: health === 2 ? 'HIT!' : 'CRITICAL!', x: player.x, y: player.y - 30, life: 1.2, maxLife: 1.2, color: COL.red, size: 24 });
+  }
+}
+
 // ─── GAME OVER ──────────────────────────────────────────────────
 function gameOver() {
   state = STATE.DEAD;
@@ -1060,7 +912,7 @@ function resetGame() {
   spawnTimer = 0; orbSpawnTimer = 0;
   lastMarkerDistance = 0; distanceMarkerFlash = 0; screenFlash = 0; floatingTexts = [];
   level = 1; levelUpFlash = 0; slowMoTimer = 0;
-  rocketState = { phase: 'waiting', timer: rand(250, 300), trail: [] };
+  health = 3; damageLevel = 0; invincTimer = 0; hitFlashTimer = 0;
   isNewHighScore = false;
 }
 
@@ -1303,6 +1155,35 @@ function drawHUD() {
     ctx.globalAlpha = 1;
   }
 
+  // Health hearts — top-right below distance
+  for (let i = 0; i < 3; i++) {
+    const hx = W - pad - i * 22 - 10;
+    const hy = top + 28;
+    const filled = i < health;
+    ctx.save();
+    ctx.translate(hx, hy);
+    // Heart shape
+    ctx.beginPath();
+    ctx.moveTo(0, 3);
+    ctx.bezierCurveTo(-5, -3, -9, -3, -9, 1);
+    ctx.bezierCurveTo(-9, 5, 0, 10, 0, 12);
+    ctx.bezierCurveTo(0, 10, 9, 5, 9, 1);
+    ctx.bezierCurveTo(9, -3, 5, -3, 0, 3);
+    ctx.closePath();
+    if (filled) {
+      ctx.fillStyle = COL.red;
+      ctx.shadowColor = COL.red;
+      ctx.shadowBlur = 8;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    } else {
+      ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
   // Floating bonus texts
   drawFloatingTexts();
 }
@@ -1404,7 +1285,6 @@ function drawGameOverScreen() {
 // ─── MAIN LOOP ──────────────────────────────────────────────────
 function update(dt) {
   updateStars(dt);
-  updateRocket(dt);
   updateParticles(dt);
   updateFloatingTexts(dt);
 
@@ -1500,8 +1380,6 @@ function draw() {
   ctx.translate(shakeX, shakeY);
 
   drawStars(performance.now());
-  drawMoon();
-  drawRocket();
   drawPath();
 
   // Draw far objects first (sorted by z descending)
