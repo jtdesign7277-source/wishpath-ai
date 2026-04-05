@@ -101,10 +101,20 @@ let orbSpawnTimer = 0;
 let distanceMarkerFlash = 0;
 let lastMarkerDistance = 0;
 
-// Particles — object pooled
-const MAX_PARTICLES = 800;
+// Particles — object pooled (1000 cap during jackpot)
+const MAX_PARTICLES = 1000;
 let particles = [];
 let sparkles = []; // persistent path-edge sparkles
+
+// Gold Coin Jackpot System
+let goldCoins = []; // active gold coin objects on path
+let goldCoinsCollected = 0; // 0-2, triggers jackpot at 3
+let goldCoinSpawnDist = 0; // distance until next gold coin spawns
+let nextGoldCoinAt = rand(800, 1500); // first spawn distance
+let jackpotTimer = 0; // countdown for jackpot celebration (2.5s)
+let jackpotScoreAnim = 0; // animated score bonus rolling up
+let goldCoinHudFlash = 0; // HUD flash when coin collected
+let totalJackpots = 0; // jackpots hit this run
 
 // Screen shake + health
 let health = 3, invincTimer = 0, hitFlashTimer = 0, damageLevel = 0;
@@ -796,6 +806,198 @@ function drawOrb(o) {
   ctx.globalAlpha = 1;
 }
 
+// ─── GOLD COIN SYSTEM ───────────────────────────────────────────
+function spawnGoldCoin() {
+  const lane = randInt(0, 2);
+  goldCoins.push({ lane, z: 1.1, collected: false, pulse: rand(0, Math.PI * 2), spin: rand(0, Math.PI * 2) });
+}
+
+function updateGoldCoins(dt) {
+  const moveSpeed = speed * 0.012 * dt * 60;
+  for (let i = goldCoins.length - 1; i >= 0; i--) {
+    const c = goldCoins[i];
+    c.z -= moveSpeed;
+    c.pulse += dt * 3;
+    c.spin += dt * 2.5;
+    if (c.z < -0.1 || c.collected) goldCoins.splice(i, 1);
+  }
+  // Jackpot celebration timer
+  if (jackpotTimer > 0) {
+    jackpotTimer -= dt;
+    // Rain gold particles from top during jackpot
+    if (jackpotTimer > 0.5) {
+      for (let i = 0; i < 4; i++) {
+        spawnParticle(rand(0, W), rand(-10, 0),
+          Math.random() < 0.6 ? COL.gold : Math.random() < 0.5 ? COL.goldLight : COL.white,
+          rand(-1, 1), rand(2, 6), rand(0.8, 2.0), rand(3, 7), 0.03);
+      }
+    }
+  }
+  // Score roll-up animation
+  if (jackpotScoreAnim > 0) {
+    const add = Math.min(jackpotScoreAnim, 300 * dt * 60);
+    score += add;
+    jackpotScoreAnim -= add;
+    if (jackpotScoreAnim < 1) jackpotScoreAnim = 0;
+  }
+  // HUD flash decay
+  if (goldCoinHudFlash > 0) goldCoinHudFlash -= dt;
+}
+
+function drawGoldCoin(c) {
+  if (c.z < 0 || c.z > 1 || c.collected) return;
+  const x = getPathX(c.lane, c.z);
+  let y = getPathY(c.z) - 20 * getScale(c.z);
+  const s = getScale(c.z);
+  const r = 22 * s; // BIG — 2-3x diamond size
+  const squeeze = Math.abs(Math.cos(c.spin));
+  const coinW = r * Math.max(0.25, squeeze);
+  const pulseGlow = 1 + Math.sin(c.pulse * 2) * 0.2;
+
+  ctx.save();
+  ctx.translate(x, y);
+
+  // Outer golden glow aura
+  ctx.shadowColor = COL.gold;
+  ctx.shadowBlur = 35 * s * pulseGlow;
+
+  // Coin body — ellipse (squeezed for 3D spin)
+  const coinGrad = ctx.createLinearGradient(-coinW, -r, coinW, r);
+  coinGrad.addColorStop(0, '#B8860B');
+  coinGrad.addColorStop(0.3, COL.gold);
+  coinGrad.addColorStop(0.5, COL.goldLight);
+  coinGrad.addColorStop(0.7, COL.gold);
+  coinGrad.addColorStop(1, '#B8860B');
+  ctx.fillStyle = coinGrad;
+  ctx.globalAlpha = 0.95;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, coinW, r, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Inner circle border
+  ctx.strokeStyle = '#B8860B';
+  ctx.lineWidth = 2 * s;
+  ctx.globalAlpha = 0.5;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, coinW * 0.75, r * 0.75, 0, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Embossed star in center (only visible when face is showing)
+  if (squeeze > 0.4) {
+    ctx.globalAlpha = squeeze * 0.7;
+    ctx.fillStyle = '#B8860B';
+    ctx.font = `bold ${Math.floor(r * 1.0)}px -apple-system, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('\u2605', 0, 1 * s); // ★ star
+    // Brighter overlay
+    ctx.globalAlpha = squeeze * 0.4;
+    ctx.fillStyle = COL.goldLight;
+    ctx.fillText('\u2605', 0, 0);
+  }
+
+  // Edge highlight — bright rim
+  ctx.globalAlpha = 0.4 + Math.sin(c.pulse * 3) * 0.2;
+  ctx.strokeStyle = COL.goldLight;
+  ctx.lineWidth = 1.5 * s;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, coinW, r, 0, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.shadowBlur = 0;
+  ctx.globalAlpha = 1;
+  ctx.restore();
+
+  // Outer pulse ring
+  ctx.strokeStyle = COL.gold;
+  ctx.globalAlpha = 0.25 + Math.sin(c.pulse * 2) * 0.15;
+  ctx.lineWidth = 1.5 * s;
+  ctx.shadowColor = COL.gold;
+  ctx.shadowBlur = 12 * s;
+  ctx.beginPath();
+  ctx.arc(x, y, r * 1.8, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+  ctx.globalAlpha = 1;
+
+  // Constant sparkle particles
+  if (s > 0.25 && Math.random() < 0.6) {
+    spawnParticle(x + rand(-r, r), y + rand(-r, r),
+      Math.random() < 0.6 ? COL.gold : COL.goldLight,
+      rand(-0.5, 0.5), rand(-0.8, 0.2), rand(0.2, 0.5), rand(1.5, 3) * s, 0);
+  }
+}
+
+function checkGoldCoinCollisions() {
+  const pz = 0.14;
+  const hitZone = 0.045; // slightly larger hit zone — reward the player
+  for (const c of goldCoins) {
+    if (c.collected) continue;
+    if (Math.abs(c.z - pz) > hitZone) continue;
+    if (Math.abs(c.lane - player.lane) > 0.7) continue;
+
+    c.collected = true;
+    goldCoinsCollected++;
+    goldCoinHudFlash = 0.8;
+
+    const cx = getPathX(c.lane, c.z);
+    const cy = getPathY(c.z) - 20 * getScale(c.z);
+
+    // Gold burst on pickup
+    spawnBurst(cx, cy, COL.gold, 50, 6, 1.0, 7);
+    spawnBurst(cx, cy, COL.goldLight, 30, 5, 0.8, 5);
+    spawnBurst(cx, cy, COL.white, 15, 4, 0.5, 3);
+    screenFlash = 0.35;
+    screenFlashColor = COL.gold;
+    shakeDur = 0.1;
+
+    floatingTexts.push({ text: '+GOLD COIN! \uD83E\uDE99', x: cx, y: cy - 15, life: 1.8, maxLife: 1.8, color: COL.gold, size: 26 });
+    floatingTexts.push({ text: `\uD83E\uDE99 ${goldCoinsCollected}/3`, x: cx, y: cy + 10, life: 1.5, maxLife: 1.5, color: COL.goldLight, size: 20 });
+
+    // Check for JACKPOT
+    if (goldCoinsCollected >= 3) {
+      triggerJackpot();
+    }
+  }
+}
+
+function triggerJackpot() {
+  jackpotTimer = 2.5;
+  goldCoinsCollected = 0;
+  totalJackpots++;
+  jackpotScoreAnim = 10000; // will roll up into score
+  slowMoTimer = Math.max(slowMoTimer, 0.5);
+  shakeDur = 0.6;
+  screenFlash = 0.8;
+  screenFlashColor = COL.gold;
+
+  // MASSIVE particle explosion — hundreds of gold beads
+  spawnBurst(W / 2, H * 0.4, COL.gold, 120, 10, 2.0, 10);
+  spawnBurst(W / 2, H * 0.4, COL.goldLight, 80, 8, 1.5, 8);
+  spawnBurst(W / 2, H * 0.4, COL.white, 40, 7, 1.0, 5);
+  spawnBurst(W / 2, H * 0.4, COL.cyan, 30, 6, 1.0, 5);
+  spawnBurst(W / 2, H * 0.4, COL.magentaGlow, 20, 5, 0.8, 4);
+  // Confetti-style colored bursts from edges
+  spawnBurst(W * 0.2, H * 0.3, COL.emerald, 25, 5, 1.2, 5);
+  spawnBurst(W * 0.8, H * 0.3, COL.purple, 25, 5, 1.2, 5);
+  spawnBurst(W * 0.5, H * 0.2, COL.gold, 40, 6, 1.5, 6);
+
+  // Giant text
+  floatingTexts.push({ text: 'JACKPOT! \uD83D\uDCB0', x: W / 2, y: H * 0.3, life: 3.0, maxLife: 3.0, color: COL.gold, size: 52 });
+  floatingTexts.push({ text: 'WISH MANIFESTED! \u2728', x: W / 2, y: H * 0.38, life: 3.0, maxLife: 3.0, color: COL.goldLight, size: 24 });
+  floatingTexts.push({ text: '+10,000', x: W / 2, y: H * 0.25, life: 3.0, maxLife: 3.0, color: COL.gold, size: 44 });
+
+  // Emoji shower
+  const jackpotEmojis = ['\uD83D\uDCB0', '\u2728', '\uD83D\uDE80', '\uD83C\uDF1F', '\uD83D\uDC8E', '\uD83E\uDE99'];
+  for (let i = 0; i < 10; i++) {
+    floatingTexts.push({
+      text: jackpotEmojis[i % jackpotEmojis.length],
+      x: rand(W * 0.15, W * 0.85), y: rand(H * 0.2, H * 0.6),
+      life: 2.5, maxLife: 2.5, color: COL.gold, size: 28
+    });
+  }
+}
+
 // ─── PLAYER ─────────────────────────────────────────────────────
 function updatePlayer(dt) {
   if (touching) {
@@ -1183,6 +1385,9 @@ function checkCollisions() {
       }
     }
   }
+
+  // Gold coin collection
+  checkGoldCoinCollisions();
 }
 
 // ─── DAMAGE / HEALTH ────────────────────────────────────────────
@@ -1262,6 +1467,8 @@ function resetGame() {
   level = 1; levelUpFlash = 0; slowMoTimer = 0;
   health = 3; damageLevel = 0; invincTimer = 0; hitFlashTimer = 0;
   deathTimer = 0; gameOverStatReveal = 0;
+  goldCoins = []; goldCoinsCollected = 0; goldCoinSpawnDist = 0;
+  nextGoldCoinAt = rand(800, 1500); jackpotTimer = 0; jackpotScoreAnim = 0; goldCoinHudFlash = 0; totalJackpots = 0;
   isNewHighScore = false;
 }
 
@@ -1491,6 +1698,59 @@ function drawHUD() {
     ctx.restore();
   }
 
+  // Gold coin progress — 3 coin slots below level
+  const coinY = top + 48;
+  for (let i = 0; i < 3; i++) {
+    const cx = pad + 8 + i * 20;
+    const filled = i < goldCoinsCollected;
+    const flashScale = (filled && goldCoinHudFlash > 0) ? 1 + goldCoinHudFlash * 0.5 : 1;
+    ctx.save();
+    ctx.translate(cx, coinY);
+    ctx.scale(flashScale, flashScale);
+    if (filled) {
+      ctx.fillStyle = COL.gold;
+      ctx.shadowColor = COL.gold;
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.arc(0, 0, 7, 0, Math.PI * 2);
+      ctx.fill();
+      // Star in center
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = '#B8860B';
+      ctx.font = 'bold 8px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('\u2605', 0, 0.5);
+    } else {
+      ctx.strokeStyle = 'rgba(253, 224, 71, 0.25)';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.arc(0, 0, 7, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+  ctx.shadowBlur = 0;
+
+  // Jackpot celebration overlay
+  if (jackpotTimer > 0) {
+    const t = jackpotTimer / 2.5;
+    // Pulsing golden border
+    ctx.save();
+    ctx.globalAlpha = t * 0.25;
+    const jGrad = ctx.createLinearGradient(0, 0, 0, H * 0.1);
+    jGrad.addColorStop(0, COL.gold);
+    jGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = jGrad;
+    ctx.fillRect(0, 0, W, H * 0.1);
+    const jGrad2 = ctx.createLinearGradient(0, H, 0, H * 0.9);
+    jGrad2.addColorStop(0, COL.gold);
+    jGrad2.addColorStop(1, 'transparent');
+    ctx.fillStyle = jGrad2;
+    ctx.fillRect(0, H * 0.9, W, H * 0.1);
+    ctx.restore();
+  }
+
   // High combo screen border glow (5x+)
   if (combo >= 5 && comboTimer > 0) {
     const mult = Math.min(combo, 10);
@@ -1647,6 +1907,7 @@ function drawGameOverScreen() {
     { label: 'DIAMONDS \uD83D\uDC8E', value: `${orbsCollected}`, color: COL.cyan, delay: 0.9 },
     { label: 'LEVEL', value: `${level}`, color: COL.purple, delay: 1.2 },
     { label: 'BEST COMBO', value: `x${maxCombo}`, color: COL.gold, delay: 1.5 },
+    { label: 'JACKPOTS \uD83D\uDCB0', value: `${Math.floor((totalJackpots || 0))}`, color: COL.gold, delay: 1.8 },
   ];
 
   for (let i = 0; i < stats.length; i++) {
@@ -1758,9 +2019,18 @@ function update(dt) {
     spawnOrb();
   }
 
+  // Gold coin spawning
+  goldCoinSpawnDist += speed * effDt * 2;
+  if (goldCoinSpawnDist >= nextGoldCoinAt) {
+    spawnGoldCoin();
+    goldCoinSpawnDist = 0;
+    nextGoldCoinAt = rand(800, 1500);
+  }
+
   updatePlayer(dt);
   updateObstacles(dt);
   updateOrbs(dt);
+  updateGoldCoins(dt);
   checkCollisions();
 
   // Screen shake
@@ -1803,10 +2073,15 @@ function draw() {
   drawPathSparkles();
 
   // Draw objects sorted by depth
-  const allObjects = [...obstacles.map(o => ({ ...o, isOrb: false })), ...orbs.map(o => ({ ...o, isOrb: true }))];
+  const allObjects = [
+    ...obstacles.map(o => ({ ...o, kind: 'obs' })),
+    ...orbs.map(o => ({ ...o, kind: 'orb' })),
+    ...goldCoins.map(o => ({ ...o, kind: 'gold' })),
+  ];
   allObjects.sort((a, b) => b.z - a.z);
   for (const obj of allObjects) {
-    if (obj.isOrb) drawOrb(obj);
+    if (obj.kind === 'orb') drawOrb(obj);
+    else if (obj.kind === 'gold') drawGoldCoin(obj);
     else drawObstacle(obj);
   }
 
