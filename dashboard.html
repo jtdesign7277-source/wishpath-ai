@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-05-v93';
+    var APP_VERSION = '2026-04-05-v94';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -7612,24 +7612,22 @@
 
     // Full-screen AI view — navigates to coach view (Notion-style)
     var _previousView = null;
-    function openFullScreenAI(keepConversation) {
-      // Remember current view so back button can return
-      var active = document.querySelector('.view.active');
-      if (active && active.id !== 'coachView') _previousView = active.id.replace('View', '');
+    function openFullScreenAI() {
+      // Open Life Coach with a fresh blank chat
+      startNewLifeCoachChat();
       hideMobileHome();
-      // Start a fresh chat unless explicitly told to keep current conversation
-      if (!keepConversation) {
-        coachHistory = [];
-        currentConvoId = null;
-        currentWishId = null;
-        var msgs = document.getElementById('coachMessages');
-        if (msgs) msgs.innerHTML = '';
-        showCoachEmpty();
-      }
-      showView('coach');
-      // Focus the input after transition
+      document.getElementById('lifecoachView').style.display = '';
+      showView('lifecoach');
+      hideLCChatList();
+      // Show empty state
+      var emptyState = document.getElementById('lcEmptyState');
+      if (emptyState) emptyState.style.display = '';
+      // Hide mobile nav bar
+      var navBar = document.getElementById('mobileNavBar');
+      if (navBar) navBar.style.display = 'none';
+      // Focus the input
       setTimeout(function() {
-        var input = document.getElementById('coachInput');
+        var input = document.getElementById('lcInput');
         if (input) input.focus();
       }, 200);
     }
