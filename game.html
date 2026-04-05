@@ -85,6 +85,7 @@ const player = {
   height: 94, width: 65,
   animPhase: 0,
   collectBoost: 0, // brief engine boost after collecting
+  bankAngle: 0, // banking tilt for lane changes
 };
 
 // Path perspective constants
@@ -115,6 +116,16 @@ let jackpotTimer = 0; // countdown for jackpot celebration (2.5s)
 let jackpotScoreAnim = 0; // animated score bonus rolling up
 let goldCoinHudFlash = 0; // HUD flash when coin collected
 let totalJackpots = 0; // jackpots hit this run
+
+// Super Boost Blue Diamond System
+let blueDiamonds = [];
+let blueDiamondsCollected = 0;
+let blueDiamondSpawnDist = 0;
+let nextBlueDiamondAt = rand(400, 700);
+let superBoostTimer = 0;
+let totalSuperBoosts = 0;
+let blueDiamondAnims = []; // fly-to-slot animations
+let blueDiamondHudFlash = 0;
 
 // Screen shake + health
 let health = 3, invincTimer = 0, hitFlashTimer = 0, damageLevel = 0;
@@ -998,6 +1009,215 @@ function triggerJackpot() {
   }
 }
 
+// ─── SUPER BOOST BLUE DIAMOND SYSTEM ────────────────────────────
+function getBlueDiamondSlotPos(index) {
+  const pad = 16;
+  const top = 14 + (CSS.supports('padding-top: env(safe-area-inset-top)') ? 30 : 0);
+  return { x: pad + 16, y: top + 90 + index * 44 };
+}
+
+function spawnBlueDiamond() {
+  const laneRoll = Math.random();
+  const lane = laneRoll < 0.4 ? 0 : laneRoll < 0.7 ? 1 : 2;
+  blueDiamonds.push({ lane, z: 1.1, collected: false, pulse: rand(0, Math.PI * 2) });
+}
+
+function updateBlueDiamonds(dt) {
+  const moveSpeed = speed * 0.012 * dt * 60;
+  for (let i = blueDiamonds.length - 1; i >= 0; i--) {
+    const d = blueDiamonds[i];
+    d.z -= moveSpeed;
+    d.pulse += dt * 3;
+    if (d.z < -0.1 || d.collected) blueDiamonds.splice(i, 1);
+  }
+  // Fly-to-slot animations
+  for (let i = blueDiamondAnims.length - 1; i >= 0; i--) {
+    const a = blueDiamondAnims[i];
+    a.progress += dt * 2.5;
+    if (a.progress >= 1) {
+      blueDiamondHudFlash = 0.6;
+      spawnBurst(a.tx, a.ty, COL.cyan, 20, 4, 0.5, 4);
+      spawnBurst(a.tx, a.ty, COL.white, 10, 3, 0.3, 2);
+      blueDiamondAnims.splice(i, 1);
+    } else {
+      const t = a.progress;
+      const cx = lerp(a.x, a.tx, t);
+      const cy = lerp(a.y, a.ty, t);
+      if (Math.random() < 0.8) {
+        spawnParticle(cx + rand(-3, 3), cy + rand(-3, 3),
+          Math.random() < 0.5 ? COL.cyan : COL.white,
+          rand(-1, 1), rand(-1, 1), rand(0.1, 0.3), rand(1.5, 3), 0);
+      }
+    }
+  }
+  // Super boost timer
+  if (superBoostTimer > 0) {
+    superBoostTimer -= dt;
+    if (superBoostTimer <= 0) {
+      superBoostTimer = 0;
+      screenFlash = 0.4;
+      screenFlashColor = COL.cyan;
+      floatingTexts.push({ text: 'BOOST COMPLETE! \u26A1', x: W / 2, y: H * 0.35, life: 2.0, maxLife: 2.0, color: COL.cyan, size: 36 });
+      speed = Math.max(speed * 0.7, baseSpeed + (distance * 0.001));
+    }
+    if (superBoostTimer > 0) {
+      for (let i = 0; i < 3; i++) {
+        spawnParticle(rand(0, W), rand(0, H),
+          [COL.cyan, COL.cyanGlow, COL.white, COL.emerald, COL.gold][randInt(0, 4)],
+          rand(-1, 1), rand(-1, 1), rand(0.2, 0.5), rand(1, 3), 0);
+      }
+    }
+  }
+  if (blueDiamondHudFlash > 0) blueDiamondHudFlash -= dt;
+}
+
+function drawBlueDiamond(d) {
+  if (d.z < 0 || d.z > 1 || d.collected) return;
+  const x = getPathX(d.lane, d.z);
+  let y = getPathY(d.z) - 20 * getScale(d.z);
+  const s = getScale(d.z);
+  const size = 28 * s;
+  const rot = d.pulse * 0.8;
+  const squeeze = Math.abs(Math.cos(rot));
+  const hw = size * 0.7 * Math.max(0.3, squeeze);
+  const hh = size;
+  const bottomH = size * 1.2;
+  const shimmer = Math.sin(rot * 2) * 0.5 + 0.5;
+
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.shadowColor = COL.cyan;
+  ctx.shadowBlur = 40 * s;
+
+  const ci = ((rot / (Math.PI * 2)) * 4) % 4;
+  const colors = [COL.cyan, COL.cyanGlow, '#60E0FF', COL.white];
+  const t = ci % 1;
+
+  ctx.fillStyle = lerpColor(colors[Math.floor(ci) % 4], colors[(Math.floor(ci) + 1) % 4], t);
+  ctx.globalAlpha = 0.95;
+  ctx.beginPath();
+  ctx.moveTo(0, -hh); ctx.lineTo(-hw, 0); ctx.lineTo(0, 0); ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = lerpColor(colors[(Math.floor(ci) + 1) % 4], colors[(Math.floor(ci) + 2) % 4], t);
+  ctx.beginPath();
+  ctx.moveTo(0, -hh); ctx.lineTo(hw, 0); ctx.lineTo(0, 0); ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = lerpColor(colors[(Math.floor(ci) + 2) % 4], colors[(Math.floor(ci) + 3) % 4], t);
+  ctx.globalAlpha = 0.85;
+  ctx.beginPath();
+  ctx.moveTo(-hw, 0); ctx.lineTo(0, bottomH); ctx.lineTo(0, 0); ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = lerpColor(colors[(Math.floor(ci) + 3) % 4], colors[Math.floor(ci) % 4], t);
+  ctx.globalAlpha = 0.88;
+  ctx.beginPath();
+  ctx.moveTo(hw, 0); ctx.lineTo(0, bottomH); ctx.lineTo(0, 0); ctx.closePath();
+  ctx.fill();
+
+  ctx.shadowBlur = 0;
+  ctx.globalAlpha = 0.5 + shimmer * 0.3;
+  ctx.strokeStyle = COL.white;
+  ctx.lineWidth = 1.2 * s;
+  ctx.beginPath();
+  ctx.moveTo(0, -hh); ctx.lineTo(-hw, 0); ctx.lineTo(0, bottomH); ctx.lineTo(hw, 0); ctx.closePath();
+  ctx.moveTo(0, -hh); ctx.lineTo(0, bottomH);
+  ctx.stroke();
+  ctx.globalAlpha = shimmer * 0.8;
+  ctx.fillStyle = COL.white;
+  ctx.beginPath();
+  ctx.arc(0, -hh * 0.2, 3 * s, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+  ctx.restore();
+
+  ctx.strokeStyle = COL.cyan;
+  ctx.globalAlpha = 0.3 + Math.sin(d.pulse * 2) * 0.15;
+  ctx.lineWidth = 2 * s;
+  ctx.shadowColor = COL.cyan;
+  ctx.shadowBlur = 15 * s;
+  ctx.beginPath();
+  ctx.arc(x, y, size * 1.5, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+  ctx.globalAlpha = 1;
+
+  if (s > 0.25 && Math.random() < 0.7) {
+    spawnParticle(x + rand(-size, size), y + rand(-size, size),
+      Math.random() < 0.6 ? COL.cyan : COL.white,
+      rand(-0.6, 0.6), rand(-0.8, 0.3), rand(0.2, 0.5), rand(2, 4) * s, 0);
+  }
+}
+
+function drawBlueDiamondAnims() {
+  for (const a of blueDiamondAnims) {
+    const t = a.progress;
+    const cx = lerp(a.x, a.tx, t * t);
+    const cy = lerp(a.y, a.ty, t);
+    const s = lerp(1, 0.4, t);
+    drawDiamond(cx, cy, s * 0.6, performance.now() * 0.005, false);
+    ctx.globalAlpha = 0.5 * (1 - t);
+    ctx.fillStyle = COL.cyan;
+    ctx.shadowColor = COL.cyan;
+    ctx.shadowBlur = 15;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 5 * s, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = 1;
+  }
+}
+
+function checkBlueDiamondCollisions() {
+  const pz = 0.14;
+  const hitZone = 0.045;
+  for (const d of blueDiamonds) {
+    if (d.collected) continue;
+    if (Math.abs(d.z - pz) > hitZone) continue;
+    if (Math.abs(d.lane - player.lane) > 0.7) continue;
+
+    d.collected = true;
+    blueDiamondsCollected++;
+    const cx = getPathX(d.lane, d.z);
+    const cy = getPathY(d.z) - 20 * getScale(d.z);
+    spawnBurst(cx, cy, COL.cyan, 40, 6, 0.8, 6);
+    spawnBurst(cx, cy, COL.white, 20, 4, 0.5, 3);
+    screenFlash = 0.3;
+    screenFlashColor = COL.cyan;
+    shakeDur = 0.08;
+    const slot = getBlueDiamondSlotPos(blueDiamondsCollected - 1);
+    blueDiamondAnims.push({ x: cx, y: cy, tx: slot.x, ty: slot.y, progress: 0 });
+    floatingTexts.push({ text: '\uD83D\uDC8E ' + blueDiamondsCollected + '/3', x: cx, y: cy - 20, life: 1.5, maxLife: 1.5, color: COL.cyan, size: 24 });
+    if (blueDiamondsCollected >= 3) triggerSuperBoost();
+  }
+}
+
+function triggerSuperBoost() {
+  superBoostTimer = 9;
+  blueDiamondsCollected = 0;
+  totalSuperBoosts++;
+  slowMoTimer = Math.max(slowMoTimer, 0.5);
+  shakeDur = 0.5;
+  screenFlash = 0.8;
+  screenFlashColor = COL.cyan;
+  speed = Math.min(maxSpeed, speed * 1.5);
+  spawnBurst(W / 2, H * 0.4, COL.cyan, 100, 10, 2.0, 10);
+  spawnBurst(W / 2, H * 0.4, COL.cyanGlow, 60, 8, 1.5, 8);
+  spawnBurst(W / 2, H * 0.4, COL.white, 40, 7, 1.0, 5);
+  spawnBurst(W / 2, H * 0.4, COL.emerald, 30, 6, 1.0, 5);
+  spawnBurst(W / 2, H * 0.4, COL.gold, 20, 5, 0.8, 4);
+  spawnBurst(W * 0.2, H * 0.3, COL.cyan, 25, 5, 1.2, 5);
+  spawnBurst(W * 0.8, H * 0.3, COL.cyanGlow, 25, 5, 1.2, 5);
+  floatingTexts.push({ text: 'SUPER BOOST! \uD83D\uDE80\u2728', x: W / 2, y: H * 0.3, life: 3.0, maxLife: 3.0, color: COL.cyan, size: 48 });
+  floatingTexts.push({ text: 'INVINCIBLE!', x: W / 2, y: H * 0.38, life: 2.5, maxLife: 2.5, color: COL.cyanGlow, size: 28 });
+  const boostEmojis = ['\uD83D\uDE80', '\u2728', '\uD83D\uDC8E', '\u26A1', '\uD83C\uDF1F', '\uD83D\uDCAB'];
+  for (let i = 0; i < 8; i++) {
+    floatingTexts.push({
+      text: boostEmojis[i % boostEmojis.length],
+      x: rand(W * 0.15, W * 0.85), y: rand(H * 0.2, H * 0.6),
+      life: 2.5, maxLife: 2.5, color: COL.cyan, size: 28
+    });
+  }
+}
+
 // ─── PLAYER ─────────────────────────────────────────────────────
 function updatePlayer(dt) {
   if (touching) {
@@ -1007,6 +1227,10 @@ function updatePlayer(dt) {
   }
   player.x = getPathX(player.lane, 0.14);
   player.y = getPathY(0.14);
+
+  // Banking — tilt toward movement direction
+  const bankTarget = clamp((player.targetLane - player.lane) * 0.4, -0.35, 0.35);
+  player.bankAngle = lerp(player.bankAngle, bankTarget, 0.12 * dt * 60);
 
   // Jump physics
   if (player.isJumping) {
@@ -1061,21 +1285,22 @@ function updatePlayer(dt) {
   // Engine flame particles — multi-layered
   if (state === STATE.PLAYING) {
     const boost = player.collectBoost > 0;
-    const flameCount = player.isSliding ? 2 : (boost ? 8 : 5);
+    const isSB = superBoostTimer > 0;
+    const flameCount = player.isSliding ? 2 : (isSB ? 14 : (boost ? 8 : 5));
     for (let i = 0; i < flameCount; i++) {
-      // Blue core
       const baseY = player.y + player.jumpY + (player.isSliding ? 3 : 8);
       if (i < 2) {
         spawnParticle(
           player.x + rand(-3, 3), baseY + rand(0, 2),
-          COL.cyan, rand(-0.2, 0.2), rand(1.5, 4), rand(0.12, 0.3), rand(2, 3.5), 0.02
+          isSB ? COL.white : COL.cyan, rand(-0.2, 0.2), rand(1.5, isSB ? 6 : 4), rand(0.12, 0.3), rand(2, isSB ? 6 : 3.5), 0.02
         );
       }
-      // Orange mid
-      const flameCol = Math.random() < 0.3 ? '#FF6B35' : Math.random() < 0.4 ? COL.gold : COL.purple;
+      const flameCol = isSB
+        ? [COL.cyan, COL.emerald, COL.gold, COL.magentaGlow, COL.white, COL.purple][randInt(0, 5)]
+        : (Math.random() < 0.3 ? '#FF6B35' : Math.random() < 0.4 ? COL.gold : COL.purple);
       spawnParticle(
-        player.x + rand(-7, 7), baseY + rand(0, 5),
-        flameCol, rand(-0.5, 0.5), rand(1, 3.5), rand(0.15, 0.45), rand(2, boost ? 6 : 4.5), 0.02
+        player.x + rand(isSB ? -14 : -7, isSB ? 14 : 7), baseY + rand(0, isSB ? 8 : 5),
+        flameCol, rand(-0.5, 0.5), rand(1, isSB ? 5 : 3.5), rand(0.15, 0.45), rand(2, isSB ? 9 : (boost ? 6 : 4.5)), 0.02
       );
     }
     // Wingtip sparkles
@@ -1107,7 +1332,7 @@ function drawPlayer() {
   let y = player.y + player.jumpY;
   const s = getScale(0.14);
   const bob = Math.sin(player.animPhase) * 2.5 + Math.sin(player.animPhase * 1.7) * 0.8;
-  const tilt = Math.sin(player.animPhase * 0.7) * 0.04;
+  const tilt = player.bankAngle + Math.sin(player.animPhase * 0.7) * 0.02;
 
   // Invincibility blink
   if (invincTimer > 0 && Math.sin(invincTimer * 20) > 0.3) return;
@@ -1148,16 +1373,79 @@ function drawPlayer() {
     ctx.ellipse(0, -sh * 0.3, sw * 0.12, sh * 0.4, 0, 0, Math.PI * 2);
     ctx.fill();
   } else {
-    // ── SPACESHIP ──
-    ctx.shadowColor = COL.cyan;
-    ctx.shadowBlur = 32;
+    // ── 3D SPACESHIP ──
+    const isBoosted = superBoostTimer > 0;
 
-    const hullGrad = ctx.createLinearGradient(0, -h, 0, h * 0.1);
-    hullGrad.addColorStop(0, COL.cyan);
-    hullGrad.addColorStop(0.3, COL.purple);
-    hullGrad.addColorStop(0.7, COL.purpleDark);
-    hullGrad.addColorStop(1, COL.purpleDeep);
-    ctx.fillStyle = hitFlashTimer > 0 ? COL.magenta : hullGrad;
+    // Engine bloom glow (behind ship)
+    const bloomPulse = 0.6 + Math.sin(player.animPhase * 6) * 0.3;
+    const bloomSize = isBoosted ? w * 1.2 : w * 0.6;
+    const bloomGrad = ctx.createRadialGradient(0, h * 0.1, 0, 0, h * 0.1, bloomSize);
+    bloomGrad.addColorStop(0, isBoosted ? 'rgba(34, 211, 238, 0.3)' : 'rgba(34, 211, 238, 0.15)');
+    bloomGrad.addColorStop(0.5, isBoosted ? 'rgba(168, 85, 247, 0.15)' : 'rgba(168, 85, 247, 0.06)');
+    bloomGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = bloomGrad;
+    ctx.globalAlpha = bloomPulse;
+    ctx.beginPath();
+    ctx.arc(0, h * 0.1, bloomSize, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = hitFlashTimer > 0 ? 0.5 + (hitFlashTimer / 0.25) * 0.5 : 1;
+
+    // ── Multi-layer engine flames ──
+    const flameIntensity = 0.7 + speed / maxSpeed * 0.3;
+    const boostMult = isBoosted ? 3 : 1;
+    const flameFlicker1 = Math.sin(player.animPhase * 12) * 0.3;
+    const flameFlicker2 = Math.sin(player.animPhase * 15 + 1) * 0.25;
+
+    for (const nozzleX of [-w * 0.1, w * 0.1]) {
+      const flameH = h * (0.35 + flameFlicker1 * 0.1) * flameIntensity * boostMult;
+
+      // Outer red/dark layer
+      const outerGrad = ctx.createLinearGradient(nozzleX, h * 0.08, nozzleX, h * 0.08 + flameH);
+      outerGrad.addColorStop(0, 'rgba(200, 50, 20, 0.7)');
+      outerGrad.addColorStop(0.5, 'rgba(180, 30, 10, 0.4)');
+      outerGrad.addColorStop(1, 'transparent');
+      ctx.fillStyle = outerGrad;
+      ctx.beginPath();
+      ctx.moveTo(nozzleX - w * 0.09 * boostMult, h * 0.08);
+      ctx.quadraticCurveTo(nozzleX, h * 0.08 + flameH * (1 + flameFlicker2 * 0.2), nozzleX + w * 0.09 * boostMult, h * 0.08);
+      ctx.fill();
+
+      // Mid orange/yellow layer
+      const midGrad = ctx.createLinearGradient(nozzleX, h * 0.06, nozzleX, h * 0.06 + flameH * 0.7);
+      midGrad.addColorStop(0, isBoosted ? 'rgba(34, 211, 238, 0.9)' : 'rgba(255, 180, 50, 0.85)');
+      midGrad.addColorStop(0.4, 'rgba(255, 130, 30, 0.6)');
+      midGrad.addColorStop(1, 'transparent');
+      ctx.fillStyle = midGrad;
+      ctx.beginPath();
+      ctx.moveTo(nozzleX - w * 0.055 * boostMult, h * 0.06);
+      ctx.quadraticCurveTo(nozzleX, h * 0.06 + flameH * 0.7 * (1 + flameFlicker1 * 0.15), nozzleX + w * 0.055 * boostMult, h * 0.06);
+      ctx.fill();
+
+      // Inner white/blue core
+      const coreGrad = ctx.createLinearGradient(nozzleX, h * 0.05, nozzleX, h * 0.05 + flameH * 0.4);
+      coreGrad.addColorStop(0, 'rgba(220, 250, 255, 0.95)');
+      coreGrad.addColorStop(0.5, 'rgba(34, 211, 238, 0.7)');
+      coreGrad.addColorStop(1, 'transparent');
+      ctx.fillStyle = coreGrad;
+      ctx.shadowColor = isBoosted ? COL.cyan : '#88CCFF';
+      ctx.shadowBlur = isBoosted ? 25 : 12;
+      ctx.beginPath();
+      ctx.moveTo(nozzleX - w * 0.03 * boostMult, h * 0.05);
+      ctx.quadraticCurveTo(nozzleX, h * 0.05 + flameH * 0.4 * (1 + flameFlicker2 * 0.1), nozzleX + w * 0.03 * boostMult, h * 0.05);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    // ── Hull — 3D multi-layer ──
+    ctx.shadowColor = isBoosted ? COL.cyan : COL.purple;
+    ctx.shadowBlur = isBoosted ? 40 : 28;
+
+    // Dark underside layer
+    const undersideGrad = ctx.createLinearGradient(0, -h * 0.3, 0, h * 0.15);
+    undersideGrad.addColorStop(0, '#2D1B69');
+    undersideGrad.addColorStop(0.5, '#1A0E3E');
+    undersideGrad.addColorStop(1, '#0E0825');
+    ctx.fillStyle = hitFlashTimer > 0 ? COL.magenta : undersideGrad;
 
     // Ship body
     ctx.beginPath();
@@ -1176,66 +1464,112 @@ function drawPlayer() {
     ctx.closePath();
     ctx.fill();
 
-    // Panel lines
-    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+    // Lighter top surface — 3D depth
+    const topGrad = ctx.createLinearGradient(0, -h, 0, -h * 0.1);
+    topGrad.addColorStop(0, isBoosted ? 'rgba(34, 211, 238, 0.5)' : 'rgba(168, 130, 247, 0.4)');
+    topGrad.addColorStop(0.4, 'rgba(120, 80, 220, 0.2)');
+    topGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = hitFlashTimer > 0 ? 'transparent' : topGrad;
+    ctx.fill();
+
+    // Metallic sheen — highlight strip along top
+    ctx.shadowBlur = 0;
+    const sheenShift = Math.sin(player.animPhase * 0.5) * 0.3;
+    const sheenGrad = ctx.createLinearGradient(-w * 0.15, -h, w * 0.15, -h * 0.4);
+    sheenGrad.addColorStop(0, 'transparent');
+    sheenGrad.addColorStop(0.3 + sheenShift * 0.1, 'transparent');
+    sheenGrad.addColorStop(0.45 + sheenShift * 0.1, isBoosted ? 'rgba(34, 211, 238, 0.6)' : 'rgba(200, 230, 255, 0.5)');
+    sheenGrad.addColorStop(0.55 + sheenShift * 0.1, isBoosted ? 'rgba(34, 211, 238, 0.6)' : 'rgba(200, 230, 255, 0.5)');
+    sheenGrad.addColorStop(0.7 + sheenShift * 0.1, 'transparent');
+    sheenGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = sheenGrad;
+    ctx.beginPath();
+    ctx.moveTo(0, -h);
+    ctx.lineTo(w * 0.18, -h * 0.55);
+    ctx.lineTo(w * 0.12, -h * 0.2);
+    ctx.lineTo(-w * 0.12, -h * 0.2);
+    ctx.lineTo(-w * 0.18, -h * 0.55);
+    ctx.closePath();
+    ctx.fill();
+
+    // Panel lines — 3D detailing
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
     ctx.lineWidth = 0.8;
     ctx.beginPath();
     ctx.moveTo(-w * 0.12, -h * 0.5);
     ctx.lineTo(-w * 0.15, h * 0.05);
     ctx.moveTo(w * 0.12, -h * 0.5);
     ctx.lineTo(w * 0.15, h * 0.05);
+    ctx.moveTo(0, -h * 0.8);
+    ctx.lineTo(0, h * 0.05);
     ctx.stroke();
 
-    // Cockpit — cyan dome
+    // Cockpit — glowing dome
     const cockpitGrad = ctx.createRadialGradient(0, -h * 0.45, 0, 0, -h * 0.45, w * 0.14);
-    cockpitGrad.addColorStop(0, 'rgba(200, 255, 255, 0.95)');
-    cockpitGrad.addColorStop(0.5, 'rgba(34, 211, 238, 0.7)');
-    cockpitGrad.addColorStop(1, 'rgba(168, 85, 247, 0.3)');
+    cockpitGrad.addColorStop(0, isBoosted ? 'rgba(34, 255, 255, 0.95)' : 'rgba(200, 255, 255, 0.95)');
+    cockpitGrad.addColorStop(0.4, 'rgba(34, 211, 238, 0.7)');
+    cockpitGrad.addColorStop(0.7, 'rgba(168, 85, 247, 0.4)');
+    cockpitGrad.addColorStop(1, 'rgba(91, 33, 182, 0.2)');
     ctx.fillStyle = cockpitGrad;
-    ctx.shadowColor = COL.cyan;
-    ctx.shadowBlur = 15;
+    ctx.shadowColor = isBoosted ? COL.cyan : COL.cyanGlow;
+    ctx.shadowBlur = isBoosted ? 20 : 12;
     ctx.beginPath();
     ctx.ellipse(0, -h * 0.45, w * 0.12, h * 0.12, 0, 0, Math.PI * 2);
     ctx.fill();
 
     // Cockpit highlight
-    ctx.fillStyle = 'rgba(255,255,255,0.45)';
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
     ctx.beginPath();
     ctx.ellipse(-w * 0.03, -h * 0.48, w * 0.04, h * 0.04, -0.3, 0, Math.PI * 2);
     ctx.fill();
 
     // Wing neon edges
-    ctx.shadowBlur = 0;
+    const wingGlow = 0.5 + Math.sin(player.animPhase * 3) * 0.2;
     ctx.strokeStyle = COL.cyan;
-    ctx.globalAlpha = Math.min(1, ctx.globalAlpha) * 0.6;
-    ctx.lineWidth = 1.2;
+    ctx.globalAlpha = Math.min(1, ctx.globalAlpha) * (0.5 + wingGlow * 0.3);
+    ctx.lineWidth = isBoosted ? 2 : 1.2;
+    ctx.shadowColor = COL.cyan;
+    ctx.shadowBlur = isBoosted ? 12 : 6;
     ctx.beginPath();
     ctx.moveTo(w * 0.22, -h * 0.15);
     ctx.lineTo(w * 0.5, h * 0.05);
     ctx.moveTo(-w * 0.22, -h * 0.15);
     ctx.lineTo(-w * 0.5, h * 0.05);
     ctx.stroke();
+    ctx.shadowBlur = 0;
     ctx.globalAlpha = hitFlashTimer > 0 ? 0.5 + (hitFlashTimer / 0.25) * 0.5 : 1;
 
-    // Engine nozzles — multi-color glow
-    const eg1 = 0.5 + Math.sin(player.animPhase * 8) * 0.3;
-    const eg2 = 0.5 + Math.sin(player.animPhase * 8 + 1) * 0.3;
-    // Blue core
-    ctx.fillStyle = `rgba(34, 211, 238, ${eg1 * 0.8})`;
-    ctx.shadowColor = COL.cyan;
-    ctx.shadowBlur = 12;
+    // ── Wing-tip running lights ──
+    const lightPulse = 0.5 + Math.sin(player.animPhase * 4) * 0.5;
+    for (const side of [-1, 1]) {
+      const tipX = side * w * 0.5;
+      const tipY = h * 0.05;
+      ctx.fillStyle = `rgba(34, 211, 238, ${lightPulse * 0.4})`;
+      ctx.shadowColor = COL.cyan;
+      ctx.shadowBlur = 10;
+      ctx.beginPath();
+      ctx.arc(tipX, tipY, 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = `rgba(200, 255, 255, ${lightPulse * 0.9})`;
+      ctx.beginPath();
+      ctx.arc(tipX, tipY, 1.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    // Engine nozzle rims
+    ctx.fillStyle = 'rgba(80, 60, 140, 0.8)';
     ctx.beginPath();
-    ctx.arc(-w * 0.1, h * 0.08, w * 0.05, 0, Math.PI * 2);
-    ctx.arc(w * 0.1, h * 0.08, w * 0.05, 0, Math.PI * 2);
+    ctx.ellipse(-w * 0.1, h * 0.08, w * 0.06, w * 0.025, 0, 0, Math.PI * 2);
+    ctx.ellipse(w * 0.1, h * 0.08, w * 0.06, w * 0.025, 0, 0, Math.PI * 2);
     ctx.fill();
-    // Orange outer
-    ctx.fillStyle = `rgba(255, 150, 50, ${eg2 * 0.6})`;
-    ctx.shadowColor = '#FF6B35';
-    ctx.shadowBlur = 8;
+    ctx.strokeStyle = isBoosted ? COL.cyan : 'rgba(34, 211, 238, 0.4)';
+    ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.arc(-w * 0.1, h * 0.1, w * 0.07, 0, Math.PI * 2);
-    ctx.arc(w * 0.1, h * 0.1, w * 0.07, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.ellipse(-w * 0.1, h * 0.08, w * 0.06, w * 0.025, 0, 0, Math.PI * 2);
+    ctx.ellipse(w * 0.1, h * 0.08, w * 0.06, w * 0.025, 0, 0, Math.PI * 2);
+    ctx.stroke();
   }
 
   ctx.shadowBlur = 0;
@@ -1251,6 +1585,19 @@ function checkCollisions() {
   for (const o of obstacles) {
     if (Math.abs(o.z - pz) > hitZone) continue;
     if (Math.abs(o.lane - player.lane) > 0.6) continue;
+
+    // Super Boost — destroy obstacles on contact
+    if (superBoostTimer > 0) {
+      const ox = getPathX(o.lane, o.z);
+      const oy = getPathY(o.z);
+      o.z = -1;
+      spawnBurst(ox, oy, '#FF6B35', 30, 6, 0.6, 5);
+      spawnBurst(ox, oy, COL.cyan, 20, 5, 0.5, 4);
+      spawnBurst(ox, oy, COL.white, 10, 4, 0.3, 3);
+      score += 100;
+      floatingTexts.push({ text: 'DESTROYED! \uD83D\uDCA5', x: ox, y: oy - 20, life: 1.0, maxLife: 1.0, color: COL.cyan, size: 22 });
+      continue;
+    }
 
     if (o.type === 'tall') {
       if (player.isJumping && player.jumpY < -20) continue;
@@ -1388,6 +1735,8 @@ function checkCollisions() {
 
   // Gold coin collection
   checkGoldCoinCollisions();
+  // Blue diamond collection
+  checkBlueDiamondCollisions();
 }
 
 // ─── DAMAGE / HEALTH ────────────────────────────────────────────
@@ -1469,6 +1818,9 @@ function resetGame() {
   deathTimer = 0; gameOverStatReveal = 0;
   goldCoins = []; goldCoinsCollected = 0; goldCoinSpawnDist = 0;
   nextGoldCoinAt = rand(800, 1500); jackpotTimer = 0; jackpotScoreAnim = 0; goldCoinHudFlash = 0; totalJackpots = 0;
+  blueDiamonds = []; blueDiamondsCollected = 0; blueDiamondSpawnDist = 0;
+  nextBlueDiamondAt = rand(400, 700); superBoostTimer = 0; totalSuperBoosts = 0;
+  blueDiamondAnims = []; blueDiamondHudFlash = 0; player.bankAngle = 0;
   isNewHighScore = false;
 }
 
@@ -1732,6 +2084,78 @@ function drawHUD() {
   }
   ctx.shadowBlur = 0;
 
+  // Super Boost blue diamond slots — left side
+  for (let i = 0; i < 3; i++) {
+    const pos = getBlueDiamondSlotPos(i);
+    const filled = i < blueDiamondsCollected || (superBoostTimer > 0 && false);
+    const flashScale = (filled && blueDiamondHudFlash > 0) ? 1 + blueDiamondHudFlash * 0.4 : 1;
+    const pulse = 0.5 + Math.sin(performance.now() * 0.003 + i * 1.5) * 0.3;
+    ctx.save();
+    ctx.translate(pos.x, pos.y);
+    ctx.scale(flashScale, flashScale);
+    const dSize = 12;
+    if (filled) {
+      ctx.fillStyle = COL.cyan;
+      ctx.shadowColor = COL.cyan;
+      ctx.shadowBlur = 12;
+      ctx.beginPath();
+      ctx.moveTo(0, -dSize); ctx.lineTo(-dSize * 0.6, 0);
+      ctx.lineTo(0, dSize * 0.8); ctx.lineTo(dSize * 0.6, 0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = 'rgba(200, 255, 255, 0.4)';
+      ctx.beginPath();
+      ctx.moveTo(0, -dSize * 0.6); ctx.lineTo(-dSize * 0.3, 0);
+      ctx.lineTo(0, 0); ctx.lineTo(dSize * 0.3, 0);
+      ctx.closePath();
+      ctx.fill();
+    } else {
+      ctx.strokeStyle = `rgba(34, 211, 238, ${0.25 + pulse * 0.15})`;
+      ctx.shadowColor = COL.cyan;
+      ctx.shadowBlur = 6 * pulse;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(0, -dSize); ctx.lineTo(-dSize * 0.6, 0);
+      ctx.lineTo(0, dSize * 0.8); ctx.lineTo(dSize * 0.6, 0);
+      ctx.closePath();
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+  ctx.shadowBlur = 0;
+
+  // Super Boost active — cyan screen edge glow
+  if (superBoostTimer > 0) {
+    const bt = superBoostTimer / 9;
+    const bPulse = 0.5 + Math.sin(performance.now() * 0.006) * 0.3;
+    ctx.save();
+    ctx.globalAlpha = bt * 0.2 * bPulse;
+    const bGrad = ctx.createLinearGradient(0, 0, 0, H * 0.12);
+    bGrad.addColorStop(0, COL.cyan);
+    bGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = bGrad;
+    ctx.fillRect(0, 0, W, H * 0.12);
+    const bGrad2 = ctx.createLinearGradient(0, H, 0, H * 0.88);
+    bGrad2.addColorStop(0, COL.cyan);
+    bGrad2.addColorStop(1, 'transparent');
+    ctx.fillStyle = bGrad2;
+    ctx.fillRect(0, H * 0.88, W, H * 0.12);
+    const sGrad = ctx.createLinearGradient(0, 0, W * 0.06, 0);
+    sGrad.addColorStop(0, COL.cyan);
+    sGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = sGrad;
+    ctx.fillRect(0, 0, W * 0.06, H);
+    const sGrad2 = ctx.createLinearGradient(W, 0, W * 0.94, 0);
+    sGrad2.addColorStop(0, COL.cyan);
+    sGrad2.addColorStop(1, 'transparent');
+    ctx.fillStyle = sGrad2;
+    ctx.fillRect(W * 0.94, 0, W * 0.06, H);
+    ctx.restore();
+    ctx.globalAlpha = bt;
+    drawGlowText('\u26A1 ' + Math.ceil(superBoostTimer) + 's', pad, top + 210, 14, COL.cyan, 'left', 8);
+    ctx.globalAlpha = 1;
+  }
+
   // Jackpot celebration overlay
   if (jackpotTimer > 0) {
     const t = jackpotTimer / 2.5;
@@ -1908,6 +2332,7 @@ function drawGameOverScreen() {
     { label: 'LEVEL', value: `${level}`, color: COL.purple, delay: 1.2 },
     { label: 'BEST COMBO', value: `x${maxCombo}`, color: COL.gold, delay: 1.5 },
     { label: 'JACKPOTS \uD83D\uDCB0', value: `${Math.floor((totalJackpots || 0))}`, color: COL.gold, delay: 1.8 },
+    { label: 'SUPER BOOSTS \u26A1', value: `${totalSuperBoosts}`, color: COL.cyan, delay: 2.1 },
   ];
 
   for (let i = 0; i < stats.length; i++) {
@@ -2027,10 +2452,19 @@ function update(dt) {
     nextGoldCoinAt = rand(800, 1500);
   }
 
+  // Blue diamond spawning
+  blueDiamondSpawnDist += speed * effDt * 2;
+  if (blueDiamondSpawnDist >= nextBlueDiamondAt) {
+    spawnBlueDiamond();
+    blueDiamondSpawnDist = 0;
+    nextBlueDiamondAt = rand(400, 700);
+  }
+
   updatePlayer(dt);
   updateObstacles(dt);
   updateOrbs(dt);
   updateGoldCoins(dt);
+  updateBlueDiamonds(dt);
   checkCollisions();
 
   // Screen shake
@@ -2077,11 +2511,13 @@ function draw() {
     ...obstacles.map(o => ({ ...o, kind: 'obs' })),
     ...orbs.map(o => ({ ...o, kind: 'orb' })),
     ...goldCoins.map(o => ({ ...o, kind: 'gold' })),
+    ...blueDiamonds.map(o => ({ ...o, kind: 'blue' })),
   ];
   allObjects.sort((a, b) => b.z - a.z);
   for (const obj of allObjects) {
     if (obj.kind === 'orb') drawOrb(obj);
     else if (obj.kind === 'gold') drawGoldCoin(obj);
+    else if (obj.kind === 'blue') drawBlueDiamond(obj);
     else drawObstacle(obj);
   }
 
@@ -2089,6 +2525,7 @@ function draw() {
     drawPlayer();
   }
 
+  drawBlueDiamondAnims();
   drawParticles();
   ctx.restore();
 
