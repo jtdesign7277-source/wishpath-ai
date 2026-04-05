@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-05-v88';
+    var APP_VERSION = '2026-04-05-v89';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -2896,65 +2896,63 @@
       color: rgba(255,255,255,0.4);
     }
 
-    /* ── Cinematic Streak Celebration — Movie Flame + Fireworks ── */
+    /* ── Lottie Streak Celebration ── */
     .streak-celebration {
       position: fixed;
       inset: 0;
-      background: radial-gradient(circle at center, rgba(20,10,40,0.95) 0%, rgba(11,6,17,0.98) 80%);
+      background: radial-gradient(circle at center, rgba(20,10,40,0.92) 0%, rgba(11,6,17,0.97) 80%);
       display: none;
       align-items: center;
       justify-content: center;
       z-index: 99999;
       overflow: hidden;
     }
-    .flame-container {
+    .streak-lottie-wrap {
       position: relative;
-      width: 280px;
-      height: 280px;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-    .cinematic-flame {
-      font-size: 260px;
+    .streak-lottie-wrap dotlottie-player {
       position: absolute;
-      left: 50%; top: 50%;
-      transform: translate(-50%, -50%);
-      animation: cinematic-flame-grow 2.4s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
-      filter: drop-shadow(0 0 60px #ff4500) drop-shadow(0 0 120px #ff8c00) drop-shadow(0 0 180px #7132F5);
-      opacity: 0.95;
+      inset: 0;
+      width: 100%;
+      height: 100%;
     }
     .streak-number {
-      position: absolute;
-      left: 50%; top: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 82px;
+      position: relative;
+      z-index: 2;
+      font-size: 90px;
       font-weight: 900;
       color: #fff;
-      text-shadow: 0 0 30px #7132F5, 0 0 60px #ff4500;
+      text-shadow: 0 0 30px #7132F5, 0 0 60px rgba(255,69,0,0.6), 0 4px 20px rgba(0,0,0,0.5);
       opacity: 0;
-      animation: number-burn 2.4s 0.9s forwards;
+      animation: streak-num-in 1.8s 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
-    @keyframes cinematic-flame-grow {
-      0%   { transform: translate(-50%, -50%) scale(0.15) rotate(-12deg); filter: brightness(0.6); }
-      50%  { transform: translate(-50%, -50%) scale(1.65) rotate(8deg); filter: brightness(1.3); }
-      80%  { transform: translate(-50%, -50%) scale(2.1) rotate(0deg); }
-      100% { transform: translate(-50%, -50%) scale(0.3) rotate(15deg); opacity: 0; }
-    }
-    @keyframes number-burn {
-      0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.3); }
-      40%  { opacity: 1; transform: translate(-50%, -50%) scale(1.25); }
-      100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-    }
-    .firework-particle {
+    .streak-label {
       position: absolute;
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      animation: firework-blast 2.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-      pointer-events: none;
-      box-shadow: 0 0 8px currentColor;
+      z-index: 2;
+      bottom: 32%;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 16px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.8);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      opacity: 0;
+      animation: streak-label-in 1.2s 0.8s ease-out forwards;
     }
-    @keyframes firework-blast {
-      0%   { transform: translate(0, 0) scale(1); opacity: 1; }
-      100% { transform: translate(var(--vx), var(--vy)) scale(0.2); opacity: 0; }
+    @keyframes streak-num-in {
+      0%   { opacity: 0; transform: scale(0.3); }
+      50%  { opacity: 1; transform: scale(1.15); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    @keyframes streak-label-in {
+      0%   { opacity: 0; transform: translateX(-50%) translateY(10px); }
+      100% { opacity: 1; transform: translateX(-50%) translateY(0); }
     }
     /* ── Streak in sidebar ── */
     .sidebar-streak { display: inline-flex; align-items: center; gap: 3px; margin-left: 6px; }
@@ -3013,6 +3011,7 @@
   <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=2302108240316680&ev=PageView&noscript=1"/></noscript>
   <!-- End Meta Pixel Code -->
   <!-- Highcharts -->
+  <script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
   <script src="https://code.highcharts.com/highcharts.js"></script>
   <script src="https://code.highcharts.com/modules/exporting.js"></script>
   <script src="https://code.highcharts.com/modules/full-screen.js"></script>
@@ -3066,11 +3065,12 @@
       <button class="mobile-fm-menu-item" data-fm-tab="fmTechAnalysis" onclick="selectMobileFMTab('fmTechAnalysis')"><span class="mobile-fm-menu-icon">&#x1F4CA;</span><span class="mobile-fm-menu-label">Technical Analysis</span></button>
     </div>
   </div>
-  <!-- Cinematic Streak Celebration - Movie Flame + Fireworks -->
+  <!-- Lottie Streak Celebration -->
   <div id="streak-celebration" class="streak-celebration">
-    <div class="flame-container">
-      <div id="cinematic-flame" class="cinematic-flame">&#x1F525;</div>
+    <div class="streak-lottie-wrap">
+      <dotlottie-player id="streak-lottie" src="https://assets-v2.lottiefiles.com/a/76caddfc-116a-11ee-aa25-6333db7b8d8c/GpI0uQYnKa.lottie" background="transparent" speed="1" style="width:100%;height:100%" direction="1" mode="normal"></dotlottie-player>
       <div id="streak-number" class="streak-number">7</div>
+      <div id="streak-label" class="streak-label">day streak</div>
     </div>
   </div>
   <div class="holding-action-overlay" id="holdingActionOverlay" onclick="if(event.target===this)closeHoldingActions()">
@@ -4756,48 +4756,37 @@
       }
     }
 
-    // Cinematic fireworks-style burst
-    function launchFireworks() {
-      var container = document.getElementById('streak-celebration');
-      if (!container) return;
-      var colors = ['#7132F5', '#ff4500', '#149E61', '#F0EFF5', '#ff8c00'];
-      for (var i = 0; i < 180; i++) {
-        var p = document.createElement('div');
-        p.className = 'firework-particle';
-        p.style.left = (40 + Math.random() * 20) + '%';
-        p.style.bottom = '30%';
-        p.style.background = colors[Math.floor(Math.random() * colors.length)];
-        p.style.setProperty('--vx', (Math.random() - 0.5) * 420 + 'px');
-        p.style.setProperty('--vy', -(Math.random() * 380 + 180) + 'px');
-        container.appendChild(p);
-        (function(el) { setTimeout(function() { if (el.parentNode) el.parentNode.removeChild(el); }, 2800); })(p);
-      }
-    }
-
+    // Lottie celebration
     function showStreakCelebration(streakCount) {
       var overlay = document.getElementById('streak-celebration');
       var numberEl = document.getElementById('streak-number');
-      var flameEl = document.getElementById('cinematic-flame');
+      var labelEl = document.getElementById('streak-label');
+      var lottieEl = document.getElementById('streak-lottie');
       if (!overlay || !numberEl) return;
       numberEl.textContent = streakCount;
-      // Reset animations for replay
-      if (flameEl) { flameEl.style.animation = 'none'; flameEl.offsetHeight; flameEl.style.animation = ''; }
+      if (labelEl) labelEl.textContent = streakCount === 1 ? 'day streak' : 'day streak';
+      // Reset number animation
       numberEl.style.animation = 'none'; numberEl.offsetHeight; numberEl.style.animation = '';
+      if (labelEl) { labelEl.style.animation = 'none'; labelEl.offsetHeight; labelEl.style.animation = ''; }
       overlay.style.display = 'flex';
       overlay.style.opacity = '1';
       overlay.style.transition = '';
-      // Fireworks blast as flame explodes and disappears
-      setTimeout(function() { launchFireworks(); }, 1350);
-      // Fade out entire overlay
+      // Play lottie
+      if (lottieEl) {
+        try { lottieEl.stop(); } catch(e) {}
+        try { lottieEl.play(); } catch(e) {}
+      }
+      // Fade out after animation
       setTimeout(function() {
-        overlay.style.transition = 'opacity 1.1s ease-out';
+        overlay.style.transition = 'opacity 1s ease-out';
         overlay.style.opacity = '0';
         setTimeout(function() {
           overlay.style.display = 'none';
           overlay.style.opacity = '1';
           overlay.style.transition = '';
-        }, 1200);
-      }, 2850);
+          if (lottieEl) { try { lottieEl.stop(); } catch(e) {} }
+        }, 1100);
+      }, 3200);
     }
 
     function claimDailyStreak() {
