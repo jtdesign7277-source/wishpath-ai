@@ -85,6 +85,8 @@ const player = {
   height: 94, width: 65,
   animPhase: 0,
   collectBoost: 0, // brief engine boost after collecting
+  bankAngle: 0, // tilt when changing lanes
+  hoverPhase: 0, // gentle hover bob
 };
 
 // Path perspective constants
@@ -115,6 +117,16 @@ let jackpotTimer = 0; // countdown for jackpot celebration (2.5s)
 let jackpotScoreAnim = 0; // animated score bonus rolling up
 let goldCoinHudFlash = 0; // HUD flash when coin collected
 let totalJackpots = 0; // jackpots hit this run
+
+// Super Boost Diamond System
+let superDiamonds = []; // giant blue diamonds on path
+let superDiamondsCollected = 0; // 0-2, triggers boost at 3
+let superDiamondSpawnDist = 0;
+let nextSuperDiamondAt = rand(400, 700);
+let superBoostTimer = 0; // countdown for super boost (8-10s)
+let superBoostHudFlash = 0;
+let totalSuperBoosts = 0;
+let superDiamondFlyAnims = []; // fly-to-HUD animations
 
 // Screen shake + health
 let health = 3, invincTimer = 0, hitFlashTimer = 0, damageLevel = 0;
@@ -998,6 +1010,255 @@ function triggerJackpot() {
   }
 }
 
+// ─── SUPER BOOST DIAMOND SYSTEM ─────────────────────────────────
+function spawnSuperDiamond() {
+  const lane = randInt(0, 2);
+  superDiamonds.push({ lane, z: 1.1, collected: false, pulse: rand(0, Math.PI * 2), spin: rand(0, Math.PI * 2) });
+}
+
+function updateSuperDiamonds(dt) {
+  const moveSpeed = speed * 0.012 * dt * 60;
+  for (let i = superDiamonds.length - 1; i >= 0; i--) {
+    const d = superDiamonds[i];
+    d.z -= moveSpeed;
+    d.pulse += dt * 4;
+    d.spin += dt * 2;
+    if (d.z < -0.1 || d.collected) superDiamonds.splice(i, 1);
+  }
+  // Super boost timer
+  if (superBoostTimer > 0) {
+    superBoostTimer -= dt;
+    // Rainbow trail particles during boost
+    if (Math.random() < 0.8) {
+      const trailColors = [COL.cyan, COL.magenta, COL.gold, COL.emerald, COL.purple, '#FF6B35'];
+      const col = trailColors[randInt(0, trailColors.length - 1)];
+      spawnParticle(player.x + rand(-20, 20), player.y + player.jumpY + rand(5, 15),
+        col, rand(-2, 2), rand(1, 5), rand(0.3, 0.7), rand(3, 8), 0.02);
+    }
+    // Constant sparkle everywhere
+    if (Math.random() < 0.5) {
+      spawnParticle(rand(0, W), rand(H * 0.2, H), COL.white,
+        rand(-0.5, 0.5), rand(-1, 1), rand(0.2, 0.5), rand(1, 3), 0);
+    }
+    if (superBoostTimer <= 0) {
+      superBoostTimer = 0;
+      speed = Math.max(speed * 0.6, baseSpeed + (level - 1) * 0.15);
+      screenFlash = 0.4;
+      screenFlashColor = COL.cyan;
+      floatingTexts.push({ text: 'BOOST COMPLETE!', x: W / 2, y: H * 0.35, life: 2.0, maxLife: 2.0, color: COL.cyan, size: 36 });
+    }
+  }
+  // HUD flash decay
+  if (superBoostHudFlash > 0) superBoostHudFlash -= dt;
+  // Fly-to-HUD animations
+  for (let i = superDiamondFlyAnims.length - 1; i >= 0; i--) {
+    const a = superDiamondFlyAnims[i];
+    a.t += dt * 2.5;
+    if (a.t >= 1) {
+      superDiamondFlyAnims.splice(i, 1);
+      superBoostHudFlash = 0.8;
+      // Particle burst at destination
+      spawnBurst(a.tx, a.ty, COL.cyan, 20, 4, 0.6, 4);
+      screenFlash = 0.15;
+      screenFlashColor = COL.cyan;
+    }
+  }
+}
+
+function drawSuperDiamond(d) {
+  if (d.z < 0 || d.z > 1 || d.collected) return;
+  const x = getPathX(d.lane, d.z);
+  let y = getPathY(d.z) - 25 * getScale(d.z);
+  const s = getScale(d.z);
+  const size = 28 * s; // 2x regular diamond
+  const rot = d.spin;
+  const squeeze = Math.abs(Math.cos(rot));
+  const hw = size * 0.7 * Math.max(0.3, squeeze);
+  const hh = size;
+  const bottomH = size * 1.2;
+  const pulseGlow = 1 + Math.sin(d.pulse * 2) * 0.3;
+
+  ctx.save();
+  ctx.translate(x, y);
+
+  // Big glowing aura
+  ctx.shadowColor = COL.cyan;
+  ctx.shadowBlur = 40 * s * pulseGlow;
+
+  // Facets — bright cyan/blue
+  const shimmer = Math.sin(rot * 2) * 0.5 + 0.5;
+  // Top-left
+  ctx.fillStyle = lerpColor('#0EA5E9', COL.cyanGlow, shimmer);
+  ctx.globalAlpha = 0.95;
+  ctx.beginPath();
+  ctx.moveTo(0, -hh); ctx.lineTo(-hw, 0); ctx.lineTo(0, 0); ctx.closePath();
+  ctx.fill();
+  // Top-right
+  ctx.fillStyle = lerpColor(COL.cyan, '#E0F7FF', shimmer);
+  ctx.beginPath();
+  ctx.moveTo(0, -hh); ctx.lineTo(hw, 0); ctx.lineTo(0, 0); ctx.closePath();
+  ctx.fill();
+  // Bottom-left
+  ctx.fillStyle = lerpColor('#0284C7', COL.cyan, shimmer);
+  ctx.globalAlpha = 0.88;
+  ctx.beginPath();
+  ctx.moveTo(-hw, 0); ctx.lineTo(0, bottomH); ctx.lineTo(0, 0); ctx.closePath();
+  ctx.fill();
+  // Bottom-right
+  ctx.fillStyle = lerpColor(COL.cyan, '#0EA5E9', shimmer);
+  ctx.beginPath();
+  ctx.moveTo(hw, 0); ctx.lineTo(0, bottomH); ctx.lineTo(0, 0); ctx.closePath();
+  ctx.fill();
+
+  // Edge highlights
+  ctx.shadowBlur = 0;
+  ctx.globalAlpha = 0.5 + shimmer * 0.3;
+  ctx.strokeStyle = COL.white;
+  ctx.lineWidth = 1.2 * s;
+  ctx.beginPath();
+  ctx.moveTo(0, -hh); ctx.lineTo(-hw, 0); ctx.lineTo(0, bottomH); ctx.lineTo(hw, 0); ctx.closePath();
+  ctx.moveTo(0, -hh); ctx.lineTo(0, bottomH);
+  ctx.stroke();
+
+  // Center sparkle
+  ctx.globalAlpha = shimmer * 0.8;
+  ctx.fillStyle = COL.white;
+  ctx.beginPath();
+  ctx.arc(0, -hh * 0.2, 3.5 * s, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.globalAlpha = 1;
+  ctx.restore();
+
+  // Outer pulse ring
+  ctx.strokeStyle = COL.cyan;
+  ctx.globalAlpha = 0.3 + Math.sin(d.pulse * 2) * 0.2;
+  ctx.lineWidth = 2 * s;
+  ctx.shadowColor = COL.cyan;
+  ctx.shadowBlur = 15 * s;
+  ctx.beginPath();
+  ctx.arc(x, y, size * 1.6, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+  ctx.globalAlpha = 1;
+
+  // Extra sparkle particles
+  if (s > 0.25 && Math.random() < 0.7) {
+    spawnParticle(x + rand(-size, size), y + rand(-size, size),
+      Math.random() < 0.5 ? COL.cyan : COL.cyanGlow,
+      rand(-0.6, 0.6), rand(-0.8, 0.3), rand(0.2, 0.5), rand(2, 4) * s, 0);
+  }
+}
+
+function drawSuperDiamondFlyAnims() {
+  for (const a of superDiamondFlyAnims) {
+    const t = a.t;
+    // Ease out curve
+    const et = 1 - Math.pow(1 - t, 3);
+    const cx = lerp(a.sx, a.tx, et);
+    const cy = lerp(a.sy, a.ty, et) - Math.sin(et * Math.PI) * 60;
+    const sz = lerp(1, 0.4, et);
+
+    // Sparkling trail
+    if (Math.random() < 0.8) {
+      spawnParticle(cx + rand(-5, 5), cy + rand(-5, 5),
+        Math.random() < 0.5 ? COL.cyan : COL.white,
+        rand(-1, 1), rand(-1, 1), rand(0.1, 0.3), rand(1, 3), 0);
+    }
+
+    // Draw mini diamond
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.scale(sz, sz);
+    ctx.fillStyle = COL.cyan;
+    ctx.shadowColor = COL.cyan;
+    ctx.shadowBlur = 15;
+    ctx.beginPath();
+    ctx.moveTo(0, -10); ctx.lineTo(-7, 0); ctx.lineTo(0, 12); ctx.lineTo(7, 0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = COL.white;
+    ctx.globalAlpha = 0.5;
+    ctx.beginPath();
+    ctx.moveTo(0, -10); ctx.lineTo(7, 0); ctx.lineTo(0, 0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  }
+}
+
+function checkSuperDiamondCollisions() {
+  const pz = 0.14;
+  const hitZone = 0.045;
+  const pad = 16;
+  const top = 14 + (CSS.supports('padding-top: env(safe-area-inset-top)') ? 30 : 0);
+
+  for (const d of superDiamonds) {
+    if (d.collected) continue;
+    if (Math.abs(d.z - pz) > hitZone) continue;
+    if (Math.abs(d.lane - player.lane) > 0.7) continue;
+
+    d.collected = true;
+    superDiamondsCollected++;
+
+    const cx = getPathX(d.lane, d.z);
+    const cy = getPathY(d.z) - 25 * getScale(d.z);
+
+    // Cyan burst
+    spawnBurst(cx, cy, COL.cyan, 50, 6, 1.0, 7);
+    spawnBurst(cx, cy, COL.cyanGlow, 30, 5, 0.8, 5);
+    spawnBurst(cx, cy, COL.white, 15, 4, 0.5, 3);
+    screenFlash = 0.3;
+    screenFlashColor = COL.cyan;
+    shakeDur = 0.1;
+
+    floatingTexts.push({ text: `\uD83D\uDC8E ${superDiamondsCollected}/3`, x: cx, y: cy - 15, life: 1.5, maxLife: 1.5, color: COL.cyan, size: 24 });
+
+    // Fly-to-HUD animation — target the next stencil slot
+    const slotIndex = superDiamondsCollected - 1;
+    const targetX = pad + 12;
+    const targetY = top + 95 + slotIndex * 32;
+    superDiamondFlyAnims.push({ sx: cx, sy: cy, tx: targetX, ty: targetY, t: 0 });
+
+    // Check for SUPER BOOST
+    if (superDiamondsCollected >= 3) {
+      triggerSuperBoost();
+    }
+  }
+}
+
+function triggerSuperBoost() {
+  superBoostTimer = 9; // 9 seconds
+  superDiamondsCollected = 0;
+  totalSuperBoosts++;
+  speed = Math.min(maxSpeed, speed * 1.8);
+  slowMoTimer = Math.max(slowMoTimer, 0.5);
+  shakeDur = 0.6;
+  screenFlash = 0.8;
+  screenFlashColor = COL.cyan;
+
+  // MASSIVE particle explosion
+  spawnBurst(W / 2, H * 0.4, COL.cyan, 100, 10, 2.0, 10);
+  spawnBurst(W / 2, H * 0.4, COL.cyanGlow, 60, 8, 1.5, 8);
+  spawnBurst(W / 2, H * 0.4, COL.white, 40, 7, 1.0, 5);
+  spawnBurst(W / 2, H * 0.4, COL.gold, 30, 6, 1.0, 5);
+  spawnBurst(W / 2, H * 0.4, COL.magentaGlow, 20, 5, 0.8, 4);
+
+  floatingTexts.push({ text: 'SUPER BOOST! \uD83D\uDE80\u2728', x: W / 2, y: H * 0.28, life: 3.0, maxLife: 3.0, color: COL.cyan, size: 48 });
+  floatingTexts.push({ text: 'INVINCIBLE!', x: W / 2, y: H * 0.36, life: 3.0, maxLife: 3.0, color: COL.cyanGlow, size: 24 });
+
+  const boostEmojis = ['\uD83D\uDE80', '\u2728', '\uD83D\uDC8E', '\uD83C\uDF1F', '\u26A1', '\uD83D\uDCAB'];
+  for (let i = 0; i < 8; i++) {
+    floatingTexts.push({
+      text: boostEmojis[i % boostEmojis.length],
+      x: rand(W * 0.15, W * 0.85), y: rand(H * 0.2, H * 0.6),
+      life: 2.5, maxLife: 2.5, color: COL.cyan, size: 28
+    });
+  }
+}
+
 // ─── PLAYER ─────────────────────────────────────────────────────
 function updatePlayer(dt) {
   if (touching) {
@@ -1027,6 +1288,14 @@ function updatePlayer(dt) {
   if (invincTimer > 0) invincTimer -= dt;
   if (hitFlashTimer > 0) hitFlashTimer -= dt;
   if (player.collectBoost > 0) player.collectBoost -= dt;
+
+  // Banking angle — tilt toward movement direction
+  const laneDiff = player.targetLane - player.lane;
+  const targetBank = clamp(laneDiff * 0.45, -0.35, 0.35);
+  player.bankAngle = lerp(player.bankAngle, targetBank, 0.12 * dt * 60);
+
+  // Hover bob
+  player.hoverPhase += dt * 2.8;
 
   // Anim
   player.animPhase += dt * 5;
@@ -1061,7 +1330,8 @@ function updatePlayer(dt) {
   // Engine flame particles — multi-layered
   if (state === STATE.PLAYING) {
     const boost = player.collectBoost > 0;
-    const flameCount = player.isSliding ? 2 : (boost ? 8 : 5);
+    const isBoosting = superBoostTimer > 0;
+    const flameCount = player.isSliding ? 2 : (isBoosting ? 12 : boost ? 8 : 5);
     for (let i = 0; i < flameCount; i++) {
       // Blue core
       const baseY = player.y + player.jumpY + (player.isSliding ? 3 : 8);
@@ -1072,10 +1342,12 @@ function updatePlayer(dt) {
         );
       }
       // Orange mid
-      const flameCol = Math.random() < 0.3 ? '#FF6B35' : Math.random() < 0.4 ? COL.gold : COL.purple;
+      const flameSizeMult = isBoosting ? 2.5 : 1;
+      const flameCol = isBoosting ? [COL.cyan, COL.gold, COL.magenta, '#FF6B35', COL.emerald][randInt(0, 4)] :
+        Math.random() < 0.3 ? '#FF6B35' : Math.random() < 0.4 ? COL.gold : COL.purple;
       spawnParticle(
-        player.x + rand(-7, 7), baseY + rand(0, 5),
-        flameCol, rand(-0.5, 0.5), rand(1, 3.5), rand(0.15, 0.45), rand(2, boost ? 6 : 4.5), 0.02
+        player.x + rand(-7 * flameSizeMult, 7 * flameSizeMult), baseY + rand(0, 5),
+        flameCol, rand(-0.5, 0.5) * flameSizeMult, rand(1, 3.5) * flameSizeMult, rand(0.15, 0.45), rand(2, boost ? 6 : 4.5) * flameSizeMult, 0.02
       );
     }
     // Wingtip sparkles
@@ -1106,15 +1378,17 @@ function drawPlayer() {
   const x = player.x;
   let y = player.y + player.jumpY;
   const s = getScale(0.14);
-  const bob = Math.sin(player.animPhase) * 2.5 + Math.sin(player.animPhase * 1.7) * 0.8;
-  const tilt = Math.sin(player.animPhase * 0.7) * 0.04;
+  // Hover bob — gentle 2-3px float
+  const hoverBob = Math.sin(player.hoverPhase) * 2.5 + Math.sin(player.hoverPhase * 1.7) * 0.8;
+  const bankAngle = player.bankAngle;
+  const isBoosting = superBoostTimer > 0;
 
-  // Invincibility blink
-  if (invincTimer > 0 && Math.sin(invincTimer * 20) > 0.3) return;
+  // Invincibility blink (not during super boost)
+  if (invincTimer > 0 && !isBoosting && Math.sin(invincTimer * 20) > 0.3) return;
 
   ctx.save();
-  ctx.translate(x, y + bob);
-  ctx.rotate(tilt);
+  ctx.translate(x, y + hoverBob);
+  ctx.rotate(bankAngle); // bank into lane changes
 
   // Hit flash — magenta overlay
   if (hitFlashTimer > 0) {
@@ -1127,13 +1401,13 @@ function drawPlayer() {
   if (player.isSliding) {
     const sw = w * 1.3;
     const sh = h * 0.3;
-    ctx.shadowColor = COL.cyan;
-    ctx.shadowBlur = 24;
+    ctx.shadowColor = isBoosting ? COL.gold : COL.cyan;
+    ctx.shadowBlur = isBoosting ? 40 : 24;
 
     const bodyGrad = ctx.createLinearGradient(-sw / 2, -sh, sw / 2, 0);
-    bodyGrad.addColorStop(0, COL.purple);
-    bodyGrad.addColorStop(0.5, COL.cyan);
-    bodyGrad.addColorStop(1, COL.purple);
+    bodyGrad.addColorStop(0, isBoosting ? COL.gold : COL.purple);
+    bodyGrad.addColorStop(0.5, isBoosting ? COL.goldLight : COL.cyan);
+    bodyGrad.addColorStop(1, isBoosting ? COL.gold : COL.purple);
     ctx.fillStyle = hitFlashTimer > 0 ? COL.magenta : bodyGrad;
     ctx.beginPath();
     ctx.moveTo(0, -sh);
@@ -1148,18 +1422,33 @@ function drawPlayer() {
     ctx.ellipse(0, -sh * 0.3, sw * 0.12, sh * 0.4, 0, 0, Math.PI * 2);
     ctx.fill();
   } else {
-    // ── SPACESHIP ──
-    ctx.shadowColor = COL.cyan;
-    ctx.shadowBlur = 32;
+    // ── PREMIUM 3D SPACESHIP ──
 
-    const hullGrad = ctx.createLinearGradient(0, -h, 0, h * 0.1);
-    hullGrad.addColorStop(0, COL.cyan);
-    hullGrad.addColorStop(0.3, COL.purple);
-    hullGrad.addColorStop(0.7, COL.purpleDark);
-    hullGrad.addColorStop(1, COL.purpleDeep);
-    ctx.fillStyle = hitFlashTimer > 0 ? COL.magenta : hullGrad;
+    // Engine bloom glow behind ship
+    const bloomSize = isBoosting ? 55 : 30;
+    const bloomAlpha = isBoosting ? 0.35 : 0.15;
+    ctx.globalAlpha = (hitFlashTimer > 0 ? 0.5 + (hitFlashTimer / 0.25) * 0.5 : 1) * bloomAlpha;
+    const bloomGrad = ctx.createRadialGradient(0, h * 0.15, 0, 0, h * 0.15, bloomSize * s);
+    bloomGrad.addColorStop(0, isBoosting ? 'rgba(253,224,71,0.6)' : 'rgba(34,211,238,0.5)');
+    bloomGrad.addColorStop(0.5, isBoosting ? 'rgba(255,150,50,0.2)' : 'rgba(168,85,247,0.15)');
+    bloomGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = bloomGrad;
+    ctx.beginPath();
+    ctx.arc(0, h * 0.15, bloomSize * s, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = hitFlashTimer > 0 ? 0.5 + (hitFlashTimer / 0.25) * 0.5 : 1;
 
-    // Ship body
+    // Shadow/glow under ship
+    ctx.shadowColor = isBoosting ? COL.gold : COL.cyan;
+    ctx.shadowBlur = isBoosting ? 45 : 32;
+
+    // ── HULL LAYER 1: Dark underside ──
+    const darkGrad = ctx.createLinearGradient(0, -h, 0, h * 0.15);
+    darkGrad.addColorStop(0, '#2A1055');
+    darkGrad.addColorStop(0.4, '#1A0835');
+    darkGrad.addColorStop(1, '#0D0420');
+    ctx.fillStyle = hitFlashTimer > 0 ? COL.magenta : darkGrad;
+
     ctx.beginPath();
     ctx.moveTo(0, -h);
     ctx.lineTo(w * 0.18, -h * 0.55);
@@ -1176,8 +1465,81 @@ function drawPlayer() {
     ctx.closePath();
     ctx.fill();
 
-    // Panel lines
-    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+    // ── HULL LAYER 2: Lighter top surface (3D depth) ──
+    ctx.shadowBlur = 0;
+    const topGrad = ctx.createLinearGradient(-w * 0.15, -h, w * 0.15, -h * 0.1);
+    topGrad.addColorStop(0, isBoosting ? '#B8860B' : '#6B3FA0');
+    topGrad.addColorStop(0.3, isBoosting ? COL.gold : '#8B5CF6');
+    topGrad.addColorStop(0.6, isBoosting ? COL.goldLight : '#A78BFA');
+    topGrad.addColorStop(1, isBoosting ? COL.gold : '#7C3AED');
+    ctx.fillStyle = hitFlashTimer > 0 ? COL.magenta : topGrad;
+
+    // Top surface polygon (narrower, overlaid)
+    ctx.beginPath();
+    ctx.moveTo(0, -h);
+    ctx.lineTo(w * 0.14, -h * 0.55);
+    ctx.lineTo(w * 0.17, -h * 0.15);
+    ctx.lineTo(w * 0.12, h * 0.02);
+    ctx.lineTo(0, h * 0.06);
+    ctx.lineTo(-w * 0.12, h * 0.02);
+    ctx.lineTo(-w * 0.17, -h * 0.15);
+    ctx.lineTo(-w * 0.14, -h * 0.55);
+    ctx.closePath();
+    ctx.fill();
+
+    // ── HULL LAYER 3: Wing surfaces with separate shading ──
+    // Left wing — darker
+    const lwGrad = ctx.createLinearGradient(-w * 0.5, 0, -w * 0.15, 0);
+    lwGrad.addColorStop(0, isBoosting ? '#8B6914' : '#3B1A6E');
+    lwGrad.addColorStop(1, isBoosting ? '#B8860B' : '#5B21B6');
+    ctx.fillStyle = hitFlashTimer > 0 ? COL.magenta : lwGrad;
+    ctx.beginPath();
+    ctx.moveTo(-w * 0.22, -h * 0.15);
+    ctx.lineTo(-w * 0.5, h * 0.05);
+    ctx.lineTo(-w * 0.35, h * 0.1);
+    ctx.lineTo(-w * 0.18, h * 0.05);
+    ctx.lineTo(-w * 0.17, -h * 0.1);
+    ctx.closePath();
+    ctx.fill();
+    // Right wing — lighter
+    const rwGrad = ctx.createLinearGradient(w * 0.15, 0, w * 0.5, 0);
+    rwGrad.addColorStop(0, isBoosting ? '#B8860B' : '#5B21B6');
+    rwGrad.addColorStop(1, isBoosting ? '#D4A017' : '#4C1D95');
+    ctx.fillStyle = hitFlashTimer > 0 ? COL.magenta : rwGrad;
+    ctx.beginPath();
+    ctx.moveTo(w * 0.22, -h * 0.15);
+    ctx.lineTo(w * 0.5, h * 0.05);
+    ctx.lineTo(w * 0.35, h * 0.1);
+    ctx.lineTo(w * 0.18, h * 0.05);
+    ctx.lineTo(w * 0.17, -h * 0.1);
+    ctx.closePath();
+    ctx.fill();
+
+    // ── METALLIC SHEEN: bright highlight strip along top edge ──
+    ctx.strokeStyle = isBoosting ? 'rgba(253,224,71,0.7)' : 'rgba(200,255,255,0.6)';
+    ctx.lineWidth = 1.5;
+    ctx.shadowColor = isBoosting ? COL.gold : COL.cyan;
+    ctx.shadowBlur = 8;
+    ctx.beginPath();
+    ctx.moveTo(-w * 0.14, -h * 0.55);
+    ctx.lineTo(0, -h);
+    ctx.lineTo(w * 0.14, -h * 0.55);
+    ctx.stroke();
+    // Secondary sheen lines along body
+    ctx.globalAlpha = (hitFlashTimer > 0 ? 0.5 + (hitFlashTimer / 0.25) * 0.5 : 1) * 0.3;
+    ctx.strokeStyle = COL.white;
+    ctx.lineWidth = 0.7;
+    ctx.shadowBlur = 0;
+    ctx.beginPath();
+    ctx.moveTo(-w * 0.08, -h * 0.8);
+    ctx.lineTo(-w * 0.1, -h * 0.2);
+    ctx.moveTo(w * 0.08, -h * 0.8);
+    ctx.lineTo(w * 0.1, -h * 0.2);
+    ctx.stroke();
+    ctx.globalAlpha = hitFlashTimer > 0 ? 0.5 + (hitFlashTimer / 0.25) * 0.5 : 1;
+
+    // Panel lines — subtle dark grooves
+    ctx.strokeStyle = 'rgba(0,0,0,0.25)';
     ctx.lineWidth = 0.8;
     ctx.beginPath();
     ctx.moveTo(-w * 0.12, -h * 0.5);
@@ -1186,29 +1548,36 @@ function drawPlayer() {
     ctx.lineTo(w * 0.15, h * 0.05);
     ctx.stroke();
 
-    // Cockpit — cyan dome
+    // Cockpit — glowing dome with depth
     const cockpitGrad = ctx.createRadialGradient(0, -h * 0.45, 0, 0, -h * 0.45, w * 0.14);
-    cockpitGrad.addColorStop(0, 'rgba(200, 255, 255, 0.95)');
-    cockpitGrad.addColorStop(0.5, 'rgba(34, 211, 238, 0.7)');
-    cockpitGrad.addColorStop(1, 'rgba(168, 85, 247, 0.3)');
+    cockpitGrad.addColorStop(0, isBoosting ? 'rgba(255, 240, 180, 0.95)' : 'rgba(200, 255, 255, 0.95)');
+    cockpitGrad.addColorStop(0.4, isBoosting ? 'rgba(253, 224, 71, 0.7)' : 'rgba(34, 211, 238, 0.7)');
+    cockpitGrad.addColorStop(0.8, isBoosting ? 'rgba(184, 134, 11, 0.4)' : 'rgba(168, 85, 247, 0.4)');
+    cockpitGrad.addColorStop(1, 'rgba(0,0,0,0.2)');
     ctx.fillStyle = cockpitGrad;
-    ctx.shadowColor = COL.cyan;
-    ctx.shadowBlur = 15;
+    ctx.shadowColor = isBoosting ? COL.gold : COL.cyan;
+    ctx.shadowBlur = 18;
     ctx.beginPath();
     ctx.ellipse(0, -h * 0.45, w * 0.12, h * 0.12, 0, 0, Math.PI * 2);
     ctx.fill();
+    // Cockpit rim
+    ctx.strokeStyle = isBoosting ? 'rgba(253,224,71,0.5)' : 'rgba(34,211,238,0.4)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
 
-    // Cockpit highlight
-    ctx.fillStyle = 'rgba(255,255,255,0.45)';
+    // Cockpit highlight — specular reflection
+    ctx.fillStyle = 'rgba(255,255,255,0.55)';
+    ctx.shadowBlur = 0;
     ctx.beginPath();
-    ctx.ellipse(-w * 0.03, -h * 0.48, w * 0.04, h * 0.04, -0.3, 0, Math.PI * 2);
+    ctx.ellipse(-w * 0.03, -h * 0.48, w * 0.04, h * 0.035, -0.3, 0, Math.PI * 2);
     ctx.fill();
 
-    // Wing neon edges
-    ctx.shadowBlur = 0;
-    ctx.strokeStyle = COL.cyan;
-    ctx.globalAlpha = Math.min(1, ctx.globalAlpha) * 0.6;
-    ctx.lineWidth = 1.2;
+    // Wing neon edges — glowing trim
+    ctx.strokeStyle = isBoosting ? COL.gold : COL.cyan;
+    ctx.globalAlpha = (hitFlashTimer > 0 ? 0.5 + (hitFlashTimer / 0.25) * 0.5 : 1) * 0.7;
+    ctx.lineWidth = 1.5;
+    ctx.shadowColor = isBoosting ? COL.gold : COL.cyan;
+    ctx.shadowBlur = 12;
     ctx.beginPath();
     ctx.moveTo(w * 0.22, -h * 0.15);
     ctx.lineTo(w * 0.5, h * 0.05);
@@ -1217,25 +1586,69 @@ function drawPlayer() {
     ctx.stroke();
     ctx.globalAlpha = hitFlashTimer > 0 ? 0.5 + (hitFlashTimer / 0.25) * 0.5 : 1;
 
-    // Engine nozzles — multi-color glow
-    const eg1 = 0.5 + Math.sin(player.animPhase * 8) * 0.3;
-    const eg2 = 0.5 + Math.sin(player.animPhase * 8 + 1) * 0.3;
-    // Blue core
-    ctx.fillStyle = `rgba(34, 211, 238, ${eg1 * 0.8})`;
-    ctx.shadowColor = COL.cyan;
-    ctx.shadowBlur = 12;
-    ctx.beginPath();
-    ctx.arc(-w * 0.1, h * 0.08, w * 0.05, 0, Math.PI * 2);
-    ctx.arc(w * 0.1, h * 0.08, w * 0.05, 0, Math.PI * 2);
-    ctx.fill();
-    // Orange outer
-    ctx.fillStyle = `rgba(255, 150, 50, ${eg2 * 0.6})`;
-    ctx.shadowColor = '#FF6B35';
-    ctx.shadowBlur = 8;
-    ctx.beginPath();
-    ctx.arc(-w * 0.1, h * 0.1, w * 0.07, 0, Math.PI * 2);
-    ctx.arc(w * 0.1, h * 0.1, w * 0.07, 0, Math.PI * 2);
-    ctx.fill();
+    // ── WING-TIP RUNNING LIGHTS ──
+    const wingPulse = 0.5 + Math.sin(player.animPhase * 3) * 0.5;
+    const lightColor = isBoosting ? COL.gold : COL.cyan;
+    for (const side of [-1, 1]) {
+      const tipX = side * w * 0.5;
+      const tipY = h * 0.05;
+      ctx.fillStyle = lightColor;
+      ctx.shadowColor = lightColor;
+      ctx.shadowBlur = 10 + wingPulse * 8;
+      ctx.globalAlpha = (hitFlashTimer > 0 ? 0.5 + (hitFlashTimer / 0.25) * 0.5 : 1) * (0.5 + wingPulse * 0.5);
+      ctx.beginPath();
+      ctx.arc(tipX, tipY, 2.5 * s, 0, Math.PI * 2);
+      ctx.fill();
+      // Outer glow ring
+      ctx.globalAlpha = (hitFlashTimer > 0 ? 0.5 + (hitFlashTimer / 0.25) * 0.5 : 1) * wingPulse * 0.3;
+      ctx.beginPath();
+      ctx.arc(tipX, tipY, 5 * s, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = hitFlashTimer > 0 ? 0.5 + (hitFlashTimer / 0.25) * 0.5 : 1;
+
+    // ── ENGINE NOZZLES — multi-layered flames ──
+    const flameIntensity = 0.5 + Math.sin(player.animPhase * 8) * 0.3;
+    const flameSize = isBoosting ? 3.0 : 1.0;
+    const boost = player.collectBoost > 0;
+
+    for (const ex of [-w * 0.1, w * 0.1]) {
+      // Red/dark outer flame
+      const outerH = (12 + Math.sin(player.animPhase * 12 + ex) * 4) * s * flameSize;
+      const outerW = w * 0.09 * flameSize;
+      ctx.fillStyle = `rgba(255, 60, 20, ${flameIntensity * 0.5})`;
+      ctx.shadowColor = '#FF3C14';
+      ctx.shadowBlur = 8 * flameSize;
+      ctx.beginPath();
+      ctx.moveTo(ex - outerW, h * 0.08);
+      ctx.quadraticCurveTo(ex, h * 0.08 + outerH, ex + outerW, h * 0.08);
+      ctx.closePath();
+      ctx.fill();
+
+      // Orange/yellow mid flame
+      const midH = (9 + Math.sin(player.animPhase * 15 + ex) * 3) * s * flameSize;
+      const midW = w * 0.065 * flameSize;
+      ctx.fillStyle = `rgba(255, 160, 40, ${flameIntensity * 0.7})`;
+      ctx.shadowColor = '#FFA028';
+      ctx.shadowBlur = 6 * flameSize;
+      ctx.beginPath();
+      ctx.moveTo(ex - midW, h * 0.08);
+      ctx.quadraticCurveTo(ex, h * 0.08 + midH, ex + midW, h * 0.08);
+      ctx.closePath();
+      ctx.fill();
+
+      // White/blue core flame
+      const coreH = (6 + Math.sin(player.animPhase * 18 + ex) * 2) * s * flameSize;
+      const coreW = w * 0.04 * flameSize;
+      ctx.fillStyle = `rgba(200, 240, 255, ${flameIntensity * 0.9})`;
+      ctx.shadowColor = COL.cyan;
+      ctx.shadowBlur = 10 * flameSize;
+      ctx.beginPath();
+      ctx.moveTo(ex - coreW, h * 0.08);
+      ctx.quadraticCurveTo(ex, h * 0.08 + coreH, ex + coreW, h * 0.08);
+      ctx.closePath();
+      ctx.fill();
+    }
   }
 
   ctx.shadowBlur = 0;
@@ -1248,12 +1661,27 @@ function checkCollisions() {
   const pz = 0.14;
   const hitZone = 0.035;
 
+  const isBoosting = superBoostTimer > 0;
+
   for (const o of obstacles) {
     if (Math.abs(o.z - pz) > hitZone) continue;
     if (Math.abs(o.lane - player.lane) > 0.6) continue;
 
     if (o.type === 'tall') {
       if (player.isJumping && player.jumpY < -20) continue;
+      if (isBoosting) {
+        // DESTROY obstacle during super boost
+        const ox = getPathX(o.lane, o.z);
+        const oy = getPathY(o.z);
+        spawnBurst(ox, oy, '#FF6B35', 40, 7, 0.8, 6);
+        spawnBurst(ox, oy, COL.gold, 25, 5, 0.6, 5);
+        spawnBurst(ox, oy, COL.white, 15, 4, 0.4, 3);
+        floatingTexts.push({ text: 'DESTROYED! \uD83D\uDCA5', x: ox, y: oy - 20, life: 1.0, maxLife: 1.0, color: '#FF6B35', size: 22 });
+        score += 25;
+        o.z = -1;
+        shakeDur = Math.max(shakeDur, 0.08);
+        continue;
+      }
       takeDamage();
       if (state === STATE.DEAD) return;
       o.z = -1;
@@ -1261,12 +1689,24 @@ function checkCollisions() {
     } else if (o.type === 'low') {
       if (player.isSliding) continue;
       if (player.isJumping) continue;
+      if (isBoosting) {
+        const ox = getPathX(o.lane, o.z);
+        const oy = getPathY(o.z);
+        spawnBurst(ox, oy, '#FF6B35', 40, 7, 0.8, 6);
+        spawnBurst(ox, oy, COL.gold, 25, 5, 0.6, 5);
+        floatingTexts.push({ text: 'DESTROYED! \uD83D\uDCA5', x: ox, y: oy - 20, life: 1.0, maxLife: 1.0, color: '#FF6B35', size: 22 });
+        score += 25;
+        o.z = -1;
+        shakeDur = Math.max(shakeDur, 0.08);
+        continue;
+      }
       takeDamage();
       if (state === STATE.DEAD) return;
       o.z = -1;
       continue;
     } else if (o.type === 'gap') {
       if (player.isJumping) continue;
+      if (isBoosting) { o.z = -1; continue; }
       takeDamage();
       if (state === STATE.DEAD) return;
       o.z = -1;
@@ -1388,6 +1828,9 @@ function checkCollisions() {
 
   // Gold coin collection
   checkGoldCoinCollisions();
+
+  // Super diamond collection
+  checkSuperDiamondCollisions();
 }
 
 // ─── DAMAGE / HEALTH ────────────────────────────────────────────
@@ -1469,6 +1912,10 @@ function resetGame() {
   deathTimer = 0; gameOverStatReveal = 0;
   goldCoins = []; goldCoinsCollected = 0; goldCoinSpawnDist = 0;
   nextGoldCoinAt = rand(800, 1500); jackpotTimer = 0; jackpotScoreAnim = 0; goldCoinHudFlash = 0; totalJackpots = 0;
+  superDiamonds = []; superDiamondsCollected = 0; superDiamondSpawnDist = 0;
+  nextSuperDiamondAt = rand(400, 700); superBoostTimer = 0; superBoostHudFlash = 0; totalSuperBoosts = 0;
+  superDiamondFlyAnims = [];
+  player.bankAngle = 0; player.hoverPhase = 0;
   isNewHighScore = false;
 }
 
@@ -1751,6 +2198,71 @@ function drawHUD() {
     ctx.restore();
   }
 
+  // ── SUPER BOOST DIAMOND STENCILS (left side) ──
+  const stencilX = pad + 12;
+  const stencilStartY = top + 85;
+  const stencilSpacing = 32;
+  const stencilPulse = 0.5 + Math.sin(performance.now() * 0.003) * 0.3;
+  for (let i = 0; i < 3; i++) {
+    const sy = stencilStartY + i * stencilSpacing;
+    const filled = i < superDiamondsCollected;
+    const flashScale = (filled && superBoostHudFlash > 0) ? 1 + superBoostHudFlash * 0.4 : 1;
+    ctx.save();
+    ctx.translate(stencilX, sy);
+    ctx.scale(flashScale, flashScale);
+    const dSize = 10;
+    if (filled) {
+      // Filled glowing diamond
+      ctx.fillStyle = COL.cyan;
+      ctx.shadowColor = COL.cyan;
+      ctx.shadowBlur = 12;
+      ctx.beginPath();
+      ctx.moveTo(0, -dSize); ctx.lineTo(-dSize * 0.7, 0); ctx.lineTo(0, dSize * 1.2); ctx.lineTo(dSize * 0.7, 0);
+      ctx.closePath();
+      ctx.fill();
+      // Bright center
+      ctx.fillStyle = COL.cyanGlow;
+      ctx.shadowBlur = 0;
+      ctx.globalAlpha = 0.6;
+      ctx.beginPath();
+      ctx.moveTo(0, -dSize * 0.5); ctx.lineTo(dSize * 0.35, 0); ctx.lineTo(0, dSize * 0.6); ctx.lineTo(0, 0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    } else {
+      // Empty stencil outline — pulsing neon
+      ctx.strokeStyle = COL.cyan;
+      ctx.shadowColor = COL.cyan;
+      ctx.shadowBlur = 6 + stencilPulse * 4;
+      ctx.globalAlpha = 0.3 + stencilPulse * 0.2;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(0, -dSize); ctx.lineTo(-dSize * 0.7, 0); ctx.lineTo(0, dSize * 1.2); ctx.lineTo(dSize * 0.7, 0);
+      ctx.closePath();
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+    ctx.shadowBlur = 0;
+    ctx.restore();
+  }
+
+  // Super boost timer bar
+  if (superBoostTimer > 0) {
+    const barW = 60;
+    const barH = 4;
+    const barX = stencilX - barW / 2;
+    const barY = stencilStartY + 3 * stencilSpacing + 5;
+    const pct = superBoostTimer / 9;
+    ctx.fillStyle = 'rgba(34,211,238,0.15)';
+    ctx.fillRect(barX, barY, barW, barH);
+    ctx.fillStyle = COL.cyan;
+    ctx.shadowColor = COL.cyan;
+    ctx.shadowBlur = 8;
+    ctx.fillRect(barX, barY, barW * pct, barH);
+    ctx.shadowBlur = 0;
+    drawGlowText('BOOST', stencilX, barY + 8, 9, COL.cyan, 'center', 6);
+  }
+
   // High combo screen border glow (5x+)
   if (combo >= 5 && comboTimer > 0) {
     const mult = Math.min(combo, 10);
@@ -1908,6 +2420,7 @@ function drawGameOverScreen() {
     { label: 'LEVEL', value: `${level}`, color: COL.purple, delay: 1.2 },
     { label: 'BEST COMBO', value: `x${maxCombo}`, color: COL.gold, delay: 1.5 },
     { label: 'JACKPOTS \uD83D\uDCB0', value: `${Math.floor((totalJackpots || 0))}`, color: COL.gold, delay: 1.8 },
+    { label: 'SUPER BOOSTS \uD83D\uDE80', value: `${Math.floor((totalSuperBoosts || 0))}`, color: COL.cyan, delay: 2.1 },
   ];
 
   for (let i = 0; i < stats.length; i++) {
@@ -2027,10 +2540,19 @@ function update(dt) {
     nextGoldCoinAt = rand(800, 1500);
   }
 
+  // Super diamond spawning
+  superDiamondSpawnDist += speed * effDt * 2;
+  if (superDiamondSpawnDist >= nextSuperDiamondAt) {
+    spawnSuperDiamond();
+    superDiamondSpawnDist = 0;
+    nextSuperDiamondAt = rand(400, 700);
+  }
+
   updatePlayer(dt);
   updateObstacles(dt);
   updateOrbs(dt);
   updateGoldCoins(dt);
+  updateSuperDiamonds(dt);
   checkCollisions();
 
   // Screen shake
@@ -2077,11 +2599,13 @@ function draw() {
     ...obstacles.map(o => ({ ...o, kind: 'obs' })),
     ...orbs.map(o => ({ ...o, kind: 'orb' })),
     ...goldCoins.map(o => ({ ...o, kind: 'gold' })),
+    ...superDiamonds.map(o => ({ ...o, kind: 'super' })),
   ];
   allObjects.sort((a, b) => b.z - a.z);
   for (const obj of allObjects) {
     if (obj.kind === 'orb') drawOrb(obj);
     else if (obj.kind === 'gold') drawGoldCoin(obj);
+    else if (obj.kind === 'super') drawSuperDiamond(obj);
     else drawObstacle(obj);
   }
 
@@ -2090,7 +2614,41 @@ function draw() {
   }
 
   drawParticles();
+  drawSuperDiamondFlyAnims();
   ctx.restore();
+
+  // Super boost screen edge glow
+  if (superBoostTimer > 0) {
+    const bt = Math.min(1, superBoostTimer / 2);
+    const pulse = 0.5 + Math.sin(performance.now() * 0.006) * 0.3;
+    ctx.save();
+    ctx.globalAlpha = bt * 0.2 * pulse;
+    // Top
+    const tGrad = ctx.createLinearGradient(0, 0, 0, H * 0.12);
+    tGrad.addColorStop(0, COL.cyan);
+    tGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = tGrad;
+    ctx.fillRect(0, 0, W, H * 0.12);
+    // Bottom
+    const bGrad = ctx.createLinearGradient(0, H, 0, H * 0.88);
+    bGrad.addColorStop(0, COL.cyan);
+    bGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = bGrad;
+    ctx.fillRect(0, H * 0.88, W, H * 0.12);
+    // Left
+    const lGrad = ctx.createLinearGradient(0, 0, W * 0.08, 0);
+    lGrad.addColorStop(0, COL.cyan);
+    lGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = lGrad;
+    ctx.fillRect(0, 0, W * 0.08, H);
+    // Right
+    const rGrad = ctx.createLinearGradient(W, 0, W * 0.92, 0);
+    rGrad.addColorStop(0, COL.cyan);
+    rGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = rGrad;
+    ctx.fillRect(W * 0.92, 0, W * 0.08, H);
+    ctx.restore();
+  }
 
   // Screen flash overlay
   if (screenFlash > 0) {
