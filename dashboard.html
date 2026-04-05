@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-04-v69';
+    var APP_VERSION = '2026-04-04-v70';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -1420,10 +1420,9 @@
         top: 0 !important;
         left: 0 !important;
         right: 0 !important;
-        bottom: 0 !important;
+        bottom: calc(58px + env(safe-area-inset-bottom)) !important;
         padding: 0 !important;
         padding-top: env(safe-area-inset-top, 47px) !important;
-        padding-bottom: env(safe-area-inset-bottom, 34px) !important;
         margin: 0 !important;
         overflow: hidden !important;
         z-index: 9999;
@@ -1485,17 +1484,14 @@
       body.fm-mobile-fullscreen .fm-exit-fs-btn { display: none !important; }
       /* ── TradingView Widget Bottom Nav — X-style scroll-triggered ── */
       .fm-widget-nav {
-        display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 10002;
+        display: none !important; position: fixed; bottom: 0; left: 0; right: 0; z-index: 10002;
         justify-content: space-around; align-items: center;
-        padding: 10px 0 calc(10px + env(safe-area-inset-bottom));
-        background: rgba(11,6,17,0.88);
+        padding: 12px 0 calc(12px + env(safe-area-inset-bottom));
+        background: rgba(11,6,17,0.92);
         backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
         border-top: 1px solid rgba(104,107,130,0.2);
-        transform: translateY(100%);
-        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       }
-      .fm-widget-nav.active { display: flex; transform: translateY(0); }
-      .fm-widget-nav.hidden { transform: translateY(100%); }
+      body.fm-widget-active .fm-widget-nav { display: flex !important; }
       .fm-widget-nav-btn {
         display: flex; align-items: center; justify-content: center;
         width: 48px; height: 48px;
@@ -4426,27 +4422,22 @@
       var isSidebarOpen = !!(document.querySelector('.sidebar') && document.querySelector('.sidebar').classList.contains('open'));
       var activeTabId = getActiveFMTabId();
       var headerBack = document.getElementById('fmHeaderBackBtn');
-      var fmWidgetNav = document.getElementById('fmWidgetNav');
       if (!onMobile || !isFMActive || isHome) {
         document.body.classList.remove('fm-mobile-fullscreen');
         document.body.classList.remove('fm-widget-active');
         if (headerBack) headerBack.classList.remove('visible');
-        if (fmWidgetNav) fmWidgetNav.classList.remove('active');
         closeMobileFMMenu();
         return;
       }
       var isWidget = isFMWidgetTab(activeTabId);
       // All 6 TradingView widget tabs are always fullscreen on mobile
+      // Widget nav visibility is purely CSS-driven via body.fm-widget-active
       if (isWidget) {
         document.body.classList.add('fm-mobile-fullscreen');
         document.body.classList.add('fm-widget-active');
-        if (fmWidgetNav) { fmWidgetNav.classList.add('active'); fmWidgetNav.classList.remove('hidden'); }
-        // Show nav immediately, auto-hide after 4s
-        if (typeof showWidgetNav === 'function') showWidgetNav();
       } else {
         document.body.classList.remove('fm-mobile-fullscreen');
         document.body.classList.remove('fm-widget-active');
-        if (fmWidgetNav) fmWidgetNav.classList.remove('active');
       }
       if (headerBack) {
         if (isWidget && !isSidebarOpen) { headerBack.classList.add('visible'); } else { headerBack.classList.remove('visible'); }
@@ -12012,61 +12003,25 @@ function exitChartView() {
   window.scrollTo(0, 0);
 }
 
-// ── Widget nav show/hide (X/Twitter style) ──
-// Nav shows by default when widget tab is active.
-// Auto-hides after 4s, reappears on any tap outside the iframe.
-var _widgetNavTimeout = null;
-function showWidgetNav() {
-  var nav = document.getElementById('fmWidgetNav');
-  if (!nav || !nav.classList.contains('active')) return;
-  nav.classList.remove('hidden');
-  clearTimeout(_widgetNavTimeout);
-  _widgetNavTimeout = setTimeout(hideWidgetNav, 4000);
-}
-function hideWidgetNav() {
-  var nav = document.getElementById('fmWidgetNav');
-  if (!nav) return;
-  nav.classList.add('hidden');
-}
-// Tap anywhere on the page (outside iframe) toggles the nav
-document.addEventListener('click', function(e) {
-  if (!document.body.classList.contains('fm-widget-active')) return;
-  // If tapping the nav itself, don't toggle
-  var nav = document.getElementById('fmWidgetNav');
-  if (nav && nav.contains(e.target)) return;
-  var isHidden = nav && nav.classList.contains('hidden');
-  if (isHidden) { showWidgetNav(); } else { hideWidgetNav(); }
-}, true);
-// Keep nav visible while hovering/touching it
-(function() {
-  var navEl = document.getElementById('fmWidgetNav');
-  if (navEl) {
-    navEl.addEventListener('touchstart', function() { clearTimeout(_widgetNavTimeout); }, { passive: true });
-    navEl.addEventListener('touchend', function() {
-      clearTimeout(_widgetNavTimeout);
-      _widgetNavTimeout = setTimeout(hideWidgetNav, 4000);
-    }, { passive: true });
-  }
-})();
+// Widget nav is always visible via CSS when body.fm-widget-active is set
 
 function exitToHome() {
-  // Exit fullscreen, go to mobile home
+  // Clean up fullscreen state
   document.body.classList.remove('fm-mobile-fullscreen');
   document.body.classList.remove('fm-widget-active');
   _fmMobileImmersive = false;
-  var fmWidgetNav = document.getElementById('fmWidgetNav');
-  if (fmWidgetNav) fmWidgetNav.classList.remove('active');
-  showView('home');
+  // Hide all views, show mobile home
+  document.querySelectorAll('.view').forEach(function(v) { v.classList.remove('active'); });
+  showMobileHome();
   window.scrollTo(0, 0);
 }
 
 function openFMChat() {
-  // Exit fullscreen and open a fresh AI coach chat
+  // Clean up fullscreen state
   document.body.classList.remove('fm-mobile-fullscreen');
   document.body.classList.remove('fm-widget-active');
   _fmMobileImmersive = false;
-  var fmWidgetNav = document.getElementById('fmWidgetNav');
-  if (fmWidgetNav) fmWidgetNav.classList.remove('active');
+  // Go to AI coach
   showView('coach');
   window.scrollTo(0, 0);
 }
