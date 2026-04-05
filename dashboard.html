@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-05-v106';
+    var APP_VERSION = '2026-04-05-v107';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -11069,25 +11069,62 @@
       return sym.replace('/USD','').substring(0,1);
     }
 
-    // Authentic company logos — ticker-based API with multi-source fallback
-    function getStockLogoUrl(sym) {
+    // Authentic company logos — multi-source fallback chain by ticker
+    var _logoSources = [
+      function(t) { return 'https://eodhd.com/img/logos/US/' + t + '.png'; },
+      function(t) { return 'https://financialmodelingprep.com/image-stock/' + t + '.png'; },
+      function(t) {
+        var domains = {
+          AAPL:'apple.com',MSFT:'microsoft.com',GOOGL:'google.com',GOOG:'google.com',
+          AMZN:'amazon.com',NVDA:'nvidia.com',META:'meta.com',TSLA:'tesla.com',
+          NFLX:'netflix.com',AMD:'amd.com',INTC:'intel.com',CRM:'salesforce.com',
+          ORCL:'oracle.com',ADBE:'adobe.com',PYPL:'paypal.com',SQ:'squareup.com',
+          SHOP:'shopify.com',COIN:'coinbase.com',PLTR:'palantir.com',UBER:'uber.com',
+          ABNB:'airbnb.com',DIS:'disney.com',BA:'boeing.com',JPM:'jpmorganchase.com',
+          BAC:'bankofamerica.com',GS:'goldmansachs.com',V:'visa.com',MA:'mastercard.com',
+          WMT:'walmart.com',TGT:'target.com',COST:'costco.com',HD:'homedepot.com',
+          NKE:'nike.com',SBUX:'starbucks.com',MCD:'mcdonalds.com',KO:'coca-cola.com',
+          PEP:'pepsico.com',JNJ:'jnj.com',PFE:'pfizer.com',UNH:'unitedhealthgroup.com',
+          XOM:'exxonmobil.com',CVX:'chevron.com',FUBO:'fubo.tv',ELF:'elfcosmetics.com',
+          NIO:'nio.com',ENPH:'enphase.com',HIMS:'forhims.com',CELH:'celsius.com',
+          BABA:'alibaba.com',RIVN:'rivian.com',SOFI:'sofi.com',SNAP:'snap.com',
+          RBLX:'roblox.com',ROKU:'roku.com',DKNG:'draftkings.com',CRWD:'crowdstrike.com',
+          PANW:'paloaltonetworks.com',ZS:'zscaler.com',NET:'cloudflare.com',
+          SNOW:'snowflake.com',MSTR:'microstrategy.com',SPOT:'spotify.com',
+          HOOD:'robinhood.com',F:'ford.com',GM:'gm.com',SCHW:'schwab.com',
+          TRUMP:'truthsocial.com',DJT:'truthsocial.com',BTC:'bitcoin.org',ETH:'ethereum.org'
+        };
+        return domains[t] ? 'https://logo.clearbit.com/' + domains[t] + '?size=80' : '';
+      }
+    ];
+    function _tryLogoSource(img, sym, srcIdx) {
       var clean = sym.replace('/USD','').toUpperCase();
-      // Primary: EODHD — free, no key, 40K+ ticker logos
-      return 'https://eodhd.com/img/logos/US/' + clean + '.png';
+      while (srcIdx < _logoSources.length) {
+        var url = _logoSources[srcIdx](clean);
+        if (url) {
+          img.setAttribute('data-src-idx', srcIdx);
+          img.src = url;
+          return;
+        }
+        srcIdx++;
+      }
+      // All sources exhausted — show fallback initial
+      img.style.display = 'none';
+      var fb = img.nextElementSibling;
+      if (fb) fb.style.display = 'flex';
     }
-    function getStockLogoFallbackUrl(sym) {
-      var clean = sym.replace('/USD','').toUpperCase();
-      // Fallback: Logo.dev ticker API (free tier, no key needed for basic use)
-      return 'https://img.logo.dev/ticker/' + clean + '?format=png&size=80';
+    function _onLogoError(img) {
+      var idx = parseInt(img.getAttribute('data-src-idx') || '0') + 1;
+      var sym = img.getAttribute('data-sym') || '';
+      _tryLogoSource(img, sym, idx);
     }
     function buildWatchlistLogo(sym) {
-      var primary = getStockLogoUrl(sym);
-      var fallback = getStockLogoFallbackUrl(sym);
+      var clean = sym.replace('/USD','').toUpperCase();
       var color = getSymbolColor(sym);
       var initial = getSymbolInitial(sym);
-      // Try primary logo → fallback logo → colored initial
-      return '<img class="wl-logo" src="' + primary + '" alt="' + sym + '" ' +
-        'onerror="this.onerror=function(){this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';};this.src=\'' + fallback + '\';" />' +
+      var firstUrl = _logoSources[0](clean);
+      return '<img class="wl-logo" src="' + firstUrl + '" alt="' + sym + '" data-sym="' + sym + '" data-src-idx="0" ' +
+        'onerror="_onLogoError(this);" />' +
         '<div class="wl-logo-fallback" style="display:none;background:' + color + ';">' + initial + '</div>';
     }
 
