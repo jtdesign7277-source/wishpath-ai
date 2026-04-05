@@ -77,7 +77,7 @@ const player = {
   x: 0, y: 0,
   jumpY: 0, jumpVel: 0, isJumping: false,
   slideTimer: 0, isSliding: false,
-  height: 40, width: 28,
+  height: 72, width: 50,
   animPhase: 0,
 };
 
@@ -102,6 +102,7 @@ let bgParticles = [];
 // Screen shake
 let shakeX = 0, shakeY = 0, shakeDur = 0;
 let screenFlash = 0, screenFlashColor = '#FFD700';
+let floatingTexts = [];
 
 // Grid scroll
 let gridOffset = 0;
@@ -156,34 +157,52 @@ function spawnBurst(x, y, color, count, spread, life, size) {
   }
 }
 
-function initBgParticles() {
-  bgParticles = [];
-  for (let i = 0; i < 30; i++) {
-    bgParticles.push({
+// ─── STARFIELD ──────────────────────────────────────────────────
+let stars = [];
+
+function initStars() {
+  stars = [];
+  const count = 120;
+  for (let i = 0; i < count; i++) {
+    stars.push({
       x: rand(0, W), y: rand(0, H),
-      vx: rand(-0.15, 0.15), vy: rand(-0.1, 0.1),
-      size: rand(1, 2.5), alpha: rand(0.03, 0.12),
-      color: [COL.violet, COL.blue, COL.purple, COL.neonGreen][randInt(0, 3)],
+      size: rand(0.4, 2.8),
+      baseAlpha: rand(0.15, 0.85),
+      twinkleSpeed: rand(1.5, 5),
+      twinkleOffset: rand(0, Math.PI * 2),
+      // Depth layer: 0=far/slow, 1=mid, 2=near/fast
+      layer: Math.random() < 0.5 ? 0 : (Math.random() < 0.6 ? 1 : 2),
+      color: Math.random() < 0.7 ? COL.white :
+             [COL.violet, COL.blue, COL.softGreen, COL.goldLight][randInt(0, 3)],
     });
   }
 }
-initBgParticles();
+initStars();
 
-function updateBgParticles() {
-  for (const p of bgParticles) {
-    p.x += p.vx; p.y += p.vy;
-    if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
-    if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
+function updateStars(dt) {
+  const layerSpeeds = [0.05, 0.15, 0.35]; // parallax speeds
+  for (const s of stars) {
+    s.y += layerSpeeds[s.layer] * dt * 60;
+    if (s.y > H + 5) { s.y = -5; s.x = rand(0, W); }
   }
 }
 
-function drawBgParticles() {
-  for (const p of bgParticles) {
-    ctx.globalAlpha = p.alpha;
-    ctx.fillStyle = p.color;
+function drawStars(time) {
+  for (const s of stars) {
+    const twinkle = Math.sin(time * 0.001 * s.twinkleSpeed + s.twinkleOffset);
+    const alpha = s.baseAlpha * (0.6 + twinkle * 0.4);
+    if (alpha < 0.02) continue;
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = s.color;
     ctx.beginPath();
-    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
     ctx.fill();
+    // Bright stars get a soft cross-glow
+    if (s.size > 1.8 && alpha > 0.5) {
+      ctx.globalAlpha = alpha * 0.25;
+      ctx.fillRect(s.x - s.size * 3, s.y - 0.5, s.size * 6, 1);
+      ctx.fillRect(s.x - 0.5, s.y - s.size * 3, 1, s.size * 6);
+    }
   }
   ctx.globalAlpha = 1;
 }
@@ -504,7 +523,7 @@ function drawPlayer() {
     const w = player.width * s * 1.4;
     const h = player.height * s * 0.35;
     ctx.shadowColor = COL.violet;
-    ctx.shadowBlur = 18;
+    ctx.shadowBlur = 26;
     const grad = ctx.createLinearGradient(-w / 2, -h, w / 2, 0);
     grad.addColorStop(0, COL.violet);
     grad.addColorStop(0.5, COL.blue);
@@ -520,14 +539,14 @@ function drawPlayer() {
     // Core glow
     ctx.fillStyle = 'rgba(255,255,255,0.3)';
     ctx.beginPath();
-    ctx.arc(0, -h / 2, w * 0.15, 0, Math.PI * 2);
+    ctx.arc(0, -h / 2, w * 0.18, 0, Math.PI * 2);
     ctx.fill();
   } else {
     // Diamond crystal
     const w = player.width * s;
     const h = player.height * s;
     ctx.shadowColor = COL.violet;
-    ctx.shadowBlur = 22;
+    ctx.shadowBlur = 32;
     const grad = ctx.createLinearGradient(0, -h, 0, 0);
     grad.addColorStop(0, COL.blue);
     grad.addColorStop(0.4, COL.violet);
@@ -603,13 +622,15 @@ function checkCollisions() {
 
     if (o.premium) {
       // Premium orb — 5x points, massive explosion, screen flash
-      score += 50 * Math.min(combo, 10);
+      const pts = 50 * Math.min(combo, 10);
+      score += pts;
       spawnBurst(ox, oy, COL.gold, 30, 5, 0.9, 6);
       spawnBurst(ox, oy, COL.goldLight, 15, 4, 0.7, 4);
       spawnBurst(ox, oy, COL.violet, 10, 3, 0.6, 3);
       screenFlash = 0.4;
       screenFlashColor = COL.gold;
       shakeDur = 0.12;
+      floatingTexts.push({ text: `+${pts} BONUS`, x: ox, y: oy, life: 1.5, maxLife: 1.5, color: COL.gold, size: 26 });
     } else {
       // Regular orb — beefier burst
       score += 10 * Math.min(combo, 10);
@@ -652,7 +673,7 @@ function resetGame() {
   obstacles = []; orbs = [];
   particles = [];
   spawnTimer = 0; orbSpawnTimer = 0;
-  lastMarkerDistance = 0; distanceMarkerFlash = 0; screenFlash = 0;
+  lastMarkerDistance = 0; distanceMarkerFlash = 0; screenFlash = 0; floatingTexts = [];
   isNewHighScore = false;
 }
 
@@ -778,37 +799,56 @@ function hexToRgb(hex) {
   return { r: parseInt(c.slice(0, 2), 16), g: parseInt(c.slice(2, 4), 16), b: parseInt(c.slice(4, 6), 16) };
 }
 
+function updateFloatingTexts(dt) {
+  for (let i = floatingTexts.length - 1; i >= 0; i--) {
+    const ft = floatingTexts[i];
+    ft.y -= 40 * dt; // float upward
+    ft.life -= dt;
+    if (ft.life <= 0) floatingTexts.splice(i, 1);
+  }
+}
+
+function drawFloatingTexts() {
+  for (const ft of floatingTexts) {
+    const alpha = clamp(ft.life / (ft.maxLife * 0.5), 0, 1);
+    const scale = 1 + (1 - ft.life / ft.maxLife) * 0.3; // grow slightly as it fades
+    ctx.globalAlpha = alpha;
+    drawGlowText(ft.text, ft.x, ft.y, Math.floor(ft.size * scale), ft.color, 'center', 18);
+  }
+  ctx.globalAlpha = 1;
+}
+
 function drawHUD() {
   const pad = 16;
   const top = 14 + (CSS.supports('padding-top: env(safe-area-inset-top)') ? 30 : 0);
 
-  // Score — large, dynamic glow intensifies over time
+  // Score — extra large, dynamic glow intensifies over time
   const finalScore = Math.floor(score + distance);
   const scoreCol = getScoreColor(distance);
-  const glowIntensity = Math.min(30, 8 + distance * 0.02);
+  const glowIntensity = Math.min(40, 10 + distance * 0.025);
   const scorePulse = 1 + Math.sin(Date.now() * 0.005) * Math.min(0.15, distance * 0.0001);
-  const scoreSize = Math.floor(34 * scorePulse);
+  const scoreSize = Math.floor(44 * scorePulse);
   drawGlowText(finalScore.toLocaleString(), pad, top, scoreSize, scoreCol, 'left', glowIntensity);
 
   // Orbs
   ctx.fillStyle = COL.neonGreen;
   ctx.shadowColor = COL.neonGreen;
-  ctx.shadowBlur = 8;
+  ctx.shadowBlur = 10;
   ctx.beginPath();
-  ctx.arc(pad + 8, top + 50, 6, 0, Math.PI * 2);
+  ctx.arc(pad + 10, top + 60, 7, 0, Math.PI * 2);
   ctx.fill();
   ctx.shadowBlur = 0;
-  drawGlowText(`${orbsCollected}`, pad + 22, top + 42, 18, COL.softGreen, 'left', 4);
+  drawGlowText(`${orbsCollected}`, pad + 24, top + 52, 20, COL.softGreen, 'left', 6);
 
   // Distance
-  drawGlowText(`${Math.floor(distance)}m`, W - pad, top, 22, 'rgba(255,255,255,0.7)', 'right', 4);
+  drawGlowText(`${Math.floor(distance)}m`, W - pad, top, 24, 'rgba(255,255,255,0.7)', 'right', 6);
 
   // Combo
   if (combo > 1 && comboTimer > 0) {
     const comboAlpha = Math.min(1, comboTimer);
     ctx.globalAlpha = comboAlpha;
     const mult = Math.min(combo, 10);
-    drawGlowText(`x${mult} COMBO`, W / 2, top, 20, COL.neonGreen, 'center', 14);
+    drawGlowText(`x${mult} COMBO`, W / 2, top, 22, COL.neonGreen, 'center', 16);
     ctx.globalAlpha = 1;
   }
 
@@ -818,6 +858,9 @@ function drawHUD() {
     drawGlowText(`${Math.floor(lastMarkerDistance)}m`, W / 2, H * 0.35, 36, COL.blue, 'center', 20);
     ctx.globalAlpha = 1;
   }
+
+  // Floating bonus texts
+  drawFloatingTexts();
 }
 
 function drawMenuScreen() {
@@ -916,8 +959,9 @@ function drawGameOverScreen() {
 
 // ─── MAIN LOOP ──────────────────────────────────────────────────
 function update(dt) {
-  updateBgParticles();
+  updateStars(dt);
   updateParticles(dt);
+  updateFloatingTexts(dt);
 
   if (state !== STATE.PLAYING) return;
 
@@ -1002,7 +1046,7 @@ function draw() {
   ctx.save();
   ctx.translate(shakeX, shakeY);
 
-  drawBgParticles();
+  drawStars(performance.now());
   drawPath();
 
   // Draw far objects first (sorted by z descending)
