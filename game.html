@@ -63,7 +63,7 @@ const COL = {
 const STATE = { MENU: 0, PLAYING: 1, DEAD: 2 };
 let state = STATE.MENU;
 let score = 0, distance = 0, orbsCollected = 0, combo = 0, comboTimer = 0;
-let speed = 4, baseSpeed = 4, maxSpeed = 14, speedTimer = 0;
+let speed = 1.8, baseSpeed = 1.8, maxSpeed = 12, speedTimer = 0;
 let highScore = parseInt(localStorage.getItem('wp_game_highscore')) || 0;
 let totalCoins = parseInt(localStorage.getItem('wp_game_coins')) || 0;
 let isNewHighScore = false;
@@ -296,14 +296,14 @@ function spawnObstacle() {
   const lane = randInt(0, 2);
   const obs = { lane, z: 1.1, type, moving: false, movDir: 0, movSpeed: 0 };
 
-  // Double obstacles after 500m
-  if (distance > 500 && Math.random() < 0.35) {
+  // Double obstacles after 800m
+  if (distance > 800 && Math.random() < 0.3) {
     let lane2 = lane === 1 ? (Math.random() < 0.5 ? 0 : 2) : (lane === 0 ? 1 : 1);
     obstacles.push({ lane: lane2, z: 1.1, type: types[randInt(0, types.length - 1)], moving: false, movDir: 0, movSpeed: 0 });
   }
 
-  // Moving obstacles after 1000m
-  if (distance > 1000 && Math.random() < 0.3) {
+  // Moving obstacles after 1500m
+  if (distance > 1500 && Math.random() < 0.25) {
     obs.moving = true;
     obs.movDir = Math.random() < 0.5 ? -1 : 1;
     obs.movSpeed = rand(0.3, 0.7);
@@ -840,9 +840,11 @@ function update(dt) {
 
   // Speed increase
   speedTimer += dt;
-  if (speedTimer >= 10) {
+  if (speedTimer >= 8) {
     speedTimer = 0;
-    speed = Math.min(maxSpeed, speed + 0.4);
+    // Ramp faster early, slower later (diminishing increments)
+    const increment = speed < 4 ? 0.3 : speed < 7 ? 0.25 : 0.15;
+    speed = Math.min(maxSpeed, speed + increment);
   }
 
   // Distance markers
@@ -864,7 +866,7 @@ function update(dt) {
   }
 
   // Spawn obstacles
-  const spawnRate = Math.max(0.6, 2.0 - distance * 0.001);
+  const spawnRate = Math.max(0.8, 3.0 - distance * 0.0008);
   spawnTimer -= dt;
   if (spawnTimer <= 0) {
     spawnTimer = spawnRate + rand(-0.2, 0.2);
