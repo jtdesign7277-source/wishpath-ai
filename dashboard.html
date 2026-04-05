@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-05-v84';
+    var APP_VERSION = '2026-04-05-v86';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -2896,7 +2896,7 @@
       color: rgba(255,255,255,0.4);
     }
 
-    /* ── Streak Celebration - Full-screen dramatic zoom + burst ── */
+    /* ── Dramatic Streak Celebration - Flame explodes into confetti ── */
     .streak-celebration {
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
@@ -2912,30 +2912,30 @@
       text-align: center;
     }
     .big-flame {
-      font-size: 320px;
+      font-size: 340px;
       line-height: 1;
-      animation: flame-grow 2.2s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
-      filter: drop-shadow(0 0 80px #ff9800) drop-shadow(0 0 120px #7132F5);
+      animation: flame-grow 1.9s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+      filter: drop-shadow(0 0 90px #ff9800) drop-shadow(0 0 140px #7132F5);
     }
     .streak-number {
       position: absolute;
       top: 50%; left: 50%;
       transform: translate(-50%, -50%);
-      font-size: 68px;
+      font-size: 72px;
       font-weight: 900;
       color: #F0EFF5;
-      text-shadow: 0 0 30px #7132F5, 0 0 60px #ff9800;
+      text-shadow: 0 0 40px #7132F5, 0 0 70px #ff9800;
       opacity: 0;
-      animation: number-pop 2.2s 0.8s forwards;
+      animation: number-pop 1.9s 0.7s forwards;
     }
     @keyframes flame-grow {
-      0%   { transform: scale(0.08) rotate(-25deg); }
-      65%  { transform: scale(1.35) rotate(12deg); }
-      100% { transform: scale(1.45) rotate(0deg); }
+      0%   { transform: scale(0.06) rotate(-20deg); }
+      55%  { transform: scale(1.42) rotate(10deg); }
+      100% { transform: scale(1.55) rotate(0deg); }
     }
     @keyframes number-pop {
       0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.2); }
-      40%  { opacity: 1; transform: translate(-50%, -50%) scale(1.25); }
+      45%  { opacity: 1; transform: translate(-50%, -50%) scale(1.25); }
       100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
     }
     #confetti-canvas {
@@ -4744,7 +4744,7 @@
       }
     }
 
-    // Canvas-based confetti — smaller, elegant pieces
+    // Flame blows up and disappears as confetti bursts
     function launchConfetti() {
       var canvas = document.createElement('canvas');
       canvas.id = 'confetti-canvas';
@@ -4754,15 +4754,15 @@
       canvas.height = window.innerHeight;
       var confetti = [];
       var colors = ['#7132F5', '#149E61', '#D11D45', '#F0EFF5', '#ff9800', '#a855f7'];
-      for (var i = 0; i < 220; i++) {
+      for (var i = 0; i < 200; i++) {
         confetti.push({
           x: Math.random() * canvas.width,
           y: Math.random() * canvas.height - canvas.height,
-          size: Math.random() * 8 + 4,
-          speed: Math.random() * 9 + 7,
+          size: Math.random() * 7 + 3.5,
+          speed: Math.random() * 10 + 8,
           color: colors[Math.floor(Math.random() * colors.length)],
           rotation: Math.random() * 360,
-          rotSpeed: Math.random() * 15 - 7
+          rotSpeed: Math.random() * 18 - 9
         });
       }
       var frame = 0;
@@ -4773,17 +4773,17 @@
           var c = confetti[i];
           c.y += c.speed;
           c.rotation += c.rotSpeed;
-          c.speed *= 0.985;
+          c.speed *= 0.982;
           ctx.save();
           ctx.translate(c.x, c.y);
           ctx.rotate(c.rotation * Math.PI / 180);
           ctx.fillStyle = c.color;
-          ctx.fillRect(-c.size/2, -c.size/2, c.size, c.size * 1.8);
+          ctx.fillRect(-c.size/2, -c.size/2, c.size, c.size * 1.7);
           ctx.restore();
-          if (c.y < canvas.height + 100) stillAlive = true;
+          if (c.y < canvas.height + 80) stillAlive = true;
         }
         frame++;
-        if (stillAlive && frame < 160) {
+        if (stillAlive && frame < 155) {
           requestAnimationFrame(animate);
         } else {
           if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
@@ -4798,24 +4798,34 @@
       var flameEl = document.getElementById('big-flame');
       if (!overlay || !numberEl) return;
       numberEl.textContent = streakCount;
-      // Reset animations for replay
-      if (flameEl) { flameEl.style.animation = 'none'; flameEl.offsetHeight; flameEl.style.animation = ''; }
+      // Reset animations and inline styles for replay
+      if (flameEl) {
+        flameEl.style.transition = ''; flameEl.style.transform = ''; flameEl.style.opacity = '';
+        flameEl.style.animation = 'none'; flameEl.offsetHeight; flameEl.style.animation = '';
+      }
       numberEl.style.animation = 'none'; numberEl.offsetHeight; numberEl.style.animation = '';
       overlay.style.display = 'flex';
       overlay.style.opacity = '1';
       overlay.style.transition = '';
-      // Burst confetti after flame reaches max size
-      setTimeout(function() { launchConfetti(); }, 1100);
-      // Auto-hide with nice fade
+      // Flame grows huge, then blows up and disappears as confetti bursts
       setTimeout(function() {
-        overlay.style.transition = 'opacity 0.9s ease-out';
+        if (flameEl) {
+          flameEl.style.transition = 'transform 0.4s ease-out, opacity 0.4s ease-out';
+          flameEl.style.transform = 'scale(2.8) rotate(15deg)';
+          flameEl.style.opacity = '0';
+        }
+        launchConfetti();
+      }, 1050);
+      // Clean fade out of entire overlay
+      setTimeout(function() {
+        overlay.style.transition = 'opacity 0.85s ease-out';
         overlay.style.opacity = '0';
         setTimeout(function() {
           overlay.style.display = 'none';
           overlay.style.opacity = '1';
           overlay.style.transition = '';
-        }, 1000);
-      }, 3200);
+        }, 900);
+      }, 2600);
     }
 
     function claimDailyStreak() {
@@ -12284,10 +12294,10 @@ window.addEventListener('orientationchange', function() {
   setTimeout(function() { refreshActiveFMWidgetLayout(true); }, 140);
 });
 window.addEventListener('focus', function() {
-  refreshActiveFMWidgetLayout(true);
+  refreshActiveFMWidgetLayout(false);
 });
 document.addEventListener('visibilitychange', function() {
-  if (document.visibilityState === 'visible') refreshActiveFMWidgetLayout(true);
+  if (document.visibilityState === 'visible') refreshActiveFMWidgetLayout(false);
 });
 
   </script>
