@@ -2477,6 +2477,8 @@
         line-height: 1.4;
       }
       .lc-input::placeholder { color: rgba(255,255,255,0.35); }
+      .lc-input:empty::before { content: attr(data-placeholder); color: rgba(255,255,255,0.35); pointer-events: none; }
+      .lc-input:focus:empty::before { color: rgba(255,255,255,0.25); }
       @keyframes inputPulse {
         0%, 100% { box-shadow: 0 0 0 0 rgba(120,80,220,0.3); }
         50% { box-shadow: 0 0 0 2px rgba(120,80,220,0.2); }
@@ -3877,7 +3879,7 @@
           <!-- Input bar -->
           <div class="lc-input-bar">
             <div class="lc-input-wrap">
-              <textarea class="lc-input" id="lcInput" placeholder="Ask your life coach anything" rows="1" autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false" enterkeyhint="send" inputmode="text" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendLifeCoachMsg();}"></textarea>
+              <div class="lc-input" id="lcInput" contenteditable="true" role="textbox" data-placeholder="Ask your life coach anything" enterkeyhint="send" inputmode="text" spellcheck="false" style="min-height:22px;max-height:120px;overflow-y:auto;" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendLifeCoachMsg();}"></div>
               <button class="lc-send-btn" onclick="sendLifeCoachMsg()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
               </button>
@@ -6830,10 +6832,10 @@
 
     function sendLifeCoachMsg() {
       var input = document.getElementById('lcInput');
-      var msg = (input ? input.value : '').trim();
+      var msg = (input ? (input.textContent || input.value || '') : '').trim();
       if (!msg) return;
       if (!checkAgentLimit()) return;
-      input.value = '';
+      if (input.textContent !== undefined) { input.textContent = ''; } else { input.value = ''; }
       input.style.height = 'auto';
 
       // Hide empty state
