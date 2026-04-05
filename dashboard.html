@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-04-v71';
+    var APP_VERSION = '2026-04-04-v72';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -1422,16 +1422,14 @@
         right: 0 !important;
         bottom: 0 !important;
         padding: 0 !important;
-        padding-top: env(safe-area-inset-top, 47px) !important;
         margin: 0 !important;
         overflow: hidden !important;
         z-index: 9999;
         background: #161b22 !important;
       }
-      /* Kill every non-chart element inside the fullscreen view */
+      /* Kill non-chart chrome inside the fullscreen view (keep ticker input) */
       body.fm-mobile-fullscreen #fmSubTabs,
       body.fm-mobile-fullscreen .fm-ticker-pull-tab,
-      body.fm-mobile-fullscreen .fm-ticker-input-row,
       body.fm-mobile-fullscreen .fm-exit-fs-btn,
       body.fm-mobile-fullscreen .chart-fs-btn {
         display: none !important;
@@ -1441,6 +1439,10 @@
         margin: 0 !important;
         border: none !important;
         overflow: hidden !important;
+      }
+      /* Hide ticker row by default in fullscreen — TradingView has built-in search */
+      body.fm-mobile-fullscreen .fm-ticker-input-row {
+        display: none !important;
       }
       body.fm-mobile-fullscreen #fmView .fm-sub-content {
         padding: 0 !important;
@@ -1483,17 +1485,18 @@
       .fm-exit-fs-btn { display: none !important; }
       body.fm-mobile-fullscreen .fm-exit-fs-btn { display: none !important; }
       .fm-widget-nav { display: none !important; }
-      /* Fixed back button on fullscreen widget tabs */
+      /* Fixed back button — bottom-left on fullscreen widget tabs, away from TradingView search bar */
       .fm-fs-back-btn {
-        display: none; position: fixed; top: calc(env(safe-area-inset-top, 47px) + 6px); left: 10px; z-index: 10003;
-        width: 36px; height: 36px; border-radius: 10px;
-        background: rgba(0,0,0,0.5); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255,255,255,0.1);
-        color: rgba(255,255,255,0.85); font-size: 16px;
+        display: none; position: fixed; bottom: calc(16px + env(safe-area-inset-bottom)); left: 14px; z-index: 10003;
+        width: 40px; height: 40px; border-radius: 12px;
+        background: rgba(0,0,0,0.6); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255,255,255,0.12);
+        color: rgba(255,255,255,0.85); font-size: 17px;
         align-items: center; justify-content: center;
         cursor: pointer; -webkit-tap-highlight-color: transparent;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.4);
       }
-      .fm-fs-back-btn:active { background: rgba(255,255,255,0.1); transform: scale(0.92); }
+      .fm-fs-back-btn:active { background: rgba(255,255,255,0.12); transform: scale(0.92); }
       body.fm-widget-active .fm-fs-back-btn { display: flex; }
 
       /* ── Unified Notion dark color scheme ── */
