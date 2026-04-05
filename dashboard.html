@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-04-v73';
+    var APP_VERSION = '2026-04-05-v75';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -1721,6 +1721,10 @@
     .holding-action-overlay.active { display: flex; }
     .holding-action-sheet { width: min(100%, 440px); max-height: 85vh; overflow-y: auto; background: #1e1e1e; border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 22px 20px; box-shadow: 0 18px 48px rgba(0,0,0,0.52); }
     .holding-action-symbol { font-size: 1.3rem; font-weight: 800; color: var(--text); margin-bottom: 6px; }
+    .holding-mode-tabs { display: flex; gap: 0; margin-bottom: 14px; background: rgba(255,255,255,0.04); border-radius: 10px; padding: 3px; }
+    .holding-mode-tab { flex: 1; padding: 8px 0; border: none; background: transparent; color: var(--text-dim); font-size: 0.82rem; font-weight: 600; border-radius: 8px; cursor: pointer; transition: all 0.15s; }
+    .holding-mode-tab.active { background: rgba(120,80,220,0.25); color: #fff; }
+    .holding-edit-summary { padding: 10px 12px; margin-top: 8px; background: rgba(120,80,220,0.08); border: 1px solid rgba(120,80,220,0.2); border-radius: 10px; font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; }
     .holding-action-meta { font-size: 0.88rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 18px; }
     .holding-action-btns { display: flex; gap: 10px; }
     .holding-action-btn { flex: 1; min-height: 48px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.04); color: var(--text); font: inherit; font-size: 0.9rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
@@ -2989,23 +2993,29 @@
     <div class="holding-action-sheet">
       <div class="holding-action-symbol" id="holdingActionSymbol">AAPL</div>
       <div class="holding-action-meta" id="holdingActionMeta"></div>
+      <!-- Mode tabs: Edit vs Add to Position -->
+      <div class="holding-mode-tabs" id="holdingModeTabs" style="display:none;">
+        <button class="holding-mode-tab active" id="holdingModeEditTab" onclick="switchHoldingMode('edit')">Edit Position</button>
+        <button class="holding-mode-tab" id="holdingModeAddTab" onclick="switchHoldingMode('addTo')">Add to Position</button>
+      </div>
       <div class="holding-edit-fields">
         <div class="holding-edit-row" id="holdingSymbolRow" style="display:none;">
           <label class="holding-edit-label">Symbol</label>
           <input class="holding-edit-input" id="holdingEditSymbol" type="text" placeholder="e.g. AAPL" style="text-transform:uppercase;" />
         </div>
         <div class="holding-edit-row">
-          <label class="holding-edit-label">Shares</label>
+          <label class="holding-edit-label" id="holdingQtyLabel">Shares</label>
           <input class="holding-edit-input" id="holdingEditQty" type="number" min="0" step="any" placeholder="Qty" />
         </div>
         <div class="holding-edit-row">
-          <label class="holding-edit-label">Avg Cost</label>
+          <label class="holding-edit-label" id="holdingCostLabel">Avg Cost</label>
           <input class="holding-edit-input" id="holdingEditCost" type="number" min="0" step="0.01" placeholder="$ per share" />
         </div>
+        <div class="holding-edit-summary" id="holdingAddSummary" style="display:none;"></div>
       </div>
       <div class="holding-action-btns">
         <button class="holding-action-btn" onclick="closeHoldingActions()">Cancel</button>
-        <button class="holding-action-btn save" onclick="saveHoldingEdit()">Save</button>
+        <button class="holding-action-btn save" id="holdingSaveBtn" onclick="saveHoldingEdit()">Save</button>
         <button class="holding-action-btn delete" id="holdingDeleteBtn" onclick="deleteActiveHolding()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
         </button>
@@ -9044,12 +9054,17 @@
       var costInput = document.getElementById('holdingEditCost');
       var symbolRow = document.getElementById('holdingSymbolRow');
       var deleteBtn = document.getElementById('holdingDeleteBtn');
+      var modeTabs = document.getElementById('holdingModeTabs');
+      var summary = document.getElementById('holdingAddSummary');
       if (symbolEl) symbolEl.textContent = holding.symbol;
-      if (metaEl) metaEl.textContent = (price && price.price ? 'Current price $' + formatNum(price.price) : '');
+      if (metaEl) metaEl.textContent = (price && price.price ? 'Current price $' + formatNum(price.price) : '') + ' · ' + holding.qty + ' shares @ $' + formatNum(holding.avgCost);
       if (symbolRow) symbolRow.style.display = 'none';
       if (deleteBtn) deleteBtn.style.display = '';
+      if (modeTabs) modeTabs.style.display = 'flex';
+      if (summary) summary.style.display = 'none';
       if (qtyInput) qtyInput.value = holding.qty || '';
       if (costInput) costInput.value = holding.avgCost || '';
+      switchHoldingMode('edit');
       if (overlay) overlay.classList.add('active');
     }
 
@@ -9064,15 +9079,78 @@
       var symbolInput = document.getElementById('holdingEditSymbol');
       var symbolRow = document.getElementById('holdingSymbolRow');
       var deleteBtn = document.getElementById('holdingDeleteBtn');
+      var modeTabs = document.getElementById('holdingModeTabs');
+      var summary = document.getElementById('holdingAddSummary');
       if (symbolEl) symbolEl.textContent = 'Add Holding';
       if (metaEl) metaEl.textContent = '';
       if (symbolRow) symbolRow.style.display = '';
       if (deleteBtn) deleteBtn.style.display = 'none';
+      if (modeTabs) modeTabs.style.display = 'none';
+      if (summary) summary.style.display = 'none';
       if (symbolInput) { symbolInput.value = ''; }
       if (qtyInput) qtyInput.value = '';
       if (costInput) costInput.value = '';
+      document.getElementById('holdingQtyLabel').textContent = 'Shares';
+      document.getElementById('holdingCostLabel').textContent = 'Avg Cost';
+      document.getElementById('holdingSaveBtn').textContent = 'Save';
       if (overlay) overlay.classList.add('active');
       setTimeout(function() { if (symbolInput) symbolInput.focus(); }, 100);
+    }
+
+    function switchHoldingMode(mode) {
+      _holdingModalMode = mode;
+      var editTab = document.getElementById('holdingModeEditTab');
+      var addTab = document.getElementById('holdingModeAddTab');
+      var qtyInput = document.getElementById('holdingEditQty');
+      var costInput = document.getElementById('holdingEditCost');
+      var qtyLabel = document.getElementById('holdingQtyLabel');
+      var costLabel = document.getElementById('holdingCostLabel');
+      var saveBtn = document.getElementById('holdingSaveBtn');
+      var summary = document.getElementById('holdingAddSummary');
+      var holding = _activeHoldingIdx !== null ? portfolioHoldings[_activeHoldingIdx] : null;
+
+      if (mode === 'addTo') {
+        if (editTab) editTab.classList.remove('active');
+        if (addTab) addTab.classList.add('active');
+        if (qtyLabel) qtyLabel.textContent = 'Shares to Add';
+        if (costLabel) costLabel.textContent = 'Purchase Price';
+        if (saveBtn) saveBtn.textContent = 'Add';
+        if (qtyInput) qtyInput.value = '';
+        if (costInput) costInput.value = '';
+        if (summary && holding) {
+          summary.style.display = 'block';
+          summary.innerHTML = 'Current: ' + holding.qty + ' shares @ $' + formatNum(holding.avgCost) + ' avg';
+        }
+        if (qtyInput) { qtyInput.placeholder = 'Additional shares'; setTimeout(function() { qtyInput.focus(); }, 100); }
+        if (costInput) costInput.placeholder = 'Price you paid';
+        var updatePreview = function() {
+          if (!holding || !summary) return;
+          var addQty = parseFloat(qtyInput.value) || 0;
+          var addPrice = parseFloat(costInput.value) || 0;
+          if (addQty > 0 && addPrice > 0) {
+            var newTotal = holding.qty + addQty;
+            var newAvg = ((holding.avgCost * holding.qty) + (addPrice * addQty)) / newTotal;
+            summary.innerHTML = 'Current: ' + holding.qty + ' shares @ $' + formatNum(holding.avgCost) + ' avg<br>After: ' + newTotal + ' shares @ $' + formatNum(newAvg) + ' avg';
+          } else {
+            summary.innerHTML = 'Current: ' + holding.qty + ' shares @ $' + formatNum(holding.avgCost) + ' avg';
+          }
+        };
+        qtyInput.oninput = updatePreview;
+        costInput.oninput = updatePreview;
+      } else {
+        if (editTab) editTab.classList.add('active');
+        if (addTab) addTab.classList.remove('active');
+        if (qtyLabel) qtyLabel.textContent = 'Shares';
+        if (costLabel) costLabel.textContent = 'Avg Cost';
+        if (saveBtn) saveBtn.textContent = 'Save';
+        if (summary) summary.style.display = 'none';
+        if (qtyInput) { qtyInput.placeholder = 'Qty'; qtyInput.oninput = null; }
+        if (costInput) { costInput.placeholder = '$ per share'; costInput.oninput = null; }
+        if (holding) {
+          if (qtyInput) qtyInput.value = holding.qty || '';
+          if (costInput) costInput.value = holding.avgCost || '';
+        }
+      }
     }
 
     async function saveHoldingEdit() {
@@ -9095,15 +9173,21 @@
         } else {
           portfolioHoldings.push({ symbol: symbol, qty: qty, avgCost: cost });
         }
+      } else if (_holdingModalMode === 'addTo') {
+        if (_activeHoldingIdx === null || !portfolioHoldings[_activeHoldingIdx]) return;
+        var h = portfolioHoldings[_activeHoldingIdx];
+        var newTotalQty = h.qty + qty;
+        h.avgCost = h.avgCost > 0 ? ((h.avgCost * h.qty) + (cost * qty)) / newTotalQty : cost;
+        h.qty = newTotalQty;
       } else {
         if (_activeHoldingIdx === null || !portfolioHoldings[_activeHoldingIdx]) return;
         portfolioHoldings[_activeHoldingIdx].qty = qty;
         portfolioHoldings[_activeHoldingIdx].avgCost = cost;
       }
       closeHoldingActions();
-      savePortfolio();
-      await refreshPortfolioPrices();
       renderHoldings();
+      savePortfolio();
+      refreshPortfolioPrices().then(function() { renderHoldings(); });
     }
 
     function closeHoldingActions() {
