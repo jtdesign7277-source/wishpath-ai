@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-04-v70';
+    var APP_VERSION = '2026-04-04-v71';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -1420,7 +1420,7 @@
         top: 0 !important;
         left: 0 !important;
         right: 0 !important;
-        bottom: calc(58px + env(safe-area-inset-bottom)) !important;
+        bottom: 0 !important;
         padding: 0 !important;
         padding-top: env(safe-area-inset-top, 47px) !important;
         margin: 0 !important;
@@ -1482,33 +1482,19 @@
       /* Exit fullscreen button — hidden, purple toggle replaces it */
       .fm-exit-fs-btn { display: none !important; }
       body.fm-mobile-fullscreen .fm-exit-fs-btn { display: none !important; }
-      /* ── TradingView Widget Bottom Nav — X-style scroll-triggered ── */
-      .fm-widget-nav {
-        display: none !important; position: fixed; bottom: 0; left: 0; right: 0; z-index: 10002;
-        justify-content: space-around; align-items: center;
-        padding: 12px 0 calc(12px + env(safe-area-inset-bottom));
-        background: rgba(11,6,17,0.92);
-        backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-        border-top: 1px solid rgba(104,107,130,0.2);
-      }
-      body.fm-widget-active .fm-widget-nav { display: flex !important; }
-      .fm-widget-nav-btn {
-        display: flex; align-items: center; justify-content: center;
-        width: 48px; height: 48px;
-        background: none; border: none; color: rgba(240,239,245,0.6);
+      .fm-widget-nav { display: none !important; }
+      /* Fixed back button on fullscreen widget tabs */
+      .fm-fs-back-btn {
+        display: none; position: fixed; top: calc(env(safe-area-inset-top, 47px) + 6px); left: 10px; z-index: 10003;
+        width: 36px; height: 36px; border-radius: 10px;
+        background: rgba(0,0,0,0.5); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255,255,255,0.1);
+        color: rgba(255,255,255,0.85); font-size: 16px;
+        align-items: center; justify-content: center;
         cursor: pointer; -webkit-tap-highlight-color: transparent;
-        transition: color 0.2s ease, transform 0.15s ease;
-        border-radius: 12px;
       }
-      .fm-widget-nav-btn:active { transform: scale(0.88); color: rgba(240,239,245,0.9); }
-      .fm-widget-nav-wand {
-        width: 52px; height: 52px;
-        background: rgba(113,50,245,0.15);
-        border: 1px solid rgba(113,50,245,0.3);
-        border-radius: 16px;
-        color: rgba(167,139,250,0.9);
-      }
-      .fm-widget-nav-wand:active { background: rgba(113,50,245,0.3); transform: scale(0.9); }
+      .fm-fs-back-btn:active { background: rgba(255,255,255,0.1); transform: scale(0.92); }
+      body.fm-widget-active .fm-fs-back-btn { display: flex; }
 
       /* ── Unified Notion dark color scheme ── */
       body, .app-container, .main-content, .view, .coach-layout, .coach-left, .coach-right-wrapper {
@@ -2974,18 +2960,8 @@
       <path d="M3 3l6 7-6 7"/>
     </svg>
   </button>
-  <!-- TradingView Widget Nav — scroll-triggered, X-style -->
-  <nav class="fm-widget-nav" id="fmWidgetNav">
-    <button class="fm-widget-nav-btn" onclick="exitToHome()" aria-label="Home">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="24" height="24"><path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V19a1 1 0 001 1h4v-5h4v5h4a1 1 0 001-1V9.5"/></svg>
-    </button>
-    <button class="fm-widget-nav-btn fm-widget-nav-wand" onclick="openFMChat()" aria-label="Ask AI">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="26" height="26"><path d="M15 4V2M15 16v-2M8 9h2M20 9h2M17.8 11.8l1.4 1.4M17.8 6.2l1.4-1.4M10.2 11.8l-1.4 1.4M10.2 6.2L8.8 4.8"/><path d="M15 9a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2 22l10-10"/></svg>
-    </button>
-    <button class="fm-widget-nav-btn" onclick="toggleMobileSidebar()" aria-label="Search">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="24" height="24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-    </button>
-  </nav>
+  <!-- Fixed back button for fullscreen TradingView tabs -->
+  <button class="fm-fs-back-btn" id="fmFsBackBtn" onclick="exitChartView()">&#x2190;</button>
   <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleMobileSidebar()"></div>
   <div class="mobile-fm-menu-backdrop" id="mobileFMTabsBackdrop" onclick="closeMobileFMMenu()"></div>
   <div class="mobile-fm-menu" id="mobileFMTabsMenu" aria-label="Financial Markets sections">
@@ -12003,28 +11979,6 @@ function exitChartView() {
   window.scrollTo(0, 0);
 }
 
-// Widget nav is always visible via CSS when body.fm-widget-active is set
-
-function exitToHome() {
-  // Clean up fullscreen state
-  document.body.classList.remove('fm-mobile-fullscreen');
-  document.body.classList.remove('fm-widget-active');
-  _fmMobileImmersive = false;
-  // Hide all views, show mobile home
-  document.querySelectorAll('.view').forEach(function(v) { v.classList.remove('active'); });
-  showMobileHome();
-  window.scrollTo(0, 0);
-}
-
-function openFMChat() {
-  // Clean up fullscreen state
-  document.body.classList.remove('fm-mobile-fullscreen');
-  document.body.classList.remove('fm-widget-active');
-  _fmMobileImmersive = false;
-  // Go to AI coach
-  showView('coach');
-  window.scrollTo(0, 0);
-}
 
 // Add fullscreen buttons to all chart containers
 function addChartFsButtons() {
