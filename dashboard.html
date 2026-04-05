@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-05-v102';
+    var APP_VERSION = '2026-04-05-v103';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -1843,17 +1843,20 @@
     .watchlist-add-input:focus { border-color: #7132F5; box-shadow: 0 0 0 3px rgba(113,50,245,0.15); }
     .watchlist-add-input::placeholder { color: var(--text-dim); text-transform: none; }
     .watchlist-add-btn { padding: 10px 18px; background: #7132F5; color: #fff; border: none; border-radius: 12px; font: inherit; font-size: 0.9rem; font-weight: 700; cursor: pointer; }
-    .watchlist-items { display: flex; flex-direction: column; gap: 2px; padding: 0 4px; }
-    .watchlist-item { display: flex; align-items: center; padding: 13px 14px; background: #252525; border-radius: 12px; border: 1px solid rgba(104,107,130,0.24); box-shadow: inset 0 1px 0 rgba(255,255,255,0.05); transition: all 0.2s ease; min-height: 58px; }
-    .watchlist-item:hover { background: rgba(113,50,245,0.08); border-color: rgba(113,50,245,0.3); }
+    .watchlist-items { display: flex; flex-direction: column; gap: 0; padding: 0; }
+    .watchlist-item { display: flex; align-items: center; padding: 14px 16px; background: transparent; border: none; border-bottom: 1px solid rgba(255,255,255,0.06); border-radius: 0; box-shadow: none; transition: background 0.2s ease; min-height: 60px; cursor: pointer; }
+    .watchlist-item:last-child { border-bottom: none; }
+    .watchlist-item:hover { background: rgba(255,255,255,0.03); }
     .watchlist-item-left { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
     .icon-circle { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 600; color: #fff; flex-shrink: 0; box-shadow: inset 0 1px 0 rgba(255,255,255,0.2); }
-    .watchlist-item-symbol { font-size: 15px; font-weight: 700; color: #F0EFF5; }
-    .watchlist-item-name { font-size: 12.5px; color: #9497A9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .watchlist-item-right { text-align: right; min-width: 92px; }
-    .watchlist-item-price { font-size: 15.5px; font-weight: 700; color: #F0EFF5; font-variant-numeric: tabular-nums; }
-    .watchlist-item-change { font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
-    .watchlist-item-remove { background: none; border: none; color: #686B82; cursor: pointer; font-size: 18px; padding: 4px 8px; margin-left: 8px; opacity: 0; transition: opacity 0.2s; }
+    .wl-logo { width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0; object-fit: contain; background: #1a1a1a; }
+    .wl-logo-fallback { width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: #fff; }
+    .watchlist-item-symbol { font-size: 15px; font-weight: 700; color: #F0EFF5; letter-spacing: 0.02em; }
+    .watchlist-item-name { font-size: 11.5px; color: rgba(255,255,255,0.35); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; text-transform: uppercase; letter-spacing: 0.03em; }
+    .watchlist-item-right { text-align: right; min-width: 110px; }
+    .watchlist-item-price { font-size: 15px; font-weight: 600; color: #F0EFF5; font-variant-numeric: tabular-nums; }
+    .watchlist-item-change { font-size: 12.5px; font-weight: 500; font-variant-numeric: tabular-nums; margin-top: 1px; }
+    .watchlist-item-remove { background: none; border: none; color: rgba(255,255,255,0.2); cursor: pointer; font-size: 18px; padding: 4px 8px; margin-left: 4px; opacity: 0; transition: opacity 0.2s; }
     .watchlist-item:hover .watchlist-item-remove { opacity: 1; }
     .watchlist-item-remove:hover { color: #D11D45; }
     @keyframes pricePulse { 0% { background: rgba(120,80,220,0.15); } 100% { background: transparent; } }
@@ -2661,7 +2664,7 @@
       .news-feed-action { min-height: 44px; padding: 8px 12px; }
       .news-detail-panel { max-width: 100%; border-radius: 16px 16px 0 0; padding: 20px 16px; }
       /* Watchlist mobile */
-      .watchlist-item { min-height: 44px; }
+      .watchlist-item { min-height: 56px; padding: 12px 14px; }
       .watchlist-add-input { font-size: 16px !important; min-height: 44px; }
       .watchlist-add-btn { min-height: 44px; }
       /* Safe areas */
@@ -10922,7 +10925,7 @@
       renderWatchlistSelector();
     }
 
-    var STOCK_NAMES = { AAPL:'Apple', MSFT:'Microsoft', GOOGL:'Alphabet', GOOG:'Alphabet', AMZN:'Amazon', NVDA:'NVIDIA', META:'Meta', TSLA:'Tesla', NFLX:'Netflix', AMD:'AMD', INTC:'Intel', CRM:'Salesforce', ORCL:'Oracle', ADBE:'Adobe', PYPL:'PayPal', SQ:'Block', SHOP:'Shopify', COIN:'Coinbase', PLTR:'Palantir', UBER:'Uber', ABNB:'Airbnb', DIS:'Disney', BA:'Boeing', JPM:'JPMorgan', BAC:'Bank of America', GS:'Goldman Sachs', V:'Visa', MA:'Mastercard', WMT:'Walmart', TGT:'Target', COST:'Costco', HD:'Home Depot', NKE:'Nike', SBUX:'Starbucks', MCD:"McDonald's", KO:'Coca-Cola', PEP:'PepsiCo', JNJ:'J&J', PFE:'Pfizer', UNH:'UnitedHealth', XOM:'Exxon', CVX:'Chevron', FUBO:'fuboTV', TRUMP:'Trump Media', DJT:'Trump Media', 'BTC/USD':'Bitcoin', 'ETH/USD':'Ethereum', 'SOL/USD':'Solana', DOGE:'Dogecoin', 'DOGE/USD':'Dogecoin' };
+    var STOCK_NAMES = { AAPL:'Apple', MSFT:'Microsoft', GOOGL:'Alphabet', GOOG:'Alphabet', AMZN:'Amazon', NVDA:'NVIDIA', META:'Meta', TSLA:'Tesla', NFLX:'Netflix', AMD:'Advanced Micro Devices', INTC:'Intel', CRM:'Salesforce', ORCL:'Oracle', ADBE:'Adobe', PYPL:'PayPal', SQ:'Block', SHOP:'Shopify', COIN:'Coinbase', PLTR:'Palantir Technologies Inc', UBER:'Uber', ABNB:'Airbnb', DIS:'Disney', BA:'Boeing', JPM:'JPMorgan', BAC:'Bank of America', GS:'Goldman Sachs', V:'Visa', MA:'Mastercard', WMT:'Walmart', TGT:'Target', COST:'Costco', HD:'Home Depot', NKE:'Nike Cl B', SBUX:'Starbucks', MCD:"McDonald's", KO:'Coca-Cola', PEP:'PepsiCo', JNJ:'J&J', PFE:'Pfizer', UNH:'UnitedHealth', XOM:'Exxon', CVX:'Chevron', FUBO:'fuboTV', TRUMP:'Trump Media', DJT:'Trump Media', ELF:'Elf Beauty Inc', NIO:'NIO Inc', ENPH:'Enphase Energy', HIMS:'Hims & Hers Health', CELH:'Celsius Holdings', BABA:'Alibaba', RIVN:'Rivian', SOFI:'SoFi Technologies', SNAP:'Snap', RBLX:'Roblox', ROKU:'Roku', DKNG:'DraftKings', CRWD:'CrowdStrike', PANW:'Palo Alto Networks', ZS:'Zscaler', NET:'Cloudflare', SNOW:'Snowflake', MSTR:'MicroStrategy', RIOT:'Riot Platforms', MARA:'Marathon Digital', SPOT:'Spotify', HOOD:'Robinhood', LCID:'Lucid Motors', F:'Ford', GM:'General Motors', T:'AT&T', VZ:'Verizon', WFC:'Wells Fargo', C:'Citigroup', MS:'Morgan Stanley', SCHW:'Charles Schwab', 'BTC/USD':'Bitcoin', 'ETH/USD':'Ethereum', 'SOL/USD':'Solana', DOGE:'Dogecoin', 'DOGE/USD':'Dogecoin' };
 
     function getSymbolColor(sym) {
       var colors = { 'AAPL':'#000000', 'TSLA':'#e31937', 'NFLX':'#e50914', 'MSFT':'#00a4ef', 'GOOGL':'#4285f4', 'AMZN':'#ff9900', 'NVDA':'#76b900', 'META':'#0668e1', 'SPX':'#e63939', 'NDQ':'#00a1e0', 'DJI':'#2a9d8f', 'BTC/USD':'#f7931a', 'ETH/USD':'#627eea', 'SOL/USD':'#00f0a0', 'BTC':'#f7931a', 'ETH':'#627eea', 'SOL':'#00f0a0', 'VIX':'#f4a261', 'DXY':'#2ec4b6', 'AMD':'#ed1c24', 'JPM':'#003087', 'BA':'#0039a6', 'DIS':'#003087', 'COIN':'#0052ff' };
@@ -10935,6 +10938,44 @@
       return sym.replace('/USD','').substring(0,1);
     }
 
+    // Authentic company logo URLs — maps ticker to logo image
+    var STOCK_LOGO_DOMAINS = {
+      AAPL:'apple.com', MSFT:'microsoft.com', GOOGL:'google.com', GOOG:'google.com',
+      AMZN:'amazon.com', NVDA:'nvidia.com', META:'meta.com', TSLA:'tesla.com',
+      NFLX:'netflix.com', AMD:'amd.com', INTC:'intel.com', CRM:'salesforce.com',
+      ORCL:'oracle.com', ADBE:'adobe.com', PYPL:'paypal.com', SQ:'block.xyz',
+      SHOP:'shopify.com', COIN:'coinbase.com', PLTR:'palantir.com', UBER:'uber.com',
+      ABNB:'airbnb.com', DIS:'disney.com', BA:'boeing.com', JPM:'jpmorganchase.com',
+      BAC:'bankofamerica.com', GS:'goldmansachs.com', V:'visa.com', MA:'mastercard.com',
+      WMT:'walmart.com', TGT:'target.com', COST:'costco.com', HD:'homedepot.com',
+      NKE:'nike.com', SBUX:'starbucks.com', MCD:'mcdonalds.com', KO:'coca-cola.com',
+      PEP:'pepsico.com', JNJ:'jnj.com', PFE:'pfizer.com', UNH:'unitedhealthgroup.com',
+      XOM:'exxonmobil.com', CVX:'chevron.com', FUBO:'fubo.tv',
+      TRUMP:'truthsocial.com', DJT:'truthsocial.com', ELF:'elfcosmetics.com',
+      NIO:'nio.com', ENPH:'enphase.com', HIMS:'forhims.com', CELH:'celsius.com',
+      BABA:'alibaba.com', RIVN:'rivian.com', SOFI:'sofi.com', SNAP:'snap.com',
+      RBLX:'roblox.com', ROKU:'roku.com', DKNG:'draftkings.com', CRWD:'crowdstrike.com',
+      PANW:'paloaltonetworks.com', ZS:'zscaler.com', NET:'cloudflare.com',
+      SNOW:'snowflake.com', MSTR:'microstrategy.com', RIOT:'riotplatforms.com',
+      MARA:'mara.com', SPOT:'spotify.com', SQ:'squareup.com', HOOD:'robinhood.com',
+      LCID:'lucidmotors.com', F:'ford.com', GM:'gm.com', T:'att.com', VZ:'verizon.com',
+      WFC:'wellsfargo.com', C:'citigroup.com', MS:'morganstanley.com', SCHW:'schwab.com'
+    };
+    function getStockLogoUrl(sym) {
+      var clean = sym.replace('/USD','');
+      var domain = STOCK_LOGO_DOMAINS[clean];
+      if (domain) return 'https://logo.clearbit.com/' + domain + '?size=80';
+      return '';
+    }
+    function buildWatchlistLogo(sym) {
+      var logoUrl = getStockLogoUrl(sym);
+      if (logoUrl) {
+        return '<img class="wl-logo" src="' + logoUrl + '" alt="' + sym + '" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';" />' +
+          '<div class="wl-logo-fallback" style="display:none;background:' + getSymbolColor(sym) + ';">' + getSymbolInitial(sym) + '</div>';
+      }
+      return '<div class="wl-logo-fallback" style="background:' + getSymbolColor(sym) + ';">' + getSymbolInitial(sym) + '</div>';
+    }
+
     function renderWatchlistItems() {
       var wl = watchlists.find(function(w) { return w.id === activeWatchlistId; });
       var container = document.getElementById('fmWatchlistItems');
@@ -10943,21 +10984,23 @@
         container.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-dim);font-size:0.85rem;">Add symbols above to start tracking.</div>';
         return;
       }
-      // TradingView-style compact rows with colored icon circles
+      // Clean list rows with authentic logos
       var rows = wl.symbols.map(function(sym) {
         var q = watchlistPrices[sym];
         var name = STOCK_NAMES[sym] || '';
         var hasPrice = q && q.price != null && !isNaN(q.price);
         var price = hasPrice ? '$' + formatNum(q.price) : '--';
         var changeClass = hasPrice && q.change > 0 ? 'up' : hasPrice && q.change < 0 ? 'down' : 'flat';
-        var sign = hasPrice && q.change > 0 ? '+' : '';
-        var changeText = hasPrice ? sign + formatNum(q.change) + ' (' + sign + formatNum(q.changePercent) + '%)' : '--';
+        var sign = hasPrice && q.change > 0 ? '+' : hasPrice && q.change < 0 ? '-' : '';
+        var changeDollar = hasPrice ? sign + '$' + formatNum(Math.abs(q.change)) : '';
+        var changePct = hasPrice ? '(' + sign + formatNum(Math.abs(q.changePercent)) + '%)' : '';
+        var changeText = hasPrice ? changeDollar + ' ' + changePct : '--';
         return '<div class="watchlist-item" data-symbol="' + sym + '">' +
           '<div class="watchlist-item-left">' +
-            '<div class="icon-circle" style="background:' + getSymbolColor(sym) + ';">' + getSymbolInitial(sym) + '</div>' +
-            '<div>' +
+            buildWatchlistLogo(sym) +
+            '<div style="min-width:0;">' +
               '<div class="watchlist-item-symbol">' + sym + '</div>' +
-              '<div class="watchlist-item-name">' + (name || '') + '</div>' +
+              '<div class="watchlist-item-name">' + (name || '').toUpperCase() + '</div>' +
             '</div>' +
           '</div>' +
           '<div class="watchlist-item-right">' +
