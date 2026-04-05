@@ -63,7 +63,7 @@ const COL = {
 const STATE = { MENU: 0, PLAYING: 1, DEAD: 2 };
 let state = STATE.MENU;
 let score = 0, distance = 0, orbsCollected = 0, combo = 0, comboTimer = 0;
-let speed = 1.8, baseSpeed = 1.8, maxSpeed = 12, speedTimer = 0;
+let speed = 0.9, baseSpeed = 0.9, maxSpeed = 11, speedTimer = 0;
 let highScore = parseInt(localStorage.getItem('wp_game_highscore')) || 0;
 let totalCoins = parseInt(localStorage.getItem('wp_game_coins')) || 0;
 let isNewHighScore = false;
@@ -416,7 +416,7 @@ function drawOrb(o) {
 // ─── PLAYER ─────────────────────────────────────────────────────
 function updatePlayer(dt) {
   // Smooth lane transition
-  player.lane = lerp(player.lane, player.targetLane, 0.15 * dt * 60);
+  player.lane = lerp(player.lane, player.targetLane, 0.45 * dt * 60);
   player.x = getPathX(player.lane, 0.08);
   player.y = getPathY(0.08);
 
@@ -612,16 +612,18 @@ function resetGame() {
 // ─── INPUT ──────────────────────────────────────────────────────
 let touchStartX = 0, touchStartY = 0, touchStartTime = 0;
 
+let swipeHandled = false;
+
 function handleSwipe(dx, dy) {
   if (state === STATE.MENU) { resetGame(); return; }
   if (state === STATE.DEAD) { resetGame(); return; }
 
   if (Math.abs(dx) > Math.abs(dy)) {
-    if (dx < -30) moveLeft();
-    else if (dx > 30) moveRight();
+    if (dx < -12) moveLeft();
+    else if (dx > 12) moveRight();
   } else {
-    if (dy < -30) jump();
-    else if (dy > 30) slide();
+    if (dy < -12) jump();
+    else if (dy > 12) slide();
   }
 }
 
@@ -646,27 +648,32 @@ canvas.addEventListener('touchstart', e => {
   touchStartX = t.clientX;
   touchStartY = t.clientY;
   touchStartTime = Date.now();
+  swipeHandled = false;
+}, { passive: false });
+
+canvas.addEventListener('touchmove', e => {
+  e.preventDefault();
+  if (swipeHandled) return;
+  const t = e.touches[0];
+  const dx = t.clientX - touchStartX;
+  const dy = t.clientY - touchStartY;
+  if (Math.abs(dx) > 12 || Math.abs(dy) > 12) {
+    swipeHandled = true;
+    handleSwipe(dx, dy);
+  }
 }, { passive: false });
 
 canvas.addEventListener('touchend', e => {
   e.preventDefault();
-  if (e.changedTouches.length === 0) return;
-  const t = e.changedTouches[0];
-  const dx = t.clientX - touchStartX;
-  const dy = t.clientY - touchStartY;
+  if (swipeHandled) return;
   const elapsed = Date.now() - touchStartTime;
-
-  if (Math.abs(dx) < 15 && Math.abs(dy) < 15 && elapsed < 300) {
+  if (elapsed < 300) {
     // Tap
     if (state === STATE.MENU || state === STATE.DEAD) {
       resetGame();
     }
-    return;
   }
-  handleSwipe(dx, dy);
 }, { passive: false });
-
-canvas.addEventListener('touchmove', e => { e.preventDefault(); }, { passive: false });
 
 document.addEventListener('keydown', e => {
   if (state === STATE.MENU || state === STATE.DEAD) {
@@ -840,10 +847,10 @@ function update(dt) {
 
   // Speed increase
   speedTimer += dt;
-  if (speedTimer >= 8) {
+  if (speedTimer >= 10) {
     speedTimer = 0;
-    // Ramp faster early, slower later (diminishing increments)
-    const increment = speed < 4 ? 0.3 : speed < 7 ? 0.25 : 0.15;
+    // Very gentle ramp — diminishing increments at higher speeds
+    const increment = speed < 2.5 ? 0.2 : speed < 5 ? 0.15 : 0.1;
     speed = Math.min(maxSpeed, speed + increment);
   }
 
@@ -866,7 +873,7 @@ function update(dt) {
   }
 
   // Spawn obstacles
-  const spawnRate = Math.max(0.8, 3.0 - distance * 0.0008);
+  const spawnRate = Math.max(0.9, 3.5 - distance * 0.0006);
   spawnTimer -= dt;
   if (spawnTimer <= 0) {
     spawnTimer = spawnRate + rand(-0.2, 0.2);
