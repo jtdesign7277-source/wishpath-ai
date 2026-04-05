@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-05-v86';
+    var APP_VERSION = '2026-04-05-v88';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -2896,53 +2896,65 @@
       color: rgba(255,255,255,0.4);
     }
 
-    /* ── Dramatic Streak Celebration - Flame explodes into confetti ── */
+    /* ── Cinematic Streak Celebration — Movie Flame + Fireworks ── */
     .streak-celebration {
       position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(11, 6, 17, 0.96);
+      inset: 0;
+      background: radial-gradient(circle at center, rgba(20,10,40,0.95) 0%, rgba(11,6,17,0.98) 80%);
       display: none;
       align-items: center;
       justify-content: center;
       z-index: 99999;
       overflow: hidden;
     }
-    .flame-wrapper {
+    .flame-container {
       position: relative;
-      text-align: center;
+      width: 280px;
+      height: 280px;
     }
-    .big-flame {
-      font-size: 340px;
-      line-height: 1;
-      animation: flame-grow 1.9s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
-      filter: drop-shadow(0 0 90px #ff9800) drop-shadow(0 0 140px #7132F5);
+    .cinematic-flame {
+      font-size: 260px;
+      position: absolute;
+      left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      animation: cinematic-flame-grow 2.4s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+      filter: drop-shadow(0 0 60px #ff4500) drop-shadow(0 0 120px #ff8c00) drop-shadow(0 0 180px #7132F5);
+      opacity: 0.95;
     }
     .streak-number {
       position: absolute;
-      top: 50%; left: 50%;
+      left: 50%; top: 50%;
       transform: translate(-50%, -50%);
-      font-size: 72px;
+      font-size: 82px;
       font-weight: 900;
-      color: #F0EFF5;
-      text-shadow: 0 0 40px #7132F5, 0 0 70px #ff9800;
+      color: #fff;
+      text-shadow: 0 0 30px #7132F5, 0 0 60px #ff4500;
       opacity: 0;
-      animation: number-pop 1.9s 0.7s forwards;
+      animation: number-burn 2.4s 0.9s forwards;
     }
-    @keyframes flame-grow {
-      0%   { transform: scale(0.06) rotate(-20deg); }
-      55%  { transform: scale(1.42) rotate(10deg); }
-      100% { transform: scale(1.55) rotate(0deg); }
+    @keyframes cinematic-flame-grow {
+      0%   { transform: translate(-50%, -50%) scale(0.15) rotate(-12deg); filter: brightness(0.6); }
+      50%  { transform: translate(-50%, -50%) scale(1.65) rotate(8deg); filter: brightness(1.3); }
+      80%  { transform: translate(-50%, -50%) scale(2.1) rotate(0deg); }
+      100% { transform: translate(-50%, -50%) scale(0.3) rotate(15deg); opacity: 0; }
     }
-    @keyframes number-pop {
-      0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.2); }
-      45%  { opacity: 1; transform: translate(-50%, -50%) scale(1.25); }
+    @keyframes number-burn {
+      0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.3); }
+      40%  { opacity: 1; transform: translate(-50%, -50%) scale(1.25); }
       100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
     }
-    #confetti-canvas {
+    .firework-particle {
       position: absolute;
-      top: 0; left: 0; width: 100%; height: 100%;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      animation: firework-blast 2.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
       pointer-events: none;
-      z-index: 100000;
+      box-shadow: 0 0 8px currentColor;
+    }
+    @keyframes firework-blast {
+      0%   { transform: translate(0, 0) scale(1); opacity: 1; }
+      100% { transform: translate(var(--vx), var(--vy)) scale(0.2); opacity: 0; }
     }
     /* ── Streak in sidebar ── */
     .sidebar-streak { display: inline-flex; align-items: center; gap: 3px; margin-left: 6px; }
@@ -3054,10 +3066,10 @@
       <button class="mobile-fm-menu-item" data-fm-tab="fmTechAnalysis" onclick="selectMobileFMTab('fmTechAnalysis')"><span class="mobile-fm-menu-icon">&#x1F4CA;</span><span class="mobile-fm-menu-label">Technical Analysis</span></button>
     </div>
   </div>
-  <!-- Streak Celebration Overlay -->
+  <!-- Cinematic Streak Celebration - Movie Flame + Fireworks -->
   <div id="streak-celebration" class="streak-celebration">
-    <div class="flame-wrapper">
-      <div id="big-flame" class="big-flame">&#x1F525;</div>
+    <div class="flame-container">
+      <div id="cinematic-flame" class="cinematic-flame">&#x1F525;</div>
       <div id="streak-number" class="streak-number">7</div>
     </div>
   </div>
@@ -4744,88 +4756,48 @@
       }
     }
 
-    // Flame blows up and disappears as confetti bursts
-    function launchConfetti() {
-      var canvas = document.createElement('canvas');
-      canvas.id = 'confetti-canvas';
-      document.getElementById('streak-celebration').appendChild(canvas);
-      var ctx = canvas.getContext('2d');
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      var confetti = [];
-      var colors = ['#7132F5', '#149E61', '#D11D45', '#F0EFF5', '#ff9800', '#a855f7'];
-      for (var i = 0; i < 200; i++) {
-        confetti.push({
-          x: Math.random() * canvas.width,
-          y: Math.random() * canvas.height - canvas.height,
-          size: Math.random() * 7 + 3.5,
-          speed: Math.random() * 10 + 8,
-          color: colors[Math.floor(Math.random() * colors.length)],
-          rotation: Math.random() * 360,
-          rotSpeed: Math.random() * 18 - 9
-        });
+    // Cinematic fireworks-style burst
+    function launchFireworks() {
+      var container = document.getElementById('streak-celebration');
+      if (!container) return;
+      var colors = ['#7132F5', '#ff4500', '#149E61', '#F0EFF5', '#ff8c00'];
+      for (var i = 0; i < 180; i++) {
+        var p = document.createElement('div');
+        p.className = 'firework-particle';
+        p.style.left = (40 + Math.random() * 20) + '%';
+        p.style.bottom = '30%';
+        p.style.background = colors[Math.floor(Math.random() * colors.length)];
+        p.style.setProperty('--vx', (Math.random() - 0.5) * 420 + 'px');
+        p.style.setProperty('--vy', -(Math.random() * 380 + 180) + 'px');
+        container.appendChild(p);
+        (function(el) { setTimeout(function() { if (el.parentNode) el.parentNode.removeChild(el); }, 2800); })(p);
       }
-      var frame = 0;
-      function animate() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        var stillAlive = false;
-        for (var i = 0; i < confetti.length; i++) {
-          var c = confetti[i];
-          c.y += c.speed;
-          c.rotation += c.rotSpeed;
-          c.speed *= 0.982;
-          ctx.save();
-          ctx.translate(c.x, c.y);
-          ctx.rotate(c.rotation * Math.PI / 180);
-          ctx.fillStyle = c.color;
-          ctx.fillRect(-c.size/2, -c.size/2, c.size, c.size * 1.7);
-          ctx.restore();
-          if (c.y < canvas.height + 80) stillAlive = true;
-        }
-        frame++;
-        if (stillAlive && frame < 155) {
-          requestAnimationFrame(animate);
-        } else {
-          if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
-        }
-      }
-      animate();
     }
 
     function showStreakCelebration(streakCount) {
       var overlay = document.getElementById('streak-celebration');
       var numberEl = document.getElementById('streak-number');
-      var flameEl = document.getElementById('big-flame');
+      var flameEl = document.getElementById('cinematic-flame');
       if (!overlay || !numberEl) return;
       numberEl.textContent = streakCount;
-      // Reset animations and inline styles for replay
-      if (flameEl) {
-        flameEl.style.transition = ''; flameEl.style.transform = ''; flameEl.style.opacity = '';
-        flameEl.style.animation = 'none'; flameEl.offsetHeight; flameEl.style.animation = '';
-      }
+      // Reset animations for replay
+      if (flameEl) { flameEl.style.animation = 'none'; flameEl.offsetHeight; flameEl.style.animation = ''; }
       numberEl.style.animation = 'none'; numberEl.offsetHeight; numberEl.style.animation = '';
       overlay.style.display = 'flex';
       overlay.style.opacity = '1';
       overlay.style.transition = '';
-      // Flame grows huge, then blows up and disappears as confetti bursts
+      // Fireworks blast as flame explodes and disappears
+      setTimeout(function() { launchFireworks(); }, 1350);
+      // Fade out entire overlay
       setTimeout(function() {
-        if (flameEl) {
-          flameEl.style.transition = 'transform 0.4s ease-out, opacity 0.4s ease-out';
-          flameEl.style.transform = 'scale(2.8) rotate(15deg)';
-          flameEl.style.opacity = '0';
-        }
-        launchConfetti();
-      }, 1050);
-      // Clean fade out of entire overlay
-      setTimeout(function() {
-        overlay.style.transition = 'opacity 0.85s ease-out';
+        overlay.style.transition = 'opacity 1.1s ease-out';
         overlay.style.opacity = '0';
         setTimeout(function() {
           overlay.style.display = 'none';
           overlay.style.opacity = '1';
           overlay.style.transition = '';
-        }, 900);
-      }, 2600);
+        }, 1200);
+      }, 2850);
     }
 
     function claimDailyStreak() {
