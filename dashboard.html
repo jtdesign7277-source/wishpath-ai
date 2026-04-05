@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-05-v104';
+    var APP_VERSION = '2026-04-05-v105';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -2928,7 +2928,7 @@
       color: rgba(255,255,255,0.4);
     }
 
-    /* ── Streak Celebration (canvas-confetti) ── */
+    /* ── Streak Celebration (pixel dust) ── */
     .streak-celebration {
       position: fixed;
       inset: 0;
@@ -2955,7 +2955,7 @@
       font-size: 110px;
       font-weight: 900;
       color: #fff;
-      text-shadow: 0 0 40px #7132F5, 0 0 80px rgba(255,69,0,0.6), 0 4px 20px rgba(0,0,0,0.5);
+      text-shadow: 0 0 30px rgba(100,80,240,0.9), 0 0 60px rgba(59,130,246,0.6), 0 0 120px rgba(0,255,120,0.2), 0 4px 20px rgba(0,0,0,0.5);
       opacity: 0;
       margin-top: -10px;
     }
@@ -3041,7 +3041,6 @@
   <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=2302108240316680&ev=PageView&noscript=1"/></noscript>
   <!-- End Meta Pixel Code -->
   <!-- Highcharts -->
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
   <script src="https://code.highcharts.com/highcharts.js"></script>
   <script src="https://code.highcharts.com/modules/exporting.js"></script>
   <script src="https://code.highcharts.com/modules/full-screen.js"></script>
@@ -4828,48 +4827,141 @@
       overlay.classList.add('dismissed');
     }
 
-    // Full-screen canvas-confetti celebration
+    // Magical pixel dust particle system — blue-purple with neon green sparks
     function fireConfettiBurst() {
       var overlay = document.getElementById('streak-celebration');
-      if (!overlay || typeof confetti === 'undefined') return;
-      // Create a canvas inside the overlay so confetti renders on top of black
+      if (!overlay) return;
       var canvas = overlay.querySelector('canvas');
       if (!canvas) {
         canvas = document.createElement('canvas');
         overlay.insertBefore(canvas, overlay.firstChild);
       }
-      var myConfetti = confetti.create(canvas, { resize: true, useWorker: true });
+      var ctx = canvas.getContext('2d');
+      var dpr = window.devicePixelRatio || 1;
+      var W = window.innerWidth;
+      var H = window.innerHeight;
+      canvas.width = W * dpr;
+      canvas.height = H * dpr;
+      canvas.style.width = W + 'px';
+      canvas.style.height = H + 'px';
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-      var colors = ['#7132F5', '#ff4500', '#149E61', '#F0EFF5', '#ff8c00', '#3b82f6', '#fbbf24'];
+      var particles = [];
+      var pool = [
+        // Blue-purple core palette
+        { r: 100, g: 60, b: 240 },   // deep violet
+        { r: 59, g: 130, b: 246 },    // bright blue
+        { r: 113, g: 50, b: 245 },    // purple
+        { r: 30, g: 80, b: 220 },     // royal blue
+        { r: 140, g: 90, b: 255 },    // soft lavender
+        { r: 70, g: 40, b: 200 },     // dark indigo
+        // Neon green sparks (rarer, brighter)
+        { r: 0, g: 255, b: 120 },     // neon green
+        { r: 80, g: 255, b: 160 },    // mint spark
+        { r: 0, g: 220, b: 90 },      // emerald flash
+      ];
 
-      // Big center burst
-      myConfetti({ particleCount: 120, spread: 180, startVelocity: 45, origin: { x: 0.5, y: 0.5 }, colors: colors, gravity: 0.8, ticks: 300 });
+      function spawn(cx, cy, count, vScale, sizeRange, isBurst) {
+        for (var i = 0; i < count; i++) {
+          var angle = Math.random() * Math.PI * 2;
+          var speed = (Math.random() * 2.5 + 0.8) * (vScale || 1);
+          // 20% chance of neon green spark
+          var isGreen = Math.random() < 0.2;
+          var c = isGreen ? pool[6 + Math.floor(Math.random() * 3)] : pool[Math.floor(Math.random() * 6)];
+          var size = sizeRange ? (Math.random() * (sizeRange[1] - sizeRange[0]) + sizeRange[0]) : (Math.random() * 3 + 1);
+          var life = Math.random() * 80 + 60;
+          particles.push({
+            x: cx + (Math.random() - 0.5) * 20,
+            y: cy + (Math.random() - 0.5) * 20,
+            vx: Math.cos(angle) * speed + (Math.random() - 0.5) * 0.5,
+            vy: Math.sin(angle) * speed + (Math.random() - 0.5) * 0.5 - (isBurst ? 1.5 : 0),
+            size: size,
+            maxSize: size,
+            r: c.r, g: c.g, b: c.b,
+            life: life,
+            maxLife: life,
+            isGreen: isGreen,
+            glow: isGreen ? 18 : (Math.random() < 0.3 ? 12 : 6),
+            drift: (Math.random() - 0.5) * 0.03,
+            wobble: Math.random() * Math.PI * 2,
+            wobbleSpeed: Math.random() * 0.06 + 0.02
+          });
+        }
+      }
 
-      // Left rocket
+      // Wave 1: Center burst — the potion splash
+      spawn(W * 0.5, H * 0.45, 120, 2.8, [1, 4.5], true);
+      // Wave 2: Floating dust from edges
       setTimeout(function() {
-        myConfetti({ particleCount: 80, angle: 60, spread: 80, startVelocity: 55, origin: { x: 0, y: 0.7 }, colors: colors, gravity: 0.7, ticks: 300 });
-      }, 200);
-
-      // Right rocket
+        spawn(W * 0.1, H * 0.6, 50, 1.8, [0.8, 3], false);
+        spawn(W * 0.9, H * 0.6, 50, 1.8, [0.8, 3], false);
+      }, 250);
+      // Wave 3: Top cascade — falling pixel rain
       setTimeout(function() {
-        myConfetti({ particleCount: 80, angle: 120, spread: 80, startVelocity: 55, origin: { x: 1, y: 0.7 }, colors: colors, gravity: 0.7, ticks: 300 });
-      }, 400);
-
-      // Top burst
+        for (var i = 0; i < 60; i++) {
+          spawn(Math.random() * W, -10, 1, 0.8, [0.5, 2.5], false);
+          particles[particles.length - 1].vy = Math.random() * 1.5 + 0.5;
+          particles[particles.length - 1].vx = (Math.random() - 0.5) * 0.8;
+        }
+      }, 500);
+      // Wave 4: Second center pulse
+      setTimeout(function() { spawn(W * 0.5, H * 0.45, 80, 3.2, [1.5, 5], true); }, 800);
+      // Wave 5: Bottom corners eruption
       setTimeout(function() {
-        myConfetti({ particleCount: 100, spread: 160, startVelocity: 35, origin: { x: 0.5, y: 0 }, colors: colors, gravity: 1.2, ticks: 250 });
-      }, 600);
+        spawn(W * 0.15, H * 0.95, 40, 2.2, [1, 3.5], true);
+        spawn(W * 0.85, H * 0.95, 40, 2.2, [1, 3.5], true);
+      }, 1100);
+      // Wave 6: Final power burst — big glow particles
+      setTimeout(function() { spawn(W * 0.5, H * 0.42, 100, 3.5, [2, 6], true); }, 1500);
 
-      // Second wave — bottom corners
-      setTimeout(function() {
-        myConfetti({ particleCount: 60, angle: 45, spread: 70, startVelocity: 50, origin: { x: 0.1, y: 1 }, colors: colors, gravity: 0.6, ticks: 300 });
-        myConfetti({ particleCount: 60, angle: 135, spread: 70, startVelocity: 50, origin: { x: 0.9, y: 1 }, colors: colors, gravity: 0.6, ticks: 300 });
-      }, 900);
-
-      // Final big center blast
-      setTimeout(function() {
-        myConfetti({ particleCount: 150, spread: 360, startVelocity: 40, origin: { x: 0.5, y: 0.4 }, colors: colors, gravity: 0.5, scalar: 1.2, ticks: 350 });
-      }, 1400);
+      var running = true;
+      function tick() {
+        if (!running) return;
+        ctx.clearRect(0, 0, W, H);
+        for (var i = particles.length - 1; i >= 0; i--) {
+          var p = particles[i];
+          p.life--;
+          if (p.life <= 0) { particles.splice(i, 1); continue; }
+          var t = p.life / p.maxLife;
+          // Physics
+          p.wobble += p.wobbleSpeed;
+          p.vx += p.drift + Math.sin(p.wobble) * 0.015;
+          p.vy += 0.008; // very gentle gravity — floaty feel
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vx *= 0.995;
+          p.vy *= 0.995;
+          // Fade + shrink
+          var alpha = t < 0.3 ? t / 0.3 : t;
+          var size = p.maxSize * (0.3 + t * 0.7);
+          // Glow layer
+          if (p.glow > 4) {
+            var grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.glow * (0.5 + t * 0.5));
+            grad.addColorStop(0, 'rgba(' + p.r + ',' + p.g + ',' + p.b + ',' + (alpha * 0.35) + ')');
+            grad.addColorStop(1, 'rgba(' + p.r + ',' + p.g + ',' + p.b + ',0)');
+            ctx.fillStyle = grad;
+            ctx.fillRect(p.x - p.glow, p.y - p.glow, p.glow * 2, p.glow * 2);
+          }
+          // Core pixel
+          ctx.globalAlpha = alpha;
+          ctx.fillStyle = 'rgb(' + p.r + ',' + p.g + ',' + p.b + ')';
+          // Pixel shape: small square (pixel dust) with slight rounding for larger particles
+          if (size > 2.5) {
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, size * 0.5, 0, Math.PI * 2);
+            ctx.fill();
+          } else {
+            ctx.fillRect(p.x - size * 0.5, p.y - size * 0.5, size, size);
+          }
+          ctx.globalAlpha = 1;
+        }
+        if (particles.length > 0) {
+          requestAnimationFrame(tick);
+        } else {
+          running = false;
+        }
+      }
+      requestAnimationFrame(tick);
     }
 
     function showStreakCelebration(streakCount) {
@@ -4883,7 +4975,7 @@
       // Trigger animations
       numberEl.classList.remove('animate'); numberEl.offsetHeight; numberEl.classList.add('animate');
       if (labelEl) { labelEl.classList.remove('animate'); labelEl.offsetHeight; labelEl.classList.add('animate'); }
-      // Fire confetti rockets from all directions
+      // Fire pixel dust burst
       setTimeout(function() { fireConfettiBurst(); }, 200);
       // Fade out overlay to reveal app
       setTimeout(function() {
