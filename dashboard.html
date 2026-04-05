@@ -4114,7 +4114,7 @@
         <div class="mobile-chips-row">
           <div class="mobile-chip" onclick="prefillMobileHomeInput('Make a plan for my goal')"><span>📋</span>Make a plan</div>
           <div class="mobile-chip" onclick="prefillMobileHomeInput('Help me manage my tasks')"><span>✅</span>Manage tasks</div>
-          <div class="mobile-chip" onclick="prefillMobileHomeInput('Give me advice on achieving my goal')"><span>💡</span>Get advice</div>
+          <div class="mobile-chip" onclick="openLifeCoachView()"><span>💡</span>Get advice</div>
           <div class="mobile-chip" onclick="prefillMobileHomeInput('Help me track my progress')"><span>📊</span>Track progress</div>
           <div class="mobile-chip" onclick="prefillMobileHomeInput('Help me start a side hustle')"><span>🚀</span>Start a side hustle</div>
           <div class="mobile-chip" onclick="openMobileTemplates()"><span>🗂️</span>Browse Templates</div>
@@ -6475,6 +6475,9 @@
       // Clear any inline display:none left by closeLCChatList
       document.getElementById('lifecoachView').style.display = '';
       showView('lifecoach');
+      // Hide scroll-to-bottom arrow on entry (only show after user scrolls up in a long chat)
+      var scrollBtn = document.getElementById('lcScrollBottom');
+      if (scrollBtn) scrollBtn.classList.remove('visible');
       // Hide mobile nav bar in this view
       var navBar = document.getElementById('mobileNavBar');
       if (navBar) navBar.style.display = 'none';
