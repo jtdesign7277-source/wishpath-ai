@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-05-v79';
+    var APP_VERSION = '2026-04-05-v80';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -4706,24 +4706,24 @@
 
     function autoClaim() {
       var today = new Date().toISOString().split('T')[0];
-      if (_streakLastDate === today) {
-        // Already claimed today — just update UI
-        updateStreakUI();
-        return;
+      var alreadyClaimed = (_streakLastDate === today);
+      if (!alreadyClaimed) {
+        // Check if continuing streak or starting fresh
+        if (_streakLastDate) {
+          var last = new Date(_streakLastDate);
+          var now = new Date(today);
+          var diff = Math.floor((now - last) / 86400000);
+          if (diff > 1) _streakCount = 0;
+        }
+        _streakCount++;
+        _streakLastDate = today;
+        saveStreakLocal();
       }
-      // Check if continuing streak or starting fresh
-      if (_streakLastDate) {
-        var last = new Date(_streakLastDate);
-        var now = new Date(today);
-        var diff = Math.floor((now - last) / 86400000);
-        if (diff > 1) _streakCount = 0;
-      }
-      _streakCount++;
-      _streakLastDate = today;
-      saveStreakLocal();
       updateStreakUI();
-      // Trigger celebration after a short delay so UI is ready
-      setTimeout(function() { showStreakCelebration(_streakCount); }, 600);
+      // Always show celebration on page load if streak > 0
+      if (_streakCount > 0) {
+        setTimeout(function() { showStreakCelebration(_streakCount); }, 600);
+      }
     }
 
     function showStreakCelebration(count) {
