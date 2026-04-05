@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-05-v100';
+    var APP_VERSION = '2026-04-05-v101';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -3213,10 +3213,10 @@
       </div>
       <div id="savedTemplatesList"></div>
       <div class="sidebar-section sidebar-collapsible" id="savedChatsLabel" style="display:none;" onclick="toggleSidebarSection('savedChats')">
-        <span>Saved Chats</span>
-        <span class="sidebar-collapse-arrow" id="savedChatsArrow">&#x25BC;</span>
+        <span>&#x1F4AC; Saved Chats</span>
+        <span class="sidebar-collapse-arrow collapsed" id="savedChatsArrow">&#x25BC;</span>
       </div>
-      <div id="savedChatsList"></div>
+      <div id="savedChatsList" style="display:none;"></div>
       <a class="nav-item" data-view="newwish" onclick="showView('newwish')" style="margin-top: 12px;">
         <span style="font-size:1.1rem;flex-shrink:0;">&#x1FA84;</span>
         <span style="margin-left:2px;">Your Wish</span>
@@ -5453,7 +5453,7 @@
           var shortTitle = g.title.length > 22 ? g.title.substring(0, 22) + '...' : g.title;
           var msgCount = g.convos[0].messages ? g.convos[0].messages.length : 0;
           var date = new Date(g.convos[0].updated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-          html += '<div class="sidebar-folder"><div class="sidebar-chat-item" onclick="loadSavedChat(\'' + wid + '\')" title="' + g.title + '">&#x1F4AC; ' + shortTitle + ' <span style="color:var(--text-dim);font-size:0.7rem;margin-left:auto;">' + msgCount + ' msgs &bull; ' + date + '</span></div></div>';
+          html += '<div class="sidebar-folder"><div class="sidebar-chat-item" onclick="loadSavedChat(\'' + wid + '\')" title="' + g.title + '">' + shortTitle + ' <span style="color:var(--text-dim);font-size:0.7rem;margin-left:auto;">' + msgCount + ' msgs &bull; ' + date + '</span></div></div>';
         });
         container.innerHTML = html;
       } catch (e) { console.error('Sidebar render error:', e); }
