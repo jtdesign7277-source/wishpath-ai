@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-05-v78';
+    var APP_VERSION = '2026-04-05-v79';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -3162,7 +3162,7 @@
     </nav>
     <div class="sidebar-bottom">
       <div class="sidebar-bottom-row">
-        <div class="plan-badge" id="planBadge">Free Plan</div>
+        <div class="plan-badge" id="planBadge" onclick="openUpgradeModal()" style="cursor:pointer;">Free Plan</div>
         <div class="user-email" id="userEmail"></div>
         <span class="sidebar-streak" id="sidebarStreak">
           <span class="sidebar-streak-flame">&#x1F525;</span>
@@ -4800,6 +4800,11 @@
       return true;
     }
 
+    function openUpgradeModal() {
+      if (userIsPro) return;
+      document.getElementById('paywallOverlay').classList.add('active');
+    }
+
     var wishes = [];
     var coachHistory = [];
     var currentConvoId = null;
@@ -4817,7 +4822,13 @@
         document.getElementById('planBadge').textContent = (profile.plan || 'free').charAt(0).toUpperCase() + (profile.plan || 'free').slice(1) + ' Plan';
       }
       await loadUserPlan();
-      if (userIsPro) document.getElementById('planBadge').textContent = 'Pro';
+      if (userIsPro) {
+        var pb = document.getElementById('planBadge');
+        pb.textContent = 'Pro';
+        pb.style.cursor = 'default';
+        pb.style.background = 'linear-gradient(135deg,#7c3aed,#a855f7)';
+        pb.onclick = null;
+      }
       loadStreak();
       loadWishes();
       // Auto-load markets data so it's ready when user taps Markets tab
