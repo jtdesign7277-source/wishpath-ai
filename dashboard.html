@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-05-v89';
+    var APP_VERSION = '2026-04-05-v90';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -2900,12 +2900,18 @@
     .streak-celebration {
       position: fixed;
       inset: 0;
-      background: radial-gradient(circle at center, rgba(20,10,40,0.92) 0%, rgba(11,6,17,0.97) 80%);
-      display: none;
+      background: #000;
+      display: flex;
       align-items: center;
       justify-content: center;
       z-index: 99999;
       overflow: hidden;
+    }
+    .streak-celebration.hiding {
+      background: radial-gradient(circle at center, rgba(20,10,40,0.92) 0%, rgba(11,6,17,0.97) 80%);
+    }
+    .streak-celebration.dismissed {
+      display: none;
     }
     .streak-lottie-wrap {
       position: relative;
@@ -3065,7 +3071,7 @@
       <button class="mobile-fm-menu-item" data-fm-tab="fmTechAnalysis" onclick="selectMobileFMTab('fmTechAnalysis')"><span class="mobile-fm-menu-icon">&#x1F4CA;</span><span class="mobile-fm-menu-label">Technical Analysis</span></button>
     </div>
   </div>
-  <!-- Lottie Streak Celebration -->
+  <!-- Lottie Streak Celebration — visible by default, dismissed after animation or if no streak -->
   <div id="streak-celebration" class="streak-celebration">
     <div class="streak-lottie-wrap">
       <dotlottie-player id="streak-lottie" src="https://assets-v2.lottiefiles.com/a/76caddfc-116a-11ee-aa25-6333db7b8d8c/GpI0uQYnKa.lottie" background="transparent" speed="1" style="width:100%;height:100%" direction="1" mode="normal"></dotlottie-player>
@@ -3073,6 +3079,20 @@
       <div id="streak-label" class="streak-label">day streak</div>
     </div>
   </div>
+  <script>
+    // Early check: if no streak, dismiss overlay immediately so user doesn't see black flash
+    try {
+      var _s = JSON.parse(localStorage.getItem('wp_streak') || '{}');
+      var _sc = _s.count || 0;
+      var _sd = _s.lastDate || null;
+      if (_sd) {
+        var _dl = new Date(_sd); _dl.setHours(0,0,0,0);
+        var _dn = new Date(); _dn.setHours(0,0,0,0);
+        if (Math.floor((_dn - _dl) / 86400000) > 1) _sc = 0;
+      }
+      if (_sc <= 0) document.getElementById('streak-celebration').classList.add('dismissed');
+    } catch(e) { document.getElementById('streak-celebration').classList.add('dismissed'); }
+  </script>
   <div class="holding-action-overlay" id="holdingActionOverlay" onclick="if(event.target===this)closeHoldingActions()">
     <div class="holding-action-sheet">
       <div class="holding-action-symbol" id="holdingActionSymbol">AAPL</div>
@@ -4750,13 +4770,21 @@
         saveStreakLocal();
       }
       updateStreakUI();
-      // Always show celebration on page load if streak > 0
+      // Celebration is visible by default (covers screen on load)
       if (_streakCount > 0) {
-        setTimeout(function() { showStreakCelebration(_streakCount); }, 600);
+        setTimeout(function() { showStreakCelebration(_streakCount); }, 300);
+      } else {
+        dismissCelebration();
       }
     }
 
-    // Lottie celebration
+    function dismissCelebration() {
+      var overlay = document.getElementById('streak-celebration');
+      if (!overlay) return;
+      overlay.classList.add('dismissed');
+    }
+
+    // Lottie celebration — overlay is already visible on screen
     function showStreakCelebration(streakCount) {
       var overlay = document.getElementById('streak-celebration');
       var numberEl = document.getElementById('streak-number');
@@ -4765,28 +4793,27 @@
       if (!overlay || !numberEl) return;
       numberEl.textContent = streakCount;
       if (labelEl) labelEl.textContent = streakCount === 1 ? 'day streak' : 'day streak';
-      // Reset number animation
+      // Transition from pure black to subtle gradient
+      overlay.classList.add('hiding');
+      // Reset animations
       numberEl.style.animation = 'none'; numberEl.offsetHeight; numberEl.style.animation = '';
       if (labelEl) { labelEl.style.animation = 'none'; labelEl.offsetHeight; labelEl.style.animation = ''; }
-      overlay.style.display = 'flex';
-      overlay.style.opacity = '1';
-      overlay.style.transition = '';
       // Play lottie
       if (lottieEl) {
         try { lottieEl.stop(); } catch(e) {}
         try { lottieEl.play(); } catch(e) {}
       }
-      // Fade out after animation
+      // Fade out overlay to reveal app
       setTimeout(function() {
-        overlay.style.transition = 'opacity 1s ease-out';
+        overlay.style.transition = 'opacity 1.2s ease-out';
         overlay.style.opacity = '0';
         setTimeout(function() {
-          overlay.style.display = 'none';
+          overlay.classList.add('dismissed');
           overlay.style.opacity = '1';
           overlay.style.transition = '';
           if (lottieEl) { try { lottieEl.stop(); } catch(e) {} }
-        }, 1100);
-      }, 3200);
+        }, 1300);
+      }, 3400);
     }
 
     function claimDailyStreak() {
