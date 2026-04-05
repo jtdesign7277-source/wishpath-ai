@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-05-v92';
+    var APP_VERSION = '2026-04-05-v93';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -2896,7 +2896,7 @@
       color: rgba(255,255,255,0.4);
     }
 
-    /* ── Lottie Streak Celebration ── */
+    /* ── Streak Celebration (canvas-confetti) ── */
     .streak-celebration {
       position: fixed;
       inset: 0;
@@ -2904,56 +2904,59 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      flex-direction: column;
       z-index: 99999;
       overflow: hidden;
-    }
-    .streak-celebration.hiding {
-      background: radial-gradient(circle at center, rgba(20,10,40,0.92) 0%, rgba(11,6,17,0.97) 80%);
     }
     .streak-celebration.dismissed {
       display: none;
     }
-    .streak-lottie-wrap {
-      position: relative;
-      width: 100vw;
-      height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .streak-celebration canvas {
+      position: absolute !important;
+      inset: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      z-index: 1;
     }
-    .streak-lottie-wrap dotlottie-player {
-      position: absolute;
-      inset: -50%;
-      width: 200%;
-      height: 200%;
+    .streak-flame {
+      font-size: 120px;
+      z-index: 2;
+      opacity: 0;
+      filter: drop-shadow(0 0 40px #ff4500) drop-shadow(0 0 80px #ff8c00);
+    }
+    .streak-flame.animate {
+      animation: flame-pop 2.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
     .streak-number {
-      position: relative;
       z-index: 2;
-      font-size: 100px;
+      font-size: 110px;
       font-weight: 900;
       color: #fff;
       text-shadow: 0 0 40px #7132F5, 0 0 80px rgba(255,69,0,0.6), 0 4px 20px rgba(0,0,0,0.5);
       opacity: 0;
+      margin-top: -10px;
     }
     .streak-number.animate {
-      animation: streak-num-in 1.8s 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      animation: streak-num-in 1.6s 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
     .streak-label {
-      position: absolute;
       z-index: 2;
-      bottom: 30%;
-      left: 50%;
-      transform: translateX(-50%);
       font-size: 17px;
       font-weight: 600;
       color: rgba(255,255,255,0.85);
-      letter-spacing: 3px;
+      letter-spacing: 4px;
       text-transform: uppercase;
       opacity: 0;
+      margin-top: 8px;
     }
     .streak-label.animate {
-      animation: streak-label-in 1.2s 0.6s ease-out forwards;
+      animation: streak-label-in 1s 0.5s ease-out forwards;
+    }
+    @keyframes flame-pop {
+      0%   { opacity: 0; transform: scale(0.2); }
+      30%  { opacity: 1; transform: scale(1.3); }
+      60%  { opacity: 1; transform: scale(1); }
+      100% { opacity: 1; transform: scale(1); }
     }
     @keyframes streak-num-in {
       0%   { opacity: 0; transform: scale(0.3); }
@@ -2961,8 +2964,8 @@
       100% { opacity: 1; transform: scale(1); }
     }
     @keyframes streak-label-in {
-      0%   { opacity: 0; transform: translateX(-50%) translateY(10px); }
-      100% { opacity: 1; transform: translateX(-50%) translateY(0); }
+      0%   { opacity: 0; transform: translateY(10px); }
+      100% { opacity: 1; transform: translateY(0); }
     }
     /* ── Streak in sidebar ── */
     .sidebar-streak { display: inline-flex; align-items: center; gap: 3px; margin-left: 6px; }
@@ -3021,7 +3024,7 @@
   <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=2302108240316680&ev=PageView&noscript=1"/></noscript>
   <!-- End Meta Pixel Code -->
   <!-- Highcharts -->
-  <script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
   <script src="https://code.highcharts.com/highcharts.js"></script>
   <script src="https://code.highcharts.com/modules/exporting.js"></script>
   <script src="https://code.highcharts.com/modules/full-screen.js"></script>
@@ -3075,13 +3078,11 @@
       <button class="mobile-fm-menu-item" data-fm-tab="fmTechAnalysis" onclick="selectMobileFMTab('fmTechAnalysis')"><span class="mobile-fm-menu-icon">&#x1F4CA;</span><span class="mobile-fm-menu-label">Technical Analysis</span></button>
     </div>
   </div>
-  <!-- Lottie Streak Celebration — visible by default, dismissed after animation or if no streak -->
+  <!-- Streak Celebration — visible by default, dismissed after animation or if no streak -->
   <div id="streak-celebration" class="streak-celebration">
-    <div class="streak-lottie-wrap">
-      <dotlottie-player id="streak-lottie" src="https://assets-v2.lottiefiles.com/a/76caddfc-116a-11ee-aa25-6333db7b8d8c/GpI0uQYnKa.lottie" background="transparent" speed="0.8" style="width:100%;height:100%" direction="1" mode="normal"></dotlottie-player>
-      <div id="streak-number" class="streak-number"></div>
-      <div id="streak-label" class="streak-label"></div>
-    </div>
+    <div id="streak-flame" class="streak-flame">&#x1F525;</div>
+    <div id="streak-number" class="streak-number"></div>
+    <div id="streak-label" class="streak-label"></div>
   </div>
   <script>
     // Early check: if no streak, dismiss overlay immediately so user doesn't see black flash
@@ -4788,26 +4789,65 @@
       overlay.classList.add('dismissed');
     }
 
-    // Lottie celebration — overlay is already visible on screen (solid black)
+    // Full-screen canvas-confetti celebration
+    function fireConfettiBurst() {
+      var overlay = document.getElementById('streak-celebration');
+      if (!overlay || typeof confetti === 'undefined') return;
+      // Create a canvas inside the overlay so confetti renders on top of black
+      var canvas = overlay.querySelector('canvas');
+      if (!canvas) {
+        canvas = document.createElement('canvas');
+        overlay.insertBefore(canvas, overlay.firstChild);
+      }
+      var myConfetti = confetti.create(canvas, { resize: true, useWorker: true });
+
+      var colors = ['#7132F5', '#ff4500', '#149E61', '#F0EFF5', '#ff8c00', '#3b82f6', '#fbbf24'];
+
+      // Big center burst
+      myConfetti({ particleCount: 120, spread: 180, startVelocity: 45, origin: { x: 0.5, y: 0.5 }, colors: colors, gravity: 0.8, ticks: 300 });
+
+      // Left rocket
+      setTimeout(function() {
+        myConfetti({ particleCount: 80, angle: 60, spread: 80, startVelocity: 55, origin: { x: 0, y: 0.7 }, colors: colors, gravity: 0.7, ticks: 300 });
+      }, 200);
+
+      // Right rocket
+      setTimeout(function() {
+        myConfetti({ particleCount: 80, angle: 120, spread: 80, startVelocity: 55, origin: { x: 1, y: 0.7 }, colors: colors, gravity: 0.7, ticks: 300 });
+      }, 400);
+
+      // Top burst
+      setTimeout(function() {
+        myConfetti({ particleCount: 100, spread: 160, startVelocity: 35, origin: { x: 0.5, y: 0 }, colors: colors, gravity: 1.2, ticks: 250 });
+      }, 600);
+
+      // Second wave — bottom corners
+      setTimeout(function() {
+        myConfetti({ particleCount: 60, angle: 45, spread: 70, startVelocity: 50, origin: { x: 0.1, y: 1 }, colors: colors, gravity: 0.6, ticks: 300 });
+        myConfetti({ particleCount: 60, angle: 135, spread: 70, startVelocity: 50, origin: { x: 0.9, y: 1 }, colors: colors, gravity: 0.6, ticks: 300 });
+      }, 900);
+
+      // Final big center blast
+      setTimeout(function() {
+        myConfetti({ particleCount: 150, spread: 360, startVelocity: 40, origin: { x: 0.5, y: 0.4 }, colors: colors, gravity: 0.5, scalar: 1.2, ticks: 350 });
+      }, 1400);
+    }
+
     function showStreakCelebration(streakCount) {
       var overlay = document.getElementById('streak-celebration');
       var numberEl = document.getElementById('streak-number');
       var labelEl = document.getElementById('streak-label');
-      var lottieEl = document.getElementById('streak-lottie');
+      var flameEl = document.getElementById('streak-flame');
       if (!overlay || !numberEl) return;
       // Set the correct number and label
       numberEl.textContent = streakCount;
       if (labelEl) labelEl.textContent = 'day streak';
-      // Transition from pure black to subtle gradient
-      overlay.classList.add('hiding');
-      // Trigger number + label animations
+      // Trigger animations
+      if (flameEl) { flameEl.classList.remove('animate'); flameEl.offsetHeight; flameEl.classList.add('animate'); }
       numberEl.classList.remove('animate'); numberEl.offsetHeight; numberEl.classList.add('animate');
       if (labelEl) { labelEl.classList.remove('animate'); labelEl.offsetHeight; labelEl.classList.add('animate'); }
-      // Play lottie
-      if (lottieEl) {
-        try { lottieEl.stop(); } catch(e) {}
-        try { lottieEl.play(); } catch(e) {}
-      }
+      // Fire confetti rockets from all directions
+      setTimeout(function() { fireConfettiBurst(); }, 200);
       // Fade out overlay to reveal app
       setTimeout(function() {
         overlay.style.transition = 'opacity 1.2s ease-out';
@@ -4816,9 +4856,8 @@
           overlay.classList.add('dismissed');
           overlay.style.opacity = '1';
           overlay.style.transition = '';
-          if (lottieEl) { try { lottieEl.stop(); } catch(e) {} }
         }, 1300);
-      }, 3800);
+      }, 4000);
     }
 
     function claimDailyStreak() {
