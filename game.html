@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Path Runner — WishPath</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    background: #0f0f0f;
+    touch-action: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+    overscroll-behavior: none;
+  }
+  canvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+  }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+// ─── SETUP ──────────────────────────────────────────────────────
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+
+let W, H, dpr;
+function resize() {
+  dpr = Math.min(window.devicePixelRatio || 1, 2);
+  W = window.innerWidth;
+  H = window.innerHeight;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+resize();
+window.addEventListener('resize', resize);
+
+// ─── COLORS ─────────────────────────────────────────────────────
+const COL = {
+  bg: '#0f0f0f',
+  violet: '#6440F0',
+  blue: '#3B82F6',
+  purple: '#7132F5',
+  neonGreen: '#00FF78',
+  softGreen: '#50FFA0',
+  red: '#f87171',
+  royal: '#1E50DC',
+  white: '#ffffff',
+  gridDim: 'rgba(100, 64, 240, 0.08)',
+  gridBright: 'rgba(100, 64, 240, 0.18)',
+};
+
+// ─── STATE ──────────────────────────────────────────────────────
+const STATE = { MENU: 0, PLAYING: 1, DEAD: 2 };
+let state = STATE.MENU;
+let score = 0, distance = 0, orbsCollected = 0, combo = 0, comboTimer = 0;
+let speed = 4, baseSpeed = 4, maxSpeed = 14, speedTimer = 0;
+let highScore = parseInt(localStorage.getItem('wp_game_highscore')) || 0;
+let totalCoins = parseInt(localStorage.getItem('wp_game_coins')) || 0;
+let isNewHighScore = false;
+
+// Player
+const player = {
+  lane: 1, // 0, 1, 2
+  targetLane: 1,
+  x: 0, y: 0,
+  jumpY: 0, jumpVel: 0, isJumping: false,
+  slideTimer: 0, isSliding: false,
+  height: 40, width: 28,
+  animPhase: 0,
+};
+
+// Path perspective constants
+const HORIZON_Y = 0.28; // fraction of screen height
+const PATH_BOTTOM_W = 0.85; // fraction of screen width at bottom
+const PATH_TOP_W = 0.08;
+const LANE_COUNT = 3;
+
+// Obstacles + orbs
+let obstacles = [];
+let orbs = [];
+let spawnTimer = 0;
+let orbSpawnTimer = 0;
+let distanceMarkerFlash = 0;
+let lastMarkerDistance = 0;
+
+// Particles
+let particles = [];
+let bgParticles = [];
+
+// Screen shake
+let shakeX = 0, shakeY = 0, shakeDur = 0;
+
+// Grid scroll
+let gridOffset = 0;
+
+// Delta time
+let lastTime = 0;
+
+// ─── HELPERS ────────────────────────────────────────────────────
+function lerp(a, b, t) { return a + (b - a) * t; }
+function rand(a, b) { return Math.random() * (b - a) + a; }
+function randInt(a, b) { return Math.floor(rand(a, b + 1)); }
+function clamp(v, mn, mx) { return Math.max(mn, Math.min(mx, v)); }
+
+function getPathX(lane, zFrac) {
+  // zFrac: 0 = bottom (near), 1 = horizon (far)
+  const horizonY = H * HORIZON_Y;
+  const bottomW = W * PATH_BOTTOM_W;
+  const topW = W * PATH_TOP_W;
+  const pathW = lerp(bottomW, topW, zFrac);
+  const laneW = pathW / LANE_COUNT;
+  const pathLeft = (W - pathW) / 2;
+  return pathLeft + laneW * (lane + 0.5);
+}
+
+function getPathY(zFrac) {
+  const horizonY = H * HORIZON_Y;
+  return lerp(H, horizonY, zFrac);
+}
+
+function getScale(zFrac) {
+  return lerp(1, 0.1, zFrac);
+}
+
+function getPathEdges(zFrac) {
+  const bottomW = W * PATH_BOTTOM_W;
+  const topW = W * PATH_TOP_W;
+  const pathW = lerp(bottomW, topW, zFrac);
+  const pathLeft = (W - pathW) / 2;
+  return { left: pathLeft, right: pathLeft + pathW, width: pathW };
+}
+
+// ─── PARTICLE SYSTEM ────────────────────────────────────────────
+function spawnParticle(x, y, color, vx, vy, life, size, grav) {
+  particles.push({ x, y, vx: vx || 0, vy: vy || 0, life, maxLife: life, size: size || 3, color, grav: grav || 0.05 });
+}
+
+function spawnBurst(x, y, color, count, spread, life, size) {
+  for (let i = 0; i < count; i++) {
+    const angle = rand(0, Math.PI * 2);
+    const spd = rand(0.5, spread);
+    spawnParticle(x, y, color, Math.cos(angle) * spd, Math.sin(angle) * spd, rand(life * 0.5, life), rand(size * 0.5, size), 0.03);
+  }
+}
+
+function initBgParticles() {
+  bgParticles = [];
+  for (let i = 0; i < 30; i++) {
+    bgParticles.push({
+      x: rand(0, W), y: rand(0, H),
+      vx: rand(-0.15, 0.15), vy: rand(-0.1, 0.1),
+      size: rand(1, 2.5), alpha: rand(0.03, 0.12),
+      color: [COL.violet, COL.blue, COL.purple, COL.neonGreen][randInt(0, 3)],
+    });
+  }
+}
+initBgParticles();
+
+function updateBgParticles() {
+  for (const p of bgParticles) {
+    p.x += p.vx; p.y += p.vy;
+    if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
+    if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
+  }
+}
+
+function drawBgParticles() {
+  for (const p of bgParticles) {
+    ctx.globalAlpha = p.alpha;
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+function updateParticles(dt) {
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.x += p.vx * dt * 60;
+    p.y += p.vy * dt * 60;
+    p.vy += p.grav * dt * 60;
+    p.life -= dt;
+    if (p.life <= 0) { particles.splice(i, 1); }
+  }
+}
+
+function drawParticles() {
+  for (const p of particles) {
+    const alpha = clamp(p.life / p.maxLife, 0, 1);
+    const sz = p.size * alpha;
+    ctx.globalAlpha = alpha * 0.9;
+    ctx.fillStyle = p.color;
+    ctx.shadowColor = p.color;
+    ctx.shadowBlur = 8;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, sz, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.shadowBlur = 0;
+  ctx.globalAlpha = 1;
+}
+
+// ─── DRAW PATH ──────────────────────────────────────────────────
+function drawPath() {
+  const horizonY = H * HORIZON_Y;
+  const steps = 60;
+
+  // Main path fill
+  ctx.beginPath();
+  const eBot = getPathEdges(0);
+  const eTop = getPathEdges(1);
+  ctx.moveTo(eBot.left, H);
+  ctx.lineTo(eTop.left, horizonY);
+  ctx.lineTo(eTop.right, horizonY);
+  ctx.lineTo(eBot.right, H);
+  ctx.closePath();
+  const pathGrad = ctx.createLinearGradient(0, horizonY, 0, H);
+  pathGrad.addColorStop(0, 'rgba(20, 15, 40, 0.6)');
+  pathGrad.addColorStop(1, 'rgba(30, 20, 60, 0.9)');
+  ctx.fillStyle = pathGrad;
+  ctx.fill();
+
+  // Grid lines (horizontal — scrolling)
+  const gridSpacing = 0.04;
+  gridOffset = (gridOffset + speed * 0.001) % gridSpacing;
+  for (let z = gridOffset; z < 1; z += gridSpacing) {
+    const y = getPathY(z);
+    const e = getPathEdges(z);
+    const alpha = lerp(0.2, 0.02, z);
+    ctx.strokeStyle = `rgba(100, 64, 240, ${alpha})`;
+    ctx.lineWidth = lerp(1.2, 0.3, z);
+    ctx.beginPath();
+    ctx.moveTo(e.left, y);
+    ctx.lineTo(e.right, y);
+    ctx.stroke();
+  }
+
+  // Lane dividers
+  for (let l = 1; l < LANE_COUNT; l++) {
+    ctx.beginPath();
+    for (let z = 0; z <= 1; z += 0.02) {
+      const e = getPathEdges(z);
+      const laneW = e.width / LANE_COUNT;
+      const x = e.left + laneW * l;
+      const y = getPathY(z);
+      if (z === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    const laneGrad = ctx.createLinearGradient(0, H, 0, horizonY);
+    laneGrad.addColorStop(0, 'rgba(100, 64, 240, 0.25)');
+    laneGrad.addColorStop(1, 'rgba(100, 64, 240, 0.02)');
+    ctx.strokeStyle = laneGrad;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  // Edge glow
+  for (let side = 0; side < 2; side++) {
+    ctx.beginPath();
+    for (let z = 0; z <= 1; z += 0.01) {
+      const e = getPathEdges(z);
+      const x = side === 0 ? e.left : e.right;
+      const y = getPathY(z);
+      if (z === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    const edgeGrad = ctx.createLinearGradient(0, H, 0, horizonY);
+    edgeGrad.addColorStop(0, COL.blue);
+    edgeGrad.addColorStop(0.5, COL.violet);
+    edgeGrad.addColorStop(1, 'transparent');
+    ctx.strokeStyle = edgeGrad;
+    ctx.lineWidth = 2;
+    ctx.shadowColor = COL.blue;
+    ctx.shadowBlur = 12;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+}
+
+// ─── OBSTACLES ──────────────────────────────────────────────────
+// type: 'tall' (jump), 'low' (slide), 'gap'
+function spawnObstacle() {
+  const types = ['tall', 'tall', 'low', 'low'];
+  if (distance > 300) types.push('gap');
+  const type = types[randInt(0, types.length - 1)];
+  const lane = randInt(0, 2);
+  const obs = { lane, z: 1.1, type, moving: false, movDir: 0, movSpeed: 0 };
+
+  // Double obstacles after 500m
+  if (distance > 500 && Math.random() < 0.35) {
+    let lane2 = lane === 1 ? (Math.random() < 0.5 ? 0 : 2) : (lane === 0 ? 1 : 1);
+    obstacles.push({ lane: lane2, z: 1.1, type: types[randInt(0, types.length - 1)], moving: false, movDir: 0, movSpeed: 0 });
+  }
+
+  // Moving obstacles after 1000m
+  if (distance > 1000 && Math.random() < 0.3) {
+    obs.moving = true;
+    obs.movDir = Math.random() < 0.5 ? -1 : 1;
+    obs.movSpeed = rand(0.3, 0.7);
+  }
+
+  obstacles.push(obs);
+}
+
+function spawnOrb() {
+  const lane = randInt(0, 2);
+  const floating = Math.random() < 0.3; // some orbs are elevated (jump to get)
+  orbs.push({ lane, z: 1.1, collected: false, floating, pulse: rand(0, Math.PI * 2) });
+}
+
+function updateObstacles(dt) {
+  const moveSpeed = speed * 0.012 * dt * 60;
+  for (let i = obstacles.length - 1; i >= 0; i--) {
+    const o = obstacles[i];
+    o.z -= moveSpeed;
+    if (o.moving) {
+      o.lane += o.movDir * o.movSpeed * dt;
+      if (o.lane <= 0) { o.lane = 0; o.movDir = 1; }
+      if (o.lane >= 2) { o.lane = 2; o.movDir = -1; }
+    }
+    if (o.z < -0.1) obstacles.splice(i, 1);
+  }
+}
+
+function updateOrbs(dt) {
+  const moveSpeed = speed * 0.012 * dt * 60;
+  for (let i = orbs.length - 1; i >= 0; i--) {
+    const o = orbs[i];
+    o.z -= moveSpeed;
+    o.pulse += dt * 4;
+    if (o.z < -0.1 || o.collected) orbs.splice(i, 1);
+  }
+}
+
+function drawObstacle(o) {
+  if (o.z < 0 || o.z > 1) return;
+  const x = getPathX(o.lane, o.z);
+  const y = getPathY(o.z);
+  const s = getScale(o.z);
+  const w = 30 * s;
+
+  if (o.type === 'tall') {
+    const h = 50 * s;
+    ctx.fillStyle = 'rgba(248, 113, 113, 0.7)';
+    ctx.shadowColor = COL.red;
+    ctx.shadowBlur = 15 * s;
+    ctx.fillRect(x - w / 2, y - h, w, h);
+    // Top edge glow
+    ctx.fillStyle = 'rgba(248, 113, 113, 0.9)';
+    ctx.fillRect(x - w / 2, y - h, w, 3 * s);
+    ctx.shadowBlur = 0;
+  } else if (o.type === 'low') {
+    const h = 18 * s;
+    const barY = y - 30 * s;
+    ctx.fillStyle = 'rgba(248, 113, 113, 0.6)';
+    ctx.shadowColor = COL.red;
+    ctx.shadowBlur = 12 * s;
+    ctx.fillRect(x - w / 2, barY, w, h);
+    // Posts
+    ctx.fillStyle = 'rgba(248, 113, 113, 0.4)';
+    ctx.fillRect(x - w / 2, barY + h, 3 * s, y - barY - h);
+    ctx.fillRect(x + w / 2 - 3 * s, barY + h, 3 * s, y - barY - h);
+    ctx.shadowBlur = 0;
+  } else if (o.type === 'gap') {
+    // Draw gap as missing path section
+    const e = getPathEdges(o.z);
+    const laneW = e.width / LANE_COUNT;
+    const lx = e.left + laneW * Math.floor(o.lane);
+    ctx.fillStyle = 'rgba(15, 15, 15, 0.95)';
+    ctx.fillRect(lx, y - 6 * s, laneW, 12 * s);
+    ctx.strokeStyle = 'rgba(248, 113, 113, 0.5)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(lx, y - 6 * s, laneW, 12 * s);
+  }
+}
+
+function drawOrb(o) {
+  if (o.z < 0 || o.z > 1 || o.collected) return;
+  const x = getPathX(o.lane, o.z);
+  let y = getPathY(o.z);
+  const s = getScale(o.z);
+  if (o.floating) y -= 35 * s;
+  else y -= 15 * s;
+  const pulseSz = 1 + Math.sin(o.pulse) * 0.2;
+  const r = 7 * s * pulseSz;
+
+  ctx.shadowColor = COL.neonGreen;
+  ctx.shadowBlur = 20 * s;
+  ctx.fillStyle = COL.neonGreen;
+  ctx.globalAlpha = 0.9;
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Inner bright core
+  ctx.fillStyle = COL.softGreen;
+  ctx.globalAlpha = 0.6;
+  ctx.beginPath();
+  ctx.arc(x, y, r * 0.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.shadowBlur = 0;
+  ctx.globalAlpha = 1;
+}
+
+// ─── PLAYER ─────────────────────────────────────────────────────
+function updatePlayer(dt) {
+  // Smooth lane transition
+  player.lane = lerp(player.lane, player.targetLane, 0.15 * dt * 60);
+  player.x = getPathX(player.lane, 0.08);
+  player.y = getPathY(0.08);
+
+  // Jump physics
+  if (player.isJumping) {
+    player.jumpVel += 0.4 * dt * 60;
+    player.jumpY += player.jumpVel * dt * 60;
+    if (player.jumpY >= 0) {
+      player.jumpY = 0;
+      player.jumpVel = 0;
+      player.isJumping = false;
+    }
+  }
+
+  // Slide timer
+  if (player.isSliding) {
+    player.slideTimer -= dt;
+    if (player.slideTimer <= 0) {
+      player.isSliding = false;
+      player.slideTimer = 0;
+    }
+  }
+
+  // Anim
+  player.animPhase += dt * 5;
+
+  // Trail particles
+  if (state === STATE.PLAYING && Math.random() < 0.6) {
+    const trailCol = [COL.violet, COL.blue, COL.purple][randInt(0, 2)];
+    spawnParticle(
+      player.x + rand(-4, 4),
+      player.y + player.jumpY + (player.isSliding ? 5 : 0) + rand(-2, 4),
+      trailCol, rand(-0.3, 0.3), rand(0.5, 1.5), rand(0.2, 0.5), rand(1.5, 3), 0.02
+    );
+  }
+}
+
+function drawPlayer() {
+  const x = player.x;
+  let y = player.y + player.jumpY;
+  const s = getScale(0.08);
+  const bob = Math.sin(player.animPhase) * 2;
+  const rot = Math.sin(player.animPhase * 0.7) * 0.08;
+
+  ctx.save();
+  ctx.translate(x, y + bob);
+  ctx.rotate(rot);
+
+  if (player.isSliding) {
+    // Flattened diamond
+    const w = player.width * s * 1.4;
+    const h = player.height * s * 0.35;
+    ctx.shadowColor = COL.violet;
+    ctx.shadowBlur = 18;
+    const grad = ctx.createLinearGradient(-w / 2, -h, w / 2, 0);
+    grad.addColorStop(0, COL.violet);
+    grad.addColorStop(0.5, COL.blue);
+    grad.addColorStop(1, COL.purple);
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.moveTo(0, -h);
+    ctx.lineTo(w / 2, -h / 2);
+    ctx.lineTo(0, 0);
+    ctx.lineTo(-w / 2, -h / 2);
+    ctx.closePath();
+    ctx.fill();
+    // Core glow
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.beginPath();
+    ctx.arc(0, -h / 2, w * 0.15, 0, Math.PI * 2);
+    ctx.fill();
+  } else {
+    // Diamond crystal
+    const w = player.width * s;
+    const h = player.height * s;
+    ctx.shadowColor = COL.violet;
+    ctx.shadowBlur = 22;
+    const grad = ctx.createLinearGradient(0, -h, 0, 0);
+    grad.addColorStop(0, COL.blue);
+    grad.addColorStop(0.4, COL.violet);
+    grad.addColorStop(1, COL.purple);
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.moveTo(0, -h);
+    ctx.lineTo(w / 2, -h * 0.4);
+    ctx.lineTo(0, 0);
+    ctx.lineTo(-w / 2, -h * 0.4);
+    ctx.closePath();
+    ctx.fill();
+
+    // Inner facets
+    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.moveTo(0, -h);
+    ctx.lineTo(0, 0);
+    ctx.moveTo(-w / 2, -h * 0.4);
+    ctx.lineTo(w / 2, -h * 0.4);
+    ctx.stroke();
+
+    // Core glow
+    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    ctx.beginPath();
+    ctx.arc(0, -h * 0.45, w * 0.18, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.shadowBlur = 0;
+  ctx.restore();
+}
+
+// ─── COLLISION ──────────────────────────────────────────────────
+function checkCollisions() {
+  const pz = 0.08;
+  const hitZone = 0.035;
+
+  for (const o of obstacles) {
+    if (Math.abs(o.z - pz) > hitZone) continue;
+    if (Math.abs(o.lane - player.lane) > 0.6) continue;
+
+    if (o.type === 'tall') {
+      if (player.isJumping && player.jumpY < -20) continue; // jumped over
+      gameOver();
+      return;
+    } else if (o.type === 'low') {
+      if (player.isSliding) continue; // slid under
+      if (player.isJumping) continue; // also safe if jumping
+      gameOver();
+      return;
+    } else if (o.type === 'gap') {
+      if (player.isJumping) continue; // jumped over gap
+      gameOver();
+      return;
+    }
+  }
+
+  // Orb collection
+  for (const o of orbs) {
+    if (o.collected) continue;
+    if (Math.abs(o.z - pz) > hitZone) continue;
+    if (Math.abs(o.lane - player.lane) > 0.6) continue;
+    if (o.floating && !(player.isJumping && player.jumpY < -15)) continue;
+
+    o.collected = true;
+    orbsCollected++;
+    combo++;
+    comboTimer = 2;
+    score += 10 * Math.min(combo, 10);
+    const ox = getPathX(o.lane, o.z);
+    const oy = getPathY(o.z) - 15 * getScale(o.z);
+    spawnBurst(ox, oy, COL.neonGreen, 18, 3, 0.6, 4);
+    spawnBurst(ox, oy, COL.softGreen, 8, 2, 0.4, 2);
+  }
+}
+
+// ─── GAME OVER ──────────────────────────────────────────────────
+function gameOver() {
+  state = STATE.DEAD;
+  shakeDur = 0.4;
+  shakeX = 0; shakeY = 0;
+
+  // Red explosion
+  spawnBurst(player.x, player.y, COL.red, 40, 5, 0.8, 5);
+  spawnBurst(player.x, player.y, COL.violet, 20, 3, 0.6, 3);
+
+  // Save scores
+  totalCoins += orbsCollected;
+  localStorage.setItem('wp_game_coins', totalCoins);
+  const finalScore = Math.floor(score + distance);
+  if (finalScore > highScore) {
+    highScore = finalScore;
+    localStorage.setItem('wp_game_highscore', highScore);
+    isNewHighScore = true;
+  } else {
+    isNewHighScore = false;
+  }
+}
+
+function resetGame() {
+  state = STATE.PLAYING;
+  score = 0; distance = 0; orbsCollected = 0; combo = 0; comboTimer = 0;
+  speed = baseSpeed; speedTimer = 0;
+  player.lane = 1; player.targetLane = 1;
+  player.jumpY = 0; player.jumpVel = 0; player.isJumping = false;
+  player.slideTimer = 0; player.isSliding = false;
+  obstacles = []; orbs = [];
+  particles = [];
+  spawnTimer = 0; orbSpawnTimer = 0;
+  lastMarkerDistance = 0; distanceMarkerFlash = 0;
+  isNewHighScore = false;
+}
+
+// ─── INPUT ──────────────────────────────────────────────────────
+let touchStartX = 0, touchStartY = 0, touchStartTime = 0;
+
+function handleSwipe(dx, dy) {
+  if (state === STATE.MENU) { resetGame(); return; }
+  if (state === STATE.DEAD) { resetGame(); return; }
+
+  if (Math.abs(dx) > Math.abs(dy)) {
+    if (dx < -30) moveLeft();
+    else if (dx > 30) moveRight();
+  } else {
+    if (dy < -30) jump();
+    else if (dy > 30) slide();
+  }
+}
+
+function moveLeft() { if (state === STATE.PLAYING) player.targetLane = Math.max(0, player.targetLane - 1); }
+function moveRight() { if (state === STATE.PLAYING) player.targetLane = Math.min(2, player.targetLane + 1); }
+function jump() {
+  if (state === STATE.PLAYING && !player.isJumping) {
+    player.isJumping = true;
+    player.jumpVel = -7;
+  }
+}
+function slide() {
+  if (state === STATE.PLAYING && !player.isSliding && !player.isJumping) {
+    player.isSliding = true;
+    player.slideTimer = 0.5;
+  }
+}
+
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  const t = e.touches[0];
+  touchStartX = t.clientX;
+  touchStartY = t.clientY;
+  touchStartTime = Date.now();
+}, { passive: false });
+
+canvas.addEventListener('touchend', e => {
+  e.preventDefault();
+  if (e.changedTouches.length === 0) return;
+  const t = e.changedTouches[0];
+  const dx = t.clientX - touchStartX;
+  const dy = t.clientY - touchStartY;
+  const elapsed = Date.now() - touchStartTime;
+
+  if (Math.abs(dx) < 15 && Math.abs(dy) < 15 && elapsed < 300) {
+    // Tap
+    if (state === STATE.MENU || state === STATE.DEAD) {
+      resetGame();
+    }
+    return;
+  }
+  handleSwipe(dx, dy);
+}, { passive: false });
+
+canvas.addEventListener('touchmove', e => { e.preventDefault(); }, { passive: false });
+
+document.addEventListener('keydown', e => {
+  if (state === STATE.MENU || state === STATE.DEAD) {
+    if (['Space', 'Enter', 'ArrowUp', 'KeyW'].includes(e.code)) {
+      resetGame();
+      return;
+    }
+  }
+  switch (e.code) {
+    case 'ArrowLeft': case 'KeyA': moveLeft(); break;
+    case 'ArrowRight': case 'KeyD': moveRight(); break;
+    case 'ArrowUp': case 'KeyW': case 'Space': jump(); break;
+    case 'ArrowDown': case 'KeyS': slide(); break;
+  }
+});
+
+// ─── HUD / UI ───────────────────────────────────────────────────
+function drawGlowText(text, x, y, size, color, align, glow) {
+  ctx.font = `bold ${size}px -apple-system, 'Segoe UI', Roboto, sans-serif`;
+  ctx.textAlign = align || 'left';
+  ctx.textBaseline = 'top';
+  if (glow) {
+    ctx.shadowColor = color || COL.white;
+    ctx.shadowBlur = glow;
+  }
+  ctx.fillStyle = color || COL.white;
+  ctx.fillText(text, x, y);
+  ctx.shadowBlur = 0;
+}
+
+function drawHUD() {
+  const pad = 16;
+  const top = 14 + (CSS.supports('padding-top: env(safe-area-inset-top)') ? 30 : 0);
+
+  // Score
+  drawGlowText(Math.floor(score + distance).toLocaleString(), pad, top, 22, COL.white, 'left', 6);
+  // Orbs
+  ctx.fillStyle = COL.neonGreen;
+  ctx.shadowColor = COL.neonGreen;
+  ctx.shadowBlur = 8;
+  ctx.beginPath();
+  ctx.arc(pad + 8, top + 36, 5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  drawGlowText(`${orbsCollected}`, pad + 20, top + 28, 16, COL.softGreen, 'left', 0);
+
+  // Distance
+  drawGlowText(`${Math.floor(distance)}m`, W - pad, top, 20, 'rgba(255,255,255,0.7)', 'right', 0);
+
+  // Combo
+  if (combo > 1 && comboTimer > 0) {
+    const comboAlpha = Math.min(1, comboTimer);
+    ctx.globalAlpha = comboAlpha;
+    const mult = Math.min(combo, 10);
+    drawGlowText(`x${mult} COMBO`, W / 2, top, 18, COL.neonGreen, 'center', 12);
+    ctx.globalAlpha = 1;
+  }
+
+  // Speed milestone flash
+  if (distanceMarkerFlash > 0) {
+    ctx.globalAlpha = distanceMarkerFlash;
+    drawGlowText(`${Math.floor(lastMarkerDistance)}m`, W / 2, H * 0.35, 36, COL.blue, 'center', 20);
+    ctx.globalAlpha = 1;
+  }
+}
+
+function drawMenuScreen() {
+  // Title
+  const titleY = H * 0.2;
+  ctx.font = `bold 48px -apple-system, 'Segoe UI', Roboto, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  // Title glow layers
+  ctx.shadowColor = COL.violet;
+  ctx.shadowBlur = 40;
+  ctx.fillStyle = COL.violet;
+  ctx.fillText('PATH', W / 2, titleY);
+  ctx.shadowColor = COL.blue;
+  ctx.shadowBlur = 30;
+  ctx.fillStyle = COL.blue;
+  ctx.fillText('RUNNER', W / 2, titleY + 56);
+  ctx.shadowBlur = 0;
+
+  // Crisp text on top
+  ctx.fillStyle = COL.white;
+  ctx.fillText('PATH', W / 2, titleY);
+  ctx.fillStyle = 'rgba(255,255,255,0.95)';
+  ctx.fillText('RUNNER', W / 2, titleY + 56);
+
+  // High score
+  if (highScore > 0) {
+    drawGlowText(`HIGH SCORE: ${highScore.toLocaleString()}`, W / 2, titleY + 120, 16, 'rgba(255,255,255,0.5)', 'center', 0);
+  }
+
+  // Total coins
+  if (totalCoins > 0) {
+    drawGlowText(`TOTAL ORBS: ${totalCoins.toLocaleString()}`, W / 2, titleY + 145, 14, COL.softGreen, 'center', 0);
+  }
+
+  // Tap to run (pulsing)
+  const pulse = 0.5 + Math.sin(Date.now() * 0.004) * 0.3;
+  ctx.globalAlpha = pulse;
+  drawGlowText('TAP TO RUN', W / 2, H * 0.65, 20, COL.white, 'center', 10);
+  ctx.globalAlpha = 1;
+
+  // Controls hint
+  drawGlowText('Swipe or Arrow Keys', W / 2, H * 0.72, 13, 'rgba(255,255,255,0.25)', 'center', 0);
+}
+
+function drawGameOverScreen() {
+  // Overlay
+  ctx.fillStyle = 'rgba(15, 15, 15, 0.75)';
+  ctx.fillRect(0, 0, W, H);
+
+  const centerY = H * 0.28;
+  const finalScore = Math.floor(score + distance);
+
+  // GAME OVER
+  ctx.font = `bold 42px -apple-system, 'Segoe UI', Roboto, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.shadowColor = COL.red;
+  ctx.shadowBlur = 30;
+  ctx.fillStyle = COL.red;
+  ctx.fillText('GAME OVER', W / 2, centerY);
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = COL.white;
+  ctx.fillText('GAME OVER', W / 2, centerY);
+
+  // Stats
+  const statY = centerY + 60;
+  const lineH = 34;
+  drawGlowText('SCORE', W / 2, statY, 14, 'rgba(255,255,255,0.5)', 'center', 0);
+  drawGlowText(finalScore.toLocaleString(), W / 2, statY + 18, 28, COL.white, 'center', 8);
+
+  drawGlowText('DISTANCE', W / 2, statY + lineH * 2, 14, 'rgba(255,255,255,0.5)', 'center', 0);
+  drawGlowText(`${Math.floor(distance)}m`, W / 2, statY + lineH * 2 + 18, 22, COL.blue, 'center', 6);
+
+  drawGlowText('ORBS', W / 2, statY + lineH * 4, 14, 'rgba(255,255,255,0.5)', 'center', 0);
+  drawGlowText(`${orbsCollected}`, W / 2, statY + lineH * 4 + 18, 22, COL.neonGreen, 'center', 6);
+
+  // High score
+  const hsY = statY + lineH * 6 + 10;
+  if (isNewHighScore) {
+    const flash = 0.7 + Math.sin(Date.now() * 0.008) * 0.3;
+    ctx.globalAlpha = flash;
+    drawGlowText('NEW HIGH SCORE!', W / 2, hsY, 18, COL.neonGreen, 'center', 15);
+    ctx.globalAlpha = 1;
+  } else {
+    drawGlowText(`BEST: ${highScore.toLocaleString()}`, W / 2, hsY, 16, 'rgba(255,255,255,0.4)', 'center', 0);
+  }
+
+  // Tap to play
+  const pulse = 0.4 + Math.sin(Date.now() * 0.004) * 0.3;
+  ctx.globalAlpha = pulse;
+  drawGlowText('TAP TO PLAY AGAIN', W / 2, H * 0.78, 18, COL.white, 'center', 8);
+  ctx.globalAlpha = 1;
+}
+
+// ─── MAIN LOOP ──────────────────────────────────────────────────
+function update(dt) {
+  updateBgParticles();
+  updateParticles(dt);
+
+  if (state !== STATE.PLAYING) return;
+
+  // Distance + score
+  distance += speed * dt * 2;
+  score += speed * dt * 0.5;
+
+  // Speed increase
+  speedTimer += dt;
+  if (speedTimer >= 10) {
+    speedTimer = 0;
+    speed = Math.min(maxSpeed, speed + 0.4);
+  }
+
+  // Distance markers
+  if (Math.floor(distance / 100) > Math.floor(lastMarkerDistance / 100)) {
+    lastMarkerDistance = Math.floor(distance / 100) * 100;
+    distanceMarkerFlash = 1;
+    // Speed milestone celebration
+    if (lastMarkerDistance % 500 === 0) {
+      spawnBurst(W / 2, H * 0.4, COL.blue, 30, 4, 0.8, 4);
+      spawnBurst(W / 2, H * 0.4, COL.violet, 20, 3, 0.6, 3);
+    }
+  }
+  if (distanceMarkerFlash > 0) distanceMarkerFlash -= dt * 1.5;
+
+  // Combo decay
+  if (comboTimer > 0) {
+    comboTimer -= dt;
+    if (comboTimer <= 0) { combo = 0; comboTimer = 0; }
+  }
+
+  // Spawn obstacles
+  const spawnRate = Math.max(0.6, 2.0 - distance * 0.001);
+  spawnTimer -= dt;
+  if (spawnTimer <= 0) {
+    spawnTimer = spawnRate + rand(-0.2, 0.2);
+    spawnObstacle();
+  }
+
+  // Spawn orbs
+  orbSpawnTimer -= dt;
+  if (orbSpawnTimer <= 0) {
+    orbSpawnTimer = rand(0.5, 1.2);
+    spawnOrb();
+  }
+
+  updatePlayer(dt);
+  updateObstacles(dt);
+  updateOrbs(dt);
+  checkCollisions();
+
+  // Screen shake
+  if (shakeDur > 0) {
+    shakeDur -= dt;
+    shakeX = rand(-6, 6) * (shakeDur / 0.4);
+    shakeY = rand(-6, 6) * (shakeDur / 0.4);
+  } else {
+    shakeX = 0; shakeY = 0;
+  }
+}
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+
+  // Background
+  ctx.fillStyle = COL.bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // Horizon glow
+  const horizGrad = ctx.createRadialGradient(W / 2, H * HORIZON_Y, 0, W / 2, H * HORIZON_Y, W * 0.5);
+  horizGrad.addColorStop(0, 'rgba(100, 64, 240, 0.06)');
+  horizGrad.addColorStop(1, 'transparent');
+  ctx.fillStyle = horizGrad;
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.save();
+  ctx.translate(shakeX, shakeY);
+
+  drawBgParticles();
+  drawPath();
+
+  // Draw far objects first (sorted by z descending)
+  const allObjects = [...obstacles.map(o => ({ ...o, isOrb: false })), ...orbs.map(o => ({ ...o, isOrb: true }))];
+  allObjects.sort((a, b) => b.z - a.z);
+
+  for (const obj of allObjects) {
+    if (obj.isOrb) drawOrb(obj);
+    else drawObstacle(obj);
+  }
+
+  if (state === STATE.PLAYING || state === STATE.DEAD) {
+    drawPlayer();
+  }
+
+  drawParticles();
+  ctx.restore();
+
+  if (state === STATE.PLAYING) drawHUD();
+  if (state === STATE.MENU) drawMenuScreen();
+  if (state === STATE.DEAD) drawGameOverScreen();
+}
+
+function loop(time) {
+  requestAnimationFrame(loop);
+  const dt = Math.min((time - lastTime) / 1000, 0.05);
+  lastTime = time;
+  update(dt);
+  draw();
+}
+
+lastTime = performance.now();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
