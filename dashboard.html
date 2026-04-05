@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-05-v81';
+    var APP_VERSION = '2026-04-05-v82';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -2896,37 +2896,53 @@
       color: rgba(255,255,255,0.4);
     }
 
-    /* ── Streak Celebration Overlay ── */
+    /* ── Streak Celebration - Full-screen login burst ── */
     .streak-celebration {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 99999;
-      display: flex; align-items: center; justify-content: center;
-      pointer-events: none; opacity: 0; transition: opacity 0.4s;
-      background: radial-gradient(circle at center, rgba(139,92,246,0.15) 0%, transparent 70%);
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(11, 6, 17, 0.95);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 99999;
+      overflow: hidden;
     }
-    .streak-celebration.active { opacity: 1; }
-    .streak-celebration-inner {
-      display: flex; flex-direction: column; align-items: center; gap: 6px;
-      animation: streakGrow 2.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    .flame-wrapper {
+      position: relative;
+      text-align: center;
     }
-    .streak-celebration-flame { font-size: 56px; filter: drop-shadow(0 0 20px rgba(251,146,60,0.6)); }
-    .streak-celebration-number { font-size: 80px; font-weight: 900; color: #fff; line-height: 1; text-shadow: 0 0 30px rgba(139,92,246,0.8), 0 0 60px rgba(139,92,246,0.4); }
-    .streak-celebration-label { font-size: 15px; color: rgba(255,255,255,0.7); text-transform: uppercase; letter-spacing: 2px; font-weight: 700; }
-    @keyframes streakGrow {
-      0% { transform: scale(0.2); opacity: 0; }
-      15% { transform: scale(1.2); opacity: 1; }
-      25% { transform: scale(0.95); opacity: 1; }
-      35% { transform: scale(1.05); opacity: 1; }
-      50% { transform: scale(1); opacity: 1; }
-      75% { transform: scale(1); opacity: 1; }
-      100% { transform: scale(2); opacity: 0; }
+    .big-flame {
+      font-size: 180px;
+      line-height: 1;
+      animation: flame-grow 1.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      filter: drop-shadow(0 0 60px #ff9800);
     }
-    .confetti-piece {
-      position: fixed; width: 8px; height: 8px; border-radius: 2px; z-index: 100000;
+    .streak-number {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 52px;
+      font-weight: 900;
+      color: #F0EFF5;
+      text-shadow: 0 0 20px #7132F5, 0 0 40px #ff9800;
+      opacity: 0;
+      animation: number-pop 1.8s 0.6s forwards;
+    }
+    @keyframes flame-grow {
+      0%   { transform: scale(0.1) rotate(-15deg); }
+      60%  { transform: scale(1.15) rotate(8deg); }
+      100% { transform: scale(1) rotate(0deg); }
+    }
+    @keyframes number-pop {
+      0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.3); }
+      50%  { opacity: 1; transform: translate(-50%, -50%) scale(1.3); }
+      100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    }
+    #confetti-canvas {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
       pointer-events: none;
-    }
-    @keyframes confettiFall {
-      0% { opacity: 1; transform: translateY(0) rotate(0deg) scale(1); }
-      100% { opacity: 0; transform: translateY(200px) rotate(720deg) scale(0.3); }
+      z-index: 100000;
     }
     /* ── Streak in sidebar ── */
     .sidebar-streak { display: inline-flex; align-items: center; gap: 3px; margin-left: 6px; }
@@ -3039,11 +3055,10 @@
     </div>
   </div>
   <!-- Streak Celebration Overlay -->
-  <div class="streak-celebration" id="streakCelebration">
-    <div class="streak-celebration-inner">
-      <div class="streak-celebration-flame">&#x1F525;</div>
-      <div class="streak-celebration-number" id="streakCelebrationNumber">1</div>
-      <div class="streak-celebration-label">day streak</div>
+  <div id="streak-celebration" class="streak-celebration">
+    <div class="flame-wrapper">
+      <div id="big-flame" class="big-flame">&#x1F525;</div>
+      <div id="streak-number" class="streak-number">7</div>
     </div>
   </div>
   <div class="holding-action-overlay" id="holdingActionOverlay" onclick="if(event.target===this)closeHoldingActions()">
@@ -4729,60 +4744,79 @@
       }
     }
 
-    function showStreakCelebration(count) {
-      var overlay = document.getElementById('streakCelebration');
-      var numEl = document.getElementById('streakCelebrationNumber');
-      if (!overlay || !numEl) return;
-      numEl.textContent = count;
-      // Reset animation so it replays cleanly
-      var inner = overlay.querySelector('.streak-celebration-inner');
-      if (inner) { inner.style.animation = 'none'; inner.offsetHeight; inner.style.animation = ''; }
-      overlay.classList.add('active');
-      // First confetti burst at the bounce peak (~500ms)
-      setTimeout(function() { spawnConfetti(); }, 500);
-      // Second burst during the hold phase for extra punch
-      setTimeout(function() { spawnConfetti(); }, 1400);
-      // Remove overlay after full animation (2.8s + buffer)
-      setTimeout(function() {
-        overlay.classList.remove('active');
-      }, 3200);
-    }
-
-    function spawnConfetti() {
-      var colors = ['#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#3B82F6', '#EF4444', '#F97316', '#14B8A6', '#A855F7', '#FBBF24'];
-      var cx = window.innerWidth / 2;
-      var cy = window.innerHeight / 2;
-      for (var i = 0; i < 60; i++) {
-        var piece = document.createElement('div');
-        piece.className = 'confetti-piece';
-        piece.style.background = colors[Math.floor(Math.random() * colors.length)];
-        piece.style.left = cx + (Math.random() - 0.5) * 80 + 'px';
-        piece.style.top = cy + (Math.random() - 0.5) * 40 + 'px';
-        var angle = Math.random() * Math.PI * 2;
-        var dist = 120 + Math.random() * 300;
-        var dx = Math.cos(angle) * dist;
-        var dy = Math.sin(angle) * dist - 150;
-        piece.style.setProperty('--dx', dx + 'px');
-        piece.style.setProperty('--dy', dy + 'px');
-        var duration = 1.2 + Math.random() * 1.0;
-        piece.style.animation = 'confettiBurst ' + duration + 's cubic-bezier(0.25, 1, 0.5, 1) forwards';
-        piece.style.animationDelay = (Math.random() * 0.15) + 's';
-        piece.style.width = (6 + Math.random() * 8) + 'px';
-        piece.style.height = (6 + Math.random() * 8) + 'px';
-        piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
-        document.body.appendChild(piece);
-        (function(p, d) {
-          setTimeout(function() { if (p.parentNode) p.parentNode.removeChild(p); }, (d + 0.2) * 1000);
-        })(piece, duration);
+    // Canvas-based confetti launcher
+    function launchConfetti() {
+      var canvas = document.createElement('canvas');
+      canvas.id = 'confetti-canvas';
+      document.getElementById('streak-celebration').appendChild(canvas);
+      var ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      var confetti = [];
+      var colors = ['#7132F5', '#149E61', '#D11D45', '#F0EFF5', '#ff9800'];
+      for (var i = 0; i < 180; i++) {
+        confetti.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height - canvas.height,
+          size: Math.random() * 12 + 6,
+          speed: Math.random() * 8 + 6,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          rotation: Math.random() * 360,
+          rotSpeed: Math.random() * 12 - 6
+        });
       }
+      var frame = 0;
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        var stillAlive = false;
+        for (var i = 0; i < confetti.length; i++) {
+          var c = confetti[i];
+          c.y += c.speed;
+          c.rotation += c.rotSpeed;
+          c.speed *= 0.99;
+          ctx.save();
+          ctx.translate(c.x, c.y);
+          ctx.rotate(c.rotation * Math.PI / 180);
+          ctx.fillStyle = c.color;
+          ctx.fillRect(-c.size/2, -c.size/2, c.size, c.size * 1.6);
+          ctx.restore();
+          if (c.y < canvas.height + 50) stillAlive = true;
+        }
+        frame++;
+        if (stillAlive && frame < 180) {
+          requestAnimationFrame(animate);
+        } else {
+          if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
+        }
+      }
+      animate();
     }
 
-    // Override confetti animation with custom burst directions
-    (function() {
-      var style = document.createElement('style');
-      style.textContent = '@keyframes confettiBurst { 0% { opacity:1; transform:translate(0,0) rotate(0deg) scale(1); } 100% { opacity:0; transform:translate(var(--dx),var(--dy)) rotate(720deg) scale(0.2); } }';
-      document.head.appendChild(style);
-    })();
+    function showStreakCelebration(streakCount) {
+      var overlay = document.getElementById('streak-celebration');
+      var numberEl = document.getElementById('streak-number');
+      var flameEl = document.getElementById('big-flame');
+      if (!overlay || !numberEl) return;
+      numberEl.textContent = streakCount;
+      // Reset animations for replay
+      if (flameEl) { flameEl.style.animation = 'none'; flameEl.offsetHeight; flameEl.style.animation = ''; }
+      numberEl.style.animation = 'none'; numberEl.offsetHeight; numberEl.style.animation = '';
+      overlay.style.display = 'flex';
+      overlay.style.opacity = '1';
+      overlay.style.transition = '';
+      // Launch confetti at flame peak
+      setTimeout(function() { launchConfetti(); }, 800);
+      // Auto-hide after celebration
+      setTimeout(function() {
+        overlay.style.transition = 'opacity 0.8s ease';
+        overlay.style.opacity = '0';
+        setTimeout(function() {
+          overlay.style.display = 'none';
+          overlay.style.opacity = '1';
+          overlay.style.transition = '';
+        }, 900);
+      }, 2800);
+    }
 
     function claimDailyStreak() {
       // Keep for backward compat but auto-claim handles it now
