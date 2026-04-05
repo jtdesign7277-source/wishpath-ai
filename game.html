@@ -104,6 +104,22 @@ let shakeX = 0, shakeY = 0, shakeDur = 0;
 let screenFlash = 0, screenFlashColor = '#FFD700';
 let floatingTexts = [];
 
+// Level system
+let level = 1, levelUpFlash = 0, slowMoTimer = 0;
+const ORBS_PER_LEVEL = 8;
+const LEVEL_COLORS = [
+  { edge: '#6440F0', grid: 'rgba(100, 64, 240,', glow: '#7132F5' },   // purple
+  { edge: '#3B82F6', grid: 'rgba(59, 130, 246,', glow: '#60A5FA' },   // blue
+  { edge: '#06B6D4', grid: 'rgba(6, 182, 212,', glow: '#22D3EE' },    // cyan
+  { edge: '#00FF78', grid: 'rgba(0, 255, 120,', glow: '#50FFA0' },    // green
+  { edge: '#FFD700', grid: 'rgba(255, 215, 0,', glow: '#FFEC80' },    // gold
+  { edge: '#F472B6', grid: 'rgba(244, 114, 182,', glow: '#FB7DC5' },  // pink
+];
+
+function getLevelColor() {
+  return LEVEL_COLORS[(level - 1) % LEVEL_COLORS.length];
+}
+
 // Grid scroll
 let gridOffset = 0;
 
@@ -162,25 +178,25 @@ let stars = [];
 
 function initStars() {
   stars = [];
-  const count = 120;
+  const count = 200;
   for (let i = 0; i < count; i++) {
+    const layer = Math.random() < 0.4 ? 0 : (Math.random() < 0.5 ? 1 : 2);
     stars.push({
       x: rand(0, W), y: rand(0, H),
-      size: rand(0.4, 2.8),
-      baseAlpha: rand(0.15, 0.85),
+      size: layer === 0 ? rand(0.6, 1.5) : layer === 1 ? rand(1.2, 2.5) : rand(2, 4),
+      baseAlpha: layer === 0 ? rand(0.3, 0.6) : layer === 1 ? rand(0.5, 0.85) : rand(0.7, 1),
       twinkleSpeed: rand(1.5, 5),
       twinkleOffset: rand(0, Math.PI * 2),
-      // Depth layer: 0=far/slow, 1=mid, 2=near/fast
-      layer: Math.random() < 0.5 ? 0 : (Math.random() < 0.6 ? 1 : 2),
-      color: Math.random() < 0.7 ? COL.white :
-             [COL.violet, COL.blue, COL.softGreen, COL.goldLight][randInt(0, 3)],
+      layer,
+      color: Math.random() < 0.6 ? COL.white :
+             [COL.violet, COL.blue, COL.softGreen, COL.goldLight, '#E0CFFF'][randInt(0, 4)],
     });
   }
 }
 initStars();
 
 function updateStars(dt) {
-  const layerSpeeds = [0.05, 0.15, 0.35]; // parallax speeds
+  const layerSpeeds = [0.06, 0.2, 0.45];
   for (const s of stars) {
     s.y += layerSpeeds[s.layer] * dt * 60;
     if (s.y > H + 5) { s.y = -5; s.x = rand(0, W); }
@@ -190,18 +206,27 @@ function updateStars(dt) {
 function drawStars(time) {
   for (const s of stars) {
     const twinkle = Math.sin(time * 0.001 * s.twinkleSpeed + s.twinkleOffset);
-    const alpha = s.baseAlpha * (0.6 + twinkle * 0.4);
-    if (alpha < 0.02) continue;
+    const alpha = s.baseAlpha * (0.65 + twinkle * 0.35);
+    if (alpha < 0.03) continue;
     ctx.globalAlpha = alpha;
     ctx.fillStyle = s.color;
+
+    // Large stars get a soft glow halo
+    if (s.size > 2) {
+      ctx.shadowColor = s.color;
+      ctx.shadowBlur = s.size * 4;
+    }
     ctx.beginPath();
     ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
     ctx.fill();
-    // Bright stars get a soft cross-glow
-    if (s.size > 1.8 && alpha > 0.5) {
-      ctx.globalAlpha = alpha * 0.25;
-      ctx.fillRect(s.x - s.size * 3, s.y - 0.5, s.size * 6, 1);
-      ctx.fillRect(s.x - 0.5, s.y - s.size * 3, 1, s.size * 6);
+    ctx.shadowBlur = 0;
+
+    // Bright stars get cross-glow spikes
+    if (s.size > 2.2 && alpha > 0.5) {
+      ctx.globalAlpha = alpha * 0.35;
+      const arm = s.size * 4;
+      ctx.fillRect(s.x - arm, s.y - 0.5, arm * 2, 1);
+      ctx.fillRect(s.x - 0.5, s.y - arm, 1, arm * 2);
     }
   }
   ctx.globalAlpha = 1;
@@ -254,6 +279,9 @@ function drawPath() {
   ctx.fillStyle = pathGrad;
   ctx.fill();
 
+  // Level-based path colors
+  const lc = getLevelColor();
+
   // Grid lines (horizontal — scrolling)
   const gridSpacing = 0.04;
   gridOffset = (gridOffset + speed * 0.001) % gridSpacing;
@@ -261,7 +289,7 @@ function drawPath() {
     const y = getPathY(z);
     const e = getPathEdges(z);
     const alpha = lerp(0.2, 0.02, z);
-    ctx.strokeStyle = `rgba(100, 64, 240, ${alpha})`;
+    ctx.strokeStyle = `${lc.grid} ${alpha})`;
     ctx.lineWidth = lerp(1.2, 0.3, z);
     ctx.beginPath();
     ctx.moveTo(e.left, y);
@@ -280,8 +308,8 @@ function drawPath() {
       if (z === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
     }
     const laneGrad = ctx.createLinearGradient(0, H, 0, horizonY);
-    laneGrad.addColorStop(0, 'rgba(100, 64, 240, 0.25)');
-    laneGrad.addColorStop(1, 'rgba(100, 64, 240, 0.02)');
+    laneGrad.addColorStop(0, `${lc.grid} 0.25)`);
+    laneGrad.addColorStop(1, `${lc.grid} 0.02)`);
     ctx.strokeStyle = laneGrad;
     ctx.lineWidth = 1;
     ctx.stroke();
@@ -297,12 +325,12 @@ function drawPath() {
       if (z === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
     }
     const edgeGrad = ctx.createLinearGradient(0, H, 0, horizonY);
-    edgeGrad.addColorStop(0, COL.blue);
-    edgeGrad.addColorStop(0.5, COL.violet);
+    edgeGrad.addColorStop(0, lc.edge);
+    edgeGrad.addColorStop(0.5, lc.glow);
     edgeGrad.addColorStop(1, 'transparent');
     ctx.strokeStyle = edgeGrad;
     ctx.lineWidth = 2;
-    ctx.shadowColor = COL.blue;
+    ctx.shadowColor = lc.edge;
     ctx.shadowBlur = 12;
     ctx.stroke();
     ctx.shadowBlur = 0;
@@ -445,10 +473,10 @@ function drawOrb(o) {
     ctx.arc(x, y, r * 1.6, 0, Math.PI * 2);
     ctx.stroke();
   } else {
-    // Regular green orb
-    const r = 7 * s * pulseSz;
+    // Regular green orb — 2x size
+    const r = 14 * s * pulseSz;
     ctx.shadowColor = COL.neonGreen;
-    ctx.shadowBlur = 20 * s;
+    ctx.shadowBlur = 30 * s;
     ctx.fillStyle = COL.neonGreen;
     ctx.globalAlpha = 0.9;
     ctx.beginPath();
@@ -456,10 +484,17 @@ function drawOrb(o) {
     ctx.fill();
     // Inner bright core
     ctx.fillStyle = COL.softGreen;
-    ctx.globalAlpha = 0.6;
+    ctx.globalAlpha = 0.7;
     ctx.beginPath();
-    ctx.arc(x, y, r * 0.5, 0, Math.PI * 2);
+    ctx.arc(x, y, r * 0.45, 0, Math.PI * 2);
     ctx.fill();
+    // Outer glow ring
+    ctx.strokeStyle = COL.neonGreen;
+    ctx.globalAlpha = 0.2 + Math.sin(o.pulse * 2) * 0.15;
+    ctx.lineWidth = 1.5 * s;
+    ctx.beginPath();
+    ctx.arc(x, y, r * 1.5, 0, Math.PI * 2);
+    ctx.stroke();
   }
 
   ctx.shadowBlur = 0;
@@ -620,6 +655,22 @@ function checkCollisions() {
     const ox = getPathX(o.lane, o.z);
     const oy = getPathY(o.z) - 15 * getScale(o.z);
 
+    // Level up check
+    const newLevel = Math.floor((orbsCollected - 1) / ORBS_PER_LEVEL) + 1;
+    if (newLevel > level) {
+      level = newLevel;
+      levelUpFlash = 2.5;
+      slowMoTimer = 0.6;
+      screenFlash = 0.5;
+      const lc = getLevelColor();
+      screenFlashColor = lc.edge;
+      shakeDur = 0.15;
+      spawnBurst(W / 2, H * 0.4, lc.edge, 50, 6, 1.0, 7);
+      spawnBurst(W / 2, H * 0.4, lc.glow, 30, 4, 0.8, 5);
+      spawnBurst(W / 2, H * 0.4, COL.white, 15, 3, 0.5, 3);
+      floatingTexts.push({ text: `LEVEL ${level}!`, x: W / 2, y: H * 0.35, life: 2.5, maxLife: 2.5, color: lc.edge, size: 48 });
+    }
+
     if (o.premium) {
       // Premium orb — 5x points, massive explosion, screen flash
       const pts = 50 * Math.min(combo, 10);
@@ -632,10 +683,13 @@ function checkCollisions() {
       shakeDur = 0.12;
       floatingTexts.push({ text: `+${pts} BONUS`, x: ox, y: oy, life: 1.5, maxLife: 1.5, color: COL.gold, size: 26 });
     } else {
-      // Regular orb — beefier burst
+      // Regular orb — firework burst + green screen flash
       score += 10 * Math.min(combo, 10);
-      spawnBurst(ox, oy, COL.neonGreen, 24, 3.5, 0.7, 4.5);
-      spawnBurst(ox, oy, COL.softGreen, 12, 2.5, 0.5, 2.5);
+      spawnBurst(ox, oy, COL.neonGreen, 45, 5, 0.9, 6);
+      spawnBurst(ox, oy, COL.softGreen, 20, 3.5, 0.7, 4);
+      spawnBurst(ox, oy, COL.white, 8, 2, 0.4, 2);
+      screenFlash = 0.2;
+      screenFlashColor = COL.neonGreen;
     }
   }
 }
@@ -674,6 +728,7 @@ function resetGame() {
   particles = [];
   spawnTimer = 0; orbSpawnTimer = 0;
   lastMarkerDistance = 0; distanceMarkerFlash = 0; screenFlash = 0; floatingTexts = [];
+  level = 1; levelUpFlash = 0; slowMoTimer = 0;
   isNewHighScore = false;
 }
 
@@ -840,6 +895,10 @@ function drawHUD() {
   ctx.shadowBlur = 0;
   drawGlowText(`${orbsCollected}`, pad + 24, top + 52, 20, COL.softGreen, 'left', 6);
 
+  // Level
+  const lcHud = getLevelColor();
+  drawGlowText(`LV ${level}`, W - pad, top + 30, 20, lcHud.edge, 'right', 10);
+
   // Distance
   drawGlowText(`${Math.floor(distance)}m`, W - pad, top, 24, 'rgba(255,255,255,0.7)', 'right', 6);
 
@@ -965,9 +1024,17 @@ function update(dt) {
 
   if (state !== STATE.PLAYING) return;
 
+  // Slow-mo effect on level up
+  let effDt = dt;
+  if (slowMoTimer > 0) {
+    slowMoTimer -= dt;
+    effDt = dt * 0.35; // 35% speed during slow-mo
+  }
+  if (levelUpFlash > 0) levelUpFlash -= dt;
+
   // Distance + score
-  distance += speed * dt * 2;
-  score += speed * dt * 0.5;
+  distance += speed * effDt * 2;
+  score += speed * effDt * 0.5;
 
   // Speed increase
   speedTimer += dt;
