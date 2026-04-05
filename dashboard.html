@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-05-v91';
+    var APP_VERSION = '2026-04-05-v92';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -2923,33 +2923,37 @@
     }
     .streak-lottie-wrap dotlottie-player {
       position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
+      inset: -50%;
+      width: 200%;
+      height: 200%;
     }
     .streak-number {
       position: relative;
       z-index: 2;
-      font-size: 90px;
+      font-size: 100px;
       font-weight: 900;
       color: #fff;
-      text-shadow: 0 0 30px #7132F5, 0 0 60px rgba(255,69,0,0.6), 0 4px 20px rgba(0,0,0,0.5);
+      text-shadow: 0 0 40px #7132F5, 0 0 80px rgba(255,69,0,0.6), 0 4px 20px rgba(0,0,0,0.5);
       opacity: 0;
-      animation: streak-num-in 1.8s 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .streak-number.animate {
+      animation: streak-num-in 1.8s 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
     .streak-label {
       position: absolute;
       z-index: 2;
-      bottom: 32%;
+      bottom: 30%;
       left: 50%;
       transform: translateX(-50%);
-      font-size: 16px;
+      font-size: 17px;
       font-weight: 600;
-      color: rgba(255,255,255,0.8);
+      color: rgba(255,255,255,0.85);
       letter-spacing: 3px;
       text-transform: uppercase;
       opacity: 0;
-      animation: streak-label-in 1.2s 0.8s ease-out forwards;
+    }
+    .streak-label.animate {
+      animation: streak-label-in 1.2s 0.6s ease-out forwards;
     }
     @keyframes streak-num-in {
       0%   { opacity: 0; transform: scale(0.3); }
@@ -3074,9 +3078,9 @@
   <!-- Lottie Streak Celebration — visible by default, dismissed after animation or if no streak -->
   <div id="streak-celebration" class="streak-celebration">
     <div class="streak-lottie-wrap">
-      <dotlottie-player id="streak-lottie" src="https://assets-v2.lottiefiles.com/a/76caddfc-116a-11ee-aa25-6333db7b8d8c/GpI0uQYnKa.lottie" background="transparent" speed="1" style="width:100%;height:100%" direction="1" mode="normal"></dotlottie-player>
-      <div id="streak-number" class="streak-number">7</div>
-      <div id="streak-label" class="streak-label">day streak</div>
+      <dotlottie-player id="streak-lottie" src="https://assets-v2.lottiefiles.com/a/76caddfc-116a-11ee-aa25-6333db7b8d8c/GpI0uQYnKa.lottie" background="transparent" speed="0.8" style="width:100%;height:100%" direction="1" mode="normal"></dotlottie-player>
+      <div id="streak-number" class="streak-number"></div>
+      <div id="streak-label" class="streak-label"></div>
     </div>
   </div>
   <script>
@@ -4784,20 +4788,21 @@
       overlay.classList.add('dismissed');
     }
 
-    // Lottie celebration — overlay is already visible on screen
+    // Lottie celebration — overlay is already visible on screen (solid black)
     function showStreakCelebration(streakCount) {
       var overlay = document.getElementById('streak-celebration');
       var numberEl = document.getElementById('streak-number');
       var labelEl = document.getElementById('streak-label');
       var lottieEl = document.getElementById('streak-lottie');
       if (!overlay || !numberEl) return;
+      // Set the correct number and label
       numberEl.textContent = streakCount;
-      if (labelEl) labelEl.textContent = streakCount === 1 ? 'day streak' : 'day streak';
+      if (labelEl) labelEl.textContent = 'day streak';
       // Transition from pure black to subtle gradient
       overlay.classList.add('hiding');
-      // Reset animations
-      numberEl.style.animation = 'none'; numberEl.offsetHeight; numberEl.style.animation = '';
-      if (labelEl) { labelEl.style.animation = 'none'; labelEl.offsetHeight; labelEl.style.animation = ''; }
+      // Trigger number + label animations
+      numberEl.classList.remove('animate'); numberEl.offsetHeight; numberEl.classList.add('animate');
+      if (labelEl) { labelEl.classList.remove('animate'); labelEl.offsetHeight; labelEl.classList.add('animate'); }
       // Play lottie
       if (lottieEl) {
         try { lottieEl.stop(); } catch(e) {}
@@ -4813,7 +4818,7 @@
           overlay.style.transition = '';
           if (lottieEl) { try { lottieEl.stop(); } catch(e) {} }
         }, 1300);
-      }, 3400);
+      }, 3800);
     }
 
     function claimDailyStreak() {
