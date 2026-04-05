@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-05-v75';
+    var APP_VERSION = '2026-04-05-v76';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -157,6 +157,9 @@
     .wish-card-summary { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 16px; }
     .wish-card-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: var(--accent); color: var(--bg); border: none; border-radius: 8px; font: inherit; font-size: 0.82rem; font-weight: 600; cursor: pointer; box-shadow: 0 2px 8px rgba(120,80,220,0.3); transition: all 0.3s ease; }
     .wish-card-btn:hover { box-shadow: 0 4px 16px rgba(120,80,220,0.4); transform: translateY(-1px); }
+    .wish-card-footer { display: flex; align-items: center; justify-content: space-between; }
+    .wish-card-delete { width: 34px; height: 34px; border-radius: 50%; background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.2); color: #ef4444; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.15s; flex-shrink: 0; }
+    .wish-card-delete:hover { background: rgba(239,68,68,0.25); }
 
     /* Empty state */
     .empty { text-align: center; padding: 80px 24px; }
@@ -4799,9 +4802,31 @@
           '<div class="wish-card-title">' + (w.wish_title || 'Untitled') + '</div>' +
           '<div class="wish-card-date">' + date + '</div>' +
           '<div class="wish-card-summary">' + (w.wish_summary || '') + '</div>' +
-          '<button class="wish-card-btn">Open Roadmap &rarr;</button>' +
+          '<div class="wish-card-footer">' +
+            '<button class="wish-card-btn">Open Roadmap &rarr;</button>' +
+            '<button class="wish-card-delete" onclick="event.stopPropagation();deleteWish(' + i + ')" title="Delete wish">' +
+              '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>' +
+            '</button>' +
+          '</div>' +
         '</div>';
       }).join('');
+    }
+
+    async function deleteWish(idx) {
+      var w = wishes[idx];
+      if (!w) return;
+      if (!confirm('Delete "' + (w.wish_title || 'Untitled') + '"?')) return;
+      try {
+        var sb = getSupabase();
+        var { error } = await sb.from('user_wishes').delete().eq('id', w.id);
+        if (error) throw error;
+        wishes.splice(idx, 1);
+        renderWishes();
+        showToast('Wish deleted');
+      } catch (e) {
+        console.error('Delete wish error:', e);
+        showToast('Failed to delete', 'error');
+      }
     }
 
     function openWish(idx) {
