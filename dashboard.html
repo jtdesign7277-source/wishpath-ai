@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-05-v82';
+    var APP_VERSION = '2026-04-05-v83';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -9378,6 +9378,7 @@
     function renderHoldings() {
       _renderHoldingsInto('holdingsBody', 'holdingsTable', 'holdingsEmpty', 'portfolioTotalValue', 'portfolioDayPL', 'portfolioDayPLPct', 'portfolioTotalPL', 'portfolioTotalPLPct', 'portfolioPositionCount', 'portfolioChartContainer');
       _renderHoldingsInto('fmHoldingsBody', 'fmHoldingsTable', 'fmHoldingsEmpty', 'fmPortfolioTotalValue', 'fmPortfolioDayPL', 'fmPortfolioDayPLPct', 'fmPortfolioTotalPL', 'fmPortfolioTotalPLPct', 'fmPortfolioPositionCount', 'fmPortfolioChartContainer');
+      _renderHoldingsInto('mobileHoldingsBody', 'mobileHoldingsTable', 'mobileHoldingsEmpty', 'mobilePortfolioValue', 'mobilePortfolioDayPL', 'mobilePortfolioDayPLPct', 'mobilePortfolioTotalPL', 'mobilePortfolioTotalPLPct', 'mobilePortfolioPositionCount', 'mobilePortfolioChartContainer');
     }
 
     function _renderHoldingsInto(bodyId, tableId, emptyId, totalValId, dayPLId, dayPLPctId, totalPLId, totalPLPctId, posCountId, chartId) {
