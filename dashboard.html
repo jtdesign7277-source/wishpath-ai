@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-05-v103';
+    var APP_VERSION = '2026-04-05-v104';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -10538,42 +10538,81 @@
       return [{ label: '', value: '' }, { label: '', value: '' }, { label: '', value: '' }];
     }
     function generateCustomChart() {
-      var rows = document.querySelectorAll('#csDataRows .cs-data-row');
-      var data = [];
-      rows.forEach(function(row) {
-        var inputs = row.querySelectorAll('input');
-        var label = (inputs[0] || {}).value || '';
-        var val = parseFloat((inputs[1] || {}).value) || 0;
-        if (label.trim()) data.push({ label: label.trim(), value: val });
-      });
-      if (!data.length) return;
-      var template = getTemplateByName(_csFormTemplateName);
-      if (!template) return;
-      _activeChartStudioTemplate = _csFormTemplateName;
-      // Build a chart config from user data
-      var config = buildTemplateChartConfig(template);
-      // Replace placeholder data with user's real data
-      if (config.series && config.series[0] && config.series[0].data && config.series[0].data[0] && config.series[0].data[0].name) {
-        // Pie/donut chart
-        config.series[0].data = data.map(function(d) { return { name: d.label, y: d.value }; });
-      } else if (config.xAxis && config.xAxis.categories) {
-        // Bar/column/line chart
-        config.xAxis.categories = data.map(function(d) { return d.label; });
-        if (config.series && config.series[0]) config.series[0].data = data.map(function(d) { return d.value; });
+      try {
+        var rows = document.querySelectorAll('#csDataRows .cs-data-row');
+        var data = [];
+        rows.forEach(function(row) {
+          var inputs = row.querySelectorAll('input');
+          var label = (inputs[0] || {}).value || '';
+          var val = parseFloat((inputs[1] || {}).value) || 0;
+          if (label.trim()) data.push({ label: label.trim(), value: val });
+        });
+        if (!data.length) {
+          showToast('Please enter at least one row of data.');
+          return;
+        }
+        if (typeof Highcharts === 'undefined') {
+          showToast('Chart library is loading. Please try again.');
+          return;
+        }
+        var template = getTemplateByName(_csFormTemplateName);
+        if (!template) {
+          showToast('Template not found. Please try again.');
+          return;
+        }
+        _activeChartStudioTemplate = _csFormTemplateName;
+        var chartArea = document.getElementById('chartStudioChartArea');
+        if (!chartArea) {
+          showToast('Chart area not found.');
+          return;
+        }
+        // Determine chart type from template config
+        var baseConfig = buildTemplateChartConfig(template);
+        var chartType = (baseConfig.chart && baseConfig.chart.type) || 'column';
+        var isPie = chartType === 'pie';
+        // Build a clean chart config directly from user data
+        var config = {
+          chart: { type: chartType, height: 320, animation: true, backgroundColor: 'transparent', style: { fontFamily: 'inherit' } },
+          title: { text: template.name, style: { color: '#F0EFF5', fontSize: '15px' } },
+          subtitle: { text: 'Your custom data', style: { color: 'rgba(255,255,255,0.4)' } },
+          credits: { enabled: false },
+          legend: { itemStyle: { color: '#9CA3AF' } },
+          plotOptions: {}
+        };
+        if (isPie) {
+          // Pie / donut chart
+          var innerSize = (baseConfig.series && baseConfig.series[0] && baseConfig.series[0].innerSize) || '0%';
+          config.series = [{ name: template.name, innerSize: innerSize, data: data.map(function(d) { return { name: d.label, y: d.value }; }) }];
+        } else {
+          // Bar, column, line, area — single series from user data
+          config.xAxis = { categories: data.map(function(d) { return d.label; }), labels: { style: { color: '#9CA3AF' } } };
+          config.yAxis = { title: { text: '', style: { color: '#9CA3AF' } }, labels: { style: { color: '#9CA3AF' } }, gridLineColor: 'rgba(255,255,255,0.06)' };
+          var seriesColor = '#22c55e';
+          if (baseConfig.series && baseConfig.series[0] && baseConfig.series[0].color) seriesColor = baseConfig.series[0].color;
+          config.series = [{ name: template.name, color: seriesColor, data: data.map(function(d) { return d.value; }) }];
+          // For waterfall-type charts, color by point
+          if (baseConfig.plotOptions && baseConfig.plotOptions.column && baseConfig.plotOptions.column.colorByPoint) {
+            config.plotOptions.column = { colorByPoint: true };
+          }
+        }
+        // Make chart area visible and render
+        chartArea.style.display = 'block';
+        chartArea.style.minHeight = '340px';
+        renderHighchart('chartStudioChartArea', config);
+        // Show save bar
+        showCSSaveBar();
+        // Hide the form
+        var form = document.getElementById('csCustomDataForm');
+        if (form) form.style.display = 'none';
+        // Scroll to chart with a small delay to ensure render completes
+        setTimeout(function() {
+          var ca = document.getElementById('chartStudioChartArea');
+          if (ca) ca.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 150);
+      } catch(e) {
+        console.error('generateCustomChart error:', e);
+        showToast('Error creating chart: ' + (e.message || 'Unknown error'));
       }
-      // Update title
-      config.title = { text: template.name };
-      config.subtitle = { text: 'Your custom data' };
-      // Render
-      renderHighchart('chartStudioChartArea', config);
-      // Show save bar
-      showCSSaveBar();
-      // Hide the form
-      var form = document.getElementById('csCustomDataForm');
-      if (form) form.style.display = 'none';
-      // Scroll to chart
-      var chartArea = document.getElementById('chartStudioChartArea');
-      if (chartArea) chartArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     function primeChartStudioTemplateAssist(name, preserveExistingText, focusInput) {
