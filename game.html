@@ -77,7 +77,7 @@ const player = {
   x: 0, y: 0,
   jumpY: 0, jumpVel: 0, isJumping: false,
   slideTimer: 0, isSliding: false,
-  height: 72, width: 50,
+  height: 94, width: 65,
   animPhase: 0,
 };
 
@@ -232,237 +232,221 @@ function drawStars(time) {
   ctx.globalAlpha = 1;
 }
 
-// ─── ROCKET EVENT ───────────────────────────────────────────────
-let rocketEvent = null;
-let rocketCooldown = rand(30, 50); // first event 30-50s in
-
-const ROCKET_PHASES = { FLYING: 0, LANDING: 1, ALIEN: 2, FADING: 3 };
-
-function startRocketEvent() {
-  const fromLeft = Math.random() < 0.5;
-  const moonX = fromLeft ? rand(W * 0.6, W * 0.85) : rand(W * 0.15, W * 0.4);
-  const moonY = rand(H * 0.08, H * 0.2);
-  rocketEvent = {
-    phase: ROCKET_PHASES.FLYING,
-    timer: 0,
-    fromLeft,
-    // Rocket
-    rx: fromLeft ? -20 : W + 20,
-    ry: H * 0.35,
-    moonX, moonY,
-    moonR: rand(14, 20),
-    // Animation progress
-    flyDur: 2.5,
-    landDur: 0.6,
-    alienDur: 3.0,
-    fadeDur: 1.5,
-    // Alien state
-    alienY: 0, alienBounce: 0, alienWave: 0,
-    // Trail particles (local, lightweight)
-    trail: [],
-    alpha: 1,
-  };
+// ─── PERMANENT MOON ─────────────────────────────────────────────
+const MOON = { x: 0, y: 0, r: 32 };
+function initMoon() {
+  MOON.x = W * 0.82;
+  MOON.y = H * 0.1;
 }
+initMoon();
 
-function updateRocketEvent(dt) {
-  if (!rocketEvent) {
-    if (state === STATE.PLAYING) {
-      rocketCooldown -= dt;
-      if (rocketCooldown <= 0) {
-        startRocketEvent();
-        rocketCooldown = rand(35, 60);
-      }
-    }
-    return;
-  }
-  const re = rocketEvent;
-  re.timer += dt;
+function drawMoon() {
+  const mx = MOON.x, my = MOON.y, mr = MOON.r;
 
-  if (re.phase === ROCKET_PHASES.FLYING) {
-    const t = clamp(re.timer / re.flyDur, 0, 1);
-    // Arc from start to moon
-    const startX = re.fromLeft ? -20 : W + 20;
-    const startY = H * 0.35;
-    const cpX = (startX + re.moonX) / 2;
-    const cpY = Math.min(startY, re.moonY) - H * 0.15; // arc above
-    // Quadratic bezier
-    const mt = 1 - t;
-    re.rx = mt * mt * startX + 2 * mt * t * cpX + t * t * re.moonX;
-    re.ry = mt * mt * startY + 2 * mt * t * cpY + t * t * (re.moonY - re.moonR - 6);
-    // Flame trail
-    if (Math.random() < 0.7) {
-      re.trail.push({
-        x: re.rx + rand(-2, 2), y: re.ry + rand(3, 7),
-        vx: rand(-0.5, 0.5), vy: rand(0.5, 1.5),
-        life: rand(0.3, 0.6), maxLife: 0.6, size: rand(1.5, 3),
-      });
-    }
-    if (t >= 1) { re.phase = ROCKET_PHASES.LANDING; re.timer = 0; }
-  } else if (re.phase === ROCKET_PHASES.LANDING) {
-    // Brief settle
-    if (re.timer >= re.landDur) {
-      re.phase = ROCKET_PHASES.ALIEN;
-      re.timer = 0;
-      re.alienY = 0;
-    }
-  } else if (re.phase === ROCKET_PHASES.ALIEN) {
-    re.alienBounce += dt * 8;
-    re.alienWave += dt * 6;
-    re.alienY = Math.abs(Math.sin(re.alienBounce)) * 6;
-    if (re.timer >= re.alienDur) { re.phase = ROCKET_PHASES.FADING; re.timer = 0; }
-  } else if (re.phase === ROCKET_PHASES.FADING) {
-    re.alpha = 1 - clamp(re.timer / re.fadeDur, 0, 1);
-    if (re.timer >= re.fadeDur) { rocketEvent = null; return; }
-  }
+  // Soft outer glow
+  const glowGrad = ctx.createRadialGradient(mx, my, mr * 0.8, mx, my, mr * 2.5);
+  glowGrad.addColorStop(0, 'rgba(210, 200, 180, 0.08)');
+  glowGrad.addColorStop(1, 'transparent');
+  ctx.fillStyle = glowGrad;
+  ctx.fillRect(mx - mr * 3, my - mr * 3, mr * 6, mr * 6);
 
-  // Update trail
-  for (let i = re.trail.length - 1; i >= 0; i--) {
-    const p = re.trail[i];
-    p.x += p.vx * dt * 60; p.y += p.vy * dt * 60;
-    p.life -= dt;
-    if (p.life <= 0) re.trail.splice(i, 1);
-  }
-}
-
-function drawRocketEvent() {
-  if (!rocketEvent) return;
-  const re = rocketEvent;
-  ctx.globalAlpha = re.alpha * 0.85;
-
-  // ── Moon with craters ──
-  const mx = re.moonX, my = re.moonY, mr = re.moonR;
-  ctx.fillStyle = '#B0A89A';
-  ctx.shadowColor = '#D4C8B8';
-  ctx.shadowBlur = 8;
+  // Moon body — 3D gradient
+  const bodyGrad = ctx.createRadialGradient(mx - mr * 0.25, my - mr * 0.25, mr * 0.1, mx, my, mr);
+  bodyGrad.addColorStop(0, '#E0D8CC');
+  bodyGrad.addColorStop(0.5, '#C4BAA8');
+  bodyGrad.addColorStop(0.85, '#A09484');
+  bodyGrad.addColorStop(1, '#7A6E60');
+  ctx.fillStyle = bodyGrad;
   ctx.beginPath();
   ctx.arc(mx, my, mr, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
-  // Craters
-  ctx.fillStyle = '#8A8070';
-  const craters = [[0.25, -0.3, 0.18], [-0.35, 0.2, 0.14], [0.1, 0.35, 0.12], [-0.15, -0.15, 0.1]];
-  for (const [ox, oy, or] of craters) {
+
+  // Craters with depth
+  const craters = [
+    { ox: 0.3, oy: -0.25, r: 0.2 },
+    { ox: -0.35, oy: 0.25, r: 0.16 },
+    { ox: 0.05, oy: 0.35, r: 0.13 },
+    { ox: -0.2, oy: -0.15, r: 0.11 },
+    { ox: 0.25, oy: 0.1, r: 0.09 },
+    { ox: -0.1, oy: 0.05, r: 0.07 },
+    { ox: 0.4, oy: 0.2, r: 0.06 },
+  ];
+  for (const c of craters) {
+    const cx = mx + c.ox * mr, cy = my + c.oy * mr, cr = c.r * mr;
+    // Crater shadow (darker ring)
+    ctx.fillStyle = 'rgba(80, 70, 55, 0.5)';
     ctx.beginPath();
-    ctx.arc(mx + ox * mr, my + oy * mr, or * mr, 0, Math.PI * 2);
+    ctx.arc(cx, cy, cr, 0, Math.PI * 2);
+    ctx.fill();
+    // Crater floor (slightly lighter)
+    ctx.fillStyle = 'rgba(140, 128, 110, 0.4)';
+    ctx.beginPath();
+    ctx.arc(cx + cr * 0.15, cy + cr * 0.15, cr * 0.7, 0, Math.PI * 2);
     ctx.fill();
   }
 
-  // ── Flame trail ──
-  for (const p of re.trail) {
-    const a = clamp(p.life / p.maxLife, 0, 1) * re.alpha;
-    ctx.globalAlpha = a * 0.8;
-    const t = 1 - p.life / p.maxLife;
-    ctx.fillStyle = t < 0.3 ? '#FFD700' : t < 0.6 ? '#FF6B35' : '#FF3333';
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, p.size * (p.life / p.maxLife), 0, Math.PI * 2);
-    ctx.fill();
-  }
-  ctx.globalAlpha = re.alpha * 0.85;
+  // Subtle rim highlight (top-left lit edge)
+  ctx.strokeStyle = 'rgba(240, 235, 220, 0.15)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.arc(mx, my, mr - 1, -Math.PI * 0.8, -Math.PI * 0.1);
+  ctx.stroke();
+}
 
-  // ── Rocket ──
-  if (re.phase <= ROCKET_PHASES.LANDING) {
-    const rx = re.phase === ROCKET_PHASES.LANDING ? re.moonX : re.rx;
-    const ry = re.phase === ROCKET_PHASES.LANDING ? re.moonY - mr - 6 - (re.landDur - re.timer) * 2 : re.ry;
-    ctx.fillStyle = '#E8E0D8';
-    // Body
-    ctx.beginPath();
-    ctx.moveTo(rx, ry - 8);
-    ctx.lineTo(rx - 4, ry + 5);
-    ctx.lineTo(rx + 4, ry + 5);
-    ctx.closePath();
-    ctx.fill();
-    // Nose cone
-    ctx.fillStyle = '#f87171';
-    ctx.beginPath();
-    ctx.moveTo(rx, ry - 8);
-    ctx.lineTo(rx - 2.5, ry - 3);
-    ctx.lineTo(rx + 2.5, ry - 3);
-    ctx.closePath();
-    ctx.fill();
-    // Window
-    ctx.fillStyle = '#60A5FA';
-    ctx.beginPath();
-    ctx.arc(rx, ry - 1, 1.5, 0, Math.PI * 2);
-    ctx.fill();
-    // Fins
-    ctx.fillStyle = '#f87171';
-    ctx.beginPath();
-    ctx.moveTo(rx - 4, ry + 3); ctx.lineTo(rx - 6, ry + 7); ctx.lineTo(rx - 3, ry + 5);
-    ctx.closePath();
-    ctx.fill();
-    ctx.beginPath();
-    ctx.moveTo(rx + 4, ry + 3); ctx.lineTo(rx + 6, ry + 7); ctx.lineTo(rx + 3, ry + 5);
-    ctx.closePath();
-    ctx.fill();
-  }
+// ─── ROCKET CYCLE (lands/takes off from permanent moon) ─────────
+let rocketState = { phase: 'waiting', timer: 0, trail: [] };
+// Phases: waiting → arriving → parked → departing → waiting
+const ROCKET_CYCLE_TIME = 300; // ~5 min between events
 
-  // Landed rocket (stays on moon)
-  if (re.phase >= ROCKET_PHASES.ALIEN) {
-    const rx = re.moonX + mr * 0.35;
-    const ry = re.moonY - mr - 3;
-    ctx.fillStyle = '#E8E0D8';
-    ctx.beginPath();
-    ctx.moveTo(rx, ry - 6); ctx.lineTo(rx - 3, ry + 4); ctx.lineTo(rx + 3, ry + 4);
-    ctx.closePath();
-    ctx.fill();
-    ctx.fillStyle = '#f87171';
-    ctx.beginPath();
-    ctx.moveTo(rx, ry - 6); ctx.lineTo(rx - 2, ry - 2); ctx.lineTo(rx + 2, ry - 2);
-    ctx.closePath();
-    ctx.fill();
-  }
+function updateRocket(dt) {
+  if (state !== STATE.PLAYING) return;
+  const rs = rocketState;
+  rs.timer += dt;
 
-  // ── Alien ──
-  if (re.phase >= ROCKET_PHASES.ALIEN) {
-    const ax = re.moonX - mr * 0.3;
-    const ay = re.moonY - mr - 2 - re.alienY;
-    // Body — green blob
-    ctx.fillStyle = '#50FFA0';
-    ctx.beginPath();
-    ctx.ellipse(ax, ay, 3, 4, 0, 0, Math.PI * 2);
-    ctx.fill();
-    // Head
-    ctx.fillStyle = '#00FF78';
-    ctx.beginPath();
-    ctx.arc(ax, ay - 5, 3, 0, Math.PI * 2);
-    ctx.fill();
-    // Eyes
-    ctx.fillStyle = '#0f0f0f';
-    ctx.beginPath();
-    ctx.arc(ax - 1.2, ay - 5.5, 0.8, 0, Math.PI * 2);
-    ctx.arc(ax + 1.2, ay - 5.5, 0.8, 0, Math.PI * 2);
-    ctx.fill();
-    // Antennae
-    ctx.strokeStyle = '#50FFA0';
-    ctx.lineWidth = 0.8;
-    ctx.beginPath();
-    ctx.moveTo(ax - 1.5, ay - 7.5);
-    ctx.lineTo(ax - 3, ay - 11);
-    ctx.moveTo(ax + 1.5, ay - 7.5);
-    ctx.lineTo(ax + 3, ay - 11);
-    ctx.stroke();
-    // Antenna tips
-    ctx.fillStyle = '#FFD700';
-    ctx.beginPath();
-    ctx.arc(ax - 3, ay - 11, 1, 0, Math.PI * 2);
-    ctx.arc(ax + 3, ay - 11, 1, 0, Math.PI * 2);
-    ctx.fill();
-    // Waving arm
-    const waveAngle = Math.sin(re.alienWave) * 0.6;
-    ctx.strokeStyle = '#50FFA0';
-    ctx.lineWidth = 1.2;
-    ctx.beginPath();
-    ctx.moveTo(ax + 3, ay - 1);
-    ctx.lineTo(ax + 3 + Math.cos(waveAngle - 1) * 5, ay - 1 + Math.sin(waveAngle - 1) * 5);
-    ctx.stroke();
-    // Little hand
-    ctx.fillStyle = '#50FFA0';
-    ctx.beginPath();
-    ctx.arc(ax + 3 + Math.cos(waveAngle - 1) * 5, ay - 1 + Math.sin(waveAngle - 1) * 5, 1, 0, Math.PI * 2);
-    ctx.fill();
+  if (rs.phase === 'waiting') {
+    if (rs.timer >= ROCKET_CYCLE_TIME) {
+      rs.phase = 'arriving';
+      rs.timer = 0;
+      rs.fromLeft = Math.random() < 0.5;
+      rs.rx = rs.fromLeft ? -20 : W + 20;
+      rs.ry = H * 0.4;
+      rs.flyDur = 3.0;
+      rs.trail = [];
+    }
+  } else if (rs.phase === 'arriving') {
+    const t = clamp(rs.timer / rs.flyDur, 0, 1);
+    const startX = rs.fromLeft ? -20 : W + 20;
+    const startY = H * 0.4;
+    const targetX = MOON.x + MOON.r * 0.35;
+    const targetY = MOON.y - MOON.r - 8;
+    const cpX = (startX + targetX) / 2;
+    const cpY = Math.min(startY, targetY) - H * 0.18;
+    const mt = 1 - t;
+    rs.rx = mt * mt * startX + 2 * mt * t * cpX + t * t * targetX;
+    rs.ry = mt * mt * startY + 2 * mt * t * cpY + t * t * targetY;
+    // Landing deceleration = bigger flames near end
+    const flameSize = 1 + t * 2;
+    if (Math.random() < 0.85) {
+      for (let i = 0; i < 2; i++) {
+        rs.trail.push({
+          x: rs.rx + rand(-3, 3), y: rs.ry + rand(5, 10),
+          vx: rand(-0.8, 0.8), vy: rand(0.8, 2.5) * flameSize,
+          life: rand(0.3, 0.7), maxLife: 0.7, size: rand(2, 4) * flameSize,
+          type: Math.random() < 0.3 ? 'smoke' : 'fire',
+        });
+      }
+    }
+    if (t >= 1) { rs.phase = 'parked'; rs.timer = 0; }
+  } else if (rs.phase === 'parked') {
+    if (rs.timer >= ROCKET_CYCLE_TIME) {
+      rs.phase = 'departing';
+      rs.timer = 0;
+      rs.rx = MOON.x + MOON.r * 0.35;
+      rs.ry = MOON.y - MOON.r - 8;
+      rs.exitLeft = Math.random() < 0.5;
+      rs.flyDur = 3.0;
+      rs.trail = [];
+      // Big liftoff smoke burst
+      for (let i = 0; i < 15; i++) {
+        rs.trail.push({
+          x: rs.rx + rand(-5, 5), y: rs.ry + rand(5, 12),
+          vx: rand(-1.5, 1.5), vy: rand(0.5, 3),
+          life: rand(0.5, 1.2), maxLife: 1.2, size: rand(3, 6),
+          type: 'smoke',
+        });
+      }
+    }
+  } else if (rs.phase === 'departing') {
+    const t = clamp(rs.timer / rs.flyDur, 0, 1);
+    const startX = MOON.x + MOON.r * 0.35;
+    const startY = MOON.y - MOON.r - 8;
+    const endX = rs.exitLeft ? -30 : W + 30;
+    const endY = H * 0.45;
+    const cpX = (startX + endX) / 2;
+    const cpY = Math.min(startY, endY) - H * 0.2;
+    const mt = 1 - t;
+    rs.rx = mt * mt * startX + 2 * mt * t * cpX + t * t * endX;
+    rs.ry = mt * mt * startY + 2 * mt * t * cpY + t * t * endY;
+    // Big flames on takeoff, reducing as it flies
+    const flameSize = Math.max(0.5, 3 - t * 2.5);
+    if (Math.random() < 0.9) {
+      for (let i = 0; i < 3; i++) {
+        rs.trail.push({
+          x: rs.rx + rand(-3, 3), y: rs.ry + rand(5, 10),
+          vx: rand(-1, 1), vy: rand(1, 3) * flameSize,
+          life: rand(0.3, 0.8), maxLife: 0.8, size: rand(2, 5) * flameSize,
+          type: Math.random() < 0.25 ? 'smoke' : 'fire',
+        });
+      }
+    }
+    if (t >= 1) { rs.phase = 'waiting'; rs.timer = 0; rs.trail = []; }
   }
 
+  // Update trail particles
+  for (let i = rs.trail.length - 1; i >= 0; i--) {
+    const p = rs.trail[i];
+    p.x += p.vx * dt * 60; p.y += p.vy * dt * 60;
+    p.vy *= 0.98; // slight drag
+    p.life -= dt;
+    if (p.life <= 0) rs.trail.splice(i, 1);
+  }
+}
+
+function drawRocketShip(rx, ry) {
+  // Body
+  ctx.fillStyle = '#E8E0D8';
+  ctx.beginPath();
+  ctx.moveTo(rx, ry - 10); ctx.lineTo(rx - 5, ry + 6); ctx.lineTo(rx + 5, ry + 6);
+  ctx.closePath();
+  ctx.fill();
+  // Nose cone
+  ctx.fillStyle = '#f87171';
+  ctx.beginPath();
+  ctx.moveTo(rx, ry - 10); ctx.lineTo(rx - 3, ry - 3); ctx.lineTo(rx + 3, ry - 3);
+  ctx.closePath();
+  ctx.fill();
+  // Window
+  ctx.fillStyle = '#60A5FA';
+  ctx.beginPath();
+  ctx.arc(rx, ry - 1, 2, 0, Math.PI * 2);
+  ctx.fill();
+  // Fins
+  ctx.fillStyle = '#f87171';
+  ctx.beginPath();
+  ctx.moveTo(rx - 5, ry + 3); ctx.lineTo(rx - 8, ry + 8); ctx.lineTo(rx - 3, ry + 6);
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(rx + 5, ry + 3); ctx.lineTo(rx + 8, ry + 8); ctx.lineTo(rx + 3, ry + 6);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawRocket() {
+  const rs = rocketState;
+
+  // Draw trail
+  for (const p of rs.trail) {
+    const a = clamp(p.life / p.maxLife, 0, 1);
+    ctx.globalAlpha = a * 0.75;
+    if (p.type === 'smoke') {
+      ctx.fillStyle = `rgba(180, 170, 160, ${a * 0.5})`;
+    } else {
+      const t = 1 - p.life / p.maxLife;
+      ctx.fillStyle = t < 0.25 ? '#FFEC80' : t < 0.5 ? '#FFD700' : t < 0.75 ? '#FF6B35' : '#FF3333';
+    }
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size * a, 0, Math.PI * 2);
+    ctx.fill();
+  }
   ctx.globalAlpha = 1;
+
+  // Draw rocket in flying or parked states
+  if (rs.phase === 'arriving' || rs.phase === 'departing') {
+    drawRocketShip(rs.rx, rs.ry);
+  } else if (rs.phase === 'parked') {
+    drawRocketShip(MOON.x + MOON.r * 0.35, MOON.y - MOON.r - 8);
+  }
 }
 
 function updateParticles(dt) {
@@ -632,39 +616,74 @@ function drawObstacle(o) {
   const y = getPathY(o.z);
   const s = getScale(o.z);
   const w = 30 * s;
+  const time = performance.now() * 0.003;
+  // Pulsing color shift red↔magenta
+  const pulse = Math.sin(time + o.z * 10) * 0.5 + 0.5;
+  const r = Math.floor(lerp(248, 220, pulse));
+  const g = Math.floor(lerp(80, 50, pulse));
+  const b = Math.floor(lerp(113, 200, pulse));
+  const baseCol = `rgb(${r},${g},${b})`;
+  const glowCol = `rgba(${r},${g},${b},0.8)`;
 
   if (o.type === 'tall') {
     const h = 50 * s;
-    ctx.fillStyle = 'rgba(248, 113, 113, 0.7)';
-    ctx.shadowColor = COL.red;
-    ctx.shadowBlur = 15 * s;
+    // Crystal gradient body
+    const grad = ctx.createLinearGradient(x - w / 2, y - h, x + w / 2, y);
+    grad.addColorStop(0, `rgba(${r},${g},${b},0.85)`);
+    grad.addColorStop(0.5, `rgba(${Math.min(255, r + 40)},${g + 20},${Math.min(255, b + 30)},0.7)`);
+    grad.addColorStop(1, `rgba(${r},${g},${b},0.6)`);
+    ctx.shadowColor = baseCol;
+    ctx.shadowBlur = 20 * s;
+    ctx.fillStyle = grad;
     ctx.fillRect(x - w / 2, y - h, w, h);
+    // Shimmer highlight
+    ctx.fillStyle = `rgba(255,255,255,${0.1 + pulse * 0.15})`;
+    ctx.fillRect(x - w * 0.15, y - h, w * 0.15, h);
     // Top edge glow
-    ctx.fillStyle = 'rgba(248, 113, 113, 0.9)';
+    ctx.fillStyle = glowCol;
     ctx.fillRect(x - w / 2, y - h, w, 3 * s);
+    // Sparkle particles (2-3 per frame when close)
+    if (s > 0.4 && Math.random() < 0.3) {
+      spawnParticle(x + rand(-w / 2, w / 2), y - rand(0, h),
+        Math.random() < 0.5 ? '#FF88AA' : '#FFaacc',
+        rand(-0.5, 0.5), rand(-0.5, 0.5), rand(0.2, 0.4), rand(1, 2.5) * s, 0);
+    }
     ctx.shadowBlur = 0;
   } else if (o.type === 'low') {
     const h = 18 * s;
     const barY = y - 30 * s;
-    ctx.fillStyle = 'rgba(248, 113, 113, 0.6)';
-    ctx.shadowColor = COL.red;
-    ctx.shadowBlur = 12 * s;
+    const grad = ctx.createLinearGradient(x - w / 2, barY, x + w / 2, barY + h);
+    grad.addColorStop(0, `rgba(${r},${g},${b},0.75)`);
+    grad.addColorStop(0.5, `rgba(${Math.min(255, r + 30)},${g + 15},${Math.min(255, b + 25)},0.6)`);
+    grad.addColorStop(1, `rgba(${r},${g},${b},0.5)`);
+    ctx.shadowColor = baseCol;
+    ctx.shadowBlur = 15 * s;
+    ctx.fillStyle = grad;
     ctx.fillRect(x - w / 2, barY, w, h);
-    // Posts
-    ctx.fillStyle = 'rgba(248, 113, 113, 0.4)';
+    // Shimmer
+    ctx.fillStyle = `rgba(255,255,255,${0.08 + pulse * 0.12})`;
+    ctx.fillRect(x - w * 0.1, barY, w * 0.1, h);
+    // Posts with glow
+    ctx.fillStyle = `rgba(${r},${g},${b},0.4)`;
     ctx.fillRect(x - w / 2, barY + h, 3 * s, y - barY - h);
     ctx.fillRect(x + w / 2 - 3 * s, barY + h, 3 * s, y - barY - h);
+    if (s > 0.4 && Math.random() < 0.2) {
+      spawnParticle(x + rand(-w / 2, w / 2), barY + rand(0, h),
+        '#FF88AA', rand(-0.3, 0.3), rand(-0.3, 0.3), rand(0.15, 0.3), rand(1, 2) * s, 0);
+    }
     ctx.shadowBlur = 0;
   } else if (o.type === 'gap') {
-    // Draw gap as missing path section
     const e = getPathEdges(o.z);
     const laneW = e.width / LANE_COUNT;
     const lx = e.left + laneW * Math.floor(o.lane);
     ctx.fillStyle = 'rgba(15, 15, 15, 0.95)';
     ctx.fillRect(lx, y - 6 * s, laneW, 12 * s);
-    ctx.strokeStyle = 'rgba(248, 113, 113, 0.5)';
+    ctx.strokeStyle = glowCol;
+    ctx.shadowColor = baseCol;
+    ctx.shadowBlur = 8 * s;
     ctx.lineWidth = 1;
     ctx.strokeRect(lx, y - 6 * s, laneW, 12 * s);
+    ctx.shadowBlur = 0;
   }
 }
 
@@ -742,8 +761,8 @@ function updatePlayer(dt) {
   } else {
     player.lane = lerp(player.lane, player.targetLane, 0.45 * dt * 60);
   }
-  player.x = getPathX(player.lane, 0.08);
-  player.y = getPathY(0.08);
+  player.x = getPathX(player.lane, 0.14);
+  player.y = getPathY(0.14);
 
   // Jump physics
   if (player.isJumping) {
@@ -792,7 +811,7 @@ function updatePlayer(dt) {
 function drawPlayer() {
   const x = player.x;
   let y = player.y + player.jumpY;
-  const s = getScale(0.08);
+  const s = getScale(0.14);
   const bob = Math.sin(player.animPhase) * 1.5;
   const tilt = Math.sin(player.animPhase * 0.7) * 0.04;
 
@@ -919,7 +938,7 @@ function drawPlayer() {
 
 // ─── COLLISION ──────────────────────────────────────────────────
 function checkCollisions() {
-  const pz = 0.08;
+  const pz = 0.14;
   const hitZone = 0.035;
 
   for (const o of obstacles) {
@@ -984,12 +1003,23 @@ function checkCollisions() {
       shakeDur = 0.12;
       floatingTexts.push({ text: `+${pts} BONUS`, x: ox, y: oy, life: 1.5, maxLife: 1.5, color: COL.gold, size: 26 });
     } else {
-      // Regular orb — firework burst + green screen flash
+      // Regular orb �� MASSIVE shatter explosion
       score += 10 * Math.min(combo, 10);
-      spawnBurst(ox, oy, COL.neonGreen, 45, 5, 0.9, 6);
-      spawnBurst(ox, oy, COL.softGreen, 20, 3.5, 0.7, 4);
-      spawnBurst(ox, oy, COL.white, 8, 2, 0.4, 2);
-      screenFlash = 0.2;
+      // Main green dust cloud (60 particles)
+      spawnBurst(ox, oy, COL.neonGreen, 60, 6, 1.1, 5);
+      // Secondary softer green ring (25 particles)
+      spawnBurst(ox, oy, COL.softGreen, 25, 4.5, 0.9, 3.5);
+      // Tiny bright sparks (15 particles, fast)
+      spawnBurst(ox, oy, COL.white, 15, 7, 0.5, 2);
+      // Mini green orbs flying out (10 larger particles)
+      for (let i = 0; i < 10; i++) {
+        const angle = rand(0, Math.PI * 2);
+        const spd = rand(2, 5);
+        spawnParticle(ox, oy, COL.neonGreen,
+          Math.cos(angle) * spd, Math.sin(angle) * spd,
+          rand(0.4, 0.8), rand(4, 7), 0.04);
+      }
+      screenFlash = 0.3;
       screenFlashColor = COL.neonGreen;
     }
   }
@@ -1030,7 +1060,7 @@ function resetGame() {
   spawnTimer = 0; orbSpawnTimer = 0;
   lastMarkerDistance = 0; distanceMarkerFlash = 0; screenFlash = 0; floatingTexts = [];
   level = 1; levelUpFlash = 0; slowMoTimer = 0;
-  rocketEvent = null; rocketCooldown = rand(30, 50);
+  rocketState = { phase: 'waiting', timer: rand(250, 300), trail: [] };
   isNewHighScore = false;
 }
 
@@ -1042,7 +1072,7 @@ let verticalSwipeDone = false;
 
 function screenXToLane(screenX) {
   // Map screen X position to lane 0-2 (continuous)
-  const e = getPathEdges(0.08);
+  const e = getPathEdges(0.14);
   const t = (screenX - e.left) / e.width;
   return clamp(t * LANE_COUNT - 0.5, 0, 2);
 }
@@ -1374,7 +1404,7 @@ function drawGameOverScreen() {
 // ─── MAIN LOOP ──────────────────────────────────────────────────
 function update(dt) {
   updateStars(dt);
-  updateRocketEvent(dt);
+  updateRocket(dt);
   updateParticles(dt);
   updateFloatingTexts(dt);
 
@@ -1470,7 +1500,8 @@ function draw() {
   ctx.translate(shakeX, shakeY);
 
   drawStars(performance.now());
-  drawRocketEvent();
+  drawMoon();
+  drawRocket();
   drawPath();
 
   // Draw far objects first (sorted by z descending)
