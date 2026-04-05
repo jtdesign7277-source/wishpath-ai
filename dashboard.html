@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-05-v101';
+    var APP_VERSION = '2026-04-05-v102';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -1823,6 +1823,8 @@
     .saved-chart-list { display: flex; flex-direction: column; gap: 8px; }
     .saved-chart-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06); background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%); cursor: pointer; transition: all 0.2s ease; }
     .saved-chart-item:hover { border-color: rgba(120,80,220,0.18); box-shadow: 0 8px 20px rgba(0,0,0,0.26), 0 0 12px rgba(120,80,220,0.08); }
+    .saved-chart-delete { width: 30px; height: 30px; border-radius: 8px; border: none; background: rgba(220,38,38,0.1); color: rgba(220,38,38,0.7); cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s ease; -webkit-tap-highlight-color: transparent; }
+    .saved-chart-delete:active { background: rgba(220,38,38,0.25); color: #dc2626; }
     .saved-chart-item-icon { width: 32px; height: 32px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; background: rgba(120,80,220,0.08); color: var(--accent); font-size: 16px; flex-shrink: 0; }
     .saved-chart-item-info { min-width: 0; flex: 1; }
     .saved-chart-item-title { font-size: 0.82rem; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -4747,11 +4749,28 @@
     var _streakCount = 0;
     var _streakLastDate = null;
 
-    function loadStreak() {
+    async function loadStreak() {
       try {
-        var stored = JSON.parse(localStorage.getItem('wp_streak') || '{}');
-        _streakCount = stored.count || 0;
-        _streakLastDate = stored.lastDate || null;
+        // Try loading from Supabase first (syncs across devices)
+        if (currentUserId) {
+          var sb = getSupabase();
+          var { data } = await sb.from('user_profiles').select('streak_count, streak_last_date').eq('id', currentUserId).single();
+          if (data && data.streak_count !== undefined && data.streak_count !== null) {
+            _streakCount = data.streak_count || 0;
+            _streakLastDate = data.streak_last_date || null;
+          } else {
+            // Migrate from localStorage if Supabase has no streak yet
+            var stored = JSON.parse(localStorage.getItem('wp_streak') || '{}');
+            _streakCount = stored.count || 0;
+            _streakLastDate = stored.lastDate || null;
+          }
+        } else {
+          // Fallback to localStorage if no user
+          var stored = JSON.parse(localStorage.getItem('wp_streak') || '{}');
+          _streakCount = stored.count || 0;
+          _streakLastDate = stored.lastDate || null;
+        }
+        // Check if streak is broken (missed more than 1 day)
         if (_streakLastDate) {
           var last = new Date(_streakLastDate);
           var now = new Date();
@@ -4759,25 +4778,29 @@
           if (diffDays > 1) {
             _streakCount = 0;
             _streakLastDate = null;
-            saveStreakLocal();
           }
         }
-        // Auto-claim on login
         autoClaim();
       } catch(e) { _streakCount = 0; updateStreakUI(); }
     }
 
-    function saveStreakLocal() {
+    async function saveStreak() {
+      // Save to both localStorage (instant) and Supabase (syncs)
       try {
         localStorage.setItem('wp_streak', JSON.stringify({ count: _streakCount, lastDate: _streakLastDate }));
       } catch(e) {}
+      if (currentUserId) {
+        try {
+          var sb = getSupabase();
+          await sb.from('user_profiles').update({ streak_count: _streakCount, streak_last_date: _streakLastDate }).eq('id', currentUserId);
+        } catch(e) { console.error('Streak sync error:', e); }
+      }
     }
 
     function autoClaim() {
       var today = new Date().toISOString().split('T')[0];
       var alreadyClaimed = (_streakLastDate === today);
       if (!alreadyClaimed) {
-        // Check if continuing streak or starting fresh
         if (_streakLastDate) {
           var last = new Date(_streakLastDate);
           var now = new Date(today);
@@ -4786,10 +4809,9 @@
         }
         _streakCount++;
         _streakLastDate = today;
-        saveStreakLocal();
+        saveStreak();
       }
       updateStreakUI();
-      // Celebration is visible by default (covers screen on load)
       if (_streakCount > 0) {
         setTimeout(function() { showStreakCelebration(_streakCount); }, 300);
       } else {
@@ -5261,15 +5283,15 @@
       renderTabBar();
       renderActiveTab();
 
-      // If it's a roadmap tab, sync the dropdown and load the correct conversation
+      // If it's a roadmap tab, ALWAYS sync the dropdown and load the correct conversation
       if (id && id.startsWith('roadmap-')) {
         var idx = parseInt(id.replace('roadmap-', ''));
         var wish = wishes[idx];
         if (wish) {
           var sel = document.getElementById('coachSelect');
-          if (sel.value != idx) {
-            sel.value = idx;
-            // Save + load in background — don't block the tab switch
+          sel.value = idx;
+          // Always save + load conversation when switching tabs
+          if (currentWishId !== wish.id) {
             (async function() {
               try {
                 if (currentWishId && coachHistory.length > 0) {
@@ -9995,7 +10017,7 @@
         return '<div class="saved-chart-item" onclick="openSavedChartTemplate(\'' + entry.id + '\')">' +
           '<div class="saved-chart-item-icon">' + icon + '</div>' +
           '<div class="saved-chart-item-info"><div class="saved-chart-item-title">' + getSavedChartTitle(entry).replace(/</g,'&lt;') + '</div><div class="saved-chart-item-meta">' + (entry.templateName || 'Custom Chart').replace(/</g,'&lt;') + ' • ' + savedAt + '</div></div>' +
-          '<div class="tmpl-arrow">›</div></div>';
+          '<button class="saved-chart-delete" onclick="event.stopPropagation();deleteSavedChart(\'' + entry.id + '\',this)" title="Delete chart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></button></div>';
       }).join('') + '</div>';
     }
 
@@ -10013,6 +10035,30 @@
         var icon = getSavedChartTemplateIcon(entry.templateName);
         return '<div class="sidebar-folder"><div class="sidebar-chat-item" onclick="openSavedChartTemplate(\'' + entry.id + '\')" title="' + getSavedChartTitle(entry).replace(/"/g, '&quot;') + '">' + icon + ' ' + getSavedChartTitle(entry).replace(/</g,'&lt;') + '</div></div>';
       }).join('');
+    }
+
+    async function deleteSavedChart(chartId, btnEl) {
+      try {
+        var item = btnEl ? btnEl.closest('.saved-chart-item') : null;
+        if (item) {
+          item.style.transition = 'opacity 0.25s ease, max-height 0.3s ease';
+          item.style.maxHeight = item.offsetHeight + 'px';
+          item.offsetHeight;
+          item.style.opacity = '0';
+          item.style.maxHeight = '0';
+          item.style.overflow = 'hidden';
+          item.style.padding = '0';
+          item.style.margin = '0';
+          item.style.border = 'none';
+        }
+        var sb = getSupabase();
+        await sb.from('user_notes').delete().eq('id', chartId);
+        savedChartTemplates = savedChartTemplates.filter(function(t) { return t.id !== chartId; });
+        setTimeout(function() {
+          renderSavedChartTemplates();
+          renderSidebarSavedChartTemplates();
+        }, 300);
+      } catch(e) { console.error('Error deleting saved chart:', e); }
     }
 
     function openSavedChartTemplate(savedId) {
