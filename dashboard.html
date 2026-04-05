@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-05-v76';
+    var APP_VERSION = '2026-04-05-v77';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -2886,9 +2886,42 @@
       color: rgba(255,255,255,0.4);
     }
 
+    /* ── Streak Celebration Overlay ── */
+    .streak-celebration {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 99999;
+      display: flex; align-items: center; justify-content: center;
+      pointer-events: none; opacity: 0; transition: opacity 0.3s;
+    }
+    .streak-celebration.active { opacity: 1; }
+    .streak-celebration-inner {
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      animation: streakGrow 1.2s ease-out forwards;
+    }
+    .streak-celebration-flame { font-size: 48px; }
+    .streak-celebration-number { font-size: 64px; font-weight: 900; color: #fff; line-height: 1; }
+    .streak-celebration-label { font-size: 14px; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+    @keyframes streakGrow {
+      0% { transform: scale(0.3); opacity: 0; }
+      40% { transform: scale(1.15); opacity: 1; }
+      60% { transform: scale(1); opacity: 1; }
+      85% { transform: scale(1.05); opacity: 1; }
+      100% { transform: scale(1.8); opacity: 0; }
+    }
+    .confetti-piece {
+      position: fixed; width: 8px; height: 8px; border-radius: 2px; z-index: 100000;
+      pointer-events: none; animation: confettiFall 1.4s ease-out forwards;
+    }
+    @keyframes confettiFall {
+      0% { opacity: 1; transform: translateY(0) rotate(0deg) scale(1); }
+      100% { opacity: 0; transform: translateY(200px) rotate(720deg) scale(0.3); }
+    }
+    /* ── Streak in sidebar ── */
+    .sidebar-streak { display: inline-flex; align-items: center; gap: 3px; margin-left: 6px; }
+    .sidebar-streak-flame { font-size: 14px; line-height: 1; animation: flame-flicker 1.2s infinite alternate ease-in-out; }
+    .sidebar-streak-count { font-size: 12px; font-weight: 700; color: #F0EFF5; }
     /* ── Streak Counter — clean, no pill ── */
     .streak-container {
-      display: flex; align-items: center; gap: 4px;
+      display: none !important; /* moved to sidebar */
       background: none; border: none; box-shadow: none;
       padding: 0;
       cursor: pointer;
@@ -2990,6 +3023,14 @@
       <button class="mobile-fm-menu-item" data-fm-tab="fmOverview" onclick="selectMobileFMTab('fmOverview')"><span class="mobile-fm-menu-icon">&#x1F30D;</span><span class="mobile-fm-menu-label">Market Overview</span></button>
       <button class="mobile-fm-menu-item" data-fm-tab="fmCalendar" onclick="selectMobileFMTab('fmCalendar')"><span class="mobile-fm-menu-icon">&#x1F4C5;</span><span class="mobile-fm-menu-label">Economic Calendar</span></button>
       <button class="mobile-fm-menu-item" data-fm-tab="fmTechAnalysis" onclick="selectMobileFMTab('fmTechAnalysis')"><span class="mobile-fm-menu-icon">&#x1F4CA;</span><span class="mobile-fm-menu-label">Technical Analysis</span></button>
+    </div>
+  </div>
+  <!-- Streak Celebration Overlay -->
+  <div class="streak-celebration" id="streakCelebration">
+    <div class="streak-celebration-inner">
+      <div class="streak-celebration-flame">&#x1F525;</div>
+      <div class="streak-celebration-number" id="streakCelebrationNumber">1</div>
+      <div class="streak-celebration-label">day streak</div>
     </div>
   </div>
   <div class="holding-action-overlay" id="holdingActionOverlay" onclick="if(event.target===this)closeHoldingActions()">
@@ -3113,6 +3154,10 @@
       <div class="sidebar-bottom-row">
         <div class="plan-badge" id="planBadge">Free Plan</div>
         <div class="user-email" id="userEmail"></div>
+        <span class="sidebar-streak" id="sidebarStreak">
+          <span class="sidebar-streak-flame">&#x1F525;</span>
+          <span class="sidebar-streak-count" id="sidebarStreakCount">0</span>
+        </span>
       </div>
     </div>
   </aside>
@@ -4619,7 +4664,7 @@
       } catch(e) {}
     }
 
-    // ── Daily Streak System ──
+    // ── Daily Streak System (auto-claim on login) ──
     var _streakCount = 0;
     var _streakLastDate = null;
 
@@ -4628,19 +4673,18 @@
         var stored = JSON.parse(localStorage.getItem('wp_streak') || '{}');
         _streakCount = stored.count || 0;
         _streakLastDate = stored.lastDate || null;
-        // Check if streak is still alive (must have claimed yesterday or today)
         if (_streakLastDate) {
           var last = new Date(_streakLastDate);
           var now = new Date();
           var diffDays = Math.floor((now.setHours(0,0,0,0) - last.setHours(0,0,0,0)) / 86400000);
           if (diffDays > 1) {
-            // Streak broken — reset
             _streakCount = 0;
             _streakLastDate = null;
             saveStreakLocal();
           }
         }
-        updateStreakUI();
+        // Auto-claim on login
+        autoClaim();
       } catch(e) { _streakCount = 0; updateStreakUI(); }
     }
 
@@ -4650,53 +4694,91 @@
       } catch(e) {}
     }
 
-    function claimDailyStreak() {
+    function autoClaim() {
       var today = new Date().toISOString().split('T')[0];
       if (_streakLastDate === today) {
-        // Already claimed today — just do a little bounce
-        var flames = document.querySelectorAll('.streak-flame');
-        flames.forEach(function(f) { f.style.transform = 'scale(1.5)'; setTimeout(function() { f.style.transform = ''; }, 300); });
+        // Already claimed today — just update UI
+        updateStreakUI();
         return;
       }
-      // Check if continuing streak (claimed yesterday) or starting fresh
+      // Check if continuing streak or starting fresh
       if (_streakLastDate) {
         var last = new Date(_streakLastDate);
         var now = new Date(today);
         var diff = Math.floor((now - last) / 86400000);
-        if (diff > 1) _streakCount = 0; // Streak broken
+        if (diff > 1) _streakCount = 0;
       }
       _streakCount++;
       _streakLastDate = today;
       saveStreakLocal();
       updateStreakUI();
-      // Pop animation on all streak count elements
-      document.querySelectorAll('.streak-count').forEach(function(el) {
-        el.classList.add('pop');
-        setTimeout(function() { el.classList.remove('pop'); }, 500);
-      });
-      // Flame celebration
-      document.querySelectorAll('.streak-flame').forEach(function(f) {
-        f.style.transform = 'scale(1.6)';
-        setTimeout(function() { f.style.transform = ''; }, 300);
-      });
+      // Trigger celebration after a short delay so UI is ready
+      setTimeout(function() { showStreakCelebration(_streakCount); }, 600);
+    }
+
+    function showStreakCelebration(count) {
+      var overlay = document.getElementById('streakCelebration');
+      var numEl = document.getElementById('streakCelebrationNumber');
+      if (!overlay || !numEl) return;
+      numEl.textContent = count;
+      overlay.classList.add('active');
+      // At peak of grow animation (~800ms), spawn confetti
+      setTimeout(function() { spawnConfetti(); }, 700);
+      // Remove celebration after animation completes
+      setTimeout(function() {
+        overlay.classList.remove('active');
+        // Reset inner animation by forcing reflow
+        var inner = overlay.querySelector('.streak-celebration-inner');
+        if (inner) { inner.style.animation = 'none'; inner.offsetHeight; inner.style.animation = ''; }
+      }, 1500);
+    }
+
+    function spawnConfetti() {
+      var colors = ['#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#3B82F6', '#EF4444', '#F97316', '#14B8A6'];
+      var cx = window.innerWidth / 2;
+      var cy = window.innerHeight / 2;
+      for (var i = 0; i < 40; i++) {
+        var piece = document.createElement('div');
+        piece.className = 'confetti-piece';
+        piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+        piece.style.left = cx + (Math.random() - 0.5) * 120 + 'px';
+        piece.style.top = cy + (Math.random() - 0.5) * 60 + 'px';
+        var angle = Math.random() * Math.PI * 2;
+        var dist = 80 + Math.random() * 200;
+        var dx = Math.cos(angle) * dist;
+        var dy = Math.sin(angle) * dist - 100;
+        piece.style.setProperty('--dx', dx + 'px');
+        piece.style.setProperty('--dy', dy + 'px');
+        piece.style.animation = 'confettiBurst ' + (0.8 + Math.random() * 0.6) + 's ease-out forwards';
+        piece.style.width = (5 + Math.random() * 6) + 'px';
+        piece.style.height = (5 + Math.random() * 6) + 'px';
+        piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+        document.body.appendChild(piece);
+        setTimeout(function() { if (piece.parentNode) piece.parentNode.removeChild(piece); }, 1600);
+      }
+    }
+
+    // Override confetti animation with custom burst directions
+    (function() {
+      var style = document.createElement('style');
+      style.textContent = '@keyframes confettiBurst { 0% { opacity:1; transform:translate(0,0) rotate(0deg) scale(1); } 100% { opacity:0; transform:translate(var(--dx),var(--dy)) rotate(720deg) scale(0.2); } }';
+      document.head.appendChild(style);
+    })();
+
+    function claimDailyStreak() {
+      // Keep for backward compat but auto-claim handles it now
+      autoClaim();
     }
 
     function updateStreakUI() {
+      // Sidebar streak
+      var sidebarCount = document.getElementById('sidebarStreakCount');
+      if (sidebarCount) sidebarCount.textContent = _streakCount;
+      var sidebarStreak = document.getElementById('sidebarStreak');
+      if (sidebarStreak) sidebarStreak.style.display = _streakCount > 0 ? 'inline-flex' : 'none';
+      // Legacy elements
       var counts = document.querySelectorAll('.streak-count');
       counts.forEach(function(el) { el.textContent = _streakCount; });
-      // Zero state styling
-      var containers = document.querySelectorAll('.streak-container');
-      containers.forEach(function(c) {
-        c.classList.toggle('streak-zero', _streakCount === 0);
-        c.classList.toggle('streak-milestone', _streakCount === 7 || _streakCount === 30 || _streakCount === 100 || _streakCount === 365);
-      });
-      // Update label for milestones
-      var labels = document.querySelectorAll('.streak-label');
-      if (_streakCount >= 100) {
-        labels.forEach(function(l) { l.textContent = 'day streak!'; });
-      } else {
-        labels.forEach(function(l) { l.textContent = 'day streak'; });
-      }
     }
 
     function checkAgentLimit() {
