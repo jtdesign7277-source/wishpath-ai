@@ -232,6 +232,239 @@ function drawStars(time) {
   ctx.globalAlpha = 1;
 }
 
+// ─── ROCKET EVENT ───────────────────────────────────────────────
+let rocketEvent = null;
+let rocketCooldown = rand(30, 50); // first event 30-50s in
+
+const ROCKET_PHASES = { FLYING: 0, LANDING: 1, ALIEN: 2, FADING: 3 };
+
+function startRocketEvent() {
+  const fromLeft = Math.random() < 0.5;
+  const moonX = fromLeft ? rand(W * 0.6, W * 0.85) : rand(W * 0.15, W * 0.4);
+  const moonY = rand(H * 0.08, H * 0.2);
+  rocketEvent = {
+    phase: ROCKET_PHASES.FLYING,
+    timer: 0,
+    fromLeft,
+    // Rocket
+    rx: fromLeft ? -20 : W + 20,
+    ry: H * 0.35,
+    moonX, moonY,
+    moonR: rand(14, 20),
+    // Animation progress
+    flyDur: 2.5,
+    landDur: 0.6,
+    alienDur: 3.0,
+    fadeDur: 1.5,
+    // Alien state
+    alienY: 0, alienBounce: 0, alienWave: 0,
+    // Trail particles (local, lightweight)
+    trail: [],
+    alpha: 1,
+  };
+}
+
+function updateRocketEvent(dt) {
+  if (!rocketEvent) {
+    if (state === STATE.PLAYING) {
+      rocketCooldown -= dt;
+      if (rocketCooldown <= 0) {
+        startRocketEvent();
+        rocketCooldown = rand(35, 60);
+      }
+    }
+    return;
+  }
+  const re = rocketEvent;
+  re.timer += dt;
+
+  if (re.phase === ROCKET_PHASES.FLYING) {
+    const t = clamp(re.timer / re.flyDur, 0, 1);
+    // Arc from start to moon
+    const startX = re.fromLeft ? -20 : W + 20;
+    const startY = H * 0.35;
+    const cpX = (startX + re.moonX) / 2;
+    const cpY = Math.min(startY, re.moonY) - H * 0.15; // arc above
+    // Quadratic bezier
+    const mt = 1 - t;
+    re.rx = mt * mt * startX + 2 * mt * t * cpX + t * t * re.moonX;
+    re.ry = mt * mt * startY + 2 * mt * t * cpY + t * t * (re.moonY - re.moonR - 6);
+    // Flame trail
+    if (Math.random() < 0.7) {
+      re.trail.push({
+        x: re.rx + rand(-2, 2), y: re.ry + rand(3, 7),
+        vx: rand(-0.5, 0.5), vy: rand(0.5, 1.5),
+        life: rand(0.3, 0.6), maxLife: 0.6, size: rand(1.5, 3),
+      });
+    }
+    if (t >= 1) { re.phase = ROCKET_PHASES.LANDING; re.timer = 0; }
+  } else if (re.phase === ROCKET_PHASES.LANDING) {
+    // Brief settle
+    if (re.timer >= re.landDur) {
+      re.phase = ROCKET_PHASES.ALIEN;
+      re.timer = 0;
+      re.alienY = 0;
+    }
+  } else if (re.phase === ROCKET_PHASES.ALIEN) {
+    re.alienBounce += dt * 8;
+    re.alienWave += dt * 6;
+    re.alienY = Math.abs(Math.sin(re.alienBounce)) * 6;
+    if (re.timer >= re.alienDur) { re.phase = ROCKET_PHASES.FADING; re.timer = 0; }
+  } else if (re.phase === ROCKET_PHASES.FADING) {
+    re.alpha = 1 - clamp(re.timer / re.fadeDur, 0, 1);
+    if (re.timer >= re.fadeDur) { rocketEvent = null; return; }
+  }
+
+  // Update trail
+  for (let i = re.trail.length - 1; i >= 0; i--) {
+    const p = re.trail[i];
+    p.x += p.vx * dt * 60; p.y += p.vy * dt * 60;
+    p.life -= dt;
+    if (p.life <= 0) re.trail.splice(i, 1);
+  }
+}
+
+function drawRocketEvent() {
+  if (!rocketEvent) return;
+  const re = rocketEvent;
+  ctx.globalAlpha = re.alpha * 0.85;
+
+  // ── Moon with craters ──
+  const mx = re.moonX, my = re.moonY, mr = re.moonR;
+  ctx.fillStyle = '#B0A89A';
+  ctx.shadowColor = '#D4C8B8';
+  ctx.shadowBlur = 8;
+  ctx.beginPath();
+  ctx.arc(mx, my, mr, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  // Craters
+  ctx.fillStyle = '#8A8070';
+  const craters = [[0.25, -0.3, 0.18], [-0.35, 0.2, 0.14], [0.1, 0.35, 0.12], [-0.15, -0.15, 0.1]];
+  for (const [ox, oy, or] of craters) {
+    ctx.beginPath();
+    ctx.arc(mx + ox * mr, my + oy * mr, or * mr, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // ── Flame trail ──
+  for (const p of re.trail) {
+    const a = clamp(p.life / p.maxLife, 0, 1) * re.alpha;
+    ctx.globalAlpha = a * 0.8;
+    const t = 1 - p.life / p.maxLife;
+    ctx.fillStyle = t < 0.3 ? '#FFD700' : t < 0.6 ? '#FF6B35' : '#FF3333';
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size * (p.life / p.maxLife), 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = re.alpha * 0.85;
+
+  // ── Rocket ──
+  if (re.phase <= ROCKET_PHASES.LANDING) {
+    const rx = re.phase === ROCKET_PHASES.LANDING ? re.moonX : re.rx;
+    const ry = re.phase === ROCKET_PHASES.LANDING ? re.moonY - mr - 6 - (re.landDur - re.timer) * 2 : re.ry;
+    ctx.fillStyle = '#E8E0D8';
+    // Body
+    ctx.beginPath();
+    ctx.moveTo(rx, ry - 8);
+    ctx.lineTo(rx - 4, ry + 5);
+    ctx.lineTo(rx + 4, ry + 5);
+    ctx.closePath();
+    ctx.fill();
+    // Nose cone
+    ctx.fillStyle = '#f87171';
+    ctx.beginPath();
+    ctx.moveTo(rx, ry - 8);
+    ctx.lineTo(rx - 2.5, ry - 3);
+    ctx.lineTo(rx + 2.5, ry - 3);
+    ctx.closePath();
+    ctx.fill();
+    // Window
+    ctx.fillStyle = '#60A5FA';
+    ctx.beginPath();
+    ctx.arc(rx, ry - 1, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+    // Fins
+    ctx.fillStyle = '#f87171';
+    ctx.beginPath();
+    ctx.moveTo(rx - 4, ry + 3); ctx.lineTo(rx - 6, ry + 7); ctx.lineTo(rx - 3, ry + 5);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(rx + 4, ry + 3); ctx.lineTo(rx + 6, ry + 7); ctx.lineTo(rx + 3, ry + 5);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Landed rocket (stays on moon)
+  if (re.phase >= ROCKET_PHASES.ALIEN) {
+    const rx = re.moonX + mr * 0.35;
+    const ry = re.moonY - mr - 3;
+    ctx.fillStyle = '#E8E0D8';
+    ctx.beginPath();
+    ctx.moveTo(rx, ry - 6); ctx.lineTo(rx - 3, ry + 4); ctx.lineTo(rx + 3, ry + 4);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#f87171';
+    ctx.beginPath();
+    ctx.moveTo(rx, ry - 6); ctx.lineTo(rx - 2, ry - 2); ctx.lineTo(rx + 2, ry - 2);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // ── Alien ──
+  if (re.phase >= ROCKET_PHASES.ALIEN) {
+    const ax = re.moonX - mr * 0.3;
+    const ay = re.moonY - mr - 2 - re.alienY;
+    // Body — green blob
+    ctx.fillStyle = '#50FFA0';
+    ctx.beginPath();
+    ctx.ellipse(ax, ay, 3, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Head
+    ctx.fillStyle = '#00FF78';
+    ctx.beginPath();
+    ctx.arc(ax, ay - 5, 3, 0, Math.PI * 2);
+    ctx.fill();
+    // Eyes
+    ctx.fillStyle = '#0f0f0f';
+    ctx.beginPath();
+    ctx.arc(ax - 1.2, ay - 5.5, 0.8, 0, Math.PI * 2);
+    ctx.arc(ax + 1.2, ay - 5.5, 0.8, 0, Math.PI * 2);
+    ctx.fill();
+    // Antennae
+    ctx.strokeStyle = '#50FFA0';
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.moveTo(ax - 1.5, ay - 7.5);
+    ctx.lineTo(ax - 3, ay - 11);
+    ctx.moveTo(ax + 1.5, ay - 7.5);
+    ctx.lineTo(ax + 3, ay - 11);
+    ctx.stroke();
+    // Antenna tips
+    ctx.fillStyle = '#FFD700';
+    ctx.beginPath();
+    ctx.arc(ax - 3, ay - 11, 1, 0, Math.PI * 2);
+    ctx.arc(ax + 3, ay - 11, 1, 0, Math.PI * 2);
+    ctx.fill();
+    // Waving arm
+    const waveAngle = Math.sin(re.alienWave) * 0.6;
+    ctx.strokeStyle = '#50FFA0';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(ax + 3, ay - 1);
+    ctx.lineTo(ax + 3 + Math.cos(waveAngle - 1) * 5, ay - 1 + Math.sin(waveAngle - 1) * 5);
+    ctx.stroke();
+    // Little hand
+    ctx.fillStyle = '#50FFA0';
+    ctx.beginPath();
+    ctx.arc(ax + 3 + Math.cos(waveAngle - 1) * 5, ay - 1 + Math.sin(waveAngle - 1) * 5, 1, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.globalAlpha = 1;
+}
+
 function updateParticles(dt) {
   for (let i = particles.length - 1; i >= 0; i--) {
     const p = particles[i];
@@ -729,6 +962,7 @@ function resetGame() {
   spawnTimer = 0; orbSpawnTimer = 0;
   lastMarkerDistance = 0; distanceMarkerFlash = 0; screenFlash = 0; floatingTexts = [];
   level = 1; levelUpFlash = 0; slowMoTimer = 0;
+  rocketEvent = null; rocketCooldown = rand(30, 50);
   isNewHighScore = false;
 }
 
@@ -873,41 +1107,81 @@ function drawFloatingTexts() {
   ctx.globalAlpha = 1;
 }
 
+function draw3DScore(text, cx, cy, size, color) {
+  ctx.font = `900 ${size}px -apple-system, 'Segoe UI', Roboto, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.shadowBlur = 0;
+
+  // Parse color to RGB for darkening
+  const rgb = hexToRgb(typeof color === 'string' && color.startsWith('#') ? color : '#ffffff');
+  const darkR = Math.floor(rgb.r * 0.3);
+  const darkG = Math.floor(rgb.g * 0.3);
+  const darkB = Math.floor(rgb.b * 0.3);
+  const midR = Math.floor(rgb.r * 0.55);
+  const midG = Math.floor(rgb.g * 0.55);
+  const midB = Math.floor(rgb.b * 0.55);
+
+  // Extrude layers (bottom to top, 6 layers for 3D depth)
+  const depth = Math.max(4, Math.floor(size * 0.1));
+  for (let i = depth; i >= 1; i--) {
+    const t = i / depth;
+    const r = Math.floor(lerp(midR, darkR, t));
+    const g = Math.floor(lerp(midG, darkG, t));
+    const b = Math.floor(lerp(midB, darkB, t));
+    ctx.fillStyle = `rgb(${r},${g},${b})`;
+    ctx.fillText(text, cx + i * 0.8, cy + i * 1.2);
+  }
+
+  // Main face with glow
+  ctx.shadowColor = color;
+  ctx.shadowBlur = Math.min(30, size * 0.4);
+  ctx.fillStyle = color;
+  ctx.fillText(text, cx, cy);
+
+  // Highlight pass — slight white on top portion
+  ctx.shadowBlur = 0;
+  ctx.globalAlpha = 0.2;
+  ctx.fillStyle = COL.white;
+  ctx.fillText(text, cx, cy - 1);
+  ctx.globalAlpha = 1;
+  ctx.shadowBlur = 0;
+}
+
 function drawHUD() {
   const pad = 16;
   const top = 14 + (CSS.supports('padding-top: env(safe-area-inset-top)') ? 30 : 0);
 
-  // Score — extra large, dynamic glow intensifies over time
+  // Score — centered 3D extruded text
   const finalScore = Math.floor(score + distance);
   const scoreCol = getScoreColor(distance);
-  const glowIntensity = Math.min(40, 10 + distance * 0.025);
-  const scorePulse = 1 + Math.sin(Date.now() * 0.005) * Math.min(0.15, distance * 0.0001);
-  const scoreSize = Math.floor(44 * scorePulse);
-  drawGlowText(finalScore.toLocaleString(), pad, top, scoreSize, scoreCol, 'left', glowIntensity);
+  const scorePulse = 1 + Math.sin(Date.now() * 0.005) * Math.min(0.12, distance * 0.0001);
+  const scoreSize = Math.floor(48 * scorePulse);
+  draw3DScore(finalScore.toLocaleString(), W / 2, top + 30, scoreSize, scoreCol);
 
-  // Orbs
+  // Orbs — top-left
   ctx.fillStyle = COL.neonGreen;
   ctx.shadowColor = COL.neonGreen;
   ctx.shadowBlur = 10;
   ctx.beginPath();
-  ctx.arc(pad + 10, top + 60, 7, 0, Math.PI * 2);
+  ctx.arc(pad + 10, top + 8, 7, 0, Math.PI * 2);
   ctx.fill();
   ctx.shadowBlur = 0;
-  drawGlowText(`${orbsCollected}`, pad + 24, top + 52, 20, COL.softGreen, 'left', 6);
+  drawGlowText(`${orbsCollected}`, pad + 24, top, 20, COL.softGreen, 'left', 6);
 
-  // Level
+  // Level — top-left below orbs
   const lcHud = getLevelColor();
-  drawGlowText(`LV ${level}`, W - pad, top + 30, 20, lcHud.edge, 'right', 10);
+  drawGlowText(`LV ${level}`, pad, top + 28, 18, lcHud.edge, 'left', 10);
 
-  // Distance
+  // Distance — top-right
   drawGlowText(`${Math.floor(distance)}m`, W - pad, top, 24, 'rgba(255,255,255,0.7)', 'right', 6);
 
-  // Combo
+  // Combo — below score center
   if (combo > 1 && comboTimer > 0) {
     const comboAlpha = Math.min(1, comboTimer);
     ctx.globalAlpha = comboAlpha;
     const mult = Math.min(combo, 10);
-    drawGlowText(`x${mult} COMBO`, W / 2, top, 22, COL.neonGreen, 'center', 16);
+    drawGlowText(`x${mult} COMBO`, W / 2, top + 58, 22, COL.neonGreen, 'center', 16);
     ctx.globalAlpha = 1;
   }
 
@@ -1019,6 +1293,7 @@ function drawGameOverScreen() {
 // ─── MAIN LOOP ──────────────────────────────────────────────────
 function update(dt) {
   updateStars(dt);
+  updateRocketEvent(dt);
   updateParticles(dt);
   updateFloatingTexts(dt);
 
@@ -1114,6 +1389,7 @@ function draw() {
   ctx.translate(shakeX, shakeY);
 
   drawStars(performance.now());
+  drawRocketEvent();
   drawPath();
 
   // Draw far objects first (sorted by z descending)
