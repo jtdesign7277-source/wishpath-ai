@@ -1013,7 +1013,8 @@ function triggerJackpot() {
 function getBlueDiamondSlotPos(index) {
   const pad = 16;
   const top = 14 + (CSS.supports('padding-top: env(safe-area-inset-top)') ? 30 : 0);
-  return { x: pad + 16, y: top + 90 + index * 44 };
+  // Below score badge (40h) + secondary row (~22h) + spacing
+  return { x: pad + 16, y: top + 74 + index * 44 };
 }
 
 function spawnBlueDiamond() {
@@ -1978,30 +1979,142 @@ function drawFloatingTexts() {
   ctx.globalAlpha = 1;
 }
 
+function drawGoldStar(cx, cy, outerR, innerR) {
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.shadowColor = COL.gold;
+  ctx.shadowBlur = 12;
+  ctx.beginPath();
+  for (let i = 0; i < 10; i++) {
+    const r = i % 2 === 0 ? outerR : innerR;
+    const angle = (i * Math.PI / 5) - Math.PI / 2;
+    const sx = Math.cos(angle) * r;
+    const sy = Math.sin(angle) * r;
+    if (i === 0) ctx.moveTo(sx, sy); else ctx.lineTo(sx, sy);
+  }
+  ctx.closePath();
+  const starGrad = ctx.createLinearGradient(0, -outerR, 0, outerR);
+  starGrad.addColorStop(0, '#FFF8DC');
+  starGrad.addColorStop(0.25, COL.goldLight);
+  starGrad.addColorStop(0.5, COL.gold);
+  starGrad.addColorStop(0.75, '#DAA520');
+  starGrad.addColorStop(1, '#B8860B');
+  ctx.fillStyle = starGrad;
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.globalAlpha = 0.5;
+  ctx.fillStyle = COL.white;
+  ctx.beginPath();
+  ctx.ellipse(-outerR * 0.2, -outerR * 0.3, outerR * 0.25, outerR * 0.18, -0.4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = 'rgba(255,248,220,0.4)';
+  ctx.lineWidth = 0.8;
+  ctx.beginPath();
+  for (let i = 0; i < 10; i++) {
+    const r = i % 2 === 0 ? outerR : innerR;
+    const angle = (i * Math.PI / 5) - Math.PI / 2;
+    const sx = Math.cos(angle) * r;
+    const sy = Math.sin(angle) * r;
+    if (i === 0) ctx.moveTo(sx, sy); else ctx.lineTo(sx, sy);
+  }
+  ctx.closePath();
+  ctx.stroke();
+  ctx.restore();
+}
+
 function drawHUD() {
   const pad = 16;
   const top = 14 + (CSS.supports('padding-top: env(safe-area-inset-top)') ? 30 : 0);
-
-  // Score — gold neon 3D with pulse
-  const finalScore = Math.floor(score + distance);
-  const scorePulse = 1 + Math.sin(Date.now() * 0.005) * 0.06;
-  const scoreSize = Math.floor(48 * scorePulse);
-  draw3DScore(finalScore.toLocaleString(), W / 2, top + 30, scoreSize, COL.gold);
-
-  // Diamonds — top-left with diamond icon
-  drawDiamond(pad + 10, top + 10, 0.5, performance.now() * 0.002, false);
-  drawGlowText(`${orbsCollected}`, pad + 24, top, 20, COL.cyanGlow, 'left', 8);
-
-  // Level — glowing, pulses on level up
   const env = getEnvPhase();
+
+  // ── SCORE BADGE — premium dark pill, top-left ──
+  const finalScore = Math.floor(score + distance);
+  const scoreText = finalScore.toLocaleString();
+  ctx.font = `bold 26px -apple-system, 'Segoe UI', Roboto, sans-serif`;
+  const textW = ctx.measureText(scoreText).width;
+  const starSize = 13;
+  const badgePadX = 14;
+  const badgeH = 40;
+  const iconSpace = starSize * 2 + 10;
+  const badgeW = iconSpace + textW + badgePadX * 2;
+  const badgeX = pad;
+  const badgeY = top;
+  const badgeR = 20;
+
+  // Badge shadow
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,0.5)';
+  ctx.shadowBlur = 12;
+  ctx.shadowOffsetY = 2;
+
+  // Badge background — dark rounded pill
+  ctx.beginPath();
+  ctx.moveTo(badgeX + badgeR, badgeY);
+  ctx.lineTo(badgeX + badgeW - badgeR, badgeY);
+  ctx.arcTo(badgeX + badgeW, badgeY, badgeX + badgeW, badgeY + badgeR, badgeR);
+  ctx.lineTo(badgeX + badgeW, badgeY + badgeH - badgeR);
+  ctx.arcTo(badgeX + badgeW, badgeY + badgeH, badgeX + badgeW - badgeR, badgeY + badgeH, badgeR);
+  ctx.lineTo(badgeX + badgeR, badgeY + badgeH);
+  ctx.arcTo(badgeX, badgeY + badgeH, badgeX, badgeY + badgeH - badgeR, badgeR);
+  ctx.lineTo(badgeX, badgeY + badgeR);
+  ctx.arcTo(badgeX, badgeY, badgeX + badgeR, badgeY, badgeR);
+  ctx.closePath();
+
+  const badgeGrad = ctx.createLinearGradient(badgeX, badgeY, badgeX, badgeY + badgeH);
+  badgeGrad.addColorStop(0, 'rgba(30, 25, 55, 0.92)');
+  badgeGrad.addColorStop(0.5, 'rgba(22, 18, 42, 0.95)');
+  badgeGrad.addColorStop(1, 'rgba(16, 12, 32, 0.92)');
+  ctx.fillStyle = badgeGrad;
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.shadowOffsetY = 0;
+
+  // Subtle border
+  ctx.strokeStyle = 'rgba(168, 85, 247, 0.2)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Inner highlight on top edge
+  ctx.beginPath();
+  ctx.moveTo(badgeX + badgeR + 4, badgeY + 1);
+  ctx.lineTo(badgeX + badgeW - badgeR - 4, badgeY + 1);
+  ctx.strokeStyle = 'rgba(255,255,255,0.07)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.restore();
+
+  // Gold star icon
+  const starCX = badgeX + badgePadX + starSize;
+  const starCY = badgeY + badgeH / 2;
+  drawGoldStar(starCX, starCY, starSize, starSize * 0.42);
+
+  // Score number — bold white
+  ctx.font = `bold 26px -apple-system, 'Segoe UI', Roboto, sans-serif`;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = COL.white;
+  ctx.shadowColor = 'rgba(253,224,71,0.3)';
+  ctx.shadowBlur = 6;
+  ctx.fillText(scoreText, badgeX + badgePadX + iconSpace, badgeY + badgeH / 2 + 1);
+  ctx.shadowBlur = 0;
+
+  // ── Secondary stats row below badge ──
+  const row2Y = badgeY + badgeH + 6;
+
+  // Diamonds count — small, left
+  drawDiamond(pad + 10, row2Y + 6, 0.4, performance.now() * 0.002, false);
+  drawGlowText(`${orbsCollected}`, pad + 22, row2Y, 16, COL.cyanGlow, 'left', 6);
+
+  // Level
   const lvScale = levelUpFlash > 0 ? 1 + Math.sin(levelUpFlash * 8) * 0.15 : 1;
-  const lvSize = Math.floor(18 * lvScale);
-  drawGlowText(`LV ${level}`, pad, top + 28, lvSize, env.edge, 'left', levelUpFlash > 0 ? 20 : 10);
+  const lvSize = Math.floor(16 * lvScale);
+  drawGlowText(`LV ${level}`, pad + 50, row2Y, lvSize, env.edge, 'left', levelUpFlash > 0 ? 20 : 8);
 
   // Distance — top-right
-  drawGlowText(`${Math.floor(distance)}m`, W - pad, top, 24, 'rgba(255,255,255,0.7)', 'right', 6);
+  drawGlowText(`${Math.floor(distance)}m`, W - pad, top, 22, 'rgba(255,255,255,0.6)', 'right', 4);
 
-  // Combo — scales bigger with higher combos
+  // Combo
   if (combo > 1 && comboTimer > 0) {
     const comboAlpha = Math.min(1, comboTimer);
     ctx.globalAlpha = comboAlpha;
@@ -2019,10 +2132,10 @@ function drawHUD() {
     ctx.globalAlpha = 1;
   }
 
-  // Health hearts — color-coded: green (3), yellow (2), magenta (1)
+  // Health hearts — top-right, below distance
   for (let i = 0; i < 3; i++) {
     const hx = W - pad - i * 24 - 12;
-    const hy = top + 30;
+    const hy = top + 28;
     const filled = i < health;
     ctx.save();
     ctx.translate(hx, hy);
@@ -2050,10 +2163,10 @@ function drawHUD() {
     ctx.restore();
   }
 
-  // Gold coin progress — 3 coin slots below level
-  const coinY = top + 48;
+  // Gold coin progress — below hearts on right
+  const coinY = top + 50;
   for (let i = 0; i < 3; i++) {
-    const cx = pad + 8 + i * 20;
+    const cx = W - pad - 50 + i * 20;
     const filled = i < goldCoinsCollected;
     const flashScale = (filled && goldCoinHudFlash > 0) ? 1 + goldCoinHudFlash * 0.5 : 1;
     ctx.save();
@@ -2066,7 +2179,6 @@ function drawHUD() {
       ctx.beginPath();
       ctx.arc(0, 0, 7, 0, Math.PI * 2);
       ctx.fill();
-      // Star in center
       ctx.shadowBlur = 0;
       ctx.fillStyle = '#B8860B';
       ctx.font = 'bold 8px sans-serif';
