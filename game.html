@@ -1982,21 +1982,74 @@ function drawHUD() {
   const pad = 16;
   const top = 14 + (CSS.supports('padding-top: env(safe-area-inset-top)') ? 30 : 0);
 
-  // Score — gold neon 3D with pulse
+  // ── Score badge — premium dark pill with gold star (top-left) ──
   const finalScore = Math.floor(score + distance);
-  const scorePulse = 1 + Math.sin(Date.now() * 0.005) * 0.06;
-  const scoreSize = Math.floor(48 * scorePulse);
-  draw3DScore(finalScore.toLocaleString(), W / 2, top + 30, scoreSize, COL.gold);
+  const scoreStr = finalScore.toLocaleString();
+  ctx.font = "bold 22px -apple-system, 'Segoe UI', Roboto, sans-serif";
+  const scoreTextW = ctx.measureText(scoreStr).width;
+  const pillW = scoreTextW + 58;
+  const pillH = 40;
+  const pillX = pad;
+  const pillY = top - 2;
+  const pillR = 20;
+  // Pill background + glow
+  ctx.save();
+  ctx.shadowColor = 'rgba(253,224,71,0.3)';
+  ctx.shadowBlur = 18;
+  ctx.beginPath();
+  ctx.moveTo(pillX + pillR, pillY); ctx.lineTo(pillX + pillW - pillR, pillY);
+  ctx.arcTo(pillX + pillW, pillY, pillX + pillW, pillY + pillR, pillR);
+  ctx.lineTo(pillX + pillW, pillY + pillH - pillR);
+  ctx.arcTo(pillX + pillW, pillY + pillH, pillX + pillW - pillR, pillY + pillH, pillR);
+  ctx.lineTo(pillX + pillR, pillY + pillH);
+  ctx.arcTo(pillX, pillY + pillH, pillX, pillY + pillH - pillR, pillR);
+  ctx.lineTo(pillX, pillY + pillR);
+  ctx.arcTo(pillX, pillY, pillX + pillR, pillY, pillR);
+  ctx.closePath();
+  ctx.fillStyle = '#1a1a2e';
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.restore();
+  // Gold 5-pointed star
+  { const sx = pillX + 24, sy = pillY + pillH / 2, ro = 9, ri = 4;
+    const sg = ctx.createRadialGradient(sx, sy - 3, 0, sx, sy, ro);
+    sg.addColorStop(0, '#FFF5A0'); sg.addColorStop(0.35, '#FDE047'); sg.addColorStop(1, '#B8860B');
+    ctx.save();
+    ctx.beginPath();
+    for (let i = 0; i < 10; i++) {
+      const a = (i * Math.PI / 5) - Math.PI / 2;
+      const r = i % 2 === 0 ? ro : ri;
+      const px = sx + Math.cos(a) * r, py = sy + Math.sin(a) * r;
+      i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.fillStyle = sg;
+    ctx.shadowColor = '#FDE047'; ctx.shadowBlur = 10;
+    ctx.fill();
+    ctx.beginPath(); ctx.arc(sx, sy - ro + 2.5, 2, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.65)'; ctx.shadowBlur = 0; ctx.fill();
+    ctx.restore();
+  }
+  // Score number
+  ctx.save();
+  ctx.font = "bold 22px -apple-system, 'Segoe UI', Roboto, sans-serif";
+  ctx.fillStyle = '#FFFFFF'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 4;
+  ctx.fillText(scoreStr, pillX + 40, pillY + pillH / 2);
+  ctx.shadowBlur = 0; ctx.restore();
 
-  // Diamonds — top-left with diamond icon
-  drawDiamond(pad + 10, top + 10, 0.5, performance.now() * 0.002, false);
-  drawGlowText(`${orbsCollected}`, pad + 24, top, 20, COL.cyanGlow, 'left', 8);
+  // Diamonds — below score badge
+  drawDiamond(pad + 10, top + 52, 0.5, performance.now() * 0.002, false);
+  drawGlowText(`${orbsCollected}`, pad + 24, top + 42, 20, COL.cyanGlow, 'left', 8);
 
   // Level — glowing, pulses on level up
   const env = getEnvPhase();
   const lvScale = levelUpFlash > 0 ? 1 + Math.sin(levelUpFlash * 8) * 0.15 : 1;
   const lvSize = Math.floor(18 * lvScale);
-  drawGlowText(`LV ${level}`, pad, top + 28, lvSize, env.edge, 'left', levelUpFlash > 0 ? 20 : 10);
+  drawGlowText(`LV ${level}`, pad, top + 70, lvSize, env.edge, 'left', levelUpFlash > 0 ? 20 : 10);
 
   // Distance — top-right
   drawGlowText(`${Math.floor(distance)}m`, W - pad, top, 24, 'rgba(255,255,255,0.7)', 'right', 6);
@@ -2051,7 +2104,7 @@ function drawHUD() {
   }
 
   // Gold coin progress — 3 coin slots below level
-  const coinY = top + 48;
+  const coinY = top + 92;
   for (let i = 0; i < 3; i++) {
     const cx = pad + 8 + i * 20;
     const filled = i < goldCoinsCollected;
