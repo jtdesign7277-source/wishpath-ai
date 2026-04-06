@@ -5,220 +5,228 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Wish Runner — WishPath</title>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body {
     width: 100%; height: 100%;
     overflow: hidden;
-    background: #0B001F;
+    background: #0B1628;
     touch-action: none;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     user-select: none;
     overscroll-behavior: none;
+    font-family: 'Press Start 2P', monospace;
   }
   canvas {
     display: block;
     width: 100vw;
     height: 100vh;
   }
+  /* Force landscape on mobile */
+  @media screen and (orientation: portrait) and (max-width: 900px) {
+    html { transform: rotate(90deg); transform-origin: top left; width: 100vh; height: 100vw; position: absolute; top: 0; left: 100%; }
+  }
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
 <script>
-// ─── SETUP ──────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════
+// WISH RUNNER — Geometry Dash × Cosmic Theme
+// Horizontal auto-scroller with tap-to-jump
+// ═══════════════════════════════════════════════════════════════════
+
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
 
 let W, H, dpr;
 function resize() {
   dpr = Math.min(window.devicePixelRatio || 1, 2);
-  W = window.innerWidth;
-  H = window.innerHeight;
+  // For portrait orientation on mobile, swap dimensions
+  const isPortrait = window.innerWidth < window.innerHeight && window.innerWidth < 900;
+  W = isPortrait ? window.innerHeight : window.innerWidth;
+  H = isPortrait ? window.innerWidth : window.innerHeight;
   canvas.width = W * dpr;
   canvas.height = H * dpr;
-  canvas.style.width = W + 'px';
-  canvas.style.height = H + 'px';
+  canvas.style.width = (isPortrait ? window.innerHeight : W) + 'px';
+  canvas.style.height = (isPortrait ? window.innerWidth : H) + 'px';
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  GROUND_Y = H * 0.78;
+  PLAYER_X = W * 0.18;
 }
-resize();
-window.addEventListener('resize', resize);
 
-// ─── COSMIC PALETTE ─────────────────────────────────────────────
+// ─── COLORS ────────────────────────────────────────────────────
 const COL = {
-  bg: '#0B001F',
-  deepBg: '#05000F',
+  bg1: '#0B1628',
+  bg2: '#0D1B3A',
+  bgGrid: 'rgba(100, 140, 255, 0.06)',
+  bgGridBright: 'rgba(100, 140, 255, 0.12)',
   purple: '#A855F7',
   purpleDark: '#7C3AED',
-  purpleDeep: '#5B21B6',
   cyan: '#22D3EE',
   cyanGlow: '#67E8F9',
   gold: '#FDE047',
-  goldLight: '#FEF08A',
   goldDark: '#EAB308',
   magenta: '#FF2EC4',
-  magentaGlow: '#FF6BD6',
-  emerald: '#00FF9F',
-  emeraldSoft: '#6EFFCB',
+  green: '#7DF900',
+  greenDark: '#5BC700',
+  greenGlow: '#A4FF44',
   white: '#ffffff',
   blue: '#3B82F6',
-  pink: '#EC4899',
-  gridDim: 'rgba(168, 85, 247, 0.06)',
-  gridBright: 'rgba(168, 85, 247, 0.18)',
+  groundLine: '#22D3EE',
+  spike: '#FF2EC4',
+  block: '#2A4A7F',
+  blockEdge: '#4A7ACC',
 };
 
-// ─── STATE ──────────────────────────────────────────────────────
-const STATE = { MENU: 0, PLAYING: 1, DEAD: 2 };
+// ─── STATE ─────────────────────────────────────────────────────
+const STATE = { MENU: 0, PLAYING: 1, DEAD: 2, LEVEL_COMPLETE: 3 };
 let state = STATE.MENU;
-let score = 0, distance = 0, orbsCollected = 0, combo = 0, comboTimer = 0, maxCombo = 0;
-let speed = 0.9, baseSpeed = 0.9, maxSpeed = 11, speedTimer = 0;
-let highScore = parseInt(localStorage.getItem('wp_game_highscore')) || 0;
-let totalCoins = parseInt(localStorage.getItem('wp_game_coins')) || 0;
-let isNewHighScore = false;
+let GROUND_Y = 0, PLAYER_X = 0;
+
+// Score + progress
+let score = 0, distance = 0, maxDistance = 0;
+let highScore = parseInt(localStorage.getItem('wr_gd_highscore')) || 0;
+let totalCoins = parseInt(localStorage.getItem('wr_gd_coins')) || 0;
+let attempt = parseInt(localStorage.getItem('wr_gd_attempt')) || 1;
+let jumpCount = 0;
+let runStartTime = 0;
 
 // Player
+const PLAYER_SIZE = 36;
+const GRAVITY = 2800;
+const JUMP_FORCE = -780;
 const player = {
-  lane: 1, targetLane: 1,
-  x: 0, y: 0,
-  jumpY: 0, jumpVel: 0, isJumping: false,
-  slideTimer: 0, isSliding: false,
-  height: 94, width: 65,
-  animPhase: 0,
-  collectBoost: 0, // brief engine boost after collecting
-  bankAngle: 0, // banking tilt for lane changes
+  y: 0, vy: 0,
+  onGround: true,
+  rotation: 0,
+  targetRotation: 0,
+  size: PLAYER_SIZE,
+  trail: [],
 };
 
-// Path perspective constants
-const HORIZON_Y = 0.28;
-const PATH_BOTTOM_W = 0.85;
-const PATH_TOP_W = 0.08;
-const LANE_COUNT = 3;
+// Scrolling
+let scrollSpeed = 360;
+let baseSpeed = 360;
+let maxSpeed = 720;
+let cameraX = 0;
 
-// Obstacles + orbs
-let obstacles = [];
-let orbs = [];
-let spawnTimer = 0;
-let orbSpawnTimer = 0;
-let distanceMarkerFlash = 0;
-let lastMarkerDistance = 0;
+// Health system (3 hits)
+let health = 3;
+let invincTimer = 0;
+let hitFlashTimer = 0;
+let damageSmoke = []; // visual smoke puffs on damage
 
-// Particles — object pooled (1000 cap during jackpot)
-const MAX_PARTICLES = 1000;
-let particles = [];
-let sparkles = []; // persistent path-edge sparkles
+// Diamonds (green neon, 8 = level up)
+let diamonds = [];
+let diamondsCollected = 0;
+const DIAMONDS_PER_LEVEL = 8;
 
-// Gold Coin Jackpot System
-let goldCoins = []; // active gold coin objects on path
-let goldCoinsCollected = 0; // 0-2, triggers jackpot at 3
-let goldCoinSpawnDist = 0; // distance until next gold coin spawns
-let nextGoldCoinAt = rand(800, 1500); // first spawn distance
-let jackpotTimer = 0; // countdown for jackpot celebration (2.5s)
-let jackpotScoreAnim = 0; // animated score bonus rolling up
-let goldCoinHudFlash = 0; // HUD flash when coin collected
-let totalJackpots = 0; // jackpots hit this run
+// Level system
+let level = 1;
+let levelUpFlash = 0;
 
-// Super Boost Blue Diamond System
+// Jackpot gold coins (3 = 10,000 pts)
+let goldCoins = [];
+let goldCoinsCollected = 0;
+let jackpotTimer = 0;
+let jackpotScoreAnim = 0;
+let totalJackpots = 0;
+
+// Super boost blue diamonds (3 = invincible)
 let blueDiamonds = [];
 let blueDiamondsCollected = 0;
-let blueDiamondSpawnDist = 0;
-let nextBlueDiamondAt = rand(400, 700);
 let superBoostTimer = 0;
 let totalSuperBoosts = 0;
-let blueDiamondAnims = []; // fly-to-slot animations
 let blueDiamondHudFlash = 0;
 
-// Screen shake + health
-let health = 3, invincTimer = 0, hitFlashTimer = 0, damageLevel = 0;
+// Obstacles + platforms
+let obstacles = [];
+let platforms = [];
+let spawnX = 0; // next world-X to spawn at
+const SPAWN_AHEAD = 1200; // spawn this far ahead of camera
+
+// Particles
+const MAX_PARTICLES = 800;
+let particles = [];
+
+// Screen effects
 let shakeX = 0, shakeY = 0, shakeDur = 0;
 let screenFlash = 0, screenFlashColor = COL.gold;
 let floatingTexts = [];
-
-// Level system
-let level = 1, levelUpFlash = 0, slowMoTimer = 0;
-const ORBS_PER_LEVEL = 8;
-
-// Environment phase colors — cycle through cosmic themes
-const ENV_PHASES = [
-  { edge: '#A855F7', grid: 'rgba(168, 85, 247,', glow: '#C084FC', nebula: 'rgba(168, 85, 247, 0.03)' },  // purple
-  { edge: '#3B82F6', grid: 'rgba(59, 130, 246,', glow: '#60A5FA', nebula: 'rgba(59, 130, 246, 0.03)' },   // blue
-  { edge: '#22D3EE', grid: 'rgba(34, 211, 238,', glow: '#67E8F9', nebula: 'rgba(34, 211, 238, 0.03)' },   // cyan
-  { edge: '#FDE047', grid: 'rgba(253, 224, 71,', glow: '#FEF08A', nebula: 'rgba(253, 224, 71, 0.02)' },   // gold
-  { edge: '#FF2EC4', grid: 'rgba(255, 46, 196,', glow: '#FF6BD6', nebula: 'rgba(255, 46, 196, 0.03)' },   // magenta
-  { edge: '#00FF9F', grid: 'rgba(0, 255, 159,', glow: '#6EFFCB', nebula: 'rgba(0, 255, 159, 0.02)' },     // emerald
-];
-
-function getEnvPhase() { return ENV_PHASES[(level - 1) % ENV_PHASES.length]; }
+let deathParticles = [];
 
 // Grid scroll
-let gridOffset = 0;
+let gridOffsetX = 0;
 
-// Game over animation
+// Progress within level
+let levelDistance = 0;
+const LEVEL_LENGTH = 5000; // distance per level
+
+// Death anim
 let deathTimer = 0;
-let gameOverStatReveal = 0;
 
-// Hit motivational messages
-const HIT_MESSAGES = [
-  'Shake it off! \uD83D\uDCA5\u2728', 'KEEP GOING! \uD83D\uDCAA', 'YOU GOT THIS! \uD83D\uDD25',
-  'STAY FOCUSED! \u26A1', 'ALMOST THERE! \uD83D\uDE80',
+// Environment phase colors per level
+const ENV_PHASES = [
+  { bg: '#0B1628', edge: '#A855F7', ground: '#22D3EE', glow: 'rgba(168,85,247,0.15)' },
+  { bg: '#0B1630', edge: '#3B82F6', ground: '#60A5FA', glow: 'rgba(59,130,246,0.15)' },
+  { bg: '#0D1825', edge: '#22D3EE', ground: '#67E8F9', glow: 'rgba(34,211,238,0.15)' },
+  { bg: '#12102A', edge: '#FF2EC4', ground: '#FF6BD6', glow: 'rgba(255,46,196,0.12)' },
+  { bg: '#0F1A10', edge: '#7DF900', ground: '#A4FF44', glow: 'rgba(125,249,0,0.12)' },
+  { bg: '#1A1408', edge: '#FDE047', ground: '#FEF08A', glow: 'rgba(253,224,71,0.12)' },
 ];
-const COLLECT_EMOJIS = ['\u2728', '\uD83D\uDE80', '\uD83D\uDCB0', '\uD83C\uDF1F', '\uD83D\uDCAA', '\uD83D\uDCAB', '\u2B50'];
-// Diamond shimmer colors for rotation
-const DIAMOND_COLORS = [COL.cyan, COL.emerald, COL.gold, COL.white, COL.cyanGlow, COL.emeraldSoft];
+function getEnv() { return ENV_PHASES[(level - 1) % ENV_PHASES.length]; }
 
 // Delta time
 let lastTime = 0;
 
-// ─── HELPERS ────────────────────────────────────────────────────
+// ─── HELPERS ───────────────────────────────────────────────────
 function lerp(a, b, t) { return a + (b - a) * t; }
 function rand(a, b) { return Math.random() * (b - a) + a; }
 function randInt(a, b) { return Math.floor(rand(a, b + 1)); }
 function clamp(v, mn, mx) { return Math.max(mn, Math.min(mx, v)); }
+function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+function easeInOutQuad(t) { return t < 0.5 ? 2*t*t : 1-Math.pow(-2*t+2,2)/2; }
 
-function getPathX(lane, zFrac) {
-  const bottomW = W * PATH_BOTTOM_W;
-  const topW = W * PATH_TOP_W;
-  const pathW = lerp(bottomW, topW, zFrac);
-  const laneW = pathW / LANE_COUNT;
-  const pathLeft = (W - pathW) / 2;
-  return pathLeft + laneW * (lane + 0.5);
-}
+// Chunky arcade font helper
+let fontLoaded = false;
+document.fonts && document.fonts.ready.then(() => { fontLoaded = true; });
+function arcadeFont(size) { return `${size}px 'Press Start 2P', monospace`; }
 
-function getPathY(zFrac) {
-  return lerp(H, H * HORIZON_Y, zFrac);
-}
-
-function getScale(zFrac) { return lerp(1, 0.1, zFrac); }
-
-function getPathEdges(zFrac) {
-  const bottomW = W * PATH_BOTTOM_W;
-  const topW = W * PATH_TOP_W;
-  const pathW = lerp(bottomW, topW, zFrac);
-  const pathLeft = (W - pathW) / 2;
-  return { left: pathLeft, right: pathLeft + pathW, width: pathW };
-}
-
-function hexToRgb(hex) {
-  const c = hex.replace('#', '');
-  return { r: parseInt(c.slice(0, 2), 16), g: parseInt(c.slice(2, 4), 16), b: parseInt(c.slice(4, 6), 16) };
-}
-
-function lerpColor(a, b, t) {
-  const pa = hexToRgb(a), pb = hexToRgb(b);
-  return `rgb(${Math.round(lerp(pa.r, pb.r, t))},${Math.round(lerp(pa.g, pb.g, t))},${Math.round(lerp(pa.b, pb.b, t))})`;
-}
-
-// ─── PARTICLE SYSTEM (pooled) ───────────────────────────────────
+// ─── PARTICLES ─────────────────────────────────────────────────
 function spawnParticle(x, y, color, vx, vy, life, size, grav) {
   if (particles.length >= MAX_PARTICLES) return;
-  particles.push({ x, y, vx: vx || 0, vy: vy || 0, life, maxLife: life, size: size || 3, color, grav: grav || 0.05 });
+  particles.push({ x, y, vx: vx||0, vy: vy||0, life, maxLife: life, size: size||3, color, grav: grav||0 });
 }
 
 function spawnBurst(x, y, color, count, spread, life, size) {
   const budget = Math.min(count, MAX_PARTICLES - particles.length);
   for (let i = 0; i < budget; i++) {
-    const angle = rand(0, Math.PI * 2);
+    const a = rand(0, Math.PI * 2);
     const spd = rand(0.5, spread);
-    spawnParticle(x, y, color, Math.cos(angle) * spd, Math.sin(angle) * spd, rand(life * 0.5, life), rand(size * 0.5, size), 0.03);
+    spawnParticle(x, y, color, Math.cos(a)*spd, Math.sin(a)*spd, rand(life*0.5, life), rand(size*0.3, size), 0.02);
+  }
+}
+
+function spawnDeathExplosion(x, y) {
+  // GD-style pixel explosion
+  const colors = [COL.purple, COL.cyan, COL.magenta, COL.white, COL.green, COL.gold];
+  for (let i = 0; i < 60; i++) {
+    const a = rand(0, Math.PI * 2);
+    const spd = rand(2, 12);
+    const c = colors[randInt(0, colors.length - 1)];
+    const sz = rand(2, 7);
+    spawnParticle(x, y, c, Math.cos(a)*spd, Math.sin(a)*spd - rand(0, 4), rand(0.4, 1.2), sz, 0.15);
+  }
+  // Square debris
+  for (let i = 0; i < 20; i++) {
+    deathParticles.push({
+      x, y, vx: rand(-8, 8), vy: rand(-12, -2),
+      rot: rand(0, 6.28), rotV: rand(-0.3, 0.3),
+      size: rand(4, 12), life: rand(0.5, 1.5), maxLife: 1.5,
+      color: colors[randInt(0, colors.length - 1)],
+    });
   }
 }
 
@@ -229,7 +237,16 @@ function updateParticles(dt) {
     p.y += p.vy * dt * 60;
     p.vy += p.grav * dt * 60;
     p.life -= dt;
-    if (p.life <= 0) { particles.splice(i, 1); }
+    if (p.life <= 0) particles.splice(i, 1);
+  }
+  for (let i = deathParticles.length - 1; i >= 0; i--) {
+    const d = deathParticles[i];
+    d.x += d.vx * dt * 60;
+    d.y += d.vy * dt * 60;
+    d.vy += 0.3 * dt * 60;
+    d.rot += d.rotV * dt * 60;
+    d.life -= dt;
+    if (d.life <= 0) deathParticles.splice(i, 1);
   }
 }
 
@@ -241,1723 +258,29 @@ function drawParticles() {
     ctx.globalAlpha = alpha * 0.9;
     ctx.fillStyle = p.color;
     ctx.shadowColor = p.color;
-    ctx.shadowBlur = Math.min(12, sz * 2);
+    ctx.shadowBlur = Math.min(10, sz * 2);
     ctx.beginPath();
     ctx.arc(p.x, p.y, sz, 0, Math.PI * 2);
     ctx.fill();
   }
-  ctx.shadowBlur = 0;
-  ctx.globalAlpha = 1;
-}
-
-// ─── PARALLAX STARFIELD + NEBULAE ───────────────────────────────
-let stars = [];
-let nebulae = [];
-
-function initStars() {
-  stars = [];
-  for (let i = 0; i < 250; i++) {
-    const layer = Math.random() < 0.35 ? 0 : (Math.random() < 0.5 ? 1 : (Math.random() < 0.6 ? 2 : 3));
-    stars.push({
-      x: rand(0, W), y: rand(0, H),
-      size: [rand(0.4, 1.0), rand(0.8, 1.8), rand(1.5, 2.8), rand(2.2, 3.5)][layer],
-      baseAlpha: [rand(0.25, 0.5), rand(0.4, 0.7), rand(0.6, 0.85), rand(0.75, 1)][layer],
-      twinkleSpeed: rand(1.5, 5),
-      twinkleOffset: rand(0, Math.PI * 2),
-      layer,
-      color: Math.random() < 0.5 ? COL.white :
-        [COL.purple, COL.cyan, COL.emeraldSoft, COL.goldLight, COL.magentaGlow, '#E0CFFF'][randInt(0, 5)],
-    });
-  }
-}
-
-function initNebulae() {
-  nebulae = [];
-  const colors = [
-    'rgba(168, 85, 247, 0.04)',  // purple
-    'rgba(59, 130, 246, 0.035)', // blue
-    'rgba(236, 72, 153, 0.03)',  // pink
-    'rgba(34, 211, 238, 0.025)', // cyan
-  ];
-  for (let i = 0; i < 8; i++) {
-    nebulae.push({
-      x: rand(0, W), y: rand(0, H),
-      rx: rand(80, 200), ry: rand(50, 140),
-      color: colors[i % colors.length],
-      layer: i < 3 ? 0 : (i < 6 ? 1 : 2),
-      baseY: rand(0, H),
-    });
-  }
-}
-initStars();
-initNebulae();
-window.addEventListener('resize', () => { initNebulae(); initStars(); });
-
-function updateStars(dt) {
-  const layerSpeeds = [0.04, 0.12, 0.28, 0.5];
-  for (const s of stars) {
-    s.y += layerSpeeds[s.layer] * dt * 60;
-    if (s.y > H + 5) { s.y = -5; s.x = rand(0, W); }
-  }
-  // Nebula drift
-  const nebulaSpeeds = [0.03, 0.08, 0.18];
-  for (const n of nebulae) {
-    n.y += nebulaSpeeds[n.layer] * dt * 60;
-    if (n.y - n.ry > H + 20) { n.y = -n.ry - 20; n.x = rand(0, W); }
-  }
-}
-
-function drawNebulae() {
-  for (const n of nebulae) {
-    const grad = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, Math.max(n.rx, n.ry));
-    grad.addColorStop(0, n.color);
-    grad.addColorStop(1, 'transparent');
-    ctx.fillStyle = grad;
-    ctx.beginPath();
-    ctx.ellipse(n.x, n.y, n.rx, n.ry, 0, 0, Math.PI * 2);
-    ctx.fill();
-  }
-}
-
-function drawStars(time) {
-  for (const s of stars) {
-    const twinkle = Math.sin(time * 0.001 * s.twinkleSpeed + s.twinkleOffset);
-    const alpha = s.baseAlpha * (0.6 + twinkle * 0.4);
-    if (alpha < 0.03) continue;
+  // Square death debris
+  for (const d of deathParticles) {
+    const alpha = clamp(d.life / d.maxLife, 0, 1);
     ctx.globalAlpha = alpha;
-    ctx.fillStyle = s.color;
-
-    if (s.size > 1.8) {
-      ctx.shadowColor = s.color;
-      ctx.shadowBlur = s.size * 5;
-    }
-    ctx.beginPath();
-    ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.shadowBlur = 0;
-
-    // Cross-glow for bright stars
-    if (s.size > 2.0 && alpha > 0.45) {
-      ctx.globalAlpha = alpha * 0.3;
-      const arm = s.size * 5;
-      ctx.fillRect(s.x - arm, s.y - 0.5, arm * 2, 1);
-      ctx.fillRect(s.x - 0.5, s.y - arm, 1, arm * 2);
-    }
-  }
-  ctx.globalAlpha = 1;
-}
-
-// ─── GOD RAYS from vanishing point ──────────────────────────────
-function drawGodRays(time) {
-  const cx = W / 2;
-  const cy = H * HORIZON_Y;
-  const env = getEnvPhase();
-  const rayCount = 8;
-  const baseAngle = time * 0.0001;
-
-  ctx.save();
-  ctx.globalCompositeOperation = 'screen';
-  for (let i = 0; i < rayCount; i++) {
-    const angle = baseAngle + (i / rayCount) * Math.PI * 2;
-    const flicker = 0.015 + Math.sin(time * 0.002 + i * 1.3) * 0.01;
-    const length = H * 0.7;
-    const spread = 0.12;
-
-    ctx.globalAlpha = flicker;
-    ctx.fillStyle = env.edge;
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.lineTo(cx + Math.cos(angle - spread) * length, cy + Math.sin(angle - spread) * length);
-    ctx.lineTo(cx + Math.cos(angle + spread) * length, cy + Math.sin(angle + spread) * length);
-    ctx.closePath();
-    ctx.fill();
-  }
-  ctx.restore();
-}
-
-// ─── PATH EDGE SPARKLES ─────────────────────────────────────────
-function updatePathSparkles(dt) {
-  // Spawn sparkles along path edges
-  if (state === STATE.PLAYING && Math.random() < 0.6) {
-    const z = rand(0.02, 0.8);
-    const e = getPathEdges(z);
-    const side = Math.random() < 0.5 ? e.left : e.right;
-    const y = getPathY(z);
-    const s = getScale(z);
-    const env = getEnvPhase();
-    sparkles.push({
-      x: side + rand(-3, 3), y: y + rand(-2, 2),
-      life: rand(0.3, 0.8), maxLife: rand(0.3, 0.8),
-      size: rand(1, 3) * s,
-      color: Math.random() < 0.6 ? env.edge : COL.white,
-    });
-  }
-  for (let i = sparkles.length - 1; i >= 0; i--) {
-    sparkles[i].life -= dt;
-    if (sparkles[i].life <= 0) sparkles.splice(i, 1);
-  }
-  // Cap sparkles
-  if (sparkles.length > 60) sparkles.splice(0, sparkles.length - 60);
-}
-
-function drawPathSparkles() {
-  for (const s of sparkles) {
-    const alpha = clamp(s.life / s.maxLife, 0, 1);
-    const pulse = 0.5 + Math.sin(s.life * 15) * 0.5;
-    ctx.globalAlpha = alpha * pulse;
-    ctx.fillStyle = s.color;
-    ctx.shadowColor = s.color;
-    ctx.shadowBlur = 6;
-    ctx.beginPath();
-    ctx.arc(s.x, s.y, s.size * alpha, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  ctx.shadowBlur = 0;
-  ctx.globalAlpha = 1;
-}
-
-// ─── AMBIENT SPARKLE PARTICLES ──────────────────────────────────
-function spawnAmbientSparkles(dt) {
-  if (state !== STATE.PLAYING) return;
-  // Floating sparkles around path area
-  if (Math.random() < 0.3) {
-    const x = rand(W * 0.1, W * 0.9);
-    const y = rand(H * HORIZON_Y, H * 0.95);
-    const env = getEnvPhase();
-    const col = Math.random() < 0.4 ? env.edge : Math.random() < 0.5 ? COL.white : env.glow;
-    spawnParticle(x, y, col, rand(-0.3, 0.3), rand(-0.5, 0.2), rand(0.5, 1.5), rand(0.8, 2), 0);
-  }
-}
-
-// ─── DRAW PATH ──────────────────────────────────────────────────
-function drawPath() {
-  const horizonY = H * HORIZON_Y;
-  const env = getEnvPhase();
-
-  // Main path fill — cosmic tunnel
-  ctx.beginPath();
-  const eBot = getPathEdges(0);
-  const eTop = getPathEdges(1);
-  ctx.moveTo(eBot.left, H);
-  ctx.lineTo(eTop.left, horizonY);
-  ctx.lineTo(eTop.right, horizonY);
-  ctx.lineTo(eBot.right, H);
-  ctx.closePath();
-  const pathGrad = ctx.createLinearGradient(0, horizonY, 0, H);
-  pathGrad.addColorStop(0, 'rgba(10, 5, 30, 0.5)');
-  pathGrad.addColorStop(0.5, 'rgba(15, 8, 40, 0.75)');
-  pathGrad.addColorStop(1, 'rgba(20, 10, 50, 0.9)');
-  ctx.fillStyle = pathGrad;
-  ctx.fill();
-
-  // Inner glow on path surface
-  const innerGlow = ctx.createLinearGradient(0, horizonY, 0, H);
-  innerGlow.addColorStop(0, `${env.grid} 0.04)`);
-  innerGlow.addColorStop(0.5, `${env.grid} 0.02)`);
-  innerGlow.addColorStop(1, `${env.grid} 0.06)`);
-  ctx.fillStyle = innerGlow;
-  ctx.fill();
-
-  // Grid lines (horizontal — scrolling)
-  const gridSpacing = 0.04;
-  gridOffset = (gridOffset + speed * 0.001) % gridSpacing;
-  for (let z = gridOffset; z < 1; z += gridSpacing) {
-    const y = getPathY(z);
-    const e = getPathEdges(z);
-    const alpha = lerp(0.18, 0.02, z);
-    ctx.strokeStyle = `${env.grid} ${alpha})`;
-    ctx.lineWidth = lerp(1.2, 0.3, z);
-    ctx.beginPath();
-    ctx.moveTo(e.left, y);
-    ctx.lineTo(e.right, y);
-    ctx.stroke();
-  }
-
-  // Lane dividers
-  for (let l = 1; l < LANE_COUNT; l++) {
-    ctx.beginPath();
-    for (let z = 0; z <= 1; z += 0.02) {
-      const e = getPathEdges(z);
-      const laneW = e.width / LANE_COUNT;
-      const x = e.left + laneW * l;
-      const y = getPathY(z);
-      if (z === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-    }
-    const laneGrad = ctx.createLinearGradient(0, H, 0, horizonY);
-    laneGrad.addColorStop(0, `${env.grid} 0.2)`);
-    laneGrad.addColorStop(1, `${env.grid} 0.02)`);
-    ctx.strokeStyle = laneGrad;
-    ctx.lineWidth = 1;
-    ctx.stroke();
-  }
-
-  // Edge glow — electric purple with cyan outer edge
-  for (let side = 0; side < 2; side++) {
-    ctx.beginPath();
-    for (let z = 0; z <= 1; z += 0.01) {
-      const e = getPathEdges(z);
-      const x = side === 0 ? e.left : e.right;
-      const y = getPathY(z);
-      if (z === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-    }
-    // Inner edge — environment color
-    const edgeGrad = ctx.createLinearGradient(0, H, 0, horizonY);
-    edgeGrad.addColorStop(0, env.edge);
-    edgeGrad.addColorStop(0.6, env.glow);
-    edgeGrad.addColorStop(1, 'transparent');
-    ctx.strokeStyle = edgeGrad;
-    ctx.lineWidth = 2.5;
-    ctx.shadowColor = env.edge;
-    ctx.shadowBlur = 18;
-    ctx.stroke();
-
-    // Outer edge — cyan accent
-    ctx.strokeStyle = `rgba(34, 211, 238, 0.3)`;
-    ctx.lineWidth = 1;
-    ctx.shadowColor = COL.cyan;
-    ctx.shadowBlur = 10;
-    ctx.stroke();
-    ctx.shadowBlur = 0;
-  }
-}
-
-// ─── OBSTACLES ──────────────────────────────────────────────────
-function spawnObstacle() {
-  const types = ['tall', 'tall', 'low', 'low'];
-  if (distance > 300) types.push('gap');
-  const type = types[randInt(0, types.length - 1)];
-  const lane = randInt(0, 2);
-  const obs = { lane, z: 1.1, type, moving: false, movDir: 0, movSpeed: 0 };
-
-  if (distance > 800 && Math.random() < 0.3) {
-    let lane2 = lane === 1 ? (Math.random() < 0.5 ? 0 : 2) : (lane === 0 ? 1 : 1);
-    obstacles.push({ lane: lane2, z: 1.1, type: types[randInt(0, types.length - 1)], moving: false, movDir: 0, movSpeed: 0 });
-  }
-
-  if (distance > 1500 && Math.random() < 0.25) {
-    obs.moving = true;
-    obs.movDir = Math.random() < 0.5 ? -1 : 1;
-    obs.movSpeed = rand(0.3, 0.7);
-  }
-
-  obstacles.push(obs);
-}
-
-function spawnOrb() {
-  const lane = randInt(0, 2);
-  const floating = Math.random() < 0.3;
-  const premium = Math.random() < 0.125;
-  orbs.push({ lane, z: 1.1, collected: false, floating, premium, pulse: rand(0, Math.PI * 2) });
-}
-
-function updateObstacles(dt) {
-  const moveSpeed = speed * 0.012 * dt * 60;
-  for (let i = obstacles.length - 1; i >= 0; i--) {
-    const o = obstacles[i];
-    o.z -= moveSpeed;
-    if (o.moving) {
-      o.lane += o.movDir * o.movSpeed * dt;
-      if (o.lane <= 0) { o.lane = 0; o.movDir = 1; }
-      if (o.lane >= 2) { o.lane = 2; o.movDir = -1; }
-    }
-    if (o.z < -0.1) obstacles.splice(i, 1);
-  }
-}
-
-function updateOrbs(dt) {
-  const moveSpeed = speed * 0.012 * dt * 60;
-  for (let i = orbs.length - 1; i >= 0; i--) {
-    const o = orbs[i];
-    o.z -= moveSpeed;
-    o.pulse += dt * 4;
-    if (o.z < -0.1 || o.collected) orbs.splice(i, 1);
-  }
-}
-
-function drawDynamite(x, y, s, w, h) {
-  // Red cylindrical body
-  const bw = w * 0.6;
-  const bh = h;
-  const bodyGrad = ctx.createLinearGradient(x - bw / 2, y - bh, x + bw / 2, y - bh);
-  bodyGrad.addColorStop(0, '#CC1111');
-  bodyGrad.addColorStop(0.3, '#FF2E2E');
-  bodyGrad.addColorStop(0.6, '#FF4444');
-  bodyGrad.addColorStop(0.8, '#FF2E2E');
-  bodyGrad.addColorStop(1, '#AA0000');
-  ctx.shadowColor = '#FF2E2E';
-  ctx.shadowBlur = 15 * s;
-  ctx.fillStyle = bodyGrad;
-  // Rounded rect body
-  const rad = bw * 0.25;
-  ctx.beginPath();
-  ctx.moveTo(x - bw / 2 + rad, y - bh);
-  ctx.lineTo(x + bw / 2 - rad, y - bh);
-  ctx.quadraticCurveTo(x + bw / 2, y - bh, x + bw / 2, y - bh + rad);
-  ctx.lineTo(x + bw / 2, y - rad);
-  ctx.quadraticCurveTo(x + bw / 2, y, x + bw / 2 - rad, y);
-  ctx.lineTo(x - bw / 2 + rad, y);
-  ctx.quadraticCurveTo(x - bw / 2, y, x - bw / 2, y - rad);
-  ctx.lineTo(x - bw / 2, y - bh + rad);
-  ctx.quadraticCurveTo(x - bw / 2, y - bh, x - bw / 2 + rad, y - bh);
-  ctx.closePath();
-  ctx.fill();
-  // Dark bands
-  ctx.fillStyle = 'rgba(100, 0, 0, 0.4)';
-  ctx.fillRect(x - bw / 2, y - bh * 0.35, bw, bh * 0.08);
-  ctx.fillRect(x - bw / 2, y - bh * 0.65, bw, bh * 0.08);
-  // Highlight
-  ctx.fillStyle = 'rgba(255,255,255,0.12)';
-  ctx.fillRect(x - bw * 0.15, y - bh + 2 * s, bw * 0.12, bh - 4 * s);
-  ctx.shadowBlur = 0;
-  // Fuse — curvy line from top
-  const fuseTop = y - bh;
-  ctx.strokeStyle = '#8B7355';
-  ctx.lineWidth = 2 * s;
-  ctx.beginPath();
-  ctx.moveTo(x, fuseTop);
-  const fWiggle = Math.sin(performance.now() * 0.008) * 3 * s;
-  ctx.quadraticCurveTo(x + fWiggle, fuseTop - 8 * s, x + 2 * s, fuseTop - 14 * s);
-  ctx.stroke();
-  // Spark tip — orange/yellow glow
-  const sparkX = x + 2 * s;
-  const sparkY = fuseTop - 14 * s;
-  const sparkFlicker = 0.6 + Math.sin(performance.now() * 0.02) * 0.4;
-  ctx.fillStyle = `rgba(255, 200, 50, ${sparkFlicker})`;
-  ctx.shadowColor = '#FFAA00';
-  ctx.shadowBlur = 10 * s;
-  ctx.beginPath();
-  ctx.arc(sparkX, sparkY, 3 * s, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = `rgba(255, 255, 200, ${sparkFlicker * 0.8})`;
-  ctx.beginPath();
-  ctx.arc(sparkX, sparkY, 1.5 * s, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.shadowBlur = 0;
-  // Fuse spark particles
-  if (s > 0.3 && Math.random() < 0.5) {
-    spawnParticle(sparkX + rand(-2, 2), sparkY + rand(-2, 2),
-      Math.random() < 0.5 ? '#FFAA00' : '#FF6B35',
-      rand(-1, 1), rand(-1.5, -0.3), rand(0.1, 0.25), rand(1, 2.5) * s, 0.04);
-  }
-}
-
-function drawObstacle(o) {
-  if (o.z < 0 || o.z > 1) return;
-  const x = getPathX(o.lane, o.z);
-  const y = getPathY(o.z);
-  const s = getScale(o.z);
-  const w = 30 * s;
-
-  if (o.type === 'tall') {
-    const h = 50 * s;
-    drawDynamite(x, y, s, w, h);
-  } else if (o.type === 'low') {
-    // Horizontal dynamite (on its side)
+    ctx.fillStyle = d.color;
     ctx.save();
-    ctx.translate(x, y - 24 * s);
-    ctx.rotate(Math.PI / 2);
-    drawDynamite(0, 12 * s, s, w * 0.7, 30 * s);
+    ctx.translate(d.x, d.y);
+    ctx.rotate(d.rot);
+    ctx.fillRect(-d.size/2, -d.size/2, d.size, d.size);
     ctx.restore();
-  } else if (o.type === 'gap') {
-    const e = getPathEdges(o.z);
-    const laneW = e.width / LANE_COUNT;
-    const lx = e.left + laneW * Math.floor(o.lane);
-    ctx.fillStyle = 'rgba(5, 0, 15, 0.95)';
-    ctx.fillRect(lx, y - 6 * s, laneW, 12 * s);
-    ctx.strokeStyle = 'rgba(255, 46, 46, 0.6)';
-    ctx.shadowColor = '#FF2E2E';
-    ctx.shadowBlur = 10 * s;
-    ctx.lineWidth = 1;
-    ctx.strokeRect(lx, y - 6 * s, laneW, 12 * s);
-    ctx.shadowBlur = 0;
   }
-}
-
-function drawDiamond(x, y, s, rotation, isPremium) {
-  const size = 14 * s;
-  const rot = rotation;
-  // Simulate 3D rotation — squeeze x based on rotation
-  const squeeze = Math.abs(Math.cos(rot));
-  const hw = size * 0.7 * Math.max(0.3, squeeze); // half width
-  const hh = size; // half height (top to middle)
-  const bottomH = size * 1.2; // bottom point length
-
-  ctx.save();
-  ctx.translate(x, y);
-
-  // Rainbow glow aura
-  const glowPhase = rot * 0.5;
-  const glowCol = isPremium ? COL.gold :
-    DIAMOND_COLORS[Math.floor((glowPhase % (Math.PI * 2)) / (Math.PI * 2) * DIAMOND_COLORS.length) % DIAMOND_COLORS.length];
-  ctx.shadowColor = glowCol;
-  ctx.shadowBlur = 25 * s;
-
-  // Determine face colors based on rotation for 3D effect
-  const facing = Math.sin(rot); // -1 to 1, which side faces us
-  const shimmer = Math.sin(rot * 2) * 0.5 + 0.5;
-
-  if (isPremium) {
-    // Gold diamond — solid gold shimmer
-    const leftCol = lerpColor(COL.gold, COL.goldLight, shimmer);
-    const rightCol = lerpColor(COL.goldDark, COL.gold, shimmer);
-    const topLeftCol = lerpColor(COL.goldLight, '#FFFDE0', shimmer);
-    const topRightCol = lerpColor(COL.gold, COL.goldLight, shimmer);
-
-    // Top-left facet
-    ctx.fillStyle = topLeftCol;
-    ctx.globalAlpha = 0.95;
-    ctx.beginPath();
-    ctx.moveTo(0, -hh); ctx.lineTo(-hw, 0); ctx.lineTo(0, 0); ctx.closePath();
-    ctx.fill();
-    // Top-right facet
-    ctx.fillStyle = topRightCol;
-    ctx.beginPath();
-    ctx.moveTo(0, -hh); ctx.lineTo(hw, 0); ctx.lineTo(0, 0); ctx.closePath();
-    ctx.fill();
-    // Bottom-left facet
-    ctx.fillStyle = leftCol;
-    ctx.globalAlpha = 0.9;
-    ctx.beginPath();
-    ctx.moveTo(-hw, 0); ctx.lineTo(0, bottomH); ctx.lineTo(0, 0); ctx.closePath();
-    ctx.fill();
-    // Bottom-right facet
-    ctx.fillStyle = rightCol;
-    ctx.beginPath();
-    ctx.moveTo(hw, 0); ctx.lineTo(0, bottomH); ctx.lineTo(0, 0); ctx.closePath();
-    ctx.fill();
-  } else {
-    // Rainbow diamond — shift colors
-    const ci = ((rot / (Math.PI * 2)) * DIAMOND_COLORS.length) % DIAMOND_COLORS.length;
-    const c0 = DIAMOND_COLORS[Math.floor(ci) % DIAMOND_COLORS.length];
-    const c1 = DIAMOND_COLORS[(Math.floor(ci) + 1) % DIAMOND_COLORS.length];
-    const c2 = DIAMOND_COLORS[(Math.floor(ci) + 2) % DIAMOND_COLORS.length];
-    const c3 = DIAMOND_COLORS[(Math.floor(ci) + 3) % DIAMOND_COLORS.length];
-    const t = ci % 1;
-
-    // Top-left facet
-    ctx.fillStyle = lerpColor(c0, c1, t);
-    ctx.globalAlpha = 0.92;
-    ctx.beginPath();
-    ctx.moveTo(0, -hh); ctx.lineTo(-hw, 0); ctx.lineTo(0, 0); ctx.closePath();
-    ctx.fill();
-    // Top-right facet (brighter)
-    ctx.fillStyle = lerpColor(c1, c2, t);
-    ctx.globalAlpha = 0.95;
-    ctx.beginPath();
-    ctx.moveTo(0, -hh); ctx.lineTo(hw, 0); ctx.lineTo(0, 0); ctx.closePath();
-    ctx.fill();
-    // Bottom-left facet (darker)
-    ctx.fillStyle = lerpColor(c2, c3, t);
-    ctx.globalAlpha = 0.85;
-    ctx.beginPath();
-    ctx.moveTo(-hw, 0); ctx.lineTo(0, bottomH); ctx.lineTo(0, 0); ctx.closePath();
-    ctx.fill();
-    // Bottom-right facet
-    ctx.fillStyle = lerpColor(c3, c0, t);
-    ctx.globalAlpha = 0.88;
-    ctx.beginPath();
-    ctx.moveTo(hw, 0); ctx.lineTo(0, bottomH); ctx.lineTo(0, 0); ctx.closePath();
-    ctx.fill();
-  }
-
-  // Edge highlights — white lines along facet edges
-  ctx.shadowBlur = 0;
-  ctx.globalAlpha = 0.4 + shimmer * 0.3;
-  ctx.strokeStyle = COL.white;
-  ctx.lineWidth = 0.8 * s;
-  ctx.beginPath();
-  ctx.moveTo(0, -hh); ctx.lineTo(-hw, 0); ctx.lineTo(0, bottomH); ctx.lineTo(hw, 0); ctx.closePath();
-  ctx.moveTo(0, -hh); ctx.lineTo(0, bottomH);
-  ctx.stroke();
-
-  // Center sparkle highlight
-  ctx.globalAlpha = shimmer * 0.6;
-  ctx.fillStyle = COL.white;
-  ctx.beginPath();
-  ctx.arc(0, -hh * 0.2, 2 * s, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.globalAlpha = 1;
-  ctx.restore();
-}
-
-function drawOrb(o) {
-  if (o.z < 0 || o.z > 1 || o.collected) return;
-  const x = getPathX(o.lane, o.z);
-  let y = getPathY(o.z);
-  const s = getScale(o.z);
-  if (o.floating) y -= 35 * s;
-  else y -= 15 * s;
-
-  // Slow rotation
-  const rotation = o.pulse * 0.8;
-
-  drawDiamond(x, y, s, rotation, o.premium);
-
-  // Outer pulse ring
-  const ringAlpha = 0.2 + Math.sin(o.pulse * 2) * 0.15;
-  const ringR = 18 * s;
-  ctx.strokeStyle = o.premium ? COL.gold : COL.cyan;
-  ctx.globalAlpha = ringAlpha;
-  ctx.lineWidth = 1 * s;
-  ctx.shadowColor = o.premium ? COL.gold : COL.cyan;
-  ctx.shadowBlur = 8 * s;
-  ctx.beginPath();
-  ctx.arc(x, y, ringR, 0, Math.PI * 2);
-  ctx.stroke();
-
-  // Ambient sparkles around diamond
-  if (s > 0.3 && Math.random() < 0.35) {
-    const col = o.premium ? COL.gold : DIAMOND_COLORS[randInt(0, DIAMOND_COLORS.length - 1)];
-    spawnParticle(x + rand(-12, 12) * s, y + rand(-12, 12) * s, col,
-      rand(-0.4, 0.4), rand(-0.6, 0.2), rand(0.15, 0.4), rand(1, 2.5) * s, 0);
-  }
-
   ctx.shadowBlur = 0;
   ctx.globalAlpha = 1;
 }
 
-// ─── GOLD COIN SYSTEM ───────────────────────────────────────────
-function spawnGoldCoin() {
-  const lane = randInt(0, 2);
-  goldCoins.push({ lane, z: 1.1, collected: false, pulse: rand(0, Math.PI * 2), spin: rand(0, Math.PI * 2) });
-}
-
-function updateGoldCoins(dt) {
-  const moveSpeed = speed * 0.012 * dt * 60;
-  for (let i = goldCoins.length - 1; i >= 0; i--) {
-    const c = goldCoins[i];
-    c.z -= moveSpeed;
-    c.pulse += dt * 3;
-    c.spin += dt * 2.5;
-    if (c.z < -0.1 || c.collected) goldCoins.splice(i, 1);
-  }
-  // Jackpot celebration timer
-  if (jackpotTimer > 0) {
-    jackpotTimer -= dt;
-    // Rain gold particles from top during jackpot
-    if (jackpotTimer > 0.5) {
-      for (let i = 0; i < 4; i++) {
-        spawnParticle(rand(0, W), rand(-10, 0),
-          Math.random() < 0.6 ? COL.gold : Math.random() < 0.5 ? COL.goldLight : COL.white,
-          rand(-1, 1), rand(2, 6), rand(0.8, 2.0), rand(3, 7), 0.03);
-      }
-    }
-  }
-  // Score roll-up animation
-  if (jackpotScoreAnim > 0) {
-    const add = Math.min(jackpotScoreAnim, 300 * dt * 60);
-    score += add;
-    jackpotScoreAnim -= add;
-    if (jackpotScoreAnim < 1) jackpotScoreAnim = 0;
-  }
-  // HUD flash decay
-  if (goldCoinHudFlash > 0) goldCoinHudFlash -= dt;
-}
-
-function drawGoldCoin(c) {
-  if (c.z < 0 || c.z > 1 || c.collected) return;
-  const x = getPathX(c.lane, c.z);
-  let y = getPathY(c.z) - 20 * getScale(c.z);
-  const s = getScale(c.z);
-  const r = 22 * s; // BIG — 2-3x diamond size
-  const squeeze = Math.abs(Math.cos(c.spin));
-  const coinW = r * Math.max(0.25, squeeze);
-  const pulseGlow = 1 + Math.sin(c.pulse * 2) * 0.2;
-
-  ctx.save();
-  ctx.translate(x, y);
-
-  // Outer golden glow aura
-  ctx.shadowColor = COL.gold;
-  ctx.shadowBlur = 35 * s * pulseGlow;
-
-  // Coin body — ellipse (squeezed for 3D spin)
-  const coinGrad = ctx.createLinearGradient(-coinW, -r, coinW, r);
-  coinGrad.addColorStop(0, '#B8860B');
-  coinGrad.addColorStop(0.3, COL.gold);
-  coinGrad.addColorStop(0.5, COL.goldLight);
-  coinGrad.addColorStop(0.7, COL.gold);
-  coinGrad.addColorStop(1, '#B8860B');
-  ctx.fillStyle = coinGrad;
-  ctx.globalAlpha = 0.95;
-  ctx.beginPath();
-  ctx.ellipse(0, 0, coinW, r, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Inner circle border
-  ctx.strokeStyle = '#B8860B';
-  ctx.lineWidth = 2 * s;
-  ctx.globalAlpha = 0.5;
-  ctx.beginPath();
-  ctx.ellipse(0, 0, coinW * 0.75, r * 0.75, 0, 0, Math.PI * 2);
-  ctx.stroke();
-
-  // Embossed star in center (only visible when face is showing)
-  if (squeeze > 0.4) {
-    ctx.globalAlpha = squeeze * 0.7;
-    ctx.fillStyle = '#B8860B';
-    ctx.font = `bold ${Math.floor(r * 1.0)}px -apple-system, sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('\u2605', 0, 1 * s); // ★ star
-    // Brighter overlay
-    ctx.globalAlpha = squeeze * 0.4;
-    ctx.fillStyle = COL.goldLight;
-    ctx.fillText('\u2605', 0, 0);
-  }
-
-  // Edge highlight — bright rim
-  ctx.globalAlpha = 0.4 + Math.sin(c.pulse * 3) * 0.2;
-  ctx.strokeStyle = COL.goldLight;
-  ctx.lineWidth = 1.5 * s;
-  ctx.beginPath();
-  ctx.ellipse(0, 0, coinW, r, 0, 0, Math.PI * 2);
-  ctx.stroke();
-
-  ctx.shadowBlur = 0;
-  ctx.globalAlpha = 1;
-  ctx.restore();
-
-  // Outer pulse ring
-  ctx.strokeStyle = COL.gold;
-  ctx.globalAlpha = 0.25 + Math.sin(c.pulse * 2) * 0.15;
-  ctx.lineWidth = 1.5 * s;
-  ctx.shadowColor = COL.gold;
-  ctx.shadowBlur = 12 * s;
-  ctx.beginPath();
-  ctx.arc(x, y, r * 1.8, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.shadowBlur = 0;
-  ctx.globalAlpha = 1;
-
-  // Constant sparkle particles
-  if (s > 0.25 && Math.random() < 0.6) {
-    spawnParticle(x + rand(-r, r), y + rand(-r, r),
-      Math.random() < 0.6 ? COL.gold : COL.goldLight,
-      rand(-0.5, 0.5), rand(-0.8, 0.2), rand(0.2, 0.5), rand(1.5, 3) * s, 0);
-  }
-}
-
-function checkGoldCoinCollisions() {
-  const pz = 0.14;
-  const hitZone = 0.045; // slightly larger hit zone — reward the player
-  for (const c of goldCoins) {
-    if (c.collected) continue;
-    if (Math.abs(c.z - pz) > hitZone) continue;
-    if (Math.abs(c.lane - player.lane) > 0.7) continue;
-
-    c.collected = true;
-    goldCoinsCollected++;
-    goldCoinHudFlash = 0.8;
-
-    const cx = getPathX(c.lane, c.z);
-    const cy = getPathY(c.z) - 20 * getScale(c.z);
-
-    // Gold burst on pickup
-    spawnBurst(cx, cy, COL.gold, 50, 6, 1.0, 7);
-    spawnBurst(cx, cy, COL.goldLight, 30, 5, 0.8, 5);
-    spawnBurst(cx, cy, COL.white, 15, 4, 0.5, 3);
-    screenFlash = 0.35;
-    screenFlashColor = COL.gold;
-    shakeDur = 0.1;
-
-    floatingTexts.push({ text: '+GOLD COIN! \uD83E\uDE99', x: cx, y: cy - 15, life: 1.8, maxLife: 1.8, color: COL.gold, size: 26 });
-    floatingTexts.push({ text: `\uD83E\uDE99 ${goldCoinsCollected}/3`, x: cx, y: cy + 10, life: 1.5, maxLife: 1.5, color: COL.goldLight, size: 20 });
-
-    // Check for JACKPOT
-    if (goldCoinsCollected >= 3) {
-      triggerJackpot();
-    }
-  }
-}
-
-function triggerJackpot() {
-  jackpotTimer = 2.5;
-  goldCoinsCollected = 0;
-  totalJackpots++;
-  jackpotScoreAnim = 10000; // will roll up into score
-  slowMoTimer = Math.max(slowMoTimer, 0.5);
-  shakeDur = 0.6;
-  screenFlash = 0.8;
-  screenFlashColor = COL.gold;
-
-  // MASSIVE particle explosion — hundreds of gold beads
-  spawnBurst(W / 2, H * 0.4, COL.gold, 120, 10, 2.0, 10);
-  spawnBurst(W / 2, H * 0.4, COL.goldLight, 80, 8, 1.5, 8);
-  spawnBurst(W / 2, H * 0.4, COL.white, 40, 7, 1.0, 5);
-  spawnBurst(W / 2, H * 0.4, COL.cyan, 30, 6, 1.0, 5);
-  spawnBurst(W / 2, H * 0.4, COL.magentaGlow, 20, 5, 0.8, 4);
-  // Confetti-style colored bursts from edges
-  spawnBurst(W * 0.2, H * 0.3, COL.emerald, 25, 5, 1.2, 5);
-  spawnBurst(W * 0.8, H * 0.3, COL.purple, 25, 5, 1.2, 5);
-  spawnBurst(W * 0.5, H * 0.2, COL.gold, 40, 6, 1.5, 6);
-
-  // Giant text
-  floatingTexts.push({ text: 'JACKPOT! \uD83D\uDCB0', x: W / 2, y: H * 0.3, life: 3.0, maxLife: 3.0, color: COL.gold, size: 52 });
-  floatingTexts.push({ text: 'WISH MANIFESTED! \u2728', x: W / 2, y: H * 0.38, life: 3.0, maxLife: 3.0, color: COL.goldLight, size: 24 });
-  floatingTexts.push({ text: '+10,000', x: W / 2, y: H * 0.25, life: 3.0, maxLife: 3.0, color: COL.gold, size: 44 });
-
-  // Emoji shower
-  const jackpotEmojis = ['\uD83D\uDCB0', '\u2728', '\uD83D\uDE80', '\uD83C\uDF1F', '\uD83D\uDC8E', '\uD83E\uDE99'];
-  for (let i = 0; i < 10; i++) {
-    floatingTexts.push({
-      text: jackpotEmojis[i % jackpotEmojis.length],
-      x: rand(W * 0.15, W * 0.85), y: rand(H * 0.2, H * 0.6),
-      life: 2.5, maxLife: 2.5, color: COL.gold, size: 28
-    });
-  }
-}
-
-// ─── SUPER BOOST BLUE DIAMOND SYSTEM ────────────────────────────
-function getBlueDiamondSlotPos(index) {
-  const pad = 16;
-  const top = 14 + (CSS.supports('padding-top: env(safe-area-inset-top)') ? 30 : 0);
-  // Below score badge (40h) + secondary row (~22h) + spacing
-  return { x: pad + 16, y: top + 74 + index * 44 };
-}
-
-function spawnBlueDiamond() {
-  const laneRoll = Math.random();
-  const lane = laneRoll < 0.4 ? 0 : laneRoll < 0.7 ? 1 : 2;
-  blueDiamonds.push({ lane, z: 1.1, collected: false, pulse: rand(0, Math.PI * 2) });
-}
-
-function updateBlueDiamonds(dt) {
-  const moveSpeed = speed * 0.012 * dt * 60;
-  for (let i = blueDiamonds.length - 1; i >= 0; i--) {
-    const d = blueDiamonds[i];
-    d.z -= moveSpeed;
-    d.pulse += dt * 3;
-    if (d.z < -0.1 || d.collected) blueDiamonds.splice(i, 1);
-  }
-  // Fly-to-slot animations
-  for (let i = blueDiamondAnims.length - 1; i >= 0; i--) {
-    const a = blueDiamondAnims[i];
-    a.progress += dt * 2.5;
-    if (a.progress >= 1) {
-      blueDiamondHudFlash = 0.6;
-      spawnBurst(a.tx, a.ty, COL.cyan, 20, 4, 0.5, 4);
-      spawnBurst(a.tx, a.ty, COL.white, 10, 3, 0.3, 2);
-      blueDiamondAnims.splice(i, 1);
-    } else {
-      const t = a.progress;
-      const cx = lerp(a.x, a.tx, t);
-      const cy = lerp(a.y, a.ty, t);
-      if (Math.random() < 0.8) {
-        spawnParticle(cx + rand(-3, 3), cy + rand(-3, 3),
-          Math.random() < 0.5 ? COL.cyan : COL.white,
-          rand(-1, 1), rand(-1, 1), rand(0.1, 0.3), rand(1.5, 3), 0);
-      }
-    }
-  }
-  // Super boost timer
-  if (superBoostTimer > 0) {
-    superBoostTimer -= dt;
-    if (superBoostTimer <= 0) {
-      superBoostTimer = 0;
-      screenFlash = 0.4;
-      screenFlashColor = COL.cyan;
-      floatingTexts.push({ text: 'BOOST COMPLETE! \u26A1', x: W / 2, y: H * 0.35, life: 2.0, maxLife: 2.0, color: COL.cyan, size: 36 });
-      speed = Math.max(speed * 0.7, baseSpeed + (distance * 0.001));
-    }
-    if (superBoostTimer > 0) {
-      for (let i = 0; i < 3; i++) {
-        spawnParticle(rand(0, W), rand(0, H),
-          [COL.cyan, COL.cyanGlow, COL.white, COL.emerald, COL.gold][randInt(0, 4)],
-          rand(-1, 1), rand(-1, 1), rand(0.2, 0.5), rand(1, 3), 0);
-      }
-    }
-  }
-  if (blueDiamondHudFlash > 0) blueDiamondHudFlash -= dt;
-}
-
-function drawBlueDiamond(d) {
-  if (d.z < 0 || d.z > 1 || d.collected) return;
-  const x = getPathX(d.lane, d.z);
-  let y = getPathY(d.z) - 20 * getScale(d.z);
-  const s = getScale(d.z);
-  const size = 28 * s;
-  const rot = d.pulse * 0.8;
-  const squeeze = Math.abs(Math.cos(rot));
-  const hw = size * 0.7 * Math.max(0.3, squeeze);
-  const hh = size;
-  const bottomH = size * 1.2;
-  const shimmer = Math.sin(rot * 2) * 0.5 + 0.5;
-
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.shadowColor = COL.cyan;
-  ctx.shadowBlur = 40 * s;
-
-  const ci = ((rot / (Math.PI * 2)) * 4) % 4;
-  const colors = [COL.cyan, COL.cyanGlow, '#60E0FF', COL.white];
-  const t = ci % 1;
-
-  ctx.fillStyle = lerpColor(colors[Math.floor(ci) % 4], colors[(Math.floor(ci) + 1) % 4], t);
-  ctx.globalAlpha = 0.95;
-  ctx.beginPath();
-  ctx.moveTo(0, -hh); ctx.lineTo(-hw, 0); ctx.lineTo(0, 0); ctx.closePath();
-  ctx.fill();
-  ctx.fillStyle = lerpColor(colors[(Math.floor(ci) + 1) % 4], colors[(Math.floor(ci) + 2) % 4], t);
-  ctx.beginPath();
-  ctx.moveTo(0, -hh); ctx.lineTo(hw, 0); ctx.lineTo(0, 0); ctx.closePath();
-  ctx.fill();
-  ctx.fillStyle = lerpColor(colors[(Math.floor(ci) + 2) % 4], colors[(Math.floor(ci) + 3) % 4], t);
-  ctx.globalAlpha = 0.85;
-  ctx.beginPath();
-  ctx.moveTo(-hw, 0); ctx.lineTo(0, bottomH); ctx.lineTo(0, 0); ctx.closePath();
-  ctx.fill();
-  ctx.fillStyle = lerpColor(colors[(Math.floor(ci) + 3) % 4], colors[Math.floor(ci) % 4], t);
-  ctx.globalAlpha = 0.88;
-  ctx.beginPath();
-  ctx.moveTo(hw, 0); ctx.lineTo(0, bottomH); ctx.lineTo(0, 0); ctx.closePath();
-  ctx.fill();
-
-  ctx.shadowBlur = 0;
-  ctx.globalAlpha = 0.5 + shimmer * 0.3;
-  ctx.strokeStyle = COL.white;
-  ctx.lineWidth = 1.2 * s;
-  ctx.beginPath();
-  ctx.moveTo(0, -hh); ctx.lineTo(-hw, 0); ctx.lineTo(0, bottomH); ctx.lineTo(hw, 0); ctx.closePath();
-  ctx.moveTo(0, -hh); ctx.lineTo(0, bottomH);
-  ctx.stroke();
-  ctx.globalAlpha = shimmer * 0.8;
-  ctx.fillStyle = COL.white;
-  ctx.beginPath();
-  ctx.arc(0, -hh * 0.2, 3 * s, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.globalAlpha = 1;
-  ctx.restore();
-
-  ctx.strokeStyle = COL.cyan;
-  ctx.globalAlpha = 0.3 + Math.sin(d.pulse * 2) * 0.15;
-  ctx.lineWidth = 2 * s;
-  ctx.shadowColor = COL.cyan;
-  ctx.shadowBlur = 15 * s;
-  ctx.beginPath();
-  ctx.arc(x, y, size * 1.5, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.shadowBlur = 0;
-  ctx.globalAlpha = 1;
-
-  if (s > 0.25 && Math.random() < 0.7) {
-    spawnParticle(x + rand(-size, size), y + rand(-size, size),
-      Math.random() < 0.6 ? COL.cyan : COL.white,
-      rand(-0.6, 0.6), rand(-0.8, 0.3), rand(0.2, 0.5), rand(2, 4) * s, 0);
-  }
-}
-
-function drawBlueDiamondAnims() {
-  for (const a of blueDiamondAnims) {
-    const t = a.progress;
-    const cx = lerp(a.x, a.tx, t * t);
-    const cy = lerp(a.y, a.ty, t);
-    const s = lerp(1, 0.4, t);
-    drawDiamond(cx, cy, s * 0.6, performance.now() * 0.005, false);
-    ctx.globalAlpha = 0.5 * (1 - t);
-    ctx.fillStyle = COL.cyan;
-    ctx.shadowColor = COL.cyan;
-    ctx.shadowBlur = 15;
-    ctx.beginPath();
-    ctx.arc(cx, cy, 5 * s, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.shadowBlur = 0;
-    ctx.globalAlpha = 1;
-  }
-}
-
-function checkBlueDiamondCollisions() {
-  const pz = 0.14;
-  const hitZone = 0.045;
-  for (const d of blueDiamonds) {
-    if (d.collected) continue;
-    if (Math.abs(d.z - pz) > hitZone) continue;
-    if (Math.abs(d.lane - player.lane) > 0.7) continue;
-
-    d.collected = true;
-    blueDiamondsCollected++;
-    const cx = getPathX(d.lane, d.z);
-    const cy = getPathY(d.z) - 20 * getScale(d.z);
-    spawnBurst(cx, cy, COL.cyan, 40, 6, 0.8, 6);
-    spawnBurst(cx, cy, COL.white, 20, 4, 0.5, 3);
-    screenFlash = 0.3;
-    screenFlashColor = COL.cyan;
-    shakeDur = 0.08;
-    const slot = getBlueDiamondSlotPos(blueDiamondsCollected - 1);
-    blueDiamondAnims.push({ x: cx, y: cy, tx: slot.x, ty: slot.y, progress: 0 });
-    floatingTexts.push({ text: '\uD83D\uDC8E ' + blueDiamondsCollected + '/3', x: cx, y: cy - 20, life: 1.5, maxLife: 1.5, color: COL.cyan, size: 24 });
-    if (blueDiamondsCollected >= 3) triggerSuperBoost();
-  }
-}
-
-function triggerSuperBoost() {
-  superBoostTimer = 9;
-  blueDiamondsCollected = 0;
-  totalSuperBoosts++;
-  slowMoTimer = Math.max(slowMoTimer, 0.5);
-  shakeDur = 0.5;
-  screenFlash = 0.8;
-  screenFlashColor = COL.cyan;
-  speed = Math.min(maxSpeed, speed * 1.5);
-  spawnBurst(W / 2, H * 0.4, COL.cyan, 100, 10, 2.0, 10);
-  spawnBurst(W / 2, H * 0.4, COL.cyanGlow, 60, 8, 1.5, 8);
-  spawnBurst(W / 2, H * 0.4, COL.white, 40, 7, 1.0, 5);
-  spawnBurst(W / 2, H * 0.4, COL.emerald, 30, 6, 1.0, 5);
-  spawnBurst(W / 2, H * 0.4, COL.gold, 20, 5, 0.8, 4);
-  spawnBurst(W * 0.2, H * 0.3, COL.cyan, 25, 5, 1.2, 5);
-  spawnBurst(W * 0.8, H * 0.3, COL.cyanGlow, 25, 5, 1.2, 5);
-  floatingTexts.push({ text: 'SUPER BOOST! \uD83D\uDE80\u2728', x: W / 2, y: H * 0.3, life: 3.0, maxLife: 3.0, color: COL.cyan, size: 48 });
-  floatingTexts.push({ text: 'INVINCIBLE!', x: W / 2, y: H * 0.38, life: 2.5, maxLife: 2.5, color: COL.cyanGlow, size: 28 });
-  const boostEmojis = ['\uD83D\uDE80', '\u2728', '\uD83D\uDC8E', '\u26A1', '\uD83C\uDF1F', '\uD83D\uDCAB'];
-  for (let i = 0; i < 8; i++) {
-    floatingTexts.push({
-      text: boostEmojis[i % boostEmojis.length],
-      x: rand(W * 0.15, W * 0.85), y: rand(H * 0.2, H * 0.6),
-      life: 2.5, maxLife: 2.5, color: COL.cyan, size: 28
-    });
-  }
-}
-
-// ─── PLAYER ─────────────────────────────────────────────────────
-function updatePlayer(dt) {
-  if (touching) {
-    player.lane = lerp(player.lane, player.targetLane, 0.7 * dt * 60);
-  } else {
-    player.lane = lerp(player.lane, player.targetLane, 0.45 * dt * 60);
-  }
-  player.x = getPathX(player.lane, 0.14);
-  player.y = getPathY(0.14);
-
-  // Banking — tilt toward movement direction
-  const bankTarget = clamp((player.targetLane - player.lane) * 0.4, -0.35, 0.35);
-  player.bankAngle = lerp(player.bankAngle, bankTarget, 0.12 * dt * 60);
-
-  // Jump physics
-  if (player.isJumping) {
-    player.jumpVel += 0.4 * dt * 60;
-    player.jumpY += player.jumpVel * dt * 60;
-    if (player.jumpY >= 0) {
-      player.jumpY = 0; player.jumpVel = 0; player.isJumping = false;
-    }
-  }
-
-  // Slide timer
-  if (player.isSliding) {
-    player.slideTimer -= dt;
-    if (player.slideTimer <= 0) { player.isSliding = false; player.slideTimer = 0; }
-  }
-
-  // Invincibility + hit flash
-  if (invincTimer > 0) invincTimer -= dt;
-  if (hitFlashTimer > 0) hitFlashTimer -= dt;
-  if (player.collectBoost > 0) player.collectBoost -= dt;
-
-  // Anim
-  player.animPhase += dt * 5;
-
-  // Damage smoke — cinematic
-  if (state === STATE.PLAYING && damageLevel > 0) {
-    const smokeRate = damageLevel === 1 ? 0.4 : 0.8;
-    if (Math.random() < smokeRate) {
-      const smokeCol = damageLevel === 1 ? 'rgba(160,140,180,0.5)' : 'rgba(60,40,70,0.7)';
-      spawnParticle(
-        player.x + rand(-10, 10), player.y + player.jumpY + rand(-12, 5),
-        smokeCol, rand(-1, 1), rand(-2, -0.3), rand(0.4, 0.9), rand(3, 7), 0.02
-      );
-    }
-    // Fire sparks at damage 2
-    if (damageLevel >= 2 && Math.random() < 0.35) {
-      spawnParticle(
-        player.x + rand(-14, 14), player.y + player.jumpY + rand(-18, 0),
-        Math.random() < 0.5 ? COL.magenta : '#FF6B35',
-        rand(-2.5, 2.5), rand(-2.5, 0), rand(0.15, 0.35), rand(1.5, 3), 0.03
-      );
-    }
-    // Occasional magenta flash particles
-    if (damageLevel >= 2 && Math.random() < 0.15) {
-      spawnParticle(
-        player.x + rand(-8, 8), player.y + player.jumpY + rand(-10, 0),
-        COL.magentaGlow, rand(-1, 1), rand(-1, 0), rand(0.1, 0.2), rand(2, 4), 0
-      );
-    }
-  }
-
-  // Engine flame particles — multi-layered
-  if (state === STATE.PLAYING) {
-    const boost = player.collectBoost > 0;
-    const isSB = superBoostTimer > 0;
-    const flameCount = player.isSliding ? 2 : (isSB ? 14 : (boost ? 8 : 5));
-    for (let i = 0; i < flameCount; i++) {
-      const baseY = player.y + player.jumpY + (player.isSliding ? 3 : 8);
-      if (i < 2) {
-        spawnParticle(
-          player.x + rand(-3, 3), baseY + rand(0, 2),
-          isSB ? COL.white : COL.cyan, rand(-0.2, 0.2), rand(1.5, isSB ? 6 : 4), rand(0.12, 0.3), rand(2, isSB ? 6 : 3.5), 0.02
-        );
-      }
-      const flameCol = isSB
-        ? [COL.cyan, COL.emerald, COL.gold, COL.magentaGlow, COL.white, COL.purple][randInt(0, 5)]
-        : (Math.random() < 0.3 ? '#FF6B35' : Math.random() < 0.4 ? COL.gold : COL.purple);
-      spawnParticle(
-        player.x + rand(isSB ? -14 : -7, isSB ? 14 : 7), baseY + rand(0, isSB ? 8 : 5),
-        flameCol, rand(-0.5, 0.5), rand(1, isSB ? 5 : 3.5), rand(0.15, 0.45), rand(2, isSB ? 9 : (boost ? 6 : 4.5)), 0.02
-      );
-    }
-    // Wingtip sparkles
-    if (Math.random() < 0.5 && !player.isSliding) {
-      const s = getScale(0.14);
-      const w = player.width * s;
-      for (const side of [-1, 1]) {
-        if (Math.random() < 0.4) {
-          spawnParticle(
-            player.x + side * w * 0.45, player.y + player.jumpY - rand(0, 5),
-            Math.random() < 0.5 ? COL.cyan : COL.purple,
-            side * rand(0.3, 1), rand(-0.3, 0.3), rand(0.1, 0.25), rand(1, 2), 0
-          );
-        }
-      }
-    }
-    // Glow trail
-    if (Math.random() < 0.5) {
-      spawnParticle(
-        player.x + rand(-4, 4), player.y + player.jumpY + rand(3, 10),
-        COL.purple, rand(-0.2, 0.2), rand(0.5, 1.5), rand(0.15, 0.35), rand(1.5, 3), 0.01
-      );
-    }
-  }
-}
-
-function drawPlayer() {
-  const x = player.x;
-  let y = player.y + player.jumpY;
-  const s = getScale(0.14);
-  const bob = Math.sin(player.animPhase) * 2.5 + Math.sin(player.animPhase * 1.7) * 0.8;
-  const tilt = player.bankAngle + Math.sin(player.animPhase * 0.7) * 0.02;
-
-  // Invincibility blink
-  if (invincTimer > 0 && Math.sin(invincTimer * 20) > 0.3) return;
-
-  ctx.save();
-  ctx.translate(x, y + bob);
-  ctx.rotate(tilt);
-
-  // Hit flash — magenta overlay
-  if (hitFlashTimer > 0) {
-    ctx.globalAlpha = 0.5 + (hitFlashTimer / 0.25) * 0.5;
-  }
-
-  const w = player.width * s;
-  const h = player.height * s;
-
-  if (player.isSliding) {
-    const sw = w * 1.3;
-    const sh = h * 0.3;
-    ctx.shadowColor = COL.cyan;
-    ctx.shadowBlur = 24;
-
-    const bodyGrad = ctx.createLinearGradient(-sw / 2, -sh, sw / 2, 0);
-    bodyGrad.addColorStop(0, COL.purple);
-    bodyGrad.addColorStop(0.5, COL.cyan);
-    bodyGrad.addColorStop(1, COL.purple);
-    ctx.fillStyle = hitFlashTimer > 0 ? COL.magenta : bodyGrad;
-    ctx.beginPath();
-    ctx.moveTo(0, -sh);
-    ctx.lineTo(sw / 2, 0);
-    ctx.lineTo(0, sh * 0.3);
-    ctx.lineTo(-sw / 2, 0);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.fillStyle = 'rgba(150, 220, 255, 0.6)';
-    ctx.beginPath();
-    ctx.ellipse(0, -sh * 0.3, sw * 0.12, sh * 0.4, 0, 0, Math.PI * 2);
-    ctx.fill();
-  } else {
-    // ── 3D SPACESHIP ──
-    const isBoosted = superBoostTimer > 0;
-
-    // Engine bloom glow (behind ship)
-    const bloomPulse = 0.6 + Math.sin(player.animPhase * 6) * 0.3;
-    const bloomSize = isBoosted ? w * 1.2 : w * 0.6;
-    const bloomGrad = ctx.createRadialGradient(0, h * 0.1, 0, 0, h * 0.1, bloomSize);
-    bloomGrad.addColorStop(0, isBoosted ? 'rgba(34, 211, 238, 0.3)' : 'rgba(34, 211, 238, 0.15)');
-    bloomGrad.addColorStop(0.5, isBoosted ? 'rgba(168, 85, 247, 0.15)' : 'rgba(168, 85, 247, 0.06)');
-    bloomGrad.addColorStop(1, 'transparent');
-    ctx.fillStyle = bloomGrad;
-    ctx.globalAlpha = bloomPulse;
-    ctx.beginPath();
-    ctx.arc(0, h * 0.1, bloomSize, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.globalAlpha = hitFlashTimer > 0 ? 0.5 + (hitFlashTimer / 0.25) * 0.5 : 1;
-
-    // ── Multi-layer engine flames ──
-    const flameIntensity = 0.7 + speed / maxSpeed * 0.3;
-    const boostMult = isBoosted ? 3 : 1;
-    const flameFlicker1 = Math.sin(player.animPhase * 12) * 0.3;
-    const flameFlicker2 = Math.sin(player.animPhase * 15 + 1) * 0.25;
-
-    for (const nozzleX of [-w * 0.1, w * 0.1]) {
-      const flameH = h * (0.35 + flameFlicker1 * 0.1) * flameIntensity * boostMult;
-
-      // Outer red/dark layer
-      const outerGrad = ctx.createLinearGradient(nozzleX, h * 0.08, nozzleX, h * 0.08 + flameH);
-      outerGrad.addColorStop(0, 'rgba(200, 50, 20, 0.7)');
-      outerGrad.addColorStop(0.5, 'rgba(180, 30, 10, 0.4)');
-      outerGrad.addColorStop(1, 'transparent');
-      ctx.fillStyle = outerGrad;
-      ctx.beginPath();
-      ctx.moveTo(nozzleX - w * 0.09 * boostMult, h * 0.08);
-      ctx.quadraticCurveTo(nozzleX, h * 0.08 + flameH * (1 + flameFlicker2 * 0.2), nozzleX + w * 0.09 * boostMult, h * 0.08);
-      ctx.fill();
-
-      // Mid orange/yellow layer
-      const midGrad = ctx.createLinearGradient(nozzleX, h * 0.06, nozzleX, h * 0.06 + flameH * 0.7);
-      midGrad.addColorStop(0, isBoosted ? 'rgba(34, 211, 238, 0.9)' : 'rgba(255, 180, 50, 0.85)');
-      midGrad.addColorStop(0.4, 'rgba(255, 130, 30, 0.6)');
-      midGrad.addColorStop(1, 'transparent');
-      ctx.fillStyle = midGrad;
-      ctx.beginPath();
-      ctx.moveTo(nozzleX - w * 0.055 * boostMult, h * 0.06);
-      ctx.quadraticCurveTo(nozzleX, h * 0.06 + flameH * 0.7 * (1 + flameFlicker1 * 0.15), nozzleX + w * 0.055 * boostMult, h * 0.06);
-      ctx.fill();
-
-      // Inner white/blue core
-      const coreGrad = ctx.createLinearGradient(nozzleX, h * 0.05, nozzleX, h * 0.05 + flameH * 0.4);
-      coreGrad.addColorStop(0, 'rgba(220, 250, 255, 0.95)');
-      coreGrad.addColorStop(0.5, 'rgba(34, 211, 238, 0.7)');
-      coreGrad.addColorStop(1, 'transparent');
-      ctx.fillStyle = coreGrad;
-      ctx.shadowColor = isBoosted ? COL.cyan : '#88CCFF';
-      ctx.shadowBlur = isBoosted ? 25 : 12;
-      ctx.beginPath();
-      ctx.moveTo(nozzleX - w * 0.03 * boostMult, h * 0.05);
-      ctx.quadraticCurveTo(nozzleX, h * 0.05 + flameH * 0.4 * (1 + flameFlicker2 * 0.1), nozzleX + w * 0.03 * boostMult, h * 0.05);
-      ctx.fill();
-      ctx.shadowBlur = 0;
-    }
-
-    // ── Hull — 3D multi-layer ──
-    ctx.shadowColor = isBoosted ? COL.cyan : COL.purple;
-    ctx.shadowBlur = isBoosted ? 40 : 28;
-
-    // Dark underside layer
-    const undersideGrad = ctx.createLinearGradient(0, -h * 0.3, 0, h * 0.15);
-    undersideGrad.addColorStop(0, '#2D1B69');
-    undersideGrad.addColorStop(0.5, '#1A0E3E');
-    undersideGrad.addColorStop(1, '#0E0825');
-    ctx.fillStyle = hitFlashTimer > 0 ? COL.magenta : undersideGrad;
-
-    // Ship body
-    ctx.beginPath();
-    ctx.moveTo(0, -h);
-    ctx.lineTo(w * 0.18, -h * 0.55);
-    ctx.lineTo(w * 0.22, -h * 0.15);
-    ctx.lineTo(w * 0.5, h * 0.05);
-    ctx.lineTo(w * 0.35, h * 0.1);
-    ctx.lineTo(w * 0.18, h * 0.05);
-    ctx.lineTo(0, h * 0.15);
-    ctx.lineTo(-w * 0.18, h * 0.05);
-    ctx.lineTo(-w * 0.35, h * 0.1);
-    ctx.lineTo(-w * 0.5, h * 0.05);
-    ctx.lineTo(-w * 0.22, -h * 0.15);
-    ctx.lineTo(-w * 0.18, -h * 0.55);
-    ctx.closePath();
-    ctx.fill();
-
-    // Lighter top surface — 3D depth
-    const topGrad = ctx.createLinearGradient(0, -h, 0, -h * 0.1);
-    topGrad.addColorStop(0, isBoosted ? 'rgba(34, 211, 238, 0.5)' : 'rgba(168, 130, 247, 0.4)');
-    topGrad.addColorStop(0.4, 'rgba(120, 80, 220, 0.2)');
-    topGrad.addColorStop(1, 'transparent');
-    ctx.fillStyle = hitFlashTimer > 0 ? 'transparent' : topGrad;
-    ctx.fill();
-
-    // Metallic sheen — highlight strip along top
-    ctx.shadowBlur = 0;
-    const sheenShift = Math.sin(player.animPhase * 0.5) * 0.3;
-    const sheenGrad = ctx.createLinearGradient(-w * 0.15, -h, w * 0.15, -h * 0.4);
-    sheenGrad.addColorStop(0, 'transparent');
-    sheenGrad.addColorStop(0.3 + sheenShift * 0.1, 'transparent');
-    sheenGrad.addColorStop(0.45 + sheenShift * 0.1, isBoosted ? 'rgba(34, 211, 238, 0.6)' : 'rgba(200, 230, 255, 0.5)');
-    sheenGrad.addColorStop(0.55 + sheenShift * 0.1, isBoosted ? 'rgba(34, 211, 238, 0.6)' : 'rgba(200, 230, 255, 0.5)');
-    sheenGrad.addColorStop(0.7 + sheenShift * 0.1, 'transparent');
-    sheenGrad.addColorStop(1, 'transparent');
-    ctx.fillStyle = sheenGrad;
-    ctx.beginPath();
-    ctx.moveTo(0, -h);
-    ctx.lineTo(w * 0.18, -h * 0.55);
-    ctx.lineTo(w * 0.12, -h * 0.2);
-    ctx.lineTo(-w * 0.12, -h * 0.2);
-    ctx.lineTo(-w * 0.18, -h * 0.55);
-    ctx.closePath();
-    ctx.fill();
-
-    // Panel lines — 3D detailing
-    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-    ctx.lineWidth = 0.8;
-    ctx.beginPath();
-    ctx.moveTo(-w * 0.12, -h * 0.5);
-    ctx.lineTo(-w * 0.15, h * 0.05);
-    ctx.moveTo(w * 0.12, -h * 0.5);
-    ctx.lineTo(w * 0.15, h * 0.05);
-    ctx.moveTo(0, -h * 0.8);
-    ctx.lineTo(0, h * 0.05);
-    ctx.stroke();
-
-    // Cockpit — glowing dome
-    const cockpitGrad = ctx.createRadialGradient(0, -h * 0.45, 0, 0, -h * 0.45, w * 0.14);
-    cockpitGrad.addColorStop(0, isBoosted ? 'rgba(34, 255, 255, 0.95)' : 'rgba(200, 255, 255, 0.95)');
-    cockpitGrad.addColorStop(0.4, 'rgba(34, 211, 238, 0.7)');
-    cockpitGrad.addColorStop(0.7, 'rgba(168, 85, 247, 0.4)');
-    cockpitGrad.addColorStop(1, 'rgba(91, 33, 182, 0.2)');
-    ctx.fillStyle = cockpitGrad;
-    ctx.shadowColor = isBoosted ? COL.cyan : COL.cyanGlow;
-    ctx.shadowBlur = isBoosted ? 20 : 12;
-    ctx.beginPath();
-    ctx.ellipse(0, -h * 0.45, w * 0.12, h * 0.12, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Cockpit highlight
-    ctx.shadowBlur = 0;
-    ctx.fillStyle = 'rgba(255,255,255,0.5)';
-    ctx.beginPath();
-    ctx.ellipse(-w * 0.03, -h * 0.48, w * 0.04, h * 0.04, -0.3, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Wing neon edges
-    const wingGlow = 0.5 + Math.sin(player.animPhase * 3) * 0.2;
-    ctx.strokeStyle = COL.cyan;
-    ctx.globalAlpha = Math.min(1, ctx.globalAlpha) * (0.5 + wingGlow * 0.3);
-    ctx.lineWidth = isBoosted ? 2 : 1.2;
-    ctx.shadowColor = COL.cyan;
-    ctx.shadowBlur = isBoosted ? 12 : 6;
-    ctx.beginPath();
-    ctx.moveTo(w * 0.22, -h * 0.15);
-    ctx.lineTo(w * 0.5, h * 0.05);
-    ctx.moveTo(-w * 0.22, -h * 0.15);
-    ctx.lineTo(-w * 0.5, h * 0.05);
-    ctx.stroke();
-    ctx.shadowBlur = 0;
-    ctx.globalAlpha = hitFlashTimer > 0 ? 0.5 + (hitFlashTimer / 0.25) * 0.5 : 1;
-
-    // ── Wing-tip running lights ──
-    const lightPulse = 0.5 + Math.sin(player.animPhase * 4) * 0.5;
-    for (const side of [-1, 1]) {
-      const tipX = side * w * 0.5;
-      const tipY = h * 0.05;
-      ctx.fillStyle = `rgba(34, 211, 238, ${lightPulse * 0.4})`;
-      ctx.shadowColor = COL.cyan;
-      ctx.shadowBlur = 10;
-      ctx.beginPath();
-      ctx.arc(tipX, tipY, 3, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = `rgba(200, 255, 255, ${lightPulse * 0.9})`;
-      ctx.beginPath();
-      ctx.arc(tipX, tipY, 1.5, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.shadowBlur = 0;
-    }
-
-    // Engine nozzle rims
-    ctx.fillStyle = 'rgba(80, 60, 140, 0.8)';
-    ctx.beginPath();
-    ctx.ellipse(-w * 0.1, h * 0.08, w * 0.06, w * 0.025, 0, 0, Math.PI * 2);
-    ctx.ellipse(w * 0.1, h * 0.08, w * 0.06, w * 0.025, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = isBoosted ? COL.cyan : 'rgba(34, 211, 238, 0.4)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.ellipse(-w * 0.1, h * 0.08, w * 0.06, w * 0.025, 0, 0, Math.PI * 2);
-    ctx.ellipse(w * 0.1, h * 0.08, w * 0.06, w * 0.025, 0, 0, Math.PI * 2);
-    ctx.stroke();
-  }
-
-  ctx.shadowBlur = 0;
-  ctx.globalAlpha = 1;
-  ctx.restore();
-}
-
-// ─── COLLISION ──────────────────────────────────────────────────
-function checkCollisions() {
-  const pz = 0.14;
-  const hitZone = 0.035;
-
-  for (const o of obstacles) {
-    if (Math.abs(o.z - pz) > hitZone) continue;
-    if (Math.abs(o.lane - player.lane) > 0.6) continue;
-
-    // Super Boost — destroy obstacles on contact
-    if (superBoostTimer > 0) {
-      const ox = getPathX(o.lane, o.z);
-      const oy = getPathY(o.z);
-      o.z = -1;
-      spawnBurst(ox, oy, '#FF6B35', 30, 6, 0.6, 5);
-      spawnBurst(ox, oy, COL.cyan, 20, 5, 0.5, 4);
-      spawnBurst(ox, oy, COL.white, 10, 4, 0.3, 3);
-      score += 100;
-      floatingTexts.push({ text: 'DESTROYED! \uD83D\uDCA5', x: ox, y: oy - 20, life: 1.0, maxLife: 1.0, color: COL.cyan, size: 22 });
-      continue;
-    }
-
-    if (o.type === 'tall') {
-      if (player.isJumping && player.jumpY < -20) continue;
-      takeDamage();
-      if (state === STATE.DEAD) return;
-      o.z = -1;
-      continue;
-    } else if (o.type === 'low') {
-      if (player.isSliding) continue;
-      if (player.isJumping) continue;
-      takeDamage();
-      if (state === STATE.DEAD) return;
-      o.z = -1;
-      continue;
-    } else if (o.type === 'gap') {
-      if (player.isJumping) continue;
-      takeDamage();
-      if (state === STATE.DEAD) return;
-      o.z = -1;
-      continue;
-    }
-  }
-
-  // Orb collection
-  for (const o of orbs) {
-    if (o.collected) continue;
-    if (Math.abs(o.z - pz) > hitZone) continue;
-    if (Math.abs(o.lane - player.lane) > 0.6) continue;
-    if (o.floating && !(player.isJumping && player.jumpY < -15)) continue;
-
-    o.collected = true;
-    orbsCollected++;
-    combo++;
-    if (combo > maxCombo) maxCombo = combo;
-    comboTimer = 2;
-    const ox = getPathX(o.lane, o.z);
-    const oy = getPathY(o.z) - 15 * getScale(o.z);
-    player.collectBoost = 0.4;
-
-    // Level up check
-    const newLevel = Math.floor((orbsCollected - 1) / ORBS_PER_LEVEL) + 1;
-    if (newLevel > level) {
-      level = newLevel;
-      levelUpFlash = 2.5;
-      slowMoTimer = 0.6;
-      screenFlash = 0.5;
-      const env = getEnvPhase();
-      screenFlashColor = env.edge;
-      shakeDur = 0.15;
-      spawnBurst(W / 2, H * 0.4, env.edge, 60, 7, 1.2, 8);
-      spawnBurst(W / 2, H * 0.4, env.glow, 35, 5, 0.9, 6);
-      spawnBurst(W / 2, H * 0.4, COL.white, 20, 3, 0.6, 3);
-      floatingTexts.push({ text: `LEVEL ${level}!`, x: W / 2, y: H * 0.35, life: 2.5, maxLife: 2.5, color: env.edge, size: 52 });
-    }
-
-    // Combo-scaled explosion multiplier
-    const comboScale = Math.min(combo, 10) / 5; // 0.2 at combo 1, 2.0 at combo 10
-
-    if (o.premium) {
-      // PREMIUM DIAMOND — slow-mo + massive gold explosion
-      const pts = 50 * Math.min(combo, 10);
-      score += pts;
-      slowMoTimer = Math.max(slowMoTimer, 0.3);
-      // Massive gold Orbeez blast
-      spawnBurst(ox, oy, COL.gold, 80, 8, 1.4, 9);
-      spawnBurst(ox, oy, COL.goldLight, 50, 6, 1.0, 7);
-      spawnBurst(ox, oy, COL.cyan, 25, 5, 0.8, 5);
-      spawnBurst(ox, oy, COL.white, 20, 7, 0.5, 3);
-      // Large slow gold beads
-      for (let i = 0; i < 15; i++) {
-        const angle = rand(0, Math.PI * 2);
-        const spd = rand(1, 3.5);
-        spawnParticle(ox, oy, Math.random() < 0.7 ? COL.gold : COL.goldLight,
-          Math.cos(angle) * spd, Math.sin(angle) * spd,
-          rand(0.7, 1.4), rand(5, 10), 0.02);
-      }
-      screenFlash = 0.5;
-      screenFlashColor = COL.gold;
-      shakeDur = 0.15;
-      floatingTexts.push({ text: `+${pts} BONUS \uD83D\uDC8E`, x: ox, y: oy - 10, life: 1.8, maxLife: 1.8, color: COL.gold, size: 30 });
-      // Emoji particles
-      for (let i = 0; i < 4; i++) {
-        floatingTexts.push({
-          text: ['\uD83D\uDCB0', '\u2B50', '\uD83C\uDF1F', '\uD83D\uDC8E'][i % 4],
-          x: ox + rand(-35, 35), y: oy + rand(-25, 10),
-          life: 1.5, maxLife: 1.5, color: COL.gold, size: 24
-        });
-      }
-    } else {
-      // REGULAR DIAMOND — ORBEEZ BLAST (colorful beads!)
-      const pts = 10 * Math.min(combo, 10);
-      score += pts;
-      // Scale particle counts with combo
-      const baseCount = Math.floor(60 + comboScale * 40);
-      // Multi-color bead explosion
-      spawnBurst(ox, oy, COL.cyan, baseCount, 7 + comboScale, 1.3, 6);
-      spawnBurst(ox, oy, COL.emerald, Math.floor(baseCount * 0.5), 5, 1.0, 5);
-      spawnBurst(ox, oy, COL.gold, Math.floor(baseCount * 0.3), 5, 0.8, 4);
-      spawnBurst(ox, oy, COL.magentaGlow, Math.floor(baseCount * 0.2), 4, 0.7, 3);
-      spawnBurst(ox, oy, COL.white, 20, 8, 0.5, 2);
-      // Large slow beads
-      const beadCount = Math.floor(12 + comboScale * 8);
-      for (let i = 0; i < beadCount; i++) {
-        const angle = rand(0, Math.PI * 2);
-        const spd = rand(1.5, 5 + comboScale);
-        const col = [COL.cyan, COL.emerald, COL.gold, COL.magentaGlow, COL.white][randInt(0, 4)];
-        spawnParticle(ox, oy, col,
-          Math.cos(angle) * spd, Math.sin(angle) * spd - 1,
-          rand(0.5, 1.0), rand(3, 7 + comboScale * 2), 0.05);
-      }
-      // Tiny fast sparks
-      for (let i = 0; i < 20; i++) {
-        const angle = rand(0, Math.PI * 2);
-        const spd = rand(3, 8);
-        spawnParticle(ox, oy, COL.white,
-          Math.cos(angle) * spd, Math.sin(angle) * spd,
-          rand(0.15, 0.4), rand(1, 2.5), 0.02);
-      }
-      screenFlash = 0.25;
-      screenFlashColor = COL.cyan;
-      // Emoji particles floating up
-      const emoji = COLLECT_EMOJIS[randInt(0, COLLECT_EMOJIS.length - 1)];
-      floatingTexts.push({
-        text: emoji, x: ox + rand(-15, 15), y: oy,
-        life: 1.2, maxLife: 1.2, color: COL.cyan, size: 22
-      });
-      if (combo > 2) {
-        floatingTexts.push({
-          text: `+${pts}`, x: ox + rand(-10, 10), y: oy + 15,
-          life: 1.0, maxLife: 1.0, color: COL.gold, size: 18
-        });
-      }
-    }
-  }
-
-  // Gold coin collection
-  checkGoldCoinCollisions();
-  // Blue diamond collection
-  checkBlueDiamondCollisions();
-}
-
-// ─── DAMAGE / HEALTH ────────────────────────────────────────────
-function takeDamage() {
-  if (invincTimer > 0) return;
-  health--;
-  damageLevel = 3 - health;
-  hitFlashTimer = 0.3;
-  invincTimer = 1.5;
-  shakeDur = 0.35;
-  screenFlash = 0.4;
-  screenFlashColor = COL.magenta;
-  slowMoTimer = Math.max(slowMoTimer, 0.3);
-
-  // DYNAMITE EXPLOSION — fire, smoke, sparks
-  const explosionScale = damageLevel; // 1, 2, or 3
-  // Fire (orange/yellow)
-  spawnBurst(player.x, player.y, '#FF6B35', 25 * explosionScale, 5 + explosionScale, 0.8, 5 + explosionScale);
-  spawnBurst(player.x, player.y, COL.gold, 15 * explosionScale, 4 + explosionScale, 0.6, 4);
-  // Smoke (gray puffs)
-  spawnBurst(player.x, player.y, 'rgba(120,110,100,0.7)', 10 * explosionScale, 3, 1.0, 6 + explosionScale);
-  // White/orange sparks
-  spawnBurst(player.x, player.y, COL.white, 10, 6, 0.4, 2);
-  spawnBurst(player.x, player.y, '#FFAA00', 8, 5, 0.5, 3);
-
-  if (health <= 0) {
-    // MASSIVE FINAL EXPLOSION
-    spawnBurst(player.x, player.y, '#FF4400', 80, 9, 1.3, 8);
-    spawnBurst(player.x, player.y, '#FF6B35', 50, 7, 1.0, 7);
-    spawnBurst(player.x, player.y, COL.gold, 30, 6, 0.9, 6);
-    spawnBurst(player.x, player.y, 'rgba(80,70,60,0.8)', 25, 5, 1.2, 8);
-    spawnBurst(player.x, player.y, COL.white, 20, 5, 0.6, 3);
-    floatingTexts.push({ text: 'BOOM! \uD83D\uDCA5', x: player.x, y: player.y - 45, life: 2, maxLife: 2, color: '#FF4400', size: 40 });
-    floatingTexts.push({ text: 'DESTROYED!', x: player.x, y: player.y - 75, life: 2.5, maxLife: 2.5, color: COL.magenta, size: 28 });
-    gameOver();
-  } else {
-    const hitText = health === 2 ? 'BOOM! \uD83D\uDCA5' : 'HIT! \uD83D\uDCA5';
-    floatingTexts.push({ text: hitText, x: player.x, y: player.y - 35, life: 1.3, maxLife: 1.3, color: '#FF4400', size: 32 });
-    // Motivational message
-    const msg = HIT_MESSAGES[randInt(0, HIT_MESSAGES.length - 1)];
-    floatingTexts.push({ text: msg, x: player.x, y: player.y - 65, life: 2.2, maxLife: 2.2, color: COL.gold, size: 17 });
-  }
-}
-
-// ─── GAME OVER ──────────────────────────────────────────────────
-function gameOver() {
-  state = STATE.DEAD;
-  shakeDur = 0.5;
-  shakeX = 0; shakeY = 0;
-  deathTimer = 0;
-  gameOverStatReveal = 0;
-
-  totalCoins += orbsCollected;
-  localStorage.setItem('wp_game_coins', totalCoins);
-  const finalScore = Math.floor(score + distance);
-  if (finalScore > highScore) {
-    highScore = finalScore;
-    localStorage.setItem('wp_game_highscore', highScore);
-    isNewHighScore = true;
-  } else {
-    isNewHighScore = false;
-  }
-}
-
-function resetGame() {
-  state = STATE.PLAYING;
-  score = 0; distance = 0; orbsCollected = 0; combo = 0; comboTimer = 0; maxCombo = 0;
-  speed = baseSpeed; speedTimer = 0;
-  player.lane = 1; player.targetLane = 1;
-  player.jumpY = 0; player.jumpVel = 0; player.isJumping = false;
-  player.slideTimer = 0; player.isSliding = false;
-  player.collectBoost = 0;
-  obstacles = []; orbs = [];
-  particles = []; sparkles = [];
-  spawnTimer = 0; orbSpawnTimer = 0;
-  lastMarkerDistance = 0; distanceMarkerFlash = 0; screenFlash = 0; floatingTexts = [];
-  level = 1; levelUpFlash = 0; slowMoTimer = 0;
-  health = 3; damageLevel = 0; invincTimer = 0; hitFlashTimer = 0;
-  deathTimer = 0; gameOverStatReveal = 0;
-  goldCoins = []; goldCoinsCollected = 0; goldCoinSpawnDist = 0;
-  nextGoldCoinAt = rand(800, 1500); jackpotTimer = 0; jackpotScoreAnim = 0; goldCoinHudFlash = 0; totalJackpots = 0;
-  blueDiamonds = []; blueDiamondsCollected = 0; blueDiamondSpawnDist = 0;
-  nextBlueDiamondAt = rand(400, 700); superBoostTimer = 0; totalSuperBoosts = 0;
-  blueDiamondAnims = []; blueDiamondHudFlash = 0; player.bankAngle = 0;
-  isNewHighScore = false;
-}
-
-// ─── INPUT ──────────────────────────────────────────────────────
-let touchStartX = 0, touchStartY = 0, touchStartTime = 0;
-let touching = false, touchCurrentX = 0;
-let touchLaneOffset = 0;
-let verticalSwipeDone = false;
-
-function screenXToLane(screenX) {
-  const e = getPathEdges(0.14);
-  const t = (screenX - e.left) / e.width;
-  return clamp(t * LANE_COUNT - 0.5, 0, 2);
-}
-
-function jump() {
-  if (state === STATE.PLAYING && !player.isJumping) {
-    player.isJumping = true;
-    player.jumpVel = -7;
-  }
-}
-function slide() {
-  if (state === STATE.PLAYING && !player.isSliding && !player.isJumping) {
-    player.isSliding = true;
-    player.slideTimer = 0.5;
-  }
-}
-
-canvas.addEventListener('touchstart', e => {
-  e.preventDefault();
-  const t = e.touches[0];
-  touchStartX = t.clientX;
-  touchStartY = t.clientY;
-  touchCurrentX = t.clientX;
-  touchStartTime = Date.now();
-  touching = true;
-  verticalSwipeDone = false;
-  touchLaneOffset = player.lane - screenXToLane(t.clientX);
-}, { passive: false });
-
-canvas.addEventListener('touchmove', e => {
-  e.preventDefault();
-  if (!touching) return;
-  const t = e.touches[0];
-  touchCurrentX = t.clientX;
-
-  if (state === STATE.PLAYING) {
-    player.targetLane = clamp(screenXToLane(touchCurrentX) + touchLaneOffset, 0, 2);
-    if (!verticalSwipeDone) {
-      const dy = t.clientY - touchStartY;
-      if (Math.abs(dy) > 20 && Math.abs(dy) > Math.abs(t.clientX - touchStartX) * 0.8) {
-        verticalSwipeDone = true;
-        if (dy < -20) jump();
-        else if (dy > 20) slide();
-      }
-    }
-  }
-}, { passive: false });
-
-canvas.addEventListener('touchend', e => {
-  e.preventDefault();
-  touching = false;
-  const elapsed = Date.now() - touchStartTime;
-  const dx = Math.abs(touchCurrentX - touchStartX);
-  const dy = Math.abs((e.changedTouches[0]?.clientY || touchStartY) - touchStartY);
-  if (elapsed < 300 && dx < 15 && dy < 15) {
-    if (state === STATE.MENU || state === STATE.DEAD) resetGame();
-  }
-}, { passive: false });
-
-document.addEventListener('keydown', e => {
-  if (state === STATE.MENU || state === STATE.DEAD) {
-    if (['Space', 'Enter', 'ArrowUp', 'KeyW'].includes(e.code)) {
-      resetGame(); return;
-    }
-  }
-  if (state !== STATE.PLAYING) return;
-  switch (e.code) {
-    case 'ArrowLeft': case 'KeyA':
-      player.targetLane = Math.max(0, Math.round(player.targetLane) - 1); break;
-    case 'ArrowRight': case 'KeyD':
-      player.targetLane = Math.min(2, Math.round(player.targetLane) + 1); break;
-    case 'ArrowUp': case 'KeyW': case 'Space': jump(); break;
-    case 'ArrowDown': case 'KeyS': slide(); break;
-  }
-});
-
-// ─── HUD / UI ───────────────────────────────────────────────────
-function drawGlowText(text, x, y, size, color, align, glow) {
-  ctx.font = `bold ${size}px -apple-system, 'Segoe UI', Roboto, sans-serif`;
-  ctx.textAlign = align || 'left';
-  ctx.textBaseline = 'top';
-  if (glow) {
-    ctx.shadowColor = color || COL.white;
-    ctx.shadowBlur = glow;
-  }
-  ctx.fillStyle = color || COL.white;
-  ctx.fillText(text, x, y);
-  ctx.shadowBlur = 0;
-}
-
-function draw3DScore(text, cx, cy, size, color) {
-  ctx.font = `900 ${size}px -apple-system, 'Segoe UI', Roboto, sans-serif`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.shadowBlur = 0;
-
-  const rgb = hexToRgb(typeof color === 'string' && color.startsWith('#') ? color : '#ffffff');
-  const darkR = Math.floor(rgb.r * 0.25);
-  const darkG = Math.floor(rgb.g * 0.25);
-  const darkB = Math.floor(rgb.b * 0.25);
-  const midR = Math.floor(rgb.r * 0.5);
-  const midG = Math.floor(rgb.g * 0.5);
-  const midB = Math.floor(rgb.b * 0.5);
-
-  const depth = Math.max(4, Math.floor(size * 0.1));
-  for (let i = depth; i >= 1; i--) {
-    const t = i / depth;
-    const r = Math.floor(lerp(midR, darkR, t));
-    const g = Math.floor(lerp(midG, darkG, t));
-    const b = Math.floor(lerp(midB, darkB, t));
-    ctx.fillStyle = `rgb(${r},${g},${b})`;
-    ctx.fillText(text, cx + i * 0.8, cy + i * 1.2);
-  }
-
-  ctx.shadowColor = color;
-  ctx.shadowBlur = Math.min(35, size * 0.5);
-  ctx.fillStyle = color;
-  ctx.fillText(text, cx, cy);
-
-  ctx.shadowBlur = 0;
-  ctx.globalAlpha = 0.25;
-  ctx.fillStyle = COL.white;
-  ctx.fillText(text, cx, cy - 1);
-  ctx.globalAlpha = 1;
-  ctx.shadowBlur = 0;
+// ─── FLOATING TEXT ─────────────────────────────────────────────
+function addFloatingText(x, y, text, color, size) {
+  floatingTexts.push({ x, y, text, color, size: size || 14, life: 1.2, maxLife: 1.2 });
 }
 
 function updateFloatingTexts(dt) {
@@ -1971,674 +294,1318 @@ function updateFloatingTexts(dt) {
 
 function drawFloatingTexts() {
   for (const ft of floatingTexts) {
-    const alpha = clamp(ft.life / (ft.maxLife * 0.5), 0, 1);
-    const scale = 1 + (1 - ft.life / ft.maxLife) * 0.3;
+    const alpha = clamp(ft.life / ft.maxLife, 0, 1);
     ctx.globalAlpha = alpha;
-    drawGlowText(ft.text, ft.x, ft.y, Math.floor(ft.size * scale), ft.color, 'center', 18);
+    ctx.font = arcadeFont(ft.size);
+    ctx.fillStyle = ft.color;
+    ctx.textAlign = 'center';
+    ctx.shadowColor = ft.color;
+    ctx.shadowBlur = 12;
+    ctx.fillText(ft.text, ft.x, ft.y);
   }
+  ctx.shadowBlur = 0;
   ctx.globalAlpha = 1;
 }
 
-function drawGoldStar(cx, cy, outerR, innerR) {
-  ctx.save();
-  ctx.translate(cx, cy);
-  ctx.shadowColor = COL.gold;
-  ctx.shadowBlur = 12;
-  ctx.beginPath();
-  for (let i = 0; i < 10; i++) {
-    const r = i % 2 === 0 ? outerR : innerR;
-    const angle = (i * Math.PI / 5) - Math.PI / 2;
-    const sx = Math.cos(angle) * r;
-    const sy = Math.sin(angle) * r;
-    if (i === 0) ctx.moveTo(sx, sy); else ctx.lineTo(sx, sy);
+// ─── BACKGROUND — GRID + STARS ─────────────────────────────────
+let bgStars = [];
+function initBgStars() {
+  bgStars = [];
+  for (let i = 0; i < 120; i++) {
+    bgStars.push({
+      x: rand(0, W), y: rand(0, H * 0.7),
+      size: rand(0.5, 2.2),
+      alpha: rand(0.15, 0.6),
+      twinkle: rand(1, 4),
+      offset: rand(0, 6.28),
+      color: Math.random() < 0.6 ? COL.white : [COL.purple, COL.cyan, COL.blue][randInt(0, 2)],
+    });
   }
-  ctx.closePath();
-  const starGrad = ctx.createLinearGradient(0, -outerR, 0, outerR);
-  starGrad.addColorStop(0, '#FFF8DC');
-  starGrad.addColorStop(0.25, COL.goldLight);
-  starGrad.addColorStop(0.5, COL.gold);
-  starGrad.addColorStop(0.75, '#DAA520');
-  starGrad.addColorStop(1, '#B8860B');
-  ctx.fillStyle = starGrad;
-  ctx.fill();
-  ctx.shadowBlur = 0;
-  ctx.globalAlpha = 0.5;
-  ctx.fillStyle = COL.white;
-  ctx.beginPath();
-  ctx.ellipse(-outerR * 0.2, -outerR * 0.3, outerR * 0.25, outerR * 0.18, -0.4, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.globalAlpha = 1;
-  ctx.strokeStyle = 'rgba(255,248,220,0.4)';
-  ctx.lineWidth = 0.8;
-  ctx.beginPath();
-  for (let i = 0; i < 10; i++) {
-    const r = i % 2 === 0 ? outerR : innerR;
-    const angle = (i * Math.PI / 5) - Math.PI / 2;
-    const sx = Math.cos(angle) * r;
-    const sy = Math.sin(angle) * r;
-    if (i === 0) ctx.moveTo(sx, sy); else ctx.lineTo(sx, sy);
-  }
-  ctx.closePath();
-  ctx.stroke();
-  ctx.restore();
 }
+initBgStars();
+window.addEventListener('resize', () => { resize(); initBgStars(); });
 
-function drawHUD() {
-  const pad = 16;
-  const top = 14 + (CSS.supports('padding-top: env(safe-area-inset-top)') ? 30 : 0);
-  const env = getEnvPhase();
+function drawBackground(time) {
+  const env = getEnv();
 
-  // ── SCORE BADGE — premium dark pill, top-left ──
-  const finalScore = Math.floor(score + distance);
-  const scoreText = finalScore.toLocaleString();
-  ctx.font = `bold 26px -apple-system, 'Segoe UI', Roboto, sans-serif`;
-  const textW = ctx.measureText(scoreText).width;
-  const starSize = 13;
-  const badgePadX = 14;
-  const badgeH = 40;
-  const iconSpace = starSize * 2 + 10;
-  const badgeW = iconSpace + textW + badgePadX * 2;
-  const badgeX = pad;
-  const badgeY = top;
-  const badgeR = 20;
-
-  // Badge shadow
-  ctx.save();
-  ctx.shadowColor = 'rgba(0,0,0,0.5)';
-  ctx.shadowBlur = 12;
-  ctx.shadowOffsetY = 2;
-
-  // Badge background — dark rounded pill
-  ctx.beginPath();
-  ctx.moveTo(badgeX + badgeR, badgeY);
-  ctx.lineTo(badgeX + badgeW - badgeR, badgeY);
-  ctx.arcTo(badgeX + badgeW, badgeY, badgeX + badgeW, badgeY + badgeR, badgeR);
-  ctx.lineTo(badgeX + badgeW, badgeY + badgeH - badgeR);
-  ctx.arcTo(badgeX + badgeW, badgeY + badgeH, badgeX + badgeW - badgeR, badgeY + badgeH, badgeR);
-  ctx.lineTo(badgeX + badgeR, badgeY + badgeH);
-  ctx.arcTo(badgeX, badgeY + badgeH, badgeX, badgeY + badgeH - badgeR, badgeR);
-  ctx.lineTo(badgeX, badgeY + badgeR);
-  ctx.arcTo(badgeX, badgeY, badgeX + badgeR, badgeY, badgeR);
-  ctx.closePath();
-
-  const badgeGrad = ctx.createLinearGradient(badgeX, badgeY, badgeX, badgeY + badgeH);
-  badgeGrad.addColorStop(0, 'rgba(30, 25, 55, 0.92)');
-  badgeGrad.addColorStop(0.5, 'rgba(22, 18, 42, 0.95)');
-  badgeGrad.addColorStop(1, 'rgba(16, 12, 32, 0.92)');
-  ctx.fillStyle = badgeGrad;
-  ctx.fill();
-  ctx.shadowBlur = 0;
-  ctx.shadowOffsetY = 0;
-
-  // Subtle border
-  ctx.strokeStyle = 'rgba(168, 85, 247, 0.2)';
-  ctx.lineWidth = 1;
-  ctx.stroke();
-
-  // Inner highlight on top edge
-  ctx.beginPath();
-  ctx.moveTo(badgeX + badgeR + 4, badgeY + 1);
-  ctx.lineTo(badgeX + badgeW - badgeR - 4, badgeY + 1);
-  ctx.strokeStyle = 'rgba(255,255,255,0.07)';
-  ctx.lineWidth = 1;
-  ctx.stroke();
-  ctx.restore();
-
-  // Gold star icon
-  const starCX = badgeX + badgePadX + starSize;
-  const starCY = badgeY + badgeH / 2;
-  drawGoldStar(starCX, starCY, starSize, starSize * 0.42);
-
-  // Score number — bold white
-  ctx.font = `bold 26px -apple-system, 'Segoe UI', Roboto, sans-serif`;
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'middle';
-  ctx.fillStyle = COL.white;
-  ctx.shadowColor = 'rgba(253,224,71,0.3)';
-  ctx.shadowBlur = 6;
-  ctx.fillText(scoreText, badgeX + badgePadX + iconSpace, badgeY + badgeH / 2 + 1);
-  ctx.shadowBlur = 0;
-
-  // ── Secondary stats row below badge ──
-  const row2Y = badgeY + badgeH + 6;
-
-  // Diamonds count — small, left
-  drawDiamond(pad + 10, row2Y + 6, 0.4, performance.now() * 0.002, false);
-  drawGlowText(`${orbsCollected}`, pad + 22, row2Y, 16, COL.cyanGlow, 'left', 6);
-
-  // Level
-  const lvScale = levelUpFlash > 0 ? 1 + Math.sin(levelUpFlash * 8) * 0.15 : 1;
-  const lvSize = Math.floor(16 * lvScale);
-  drawGlowText(`LV ${level}`, pad + 50, row2Y, lvSize, env.edge, 'left', levelUpFlash > 0 ? 20 : 8);
-
-  // Distance — top-right
-  drawGlowText(`${Math.floor(distance)}m`, W - pad, top, 22, 'rgba(255,255,255,0.6)', 'right', 4);
-
-  // Combo
-  if (combo > 1 && comboTimer > 0) {
-    const comboAlpha = Math.min(1, comboTimer);
-    ctx.globalAlpha = comboAlpha;
-    const mult = Math.min(combo, 10);
-    const comboSize = 22 + Math.min(mult, 10) * 2;
-    const comboPulse = 1 + Math.sin(Date.now() * 0.01) * 0.1;
-    drawGlowText(`x${mult} COMBO`, W / 2, top + 58, Math.floor(comboSize * comboPulse), COL.gold, 'center', 20);
-    ctx.globalAlpha = 1;
-  }
-
-  // Distance milestone flash
-  if (distanceMarkerFlash > 0) {
-    ctx.globalAlpha = distanceMarkerFlash;
-    drawGlowText(`${Math.floor(lastMarkerDistance)}m`, W / 2, H * 0.35, 36, COL.cyan, 'center', 24);
-    ctx.globalAlpha = 1;
-  }
-
-  // Health hearts — top-right, below distance
-  for (let i = 0; i < 3; i++) {
-    const hx = W - pad - i * 24 - 12;
-    const hy = top + 28;
-    const filled = i < health;
-    ctx.save();
-    ctx.translate(hx, hy);
-    const heartScale = filled && hitFlashTimer > 0 ? 1.3 : 1;
-    ctx.scale(heartScale, heartScale);
-    ctx.beginPath();
-    ctx.moveTo(0, 3);
-    ctx.bezierCurveTo(-5, -3, -9, -3, -9, 1);
-    ctx.bezierCurveTo(-9, 5, 0, 10, 0, 12);
-    ctx.bezierCurveTo(0, 10, 9, 5, 9, 1);
-    ctx.bezierCurveTo(9, -3, 5, -3, 0, 3);
-    ctx.closePath();
-    if (filled) {
-      const hCol = health === 3 ? COL.emerald : health === 2 ? COL.gold : COL.magenta;
-      ctx.fillStyle = hCol;
-      ctx.shadowColor = hCol;
-      ctx.shadowBlur = 10;
-      ctx.fill();
-      ctx.shadowBlur = 0;
-    } else {
-      ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-      ctx.lineWidth = 1.2;
-      ctx.stroke();
-    }
-    ctx.restore();
-  }
-
-  // Gold coin progress — below hearts on right
-  const coinY = top + 50;
-  for (let i = 0; i < 3; i++) {
-    const cx = W - pad - 50 + i * 20;
-    const filled = i < goldCoinsCollected;
-    const flashScale = (filled && goldCoinHudFlash > 0) ? 1 + goldCoinHudFlash * 0.5 : 1;
-    ctx.save();
-    ctx.translate(cx, coinY);
-    ctx.scale(flashScale, flashScale);
-    if (filled) {
-      ctx.fillStyle = COL.gold;
-      ctx.shadowColor = COL.gold;
-      ctx.shadowBlur = 8;
-      ctx.beginPath();
-      ctx.arc(0, 0, 7, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.shadowBlur = 0;
-      ctx.fillStyle = '#B8860B';
-      ctx.font = 'bold 8px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('\u2605', 0, 0.5);
-    } else {
-      ctx.strokeStyle = 'rgba(253, 224, 71, 0.25)';
-      ctx.lineWidth = 1.2;
-      ctx.beginPath();
-      ctx.arc(0, 0, 7, 0, Math.PI * 2);
-      ctx.stroke();
-    }
-    ctx.restore();
-  }
-  ctx.shadowBlur = 0;
-
-  // Super Boost blue diamond slots — left side
-  for (let i = 0; i < 3; i++) {
-    const pos = getBlueDiamondSlotPos(i);
-    const filled = i < blueDiamondsCollected || (superBoostTimer > 0 && false);
-    const flashScale = (filled && blueDiamondHudFlash > 0) ? 1 + blueDiamondHudFlash * 0.4 : 1;
-    const pulse = 0.5 + Math.sin(performance.now() * 0.003 + i * 1.5) * 0.3;
-    ctx.save();
-    ctx.translate(pos.x, pos.y);
-    ctx.scale(flashScale, flashScale);
-    const dSize = 12;
-    if (filled) {
-      ctx.fillStyle = COL.cyan;
-      ctx.shadowColor = COL.cyan;
-      ctx.shadowBlur = 12;
-      ctx.beginPath();
-      ctx.moveTo(0, -dSize); ctx.lineTo(-dSize * 0.6, 0);
-      ctx.lineTo(0, dSize * 0.8); ctx.lineTo(dSize * 0.6, 0);
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = 'rgba(200, 255, 255, 0.4)';
-      ctx.beginPath();
-      ctx.moveTo(0, -dSize * 0.6); ctx.lineTo(-dSize * 0.3, 0);
-      ctx.lineTo(0, 0); ctx.lineTo(dSize * 0.3, 0);
-      ctx.closePath();
-      ctx.fill();
-    } else {
-      ctx.strokeStyle = `rgba(34, 211, 238, ${0.25 + pulse * 0.15})`;
-      ctx.shadowColor = COL.cyan;
-      ctx.shadowBlur = 6 * pulse;
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(0, -dSize); ctx.lineTo(-dSize * 0.6, 0);
-      ctx.lineTo(0, dSize * 0.8); ctx.lineTo(dSize * 0.6, 0);
-      ctx.closePath();
-      ctx.stroke();
-    }
-    ctx.restore();
-  }
-  ctx.shadowBlur = 0;
-
-  // Super Boost active — cyan screen edge glow
-  if (superBoostTimer > 0) {
-    const bt = superBoostTimer / 9;
-    const bPulse = 0.5 + Math.sin(performance.now() * 0.006) * 0.3;
-    ctx.save();
-    ctx.globalAlpha = bt * 0.2 * bPulse;
-    const bGrad = ctx.createLinearGradient(0, 0, 0, H * 0.12);
-    bGrad.addColorStop(0, COL.cyan);
-    bGrad.addColorStop(1, 'transparent');
-    ctx.fillStyle = bGrad;
-    ctx.fillRect(0, 0, W, H * 0.12);
-    const bGrad2 = ctx.createLinearGradient(0, H, 0, H * 0.88);
-    bGrad2.addColorStop(0, COL.cyan);
-    bGrad2.addColorStop(1, 'transparent');
-    ctx.fillStyle = bGrad2;
-    ctx.fillRect(0, H * 0.88, W, H * 0.12);
-    const sGrad = ctx.createLinearGradient(0, 0, W * 0.06, 0);
-    sGrad.addColorStop(0, COL.cyan);
-    sGrad.addColorStop(1, 'transparent');
-    ctx.fillStyle = sGrad;
-    ctx.fillRect(0, 0, W * 0.06, H);
-    const sGrad2 = ctx.createLinearGradient(W, 0, W * 0.94, 0);
-    sGrad2.addColorStop(0, COL.cyan);
-    sGrad2.addColorStop(1, 'transparent');
-    ctx.fillStyle = sGrad2;
-    ctx.fillRect(W * 0.94, 0, W * 0.06, H);
-    ctx.restore();
-    ctx.globalAlpha = bt;
-    drawGlowText('\u26A1 ' + Math.ceil(superBoostTimer) + 's', pad, top + 210, 14, COL.cyan, 'left', 8);
-    ctx.globalAlpha = 1;
-  }
-
-  // Jackpot celebration overlay
-  if (jackpotTimer > 0) {
-    const t = jackpotTimer / 2.5;
-    // Pulsing golden border
-    ctx.save();
-    ctx.globalAlpha = t * 0.25;
-    const jGrad = ctx.createLinearGradient(0, 0, 0, H * 0.1);
-    jGrad.addColorStop(0, COL.gold);
-    jGrad.addColorStop(1, 'transparent');
-    ctx.fillStyle = jGrad;
-    ctx.fillRect(0, 0, W, H * 0.1);
-    const jGrad2 = ctx.createLinearGradient(0, H, 0, H * 0.9);
-    jGrad2.addColorStop(0, COL.gold);
-    jGrad2.addColorStop(1, 'transparent');
-    ctx.fillStyle = jGrad2;
-    ctx.fillRect(0, H * 0.9, W, H * 0.1);
-    ctx.restore();
-  }
-
-  // High combo screen border glow (5x+)
-  if (combo >= 5 && comboTimer > 0) {
-    const mult = Math.min(combo, 10);
-    const glowAlpha = Math.min(0.15, mult * 0.02) * Math.min(1, comboTimer);
-    const pulse = 0.7 + Math.sin(Date.now() * 0.008) * 0.3;
-    ctx.save();
-    ctx.globalAlpha = glowAlpha * pulse;
-    // Top border
-    const borderGrad = ctx.createLinearGradient(0, 0, 0, H * 0.15);
-    borderGrad.addColorStop(0, COL.gold);
-    borderGrad.addColorStop(1, 'transparent');
-    ctx.fillStyle = borderGrad;
-    ctx.fillRect(0, 0, W, H * 0.15);
-    // Bottom border
-    const borderGrad2 = ctx.createLinearGradient(0, H, 0, H * 0.85);
-    borderGrad2.addColorStop(0, COL.gold);
-    borderGrad2.addColorStop(1, 'transparent');
-    ctx.fillStyle = borderGrad2;
-    ctx.fillRect(0, H * 0.85, W, H * 0.15);
-    // Side borders
-    const sideGrad = ctx.createLinearGradient(0, 0, W * 0.08, 0);
-    sideGrad.addColorStop(0, COL.gold);
-    sideGrad.addColorStop(1, 'transparent');
-    ctx.fillStyle = sideGrad;
-    ctx.fillRect(0, 0, W * 0.08, H);
-    const sideGrad2 = ctx.createLinearGradient(W, 0, W * 0.92, 0);
-    sideGrad2.addColorStop(0, COL.gold);
-    sideGrad2.addColorStop(1, 'transparent');
-    ctx.fillStyle = sideGrad2;
-    ctx.fillRect(W * 0.92, 0, W * 0.08, H);
-    ctx.restore();
-  }
-
-  // Level up flash overlay
-  if (levelUpFlash > 1.5) {
-    const t = (levelUpFlash - 1.5) / 1.0;
-    ctx.globalAlpha = t * 0.15;
-    ctx.fillStyle = env.edge;
-    ctx.fillRect(0, 0, W, H);
-    ctx.globalAlpha = 1;
-  }
-
-  drawFloatingTexts();
-}
-
-// ─── MENU SCREEN ────────────────────────────────────────────────
-function drawMenuScreen() {
-  const titleY = H * 0.18;
-  const time = performance.now();
-
-  // Title sparkle particles around text
-  if (Math.random() < 0.3) {
-    spawnParticle(
-      W / 2 + rand(-100, 100), titleY + rand(-20, 80),
-      Math.random() < 0.5 ? COL.gold : COL.goldLight,
-      rand(-0.5, 0.5), rand(-0.5, 0.5), rand(0.3, 0.8), rand(1, 3), 0
-    );
-  }
-
-  // "WISH" — gold glow
-  ctx.font = `bold 52px -apple-system, 'Segoe UI', Roboto, sans-serif`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.shadowColor = COL.gold;
-  ctx.shadowBlur = 50;
-  ctx.fillStyle = COL.gold;
-  ctx.fillText('WISH', W / 2, titleY);
-  ctx.shadowBlur = 25;
-  ctx.fillText('WISH', W / 2, titleY);
-  ctx.shadowBlur = 0;
-  ctx.fillStyle = COL.goldLight;
-  ctx.fillText('WISH', W / 2, titleY);
-
-  // "RUNNER" — gold glow
-  ctx.shadowColor = COL.gold;
-  ctx.shadowBlur = 40;
-  ctx.fillStyle = COL.gold;
-  ctx.fillText('RUNNER', W / 2, titleY + 60);
-  ctx.shadowBlur = 20;
-  ctx.fillText('RUNNER', W / 2, titleY + 60);
-  ctx.shadowBlur = 0;
-  ctx.fillStyle = COL.goldLight;
-  ctx.fillText('RUNNER', W / 2, titleY + 60);
-
-  // Subtitle — cyan
-  ctx.font = `400 14px -apple-system, 'Segoe UI', Roboto, sans-serif`;
-  ctx.shadowColor = COL.cyan;
-  ctx.shadowBlur = 12;
-  ctx.fillStyle = COL.cyan;
-  ctx.fillText('Run Your Dreams Through the Cosmos', W / 2, titleY + 105);
-  ctx.shadowBlur = 0;
-
-  // High score
-  if (highScore > 0) {
-    drawGlowText(`HIGH SCORE: ${highScore.toLocaleString()}`, W / 2, titleY + 145, 16, 'rgba(255,255,255,0.5)', 'center', 0);
-  }
-
-  if (totalCoins > 0) {
-    drawGlowText(`\uD83D\uDC8E TOTAL DIAMONDS: ${totalCoins.toLocaleString()}`, W / 2, titleY + 168, 14, COL.cyanGlow, 'center', 0);
-  }
-
-  // TAP TO RUN — pulsing white glow
-  const pulse = 0.5 + Math.sin(time * 0.004) * 0.3;
-  ctx.globalAlpha = pulse;
-  ctx.font = `bold 20px -apple-system, 'Segoe UI', Roboto, sans-serif`;
-  ctx.shadowColor = COL.white;
-  ctx.shadowBlur = 15;
-  ctx.fillStyle = COL.white;
-  ctx.textAlign = 'center';
-  ctx.fillText('TAP TO RUN', W / 2, H * 0.65);
-  ctx.shadowBlur = 0;
-  ctx.globalAlpha = 1;
-
-  drawGlowText('Drag to Move \u00B7 Swipe Up/Down', W / 2, H * 0.72, 12, 'rgba(255,255,255,0.2)', 'center', 0);
-}
-
-// ─── GAME OVER SCREEN ───────────────────────────────────────────
-function drawGameOverScreen() {
-  // Slow fade overlay
-  const fadeAlpha = Math.min(0.8, deathTimer * 1.2);
-  ctx.fillStyle = `rgba(5, 0, 15, ${fadeAlpha})`;
+  // Gradient sky
+  const skyGrad = ctx.createLinearGradient(0, 0, 0, H);
+  skyGrad.addColorStop(0, env.bg);
+  skyGrad.addColorStop(0.6, COL.bg2);
+  skyGrad.addColorStop(1, '#050A14');
+  ctx.fillStyle = skyGrad;
   ctx.fillRect(0, 0, W, H);
 
-  if (deathTimer < 0.4) return; // brief pause before stats appear
-
-  const centerY = H * 0.2;
-  const finalScore = Math.floor(score + distance);
-  const reveal = gameOverStatReveal;
-
-  // YOUR WISH RUN
-  if (reveal > 0) {
-    const t = Math.min(1, reveal * 2);
-    ctx.globalAlpha = t;
-    ctx.font = `bold 36px -apple-system, 'Segoe UI', Roboto, sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.shadowColor = COL.purple;
-    ctx.shadowBlur = 30;
-    ctx.fillStyle = COL.purple;
-    ctx.fillText('YOUR WISH RUN', W / 2, centerY);
-    ctx.shadowBlur = 0;
-    ctx.fillStyle = COL.white;
-    ctx.fillText('YOUR WISH RUN', W / 2, centerY);
-    ctx.globalAlpha = 1;
+  // Rectangular tile grid (GD style)
+  const tileSize = 50;
+  const offsetX = (cameraX * 0.3) % tileSize;
+  ctx.strokeStyle = COL.bgGrid;
+  ctx.lineWidth = 0.5;
+  ctx.beginPath();
+  for (let x = -offsetX; x < W + tileSize; x += tileSize) {
+    ctx.moveTo(x, 0); ctx.lineTo(x, GROUND_Y);
   }
+  for (let y = 0; y <= GROUND_Y; y += tileSize) {
+    ctx.moveTo(0, y); ctx.lineTo(W, y);
+  }
+  ctx.stroke();
 
-  const statY = centerY + 60;
-  const lineH = 38;
+  // Subtle brighter grid near ground
+  const nearGroundGrad = ctx.createLinearGradient(0, GROUND_Y - 120, 0, GROUND_Y);
+  nearGroundGrad.addColorStop(0, 'transparent');
+  nearGroundGrad.addColorStop(1, env.glow);
+  ctx.fillStyle = nearGroundGrad;
+  ctx.fillRect(0, GROUND_Y - 120, W, 120);
 
-  // Stats pop in one by one
-  const stats = [
-    { label: 'DISTANCE', value: `${Math.floor(distance)}m`, color: COL.cyan, delay: 0.3 },
-    { label: 'SCORE', value: finalScore.toLocaleString(), color: COL.gold, delay: 0.6 },
-    { label: 'DIAMONDS \uD83D\uDC8E', value: `${orbsCollected}`, color: COL.cyan, delay: 0.9 },
-    { label: 'LEVEL', value: `${level}`, color: COL.purple, delay: 1.2 },
-    { label: 'BEST COMBO', value: `x${maxCombo}`, color: COL.gold, delay: 1.5 },
-    { label: 'JACKPOTS \uD83D\uDCB0', value: `${Math.floor((totalJackpots || 0))}`, color: COL.gold, delay: 1.8 },
-    { label: 'SUPER BOOSTS \u26A1', value: `${totalSuperBoosts}`, color: COL.cyan, delay: 2.1 },
-  ];
-
-  for (let i = 0; i < stats.length; i++) {
-    const s = stats[i];
-    const t = clamp((reveal - s.delay) * 3, 0, 1);
-    if (t <= 0) continue;
-    const bounce = t < 1 ? 1 + (1 - t) * 0.3 : 1; // pop-in bounce
-    ctx.globalAlpha = t;
-    const sy = statY + i * lineH;
-    drawGlowText(s.label, W / 2, sy, 12, 'rgba(255,255,255,0.4)', 'center', 0);
-    drawGlowText(s.value, W / 2, sy + 14, Math.floor(24 * bounce), s.color, 'center', 10);
+  // Stars
+  for (const s of bgStars) {
+    const tw = Math.sin(time * 0.001 * s.twinkle + s.offset);
+    const a = s.alpha * (0.5 + tw * 0.5);
+    if (a < 0.03) continue;
+    ctx.globalAlpha = a;
+    ctx.fillStyle = s.color;
+    if (s.size > 1.5) { ctx.shadowColor = s.color; ctx.shadowBlur = s.size * 4; }
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
   }
   ctx.globalAlpha = 1;
+}
 
-  // New high score
-  if (reveal > 1.8 && isNewHighScore) {
-    const flash = 0.7 + Math.sin(Date.now() * 0.008) * 0.3;
-    ctx.globalAlpha = flash;
-    drawGlowText('NEW RECORD! \uD83C\uDFC6', W / 2, statY + stats.length * lineH + 10, 22, COL.gold, 'center', 20);
-    ctx.globalAlpha = 1;
-    // Celebration particles
-    if (Math.random() < 0.3) {
-      spawnBurst(W / 2 + rand(-80, 80), statY + stats.length * lineH + rand(-20, 20), COL.gold, 3, 3, 0.5, 3);
+// ─── GROUND ────────────────────────────────────────────────────
+function drawGround() {
+  const env = getEnv();
+
+  // Ground blocks (GD style rectangular tiles below ground line)
+  const tileSize = 50;
+  const offsetX = (cameraX * 1) % tileSize;
+  const groundBlockY = GROUND_Y;
+  const rows = Math.ceil((H - GROUND_Y) / tileSize) + 1;
+  const cols = Math.ceil(W / tileSize) + 2;
+
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const bx = c * tileSize - offsetX;
+      const by = groundBlockY + r * tileSize;
+      const depth = r / rows;
+
+      // Block fill — darker as it goes down
+      const brightness = Math.max(0.15, 0.5 - depth * 0.4);
+      ctx.fillStyle = `rgba(20, 40, 80, ${brightness + 0.4})`;
+      ctx.fillRect(bx, by, tileSize, tileSize);
+
+      // Block edge
+      ctx.strokeStyle = `rgba(60, 100, 180, ${0.3 - depth * 0.15})`;
+      ctx.lineWidth = 1;
+      ctx.strokeRect(bx + 0.5, by + 0.5, tileSize - 1, tileSize - 1);
     }
-  } else if (reveal > 1.8) {
-    drawGlowText(`BEST: ${highScore.toLocaleString()}`, W / 2, statY + stats.length * lineH + 10, 16, 'rgba(255,255,255,0.35)', 'center', 0);
   }
 
-  // TAP TO RUN AGAIN
-  if (reveal > 2.2) {
-    const pulse = 0.4 + Math.sin(Date.now() * 0.004) * 0.3;
-    ctx.globalAlpha = pulse;
-    drawGlowText('TAP TO RUN AGAIN', W / 2, H * 0.82, 18, COL.white, 'center', 10);
-    ctx.globalAlpha = 1;
+  // Glowing ground line
+  ctx.shadowColor = env.ground;
+  ctx.shadowBlur = 20;
+  ctx.strokeStyle = env.ground;
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(0, GROUND_Y);
+  ctx.lineTo(W, GROUND_Y);
+  ctx.stroke();
+  ctx.shadowBlur = 0;
 
-    // WishPath link
-    ctx.globalAlpha = 0.3;
-    drawGlowText('Generate Your Real Roadmap \u2192', W / 2, H * 0.88, 12, COL.cyan, 'center', 0);
-    ctx.globalAlpha = 1;
+  // Extra glow layer
+  const glowGrad = ctx.createLinearGradient(0, GROUND_Y - 15, 0, GROUND_Y + 15);
+  glowGrad.addColorStop(0, 'transparent');
+  glowGrad.addColorStop(0.5, env.ground.replace ? env.ground : COL.cyan);
+  glowGrad.addColorStop(1, 'transparent');
+  ctx.globalAlpha = 0.15;
+  ctx.fillStyle = glowGrad;
+  ctx.fillRect(0, GROUND_Y - 15, W, 30);
+  ctx.globalAlpha = 1;
+}
+
+// ─── PLAYER (NEON CUBE) ───────────────────────────────────────
+function drawPlayer() {
+  if (state === STATE.DEAD && deathTimer > 0.3) return; // hide after explosion
+
+  const px = PLAYER_X;
+  const py = player.y;
+  const sz = player.size;
+
+  // Particle trail behind cube
+  if (state === STATE.PLAYING) {
+    const trailColor = superBoostTimer > 0 ? COL.gold : COL.cyan;
+    player.trail.push({ x: px - sz/2, y: py + sz * 0.3, life: 0.4, maxLife: 0.4, color: trailColor });
+    if (player.trail.length > 20) player.trail.shift();
+  }
+
+  // Draw trail
+  for (let i = player.trail.length - 1; i >= 0; i--) {
+    const t = player.trail[i];
+    t.life -= 0.016;
+    if (t.life <= 0) { player.trail.splice(i, 1); continue; }
+    const alpha = (t.life / t.maxLife) * 0.5;
+    const tsz = sz * 0.4 * (t.life / t.maxLife);
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = t.color;
+    ctx.shadowColor = t.color;
+    ctx.shadowBlur = 8;
+    ctx.fillRect(t.x - tsz/2, t.y - tsz/2, tsz, tsz);
+  }
+  ctx.shadowBlur = 0;
+  ctx.globalAlpha = 1;
+
+  ctx.save();
+  ctx.translate(px, py);
+  ctx.rotate(player.rotation);
+
+  // Super boost glow
+  if (superBoostTimer > 0) {
+    ctx.shadowColor = COL.gold;
+    ctx.shadowBlur = 30;
+    ctx.fillStyle = 'rgba(253, 224, 71, 0.3)';
+    ctx.fillRect(-sz * 0.7, -sz * 0.7, sz * 1.4, sz * 1.4);
+    ctx.shadowBlur = 0;
+  }
+
+  // Invincibility flash
+  if (invincTimer > 0 && Math.floor(invincTimer * 10) % 2 === 0) {
+    ctx.globalAlpha = 0.5;
+  }
+
+  // Cube body — purple/cyan gradient
+  const grad = ctx.createLinearGradient(-sz/2, -sz/2, sz/2, sz/2);
+  grad.addColorStop(0, COL.purple);
+  grad.addColorStop(1, COL.cyan);
+  ctx.fillStyle = grad;
+  ctx.shadowColor = COL.purple;
+  ctx.shadowBlur = 15;
+  ctx.fillRect(-sz/2, -sz/2, sz, sz);
+
+  // Neon outline
+  ctx.shadowBlur = 8;
+  ctx.shadowColor = COL.cyanGlow;
+  ctx.strokeStyle = COL.cyanGlow;
+  ctx.lineWidth = 2;
+  ctx.strokeRect(-sz/2, -sz/2, sz, sz);
+
+  // Inner icon — small diamond/star shape
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  const ic = sz * 0.2;
+  ctx.beginPath();
+  ctx.moveTo(0, -ic);
+  ctx.lineTo(ic, 0);
+  ctx.lineTo(0, ic);
+  ctx.lineTo(-ic, 0);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.restore();
+  ctx.globalAlpha = 1;
+
+  // Damage smoke puffs
+  for (let i = damageSmoke.length - 1; i >= 0; i--) {
+    const s = damageSmoke[i];
+    s.x -= 1.5;
+    s.y -= 0.8;
+    s.life -= 0.016;
+    s.size += 0.3;
+    if (s.life <= 0) { damageSmoke.splice(i, 1); continue; }
+    const alpha = (s.life / s.maxLife) * 0.4;
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = '#888';
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+// ─── LEVEL GENERATION ──────────────────────────────────────────
+// Procedural obstacle/diamond/coin placement
+function generateChunk(startX, endX) {
+  let x = startX;
+  const minGap = Math.max(150, 280 - level * 10);
+  const maxGap = Math.max(200, 400 - level * 15);
+
+  while (x < endX) {
+    const gap = rand(minGap, maxGap);
+    x += gap;
+    if (x >= endX) break;
+
+    const r = Math.random();
+
+    if (r < 0.45) {
+      // Spike (triangle)
+      obstacles.push({
+        x: x, y: GROUND_Y,
+        type: 'spike', w: 36, h: 42,
+        hit: false,
+      });
+      // Sometimes double/triple spikes
+      if (Math.random() < 0.25 + level * 0.03) {
+        obstacles.push({ x: x + 38, y: GROUND_Y, type: 'spike', w: 36, h: 42, hit: false });
+      }
+      if (Math.random() < 0.1 + level * 0.02) {
+        obstacles.push({ x: x + 76, y: GROUND_Y, type: 'spike', w: 36, h: 42, hit: false });
+      }
+    } else if (r < 0.7) {
+      // Block platform
+      const bw = rand(80, 180);
+      const bh = rand(36, 60);
+      const elevated = Math.random() < 0.35;
+      const by = elevated ? GROUND_Y - rand(80, 140) : GROUND_Y;
+      platforms.push({ x: x, y: by, w: bw, h: bh });
+
+      // Spike on top of block
+      if (Math.random() < 0.3 + level * 0.04) {
+        obstacles.push({ x: x + bw/2, y: by - bh, type: 'spike', w: 30, h: 36, hit: false });
+      }
+
+      // Diamonds on top of elevated platforms
+      if (elevated && Math.random() < 0.6) {
+        diamonds.push({ x: x + bw/2, y: by - bh - 30, collected: false, anim: rand(0, 6.28) });
+      }
+    } else if (r < 0.85) {
+      // Tall pillar
+      const pw = rand(40, 60);
+      const ph = rand(70, 140);
+      platforms.push({ x: x, y: GROUND_Y - ph, w: pw, h: ph });
+      // Spike on top
+      if (Math.random() < 0.4) {
+        obstacles.push({ x: x + pw/2, y: GROUND_Y - ph, type: 'spike', w: 30, h: 36, hit: false });
+      }
+    } else {
+      // Gap section — spikes in a pit pattern
+      for (let s = 0; s < randInt(2, 4); s++) {
+        obstacles.push({ x: x + s * 34, y: GROUND_Y, type: 'spike', w: 32, h: 38, hit: false });
+      }
+    }
+
+    // Floating diamonds (in air between obstacles)
+    if (Math.random() < 0.5) {
+      const dy = GROUND_Y - rand(60, 160);
+      diamonds.push({ x: x + rand(-30, 60), y: dy, collected: false, anim: rand(0, 6.28) });
+    }
+
+    // Gold coin (rare)
+    if (Math.random() < 0.04) {
+      goldCoins.push({ x: x + rand(0, 80), y: GROUND_Y - rand(40, 120), collected: false, anim: rand(0, 6.28) });
+    }
+
+    // Blue diamond (moderate rarity)
+    if (Math.random() < 0.06) {
+      blueDiamonds.push({ x: x + rand(0, 80), y: GROUND_Y - rand(60, 140), collected: false, anim: rand(0, 6.28) });
+    }
   }
 }
 
-// ─── MAIN LOOP ──────────────────────────────────────────────────
-function update(dt) {
-  updateStars(dt);
-  updateParticles(dt);
-  updateFloatingTexts(dt);
-  updatePathSparkles(dt);
-  spawnAmbientSparkles(dt);
+function ensureWorldGenerated() {
+  const needUpTo = cameraX + W + SPAWN_AHEAD;
+  if (needUpTo > spawnX) {
+    generateChunk(spawnX, needUpTo);
+    spawnX = needUpTo;
+  }
+}
 
+// ─── DRAW OBSTACLES ────────────────────────────────────────────
+function drawSpike(sx, sy, sw, sh, hit) {
+  const screenX = sx - cameraX;
+  if (screenX < -50 || screenX > W + 50) return;
+
+  ctx.save();
+  ctx.translate(screenX, sy);
+
+  // Spike triangle
+  ctx.beginPath();
+  ctx.moveTo(0, -sh);
+  ctx.lineTo(-sw/2, 0);
+  ctx.lineTo(sw/2, 0);
+  ctx.closePath();
+
+  // Dark fill with neon outline
+  ctx.fillStyle = 'rgba(20, 10, 30, 0.9)';
+  ctx.fill();
+  ctx.strokeStyle = hit ? 'rgba(255,100,100,0.5)' : COL.magenta;
+  ctx.lineWidth = 2;
+  ctx.shadowColor = COL.magenta;
+  ctx.shadowBlur = 10;
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Inner glow line
+  ctx.beginPath();
+  ctx.moveTo(0, -sh + 8);
+  ctx.lineTo(-sw/2 + 6, -2);
+  ctx.lineTo(sw/2 - 6, -2);
+  ctx.closePath();
+  ctx.strokeStyle = `rgba(255, 46, 196, 0.3)`;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+function drawPlatform(p) {
+  const screenX = p.x - cameraX;
+  if (screenX + p.w < -10 || screenX > W + 10) return;
+
+  // Block body
+  ctx.fillStyle = COL.block;
+  ctx.fillRect(screenX, p.y - p.h, p.w, p.h);
+
+  // Block edge highlight
+  ctx.strokeStyle = COL.blockEdge;
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(screenX + 0.5, p.y - p.h + 0.5, p.w - 1, p.h - 1);
+
+  // Top bright edge
+  ctx.strokeStyle = 'rgba(100, 160, 255, 0.5)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(screenX, p.y - p.h);
+  ctx.lineTo(screenX + p.w, p.y - p.h);
+  ctx.stroke();
+
+  // Inner grid pattern
+  const ts = 25;
+  ctx.strokeStyle = 'rgba(80, 130, 200, 0.15)';
+  ctx.lineWidth = 0.5;
+  ctx.beginPath();
+  const oX = cameraX % ts;
+  for (let gx = screenX - oX; gx < screenX + p.w; gx += ts) {
+    if (gx >= screenX && gx <= screenX + p.w) {
+      ctx.moveTo(gx, p.y - p.h);
+      ctx.lineTo(gx, p.y);
+    }
+  }
+  for (let gy = p.y - p.h; gy <= p.y; gy += ts) {
+    ctx.moveTo(screenX, gy);
+    ctx.lineTo(screenX + p.w, gy);
+  }
+  ctx.stroke();
+}
+
+// ─── DRAW DIAMONDS (GREEN NEON, GD STYLE) ─────────────────────
+function drawDiamond(d, time) {
+  if (d.collected) return;
+  const screenX = d.x - cameraX;
+  if (screenX < -30 || screenX > W + 30) return;
+
+  const bob = Math.sin(time * 0.003 + d.anim) * 5;
+  const rot = Math.sin(time * 0.002 + d.anim) * 0.2;
+
+  ctx.save();
+  ctx.translate(screenX, d.y + bob);
+  ctx.rotate(rot);
+
+  const sz = 14;
+  ctx.shadowColor = COL.green;
+  ctx.shadowBlur = 14;
+
+  // Diamond shape
+  ctx.beginPath();
+  ctx.moveTo(0, -sz);
+  ctx.lineTo(sz, 0);
+  ctx.lineTo(0, sz);
+  ctx.lineTo(-sz, 0);
+  ctx.closePath();
+  ctx.fillStyle = COL.green;
+  ctx.fill();
+
+  // Outline
+  ctx.strokeStyle = COL.greenGlow;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Inner shine
+  ctx.fillStyle = 'rgba(255,255,255,0.4)';
+  ctx.beginPath();
+  ctx.moveTo(0, -sz * 0.5);
+  ctx.lineTo(sz * 0.4, 0);
+  ctx.lineTo(0, sz * 0.1);
+  ctx.lineTo(-sz * 0.1, -sz * 0.1);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.shadowBlur = 0;
+  ctx.restore();
+}
+
+// ─── DRAW GOLD COINS ──────────────────────────────────────────
+function drawGoldCoinObj(gc, time) {
+  if (gc.collected) return;
+  const screenX = gc.x - cameraX;
+  if (screenX < -30 || screenX > W + 30) return;
+
+  const bob = Math.sin(time * 0.004 + gc.anim) * 4;
+  const scaleX = Math.abs(Math.cos(time * 0.003 + gc.anim));
+
+  ctx.save();
+  ctx.translate(screenX, gc.y + bob);
+  ctx.scale(0.3 + scaleX * 0.7, 1);
+
+  ctx.shadowColor = COL.gold;
+  ctx.shadowBlur = 16;
+  ctx.fillStyle = COL.gold;
+  ctx.beginPath();
+  ctx.arc(0, 0, 14, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = COL.goldDark;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Star emblem
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = COL.goldDark;
+  ctx.font = arcadeFont(10);
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('★', 0, 1);
+
+  ctx.restore();
+}
+
+// ─── DRAW BLUE DIAMONDS ───────────────────────────────────────
+function drawBlueDiamondObj(bd, time) {
+  if (bd.collected) return;
+  const screenX = bd.x - cameraX;
+  if (screenX < -30 || screenX > W + 30) return;
+
+  const bob = Math.sin(time * 0.003 + bd.anim) * 6;
+  const pulse = 0.9 + Math.sin(time * 0.005 + bd.anim) * 0.1;
+
+  ctx.save();
+  ctx.translate(screenX, bd.y + bob);
+  ctx.scale(pulse, pulse);
+
+  const sz = 13;
+  ctx.shadowColor = COL.blue;
+  ctx.shadowBlur = 18;
+
+  ctx.beginPath();
+  ctx.moveTo(0, -sz);
+  ctx.lineTo(sz, 0);
+  ctx.lineTo(0, sz);
+  ctx.lineTo(-sz, 0);
+  ctx.closePath();
+
+  const grad = ctx.createLinearGradient(-sz, -sz, sz, sz);
+  grad.addColorStop(0, '#3B82F6');
+  grad.addColorStop(1, '#60A5FA');
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  ctx.strokeStyle = '#93C5FD';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.shadowBlur = 0;
+  ctx.restore();
+}
+
+// ─── UPDATE PLAYER ─────────────────────────────────────────────
+function jump() {
+  if (state === STATE.MENU) {
+    startGame();
+    return;
+  }
+  if (state === STATE.DEAD) {
+    if (deathTimer > 0.8) startGame();
+    return;
+  }
+  if (state === STATE.LEVEL_COMPLETE) {
+    nextLevel();
+    return;
+  }
+  if (player.onGround) {
+    player.vy = JUMP_FORCE;
+    player.onGround = false;
+    jumpCount++;
+    // Jump particles
+    for (let i = 0; i < 6; i++) {
+      spawnParticle(PLAYER_X, player.y + player.size/2, COL.cyan, rand(-2, 2), rand(1, 3), rand(0.2, 0.4), rand(2, 4), 0);
+    }
+  }
+}
+
+function updatePlayer(dt) {
+  if (state !== STATE.PLAYING) return;
+
+  // Gravity
+  player.vy += GRAVITY * dt;
+  player.y += player.vy * dt;
+
+  // Ground collision
+  const groundLevel = GROUND_Y - player.size / 2;
+  let onPlatform = false;
+
+  // Check platform collisions (only when falling)
+  if (player.vy >= 0) {
+    for (const p of platforms) {
+      const px = PLAYER_X + cameraX;
+      const pLeft = p.x;
+      const pRight = p.x + p.w;
+      const pTop = p.y - p.h;
+
+      if (px + player.size/2 > pLeft + 4 && px - player.size/2 < pRight - 4) {
+        const playerBottom = player.y + player.size / 2;
+        const prevBottom = playerBottom - player.vy * dt;
+        if (prevBottom <= pTop + 2 && playerBottom >= pTop) {
+          player.y = pTop - player.size / 2;
+          player.vy = 0;
+          player.onGround = true;
+          onPlatform = true;
+          break;
+        }
+      }
+    }
+  }
+
+  if (!onPlatform) {
+    if (player.y + player.size / 2 >= GROUND_Y) {
+      player.y = groundLevel;
+      player.vy = 0;
+      player.onGround = true;
+    } else {
+      player.onGround = false;
+    }
+  }
+
+  // Rotation — spin in air (GD style)
+  if (!player.onGround) {
+    player.rotation += 6 * dt; // rotate while airborne
+  } else {
+    // Snap to nearest 90 degrees
+    const target = Math.round(player.rotation / (Math.PI / 2)) * (Math.PI / 2);
+    player.rotation = lerp(player.rotation, target, 0.3);
+  }
+
+  // Invincibility timer
+  if (invincTimer > 0) invincTimer -= dt;
+  if (hitFlashTimer > 0) hitFlashTimer -= dt;
+
+  // Super boost timer
+  if (superBoostTimer > 0) {
+    superBoostTimer -= dt;
+    if (superBoostTimer <= 0) {
+      superBoostTimer = 0;
+    }
+  }
+
+  // Jackpot timer
+  if (jackpotTimer > 0) {
+    jackpotTimer -= dt;
+    jackpotScoreAnim = Math.min(10000, jackpotScoreAnim + dt * 8000);
+  }
+
+  // Level up flash
+  if (levelUpFlash > 0) levelUpFlash -= dt;
+
+  // Blue diamond HUD flash
+  if (blueDiamondHudFlash > 0) blueDiamondHudFlash -= dt;
+}
+
+// ─── COLLISION DETECTION ───────────────────────────────────────
+function checkCollisions() {
+  if (state !== STATE.PLAYING) return;
+
+  const px = PLAYER_X + cameraX; // world X
+  const py = player.y;
+  const ps = player.size * 0.4; // hitbox radius
+
+  // Spike collisions
+  for (const obs of obstacles) {
+    if (obs.hit) continue;
+    const screenDist = obs.x - px;
+    if (Math.abs(screenDist) > 60) continue;
+
+    // Triangle hitbox approximation
+    const dx = Math.abs(px - obs.x);
+    const dy = (py + ps) - (obs.y - obs.h);
+    if (dx < obs.w * 0.35 && dy > 0 && py + ps > obs.y - obs.h && py - ps < obs.y) {
+      if (superBoostTimer > 0) {
+        obs.hit = true;
+        spawnBurst(obs.x - cameraX, obs.y - obs.h/2, COL.gold, 15, 4, 0.5, 4);
+        score += 50;
+        continue;
+      }
+      if (invincTimer <= 0) {
+        obs.hit = true;
+        takeDamage(obs.x - cameraX, py);
+      }
+    }
+  }
+
+  // Diamond collection
+  for (const d of diamonds) {
+    if (d.collected) continue;
+    const dx = Math.abs(px - d.x);
+    const dy = Math.abs(py - d.y);
+    if (dx < 28 && dy < 28) {
+      d.collected = true;
+      diamondsCollected++;
+      score += 100;
+      totalCoins++;
+      spawnBurst(d.x - cameraX, d.y, COL.green, 12, 4, 0.5, 4);
+      addFloatingText(d.x - cameraX, d.y - 20, '+100', COL.green, 12);
+
+      // Level up check
+      if (diamondsCollected % DIAMONDS_PER_LEVEL === 0) {
+        level++;
+        levelUpFlash = 1.5;
+        scrollSpeed = Math.min(maxSpeed, baseSpeed + (level - 1) * 30);
+        screenFlash = 0.5;
+        screenFlashColor = getEnv().edge;
+        spawnBurst(PLAYER_X, py, getEnv().edge, 40, 6, 0.8, 5);
+        addFloatingText(W/2, H/2 - 40, 'LEVEL ' + level + '!', COL.white, 18);
+      }
+    }
+  }
+
+  // Gold coin collection
+  for (const gc of goldCoins) {
+    if (gc.collected) continue;
+    const dx = Math.abs(px - gc.x);
+    const dy = Math.abs(py - gc.y);
+    if (dx < 28 && dy < 28) {
+      gc.collected = true;
+      goldCoinsCollected++;
+      spawnBurst(gc.x - cameraX, gc.y, COL.gold, 15, 5, 0.6, 5);
+      addFloatingText(gc.x - cameraX, gc.y - 20, '★ GOLD!', COL.gold, 14);
+
+      if (goldCoinsCollected >= 3) {
+        // JACKPOT!
+        goldCoinsCollected = 0;
+        jackpotTimer = 2.5;
+        jackpotScoreAnim = 0;
+        totalJackpots++;
+        score += 10000;
+        screenFlash = 0.8;
+        screenFlashColor = COL.gold;
+        shakeDur = 0.5;
+        spawnBurst(W/2, H/2, COL.gold, 80, 8, 1.2, 7);
+        addFloatingText(W/2, H/3, '★ JACKPOT +10,000! ★', COL.gold, 20);
+      }
+    }
+  }
+
+  // Blue diamond collection
+  for (const bd of blueDiamonds) {
+    if (bd.collected) continue;
+    const dx = Math.abs(px - bd.x);
+    const dy = Math.abs(py - bd.y);
+    if (dx < 28 && dy < 28) {
+      bd.collected = true;
+      blueDiamondsCollected++;
+      blueDiamondHudFlash = 0.5;
+      spawnBurst(bd.x - cameraX, bd.y, COL.blue, 12, 4, 0.5, 4);
+      addFloatingText(bd.x - cameraX, bd.y - 20, '◆ BOOST', COL.blue, 12);
+
+      if (blueDiamondsCollected >= 3) {
+        // SUPER BOOST!
+        blueDiamondsCollected = 0;
+        superBoostTimer = 5;
+        totalSuperBoosts++;
+        screenFlash = 0.6;
+        screenFlashColor = COL.blue;
+        shakeDur = 0.3;
+        spawnBurst(PLAYER_X, py, COL.blue, 50, 6, 1.0, 6);
+        spawnBurst(PLAYER_X, py, COL.gold, 30, 5, 0.8, 4);
+        addFloatingText(W/2, H/3, '⚡ SUPER BOOST! ⚡', COL.gold, 18);
+      }
+    }
+  }
+}
+
+function takeDamage(x, y) {
+  health--;
+  invincTimer = 1.5;
+  hitFlashTimer = 0.3;
+  shakeDur = 0.4;
+  screenFlash = 0.3;
+  screenFlashColor = '#FF4444';
+
+  // Smoke puffs
+  for (let i = 0; i < 5; i++) {
+    damageSmoke.push({
+      x: PLAYER_X + rand(-15, 15), y: player.y + rand(-15, 15),
+      size: rand(4, 10), life: rand(0.5, 1.0), maxLife: 1.0,
+    });
+  }
+  spawnBurst(x, y, '#FF4444', 20, 5, 0.5, 4);
+
+  if (health <= 0) {
+    die();
+  } else {
+    addFloatingText(PLAYER_X, player.y - 40, '-1 ❤', '#FF4444', 14);
+  }
+}
+
+function die() {
+  state = STATE.DEAD;
+  deathTimer = 0;
+  spawnDeathExplosion(PLAYER_X, player.y);
+  shakeDur = 0.6;
+  screenFlash = 0.5;
+  screenFlashColor = '#FF2222';
+
+  // Save scores
+  if (score > highScore) {
+    highScore = Math.floor(score);
+    localStorage.setItem('wr_gd_highscore', highScore);
+  }
+  localStorage.setItem('wr_gd_coins', totalCoins);
+  attempt++;
+  localStorage.setItem('wr_gd_attempt', attempt);
+}
+
+// ─── GAME LIFECYCLE ────────────────────────────────────────────
+function startGame() {
+  state = STATE.PLAYING;
+  score = 0;
+  distance = 0;
+  levelDistance = 0;
+  health = 3;
+  invincTimer = 0;
+  hitFlashTimer = 0;
+  diamondsCollected = 0;
+  goldCoinsCollected = 0;
+  blueDiamondsCollected = 0;
+  superBoostTimer = 0;
+  jackpotTimer = 0;
+  totalJackpots = 0;
+  totalSuperBoosts = 0;
+  level = 1;
+  levelUpFlash = 0;
+  jumpCount = 0;
+  scrollSpeed = baseSpeed;
+  cameraX = 0;
+  spawnX = 0;
+  player.y = GROUND_Y - PLAYER_SIZE / 2;
+  player.vy = 0;
+  player.onGround = true;
+  player.rotation = 0;
+  player.trail = [];
+  obstacles = [];
+  platforms = [];
+  diamonds = [];
+  goldCoins = [];
+  blueDiamonds = [];
+  particles = [];
+  deathParticles = [];
+  damageSmoke = [];
+  floatingTexts = [];
+  shakeX = 0; shakeY = 0; shakeDur = 0;
+  screenFlash = 0;
+  deathTimer = 0;
+  blueDiamondHudFlash = 0;
+  runStartTime = performance.now();
+  ensureWorldGenerated();
+}
+
+function nextLevel() {
+  level++;
+  levelDistance = 0;
+  state = STATE.PLAYING;
+  scrollSpeed = Math.min(maxSpeed, baseSpeed + (level - 1) * 30);
+  levelUpFlash = 1.5;
+}
+
+// ─── UPDATE ────────────────────────────────────────────────────
+function update(dt) {
   if (state === STATE.DEAD) {
     deathTimer += dt;
-    gameOverStatReveal += dt;
+    updateParticles(dt);
+    updateFloatingTexts(dt);
+    if (shakeDur > 0) {
+      shakeDur -= dt;
+      shakeX = rand(-6, 6) * (shakeDur / 0.6);
+      shakeY = rand(-6, 6) * (shakeDur / 0.6);
+    } else { shakeX = 0; shakeY = 0; }
+    if (screenFlash > 0) screenFlash -= dt * 2;
     return;
   }
 
   if (state !== STATE.PLAYING) return;
 
-  // Slow-mo
-  let effDt = dt;
-  if (slowMoTimer > 0) {
-    slowMoTimer -= dt;
-    effDt = dt * 0.3;
-  }
-  if (levelUpFlash > 0) levelUpFlash -= dt;
+  // Scroll world
+  const effSpeed = superBoostTimer > 0 ? scrollSpeed * 1.4 : scrollSpeed;
+  cameraX += effSpeed * dt;
+  distance += effSpeed * dt;
+  levelDistance += effSpeed * dt;
+  score += effSpeed * dt * 0.05;
 
-  // Distance + score
-  distance += speed * effDt * 2;
-  score += speed * effDt * 0.5;
+  // Progressive speed ramp
+  scrollSpeed = Math.min(maxSpeed, baseSpeed + distance * 0.008 + (level - 1) * 25);
 
-  // Speed increase
-  speedTimer += dt;
-  if (speedTimer >= 10) {
-    speedTimer = 0;
-    const increment = speed < 2.5 ? 0.2 : speed < 5 ? 0.15 : 0.1;
-    speed = Math.min(maxSpeed, speed + increment);
-  }
-
-  // Distance markers
-  if (Math.floor(distance / 100) > Math.floor(lastMarkerDistance / 100)) {
-    lastMarkerDistance = Math.floor(distance / 100) * 100;
-    distanceMarkerFlash = 1;
-    if (lastMarkerDistance % 500 === 0) {
-      const env = getEnvPhase();
-      spawnBurst(W / 2, H * 0.4, env.edge, 40, 5, 0.9, 5);
-      spawnBurst(W / 2, H * 0.4, COL.cyan, 25, 4, 0.7, 4);
-    }
-  }
-  if (distanceMarkerFlash > 0) distanceMarkerFlash -= dt * 1.5;
-
-  // Combo decay
-  if (comboTimer > 0) {
-    comboTimer -= dt;
-    if (comboTimer <= 0) { combo = 0; comboTimer = 0; }
-  }
-
-  // Spawn obstacles
-  const spawnRate = Math.max(0.9, 3.5 - distance * 0.0006);
-  spawnTimer -= dt;
-  if (spawnTimer <= 0) {
-    spawnTimer = spawnRate + rand(-0.2, 0.2);
-    spawnObstacle();
-  }
-
-  // Spawn orbs
-  orbSpawnTimer -= dt;
-  if (orbSpawnTimer <= 0) {
-    orbSpawnTimer = rand(0.5, 1.2);
-    spawnOrb();
-  }
-
-  // Gold coin spawning
-  goldCoinSpawnDist += speed * effDt * 2;
-  if (goldCoinSpawnDist >= nextGoldCoinAt) {
-    spawnGoldCoin();
-    goldCoinSpawnDist = 0;
-    nextGoldCoinAt = rand(800, 1500);
-  }
-
-  // Blue diamond spawning
-  blueDiamondSpawnDist += speed * effDt * 2;
-  if (blueDiamondSpawnDist >= nextBlueDiamondAt) {
-    spawnBlueDiamond();
-    blueDiamondSpawnDist = 0;
-    nextBlueDiamondAt = rand(400, 700);
-  }
-
+  ensureWorldGenerated();
   updatePlayer(dt);
-  updateObstacles(dt);
-  updateOrbs(dt);
-  updateGoldCoins(dt);
-  updateBlueDiamonds(dt);
   checkCollisions();
+  updateParticles(dt);
+  updateFloatingTexts(dt);
+
+  // Clean up passed objects
+  const cleanX = cameraX - 200;
+  obstacles = obstacles.filter(o => o.x > cleanX);
+  platforms = platforms.filter(p => p.x + p.w > cleanX);
+  diamonds = diamonds.filter(d => d.x > cleanX || !d.collected);
+  goldCoins = goldCoins.filter(g => g.x > cleanX || !g.collected);
+  blueDiamonds = blueDiamonds.filter(b => b.x > cleanX || !b.collected);
 
   // Screen shake
   if (shakeDur > 0) {
     shakeDur -= dt;
     shakeX = rand(-8, 8) * (shakeDur / 0.5);
     shakeY = rand(-8, 8) * (shakeDur / 0.5);
-  } else {
-    shakeX = 0; shakeY = 0;
-  }
+  } else { shakeX = 0; shakeY = 0; }
 
   if (screenFlash > 0) screenFlash -= dt * 2;
+
+  // Ground-line trail particles
+  if (Math.random() < 0.3) {
+    const env = getEnv();
+    spawnParticle(PLAYER_X - player.size/2, GROUND_Y, env.ground, rand(-1, -3), rand(-0.5, -2), rand(0.15, 0.35), rand(1, 3), 0);
+  }
 }
 
+// ─── HUD (Geometry Dash style) ─────────────────────────────────
+function drawHUD() {
+  const pad = 12;
+  const env = getEnv();
+
+  // ── Progress bar at top ──
+  const barH = 5;
+  const barY = pad;
+  const progress = clamp(levelDistance / LEVEL_LENGTH, 0, 1);
+
+  // Track
+  ctx.fillStyle = 'rgba(255,255,255,0.1)';
+  ctx.fillRect(W * 0.15, barY, W * 0.7, barH);
+
+  // Fill
+  const barGrad = ctx.createLinearGradient(W * 0.15, 0, W * 0.15 + W * 0.7 * progress, 0);
+  barGrad.addColorStop(0, COL.green);
+  barGrad.addColorStop(1, COL.greenGlow);
+  ctx.fillStyle = barGrad;
+  ctx.shadowColor = COL.green;
+  ctx.shadowBlur = 6;
+  ctx.fillRect(W * 0.15, barY, W * 0.7 * progress, barH);
+  ctx.shadowBlur = 0;
+
+  // Progress %
+  ctx.font = arcadeFont(9);
+  ctx.fillStyle = COL.white;
+  ctx.textAlign = 'right';
+  ctx.fillText(Math.floor(progress * 100) + '%', W * 0.15 + W * 0.7 + 40, barY + barH + 1);
+
+  // ── Score badge (top-left pill) ──
+  const badgeX = pad + 8;
+  const badgeY = pad + 20;
+  const scoreStr = Math.floor(score).toLocaleString();
+
+  ctx.fillStyle = 'rgba(0,0,0,0.5)';
+  ctx.beginPath();
+  ctx.roundRect(badgeX, badgeY, 160, 30, 15);
+  ctx.fill();
+
+  ctx.font = arcadeFont(10);
+  ctx.fillStyle = COL.gold;
+  ctx.textAlign = 'left';
+  ctx.fillText('★ ' + scoreStr, badgeX + 12, badgeY + 20);
+
+  // ── Level indicator ──
+  ctx.fillStyle = 'rgba(0,0,0,0.5)';
+  ctx.beginPath();
+  ctx.roundRect(badgeX, badgeY + 38, 90, 26, 13);
+  ctx.fill();
+  ctx.font = arcadeFont(8);
+  ctx.fillStyle = env.edge;
+  ctx.fillText('LV ' + level, badgeX + 12, badgeY + 56);
+
+  // ── Health hearts (top-right) ──
+  const heartX = W - pad - 10;
+  const heartY = pad + 32;
+  ctx.font = arcadeFont(14);
+  ctx.textAlign = 'right';
+  for (let i = 0; i < 3; i++) {
+    const hx = heartX - (2 - i) * 28;
+    if (i < health) {
+      ctx.fillStyle = '#FF4444';
+      ctx.shadowColor = '#FF4444';
+      ctx.shadowBlur = 8;
+    } else {
+      ctx.fillStyle = 'rgba(255,255,255,0.15)';
+      ctx.shadowBlur = 0;
+    }
+    ctx.fillText('♥', hx, heartY);
+  }
+  ctx.shadowBlur = 0;
+
+  // ── Diamond counter ──
+  ctx.fillStyle = 'rgba(0,0,0,0.5)';
+  ctx.beginPath();
+  ctx.roundRect(W - pad - 120, heartY + 14, 120, 26, 13);
+  ctx.fill();
+  ctx.font = arcadeFont(8);
+  ctx.fillStyle = COL.green;
+  ctx.textAlign = 'right';
+  ctx.fillText('◆ ' + diamondsCollected + ' / ' + (level * DIAMONDS_PER_LEVEL), W - pad - 14, heartY + 34);
+
+  // ── Gold coin counter ──
+  ctx.fillStyle = 'rgba(0,0,0,0.5)';
+  ctx.beginPath();
+  ctx.roundRect(W - pad - 80, heartY + 46, 80, 24, 12);
+  ctx.fill();
+  ctx.font = arcadeFont(8);
+  ctx.fillStyle = COL.gold;
+  ctx.fillText('★ ' + goldCoinsCollected + '/3', W - pad - 14, heartY + 64);
+
+  // ── Super Boost diamond slots (left side) ──
+  const slotX = pad + 10;
+  const slotY = H - 55;
+  for (let i = 0; i < 3; i++) {
+    const sx = slotX + i * 32;
+    const filled = i < blueDiamondsCollected;
+
+    // Stencil diamond slot
+    ctx.beginPath();
+    ctx.moveTo(sx + 10, slotY - 12);
+    ctx.lineTo(sx + 22, slotY);
+    ctx.lineTo(sx + 10, slotY + 12);
+    ctx.lineTo(sx - 2, slotY);
+    ctx.closePath();
+
+    if (filled) {
+      ctx.fillStyle = COL.blue;
+      ctx.shadowColor = COL.blue;
+      ctx.shadowBlur = 10;
+      ctx.fill();
+    } else {
+      ctx.strokeStyle = 'rgba(59, 130, 246, 0.3)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+    ctx.shadowBlur = 0;
+  }
+  if (blueDiamondHudFlash > 0) {
+    ctx.globalAlpha = blueDiamondHudFlash;
+    ctx.fillStyle = COL.blue;
+    ctx.fillRect(slotX - 5, slotY - 18, 100, 36);
+    ctx.globalAlpha = 1;
+  }
+
+  // Super boost active indicator
+  if (superBoostTimer > 0) {
+    const pulse = 0.7 + Math.sin(performance.now() * 0.01) * 0.3;
+    ctx.globalAlpha = pulse;
+    ctx.font = arcadeFont(10);
+    ctx.fillStyle = COL.gold;
+    ctx.textAlign = 'left';
+    ctx.shadowColor = COL.gold;
+    ctx.shadowBlur = 10;
+    ctx.fillText('⚡ BOOST ' + superBoostTimer.toFixed(1) + 's', slotX, slotY + 30);
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = 1;
+  }
+
+  // ── Jackpot celebration overlay ──
+  if (jackpotTimer > 0) {
+    const pulse = 0.5 + Math.sin(performance.now() * 0.015) * 0.3;
+    ctx.globalAlpha = pulse;
+    ctx.font = arcadeFont(22);
+    ctx.fillStyle = COL.gold;
+    ctx.textAlign = 'center';
+    ctx.shadowColor = COL.gold;
+    ctx.shadowBlur = 20;
+    ctx.fillText('★ JACKPOT! ★', W/2, H/2 - 20);
+    ctx.font = arcadeFont(16);
+    ctx.fillText('+' + Math.floor(jackpotScoreAnim).toLocaleString(), W/2, H/2 + 20);
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = 1;
+  }
+
+  // ── Level up flash ──
+  if (levelUpFlash > 0) {
+    const alpha = levelUpFlash > 1 ? 1 : levelUpFlash;
+    ctx.globalAlpha = alpha * 0.8;
+    ctx.font = arcadeFont(24);
+    ctx.fillStyle = env.edge;
+    ctx.textAlign = 'center';
+    ctx.shadowColor = env.edge;
+    ctx.shadowBlur = 20;
+    ctx.fillText('LEVEL ' + level, W/2, H * 0.35);
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = 1;
+  }
+
+  // ── Hit flash ──
+  if (hitFlashTimer > 0) {
+    ctx.globalAlpha = hitFlashTimer * 0.4;
+    ctx.fillStyle = '#FF0000';
+    ctx.fillRect(0, 0, W, H);
+    ctx.globalAlpha = 1;
+  }
+}
+
+// ─── MENU SCREEN ───────────────────────────────────────────────
+function drawMenuScreen() {
+  const time = performance.now();
+
+  // Dim overlay
+  ctx.fillStyle = 'rgba(5, 10, 25, 0.6)';
+  ctx.fillRect(0, 0, W, H);
+
+  // Title
+  const titleY = H * 0.28;
+  const pulse = 1 + Math.sin(time * 0.003) * 0.03;
+
+  ctx.save();
+  ctx.translate(W/2, titleY);
+  ctx.scale(pulse, pulse);
+
+  // Title glow
+  ctx.shadowColor = COL.purple;
+  ctx.shadowBlur = 30;
+  ctx.font = arcadeFont(Math.min(36, W * 0.045));
+  ctx.fillStyle = COL.white;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('WISH RUNNER', 0, 0);
+  ctx.shadowBlur = 0;
+
+  // Subtitle
+  ctx.font = arcadeFont(Math.min(12, W * 0.016));
+  ctx.fillStyle = COL.cyan;
+  ctx.fillText('GEOMETRY DASH × COSMIC', 0, 36);
+  ctx.restore();
+
+  // Level name
+  ctx.font = arcadeFont(Math.min(14, W * 0.02));
+  ctx.fillStyle = getEnv().edge;
+  ctx.textAlign = 'center';
+  ctx.fillText('LEVEL ' + level + ' — COSMIC RUN', W/2, titleY + 70);
+
+  // Big green play button (GD style)
+  const btnR = Math.min(55, W * 0.06);
+  const btnY = H * 0.55;
+  const btnPulse = 1 + Math.sin(time * 0.004) * 0.05;
+
+  ctx.save();
+  ctx.translate(W/2, btnY);
+  ctx.scale(btnPulse, btnPulse);
+
+  // White outline ring
+  ctx.strokeStyle = COL.white;
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.arc(0, 0, btnR + 8, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Green circle
+  ctx.shadowColor = COL.green;
+  ctx.shadowBlur = 25;
+  ctx.fillStyle = COL.green;
+  ctx.beginPath();
+  ctx.arc(0, 0, btnR, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Darker green border
+  ctx.strokeStyle = COL.greenDark;
+  ctx.lineWidth = 3;
+  ctx.stroke();
+
+  // Play triangle
+  ctx.fillStyle = COL.white;
+  ctx.beginPath();
+  ctx.moveTo(-btnR * 0.25, -btnR * 0.35);
+  ctx.lineTo(-btnR * 0.25, btnR * 0.35);
+  ctx.lineTo(btnR * 0.35, 0);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.restore();
+
+  // Tap to play text
+  ctx.font = arcadeFont(Math.min(10, W * 0.014));
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.textAlign = 'center';
+  ctx.fillText('TAP ANYWHERE TO PLAY', W/2, btnY + btnR + 35);
+
+  // Attempt counter
+  ctx.font = arcadeFont(Math.min(10, W * 0.014));
+  ctx.fillStyle = 'rgba(255,255,255,0.4)';
+  ctx.fillText('ATTEMPT ' + attempt, W/2, H * 0.82);
+
+  // High score
+  if (highScore > 0) {
+    ctx.font = arcadeFont(Math.min(10, W * 0.014));
+    ctx.fillStyle = COL.gold;
+    ctx.fillText('★ BEST: ' + highScore.toLocaleString(), W/2, H * 0.88);
+  }
+}
+
+// ─── DEATH SCREEN (GD STYLE) ──────────────────────────────────
+function drawGameOverScreen() {
+  if (deathTimer < 0.3) return; // wait for explosion
+
+  const revealT = clamp((deathTimer - 0.3) / 0.8, 0, 1);
+  const alpha = easeOutCubic(revealT);
+
+  // Dark overlay
+  ctx.fillStyle = `rgba(5, 10, 20, ${alpha * 0.75})`;
+  ctx.fillRect(0, 0, W, H);
+
+  if (revealT < 0.1) return;
+
+  ctx.globalAlpha = alpha;
+
+  // Panel
+  const panelW = Math.min(420, W * 0.7);
+  const panelH = Math.min(320, H * 0.65);
+  const panelX = (W - panelW) / 2;
+  const panelY = (H - panelH) / 2;
+
+  ctx.fillStyle = 'rgba(15, 25, 50, 0.95)';
+  ctx.beginPath();
+  ctx.roundRect(panelX, panelY, panelW, panelH, 16);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(100, 150, 255, 0.3)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Level name
+  ctx.font = arcadeFont(Math.min(14, W * 0.02));
+  ctx.fillStyle = getEnv().edge;
+  ctx.textAlign = 'center';
+  ctx.fillText('LEVEL ' + level, W/2, panelY + 35);
+
+  // Stats
+  const statY = panelY + 65;
+  const statGap = 30;
+  ctx.font = arcadeFont(Math.min(10, W * 0.014));
+  ctx.textAlign = 'left';
+  const statX = panelX + 30;
+
+  const elapsedSec = ((performance.now() - runStartTime) / 1000).toFixed(1);
+  const progress = clamp(levelDistance / LEVEL_LENGTH * 100, 0, 100).toFixed(0);
+
+  const stats = [
+    ['ATTEMPT', '' + attempt],
+    ['SCORE', Math.floor(score).toLocaleString()],
+    ['JUMPS', '' + jumpCount],
+    ['TIME', elapsedSec + 's'],
+    ['PROGRESS', progress + '%'],
+    ['DIAMONDS', '' + diamondsCollected],
+  ];
+
+  for (let i = 0; i < stats.length; i++) {
+    const sy = statY + i * statGap;
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.textAlign = 'left';
+    ctx.fillText(stats[i][0], statX, sy);
+    ctx.fillStyle = COL.white;
+    ctx.textAlign = 'right';
+    ctx.fillText(stats[i][1], panelX + panelW - 30, sy);
+  }
+
+  // New high score
+  if (Math.floor(score) >= highScore && score > 0) {
+    ctx.font = arcadeFont(Math.min(12, W * 0.016));
+    ctx.fillStyle = COL.gold;
+    ctx.textAlign = 'center';
+    ctx.shadowColor = COL.gold;
+    ctx.shadowBlur = 12;
+    ctx.fillText('★ NEW BEST! ★', W/2, panelY + panelH - 65);
+    ctx.shadowBlur = 0;
+  }
+
+  // Replay button (green circle with arrow, GD style)
+  if (deathTimer > 1.0) {
+    const btnR = Math.min(30, W * 0.04);
+    const btnY2 = panelY + panelH - 28;
+    const time2 = performance.now();
+    const btnPulse = 1 + Math.sin(time2 * 0.004) * 0.05;
+
+    ctx.save();
+    ctx.translate(W/2, btnY2);
+    ctx.scale(btnPulse, btnPulse);
+
+    // White ring
+    ctx.strokeStyle = COL.white;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(0, 0, btnR + 6, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Green fill
+    ctx.shadowColor = COL.green;
+    ctx.shadowBlur = 15;
+    ctx.fillStyle = COL.green;
+    ctx.beginPath();
+    ctx.arc(0, 0, btnR, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    ctx.strokeStyle = COL.greenDark;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Replay arrow
+    ctx.fillStyle = COL.white;
+    ctx.strokeStyle = COL.white;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(0, 0, btnR * 0.4, -0.8, Math.PI * 1.5, false);
+    ctx.stroke();
+    // Arrow tip
+    ctx.beginPath();
+    ctx.moveTo(btnR * 0.15, -btnR * 0.5);
+    ctx.lineTo(btnR * 0.45, -btnR * 0.25);
+    ctx.lineTo(btnR * 0.05, -btnR * 0.15);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  ctx.globalAlpha = 1;
+}
+
+// ─── DRAW ──────────────────────────────────────────────────────
 function draw() {
+  const time = performance.now();
   ctx.clearRect(0, 0, W, H);
 
-  // Deep space background
-  ctx.fillStyle = COL.bg;
-  ctx.fillRect(0, 0, W, H);
-
-  // Nebulae layers
-  drawNebulae();
-
-  // Vanishing point glow
-  const horizGrad = ctx.createRadialGradient(W / 2, H * HORIZON_Y, 0, W / 2, H * HORIZON_Y, W * 0.6);
-  const env = getEnvPhase();
-  horizGrad.addColorStop(0, `${env.grid} 0.08)`);
-  horizGrad.addColorStop(0.5, `${env.grid} 0.03)`);
-  horizGrad.addColorStop(1, 'transparent');
-  ctx.fillStyle = horizGrad;
-  ctx.fillRect(0, 0, W, H);
+  drawBackground(time);
 
   ctx.save();
   ctx.translate(shakeX, shakeY);
 
-  drawStars(performance.now());
-  drawGodRays(performance.now());
-  drawPath();
-  drawPathSparkles();
+  drawGround();
 
-  // Draw objects sorted by depth
-  const allObjects = [
-    ...obstacles.map(o => ({ ...o, kind: 'obs' })),
-    ...orbs.map(o => ({ ...o, kind: 'orb' })),
-    ...goldCoins.map(o => ({ ...o, kind: 'gold' })),
-    ...blueDiamonds.map(o => ({ ...o, kind: 'blue' })),
-  ];
-  allObjects.sort((a, b) => b.z - a.z);
-  for (const obj of allObjects) {
-    if (obj.kind === 'orb') drawOrb(obj);
-    else if (obj.kind === 'gold') drawGoldCoin(obj);
-    else if (obj.kind === 'blue') drawBlueDiamond(obj);
-    else drawObstacle(obj);
+  // Draw platforms
+  for (const p of platforms) drawPlatform(p);
+
+  // Draw obstacles (spikes)
+  for (const obs of obstacles) {
+    drawSpike(obs.x, obs.y, obs.w, obs.h, obs.hit);
   }
 
-  if (state === STATE.PLAYING || state === STATE.DEAD) {
-    drawPlayer();
-  }
+  // Draw collectibles
+  for (const d of diamonds) drawDiamond(d, time);
+  for (const gc of goldCoins) drawGoldCoinObj(gc, time);
+  for (const bd of blueDiamonds) drawBlueDiamondObj(bd, time);
 
-  drawBlueDiamondAnims();
+  // Draw player
+  if (state === STATE.PLAYING || state === STATE.DEAD) drawPlayer();
+
   drawParticles();
+  drawFloatingTexts();
+
   ctx.restore();
 
   // Screen flash overlay
@@ -2654,6 +1621,7 @@ function draw() {
   if (state === STATE.DEAD) drawGameOverScreen();
 }
 
+// ─── GAME LOOP ─────────────────────────────────────────────────
 function loop(time) {
   requestAnimationFrame(loop);
   const dt = Math.min((time - lastTime) / 1000, 0.05);
@@ -2662,6 +1630,26 @@ function loop(time) {
   draw();
 }
 
+// ─── INPUT ─────────────────────────────────────────────────────
+function handleInput(e) {
+  e.preventDefault();
+  jump();
+}
+
+canvas.addEventListener('touchstart', handleInput, { passive: false });
+canvas.addEventListener('mousedown', handleInput);
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') {
+    e.preventDefault();
+    jump();
+  }
+});
+
+// Prevent scroll / zoom
+document.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+
+// ─── INIT ──────────────────────────────────────────────────────
+resize();
 lastTime = performance.now();
 requestAnimationFrame(loop);
 </script>
