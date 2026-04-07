@@ -91,7 +91,7 @@ let scrollSpeed=200,baseSpeed=200,maxSpeed=520;
 let cameraX=0,nextWallX=0;
 
 // Health
-let health=3,maxHealth=3,invincTimer=0,hitFlashTimer=0,damageLevel=0;
+let health=3,maxHealth=3,invincTimer=0,hitFlashTimer=0,damageLevel=0,damageFlash=0;
 
 // Diamonds (green)
 let diamonds=[],diamondsCollected=0;
@@ -321,16 +321,43 @@ function drawSpeedLines(){
   ctx.globalAlpha=1;
 }
 
-// ─── PERSISTENT SMOKE ──────────────────────────────────────────
+// ─── PERSISTENT SMOKE — BIG, THICK, UNMISSABLE ────────────────
 function updatePersistentSmoke(dt){
   if(state===STATE.PLAYING&&damageLevel>0){
-    const rate=damageLevel===1?0.3:0.7;
-    if(Math.random()<rate){persistentSmoke.push({x:SHIP_X-SHIP_W*0.3+rand(-8,8),y:ship.y+rand(-5,5),size:damageLevel===1?rand(3,7):rand(5,12),maxSize:(damageLevel===1?rand(3,7):rand(5,12))*3,life:rand(0.4,0.9),maxLife:0.9,vx:rand(-3,-1.5),vy:rand(-1.5,1.5),dark:damageLevel>=2});}
-    if(damageLevel>=2&&Math.random()<0.4){persistentSmoke.push({x:SHIP_X+rand(-5,5),y:ship.y+rand(-8,8),size:rand(4,8),maxSize:rand(15,25),life:rand(0.5,1.2),maxLife:1.2,vx:rand(-2.5,-0.5),vy:rand(-2,0),dark:true});}
+    // 1st hit: thick gray/white smoke billowing visibly
+    if(damageLevel===1){
+      if(Math.random()<0.7){persistentSmoke.push({x:SHIP_X-SHIP_W*0.3+rand(-12,12),y:ship.y+rand(-8,8),size:rand(8,16),maxSize:rand(25,45),life:rand(0.6,1.2),maxLife:1.2,vx:rand(-4,-1.5),vy:rand(-2,2),dark:false,fire:false});}
+      if(Math.random()<0.3){persistentSmoke.push({x:SHIP_X+rand(-8,8),y:ship.y+rand(-6,6),size:rand(5,10),maxSize:rand(18,30),life:rand(0.4,0.8),maxLife:0.8,vx:rand(-3,-1),vy:rand(-3,-1),dark:false,fire:false});}
+    }
+    // 2nd hit: heavy BLACK smoke pouring out, impossible to miss
+    if(damageLevel>=2){
+      if(Math.random()<0.85){persistentSmoke.push({x:SHIP_X-SHIP_W*0.2+rand(-15,15),y:ship.y+rand(-10,10),size:rand(12,22),maxSize:rand(35,60),life:rand(0.7,1.5),maxLife:1.5,vx:rand(-5,-2),vy:rand(-2.5,2.5),dark:true,fire:false});}
+      // Fire/ember particles mixed in
+      if(Math.random()<0.5){persistentSmoke.push({x:SHIP_X+rand(-12,5),y:ship.y+rand(-8,8),size:rand(4,8),maxSize:rand(8,14),life:rand(0.2,0.5),maxLife:0.5,vx:rand(-6,-2),vy:rand(-3,1),dark:false,fire:true});}
+      // Extra thick trailing plume
+      if(Math.random()<0.6){persistentSmoke.push({x:SHIP_X-SHIP_W*0.4+rand(-5,5),y:ship.y+rand(-12,12),size:rand(10,18),maxSize:rand(40,65),life:rand(0.8,1.8),maxLife:1.8,vx:rand(-3.5,-1),vy:rand(-1,1),dark:true,fire:false});}
+    }
   }
   for(let i=persistentSmoke.length-1;i>=0;i--){const s=persistentSmoke[i];s.x+=s.vx*dt*60;s.y+=s.vy*dt*60;s.vy-=0.02*dt*60;s.size=lerp(s.size,s.maxSize,dt*2);s.life-=dt;if(s.life<=0)swapRemove(persistentSmoke,i);}
 }
-function drawPersistentSmoke(){for(const s of persistentSmoke){ctx.globalAlpha=clamp(s.life/s.maxLife,0,1)*(s.dark?0.6:0.35);ctx.fillStyle=s.dark?'#222':'#999';ctx.beginPath();ctx.arc(s.x,s.y,s.size,0,Math.PI*2);ctx.fill();}ctx.globalAlpha=1;}
+function drawPersistentSmoke(){
+  for(const s of persistentSmoke){
+    const a=clamp(s.life/s.maxLife,0,1);
+    if(s.fire){
+      // Fire particles — bright orange/yellow glow
+      ctx.globalAlpha=a*0.8;ctx.fillStyle=Math.random()<0.5?'#FF6600':'#FFAA00';
+      ctx.shadowColor='#FF4400';ctx.shadowBlur=s.size*2;
+    }else if(s.dark){
+      // Heavy black smoke — very opaque
+      ctx.globalAlpha=a*0.75;ctx.fillStyle='#1A1A1A';ctx.shadowBlur=0;
+    }else{
+      // Gray/white smoke — clearly visible
+      ctx.globalAlpha=a*0.55;ctx.fillStyle='#AAAAAA';ctx.shadowBlur=0;
+    }
+    ctx.beginPath();ctx.arc(s.x,s.y,s.size,0,Math.PI*2);ctx.fill();
+  }
+  ctx.shadowBlur=0;ctx.globalAlpha=1;
+}
 
 // ─── FLOATING TEXT ─────────────────────────────────────────────
 function addFloatingText(x,y,text,color,size){floatingTexts.push({x,y,text,color,size:size||14,life:1.5,maxLife:1.5});}
@@ -710,6 +737,7 @@ function updateShip(dt){
 
   if(invincTimer>0)invincTimer-=dt;
   if(hitFlashTimer>0)hitFlashTimer-=dt;
+  if(damageFlash>0)damageFlash-=dt*2;
   if(superBoostTimer>0)superBoostTimer-=dt;
   if(jackpotTimer>0){jackpotTimer-=dt;jackpotScoreAnim=Math.min(10000,jackpotScoreAnim+dt*8000);}
   if(levelUpFlash>0)levelUpFlash-=dt;
@@ -825,9 +853,15 @@ function checkCollisions(){
 }
 
 function takeDamage(){
-  health--;damageLevel=maxHealth-health;invincTimer=1.5;hitFlashTimer=0.3;shakeDur=0.4;
+  health--;damageLevel=maxHealth-health;invincTimer=1.5;hitFlashTimer=0.3;shakeDur=0.4;damageFlash=1.0;
   screenFlash=0.3;screenFlashColor='#FF4444';
   spawnBurst(SHIP_X,ship.y,'#FF4444',25,5,0.5,4);
+  // BIG smoke burst on impact — immediate visual feedback
+  const smkCols=damageLevel>=2?['#111','#222','#333','#FF4400']:['#888','#AAA','#CCC','#FFF'];
+  for(let i=0;i<(damageLevel>=2?20:12);i++){
+    const a=rand(0,Math.PI*2),spd=rand(1,4);
+    persistentSmoke.push({x:SHIP_X+rand(-10,10),y:ship.y+rand(-8,8),size:rand(6,14),maxSize:rand(20,40),life:rand(0.6,1.4),maxLife:1.4,vx:Math.cos(a)*spd-2,vy:Math.sin(a)*spd,dark:damageLevel>=2});
+  }
   if(health<=0)die();else addFloatingText(SHIP_X,ship.y-35,'-1 ❤','#FF4444',16);
 }
 
@@ -840,7 +874,7 @@ function die(){
 }
 
 function startGame(){
-  state=STATE.PLAYING;score=0;distance=0;health=3;damageLevel=0;
+  state=STATE.PLAYING;score=0;distance=0;health=3;damageLevel=0;damageFlash=0;
   invincTimer=0;hitFlashTimer=0;diamondsCollected=0;bitcoinsCollected=0;blueDiamondsCollected=0;
   rocketBoostersCollected=0;rocketBoostReady=false;rocketBoostActive=false;rocketBoostFuel=0;
   superBoostTimer=0;jackpotTimer=0;level=1;levelUpFlash=0;levelWarpTimer=0;
@@ -919,11 +953,36 @@ function drawHUD(){
   ctx.font=arcadeFont(8);ctx.fillStyle=theme.edge;
   ctx.fillText('LV '+level+' '+theme.name.split(' ')[0],pad+18,pad+76);
 
-  // Hearts
-  const heartX=W-pad-10,heartY=pad+32;ctx.font=arcadeFont(14);ctx.textAlign='right';
-  for(let i=0;i<3;i++){const hx=heartX-(2-i)*28;
-    if(i<health){ctx.fillStyle='#FF4444';ctx.shadowColor='#FF4444';ctx.shadowBlur=8;}else{ctx.fillStyle='rgba(255,255,255,0.15)';ctx.shadowBlur=0;}
-    ctx.fillText('♥',hx,heartY);}ctx.shadowBlur=0;
+  // DAMAGE INDICATORS — dim when safe, lights up BRIGHT on each hit
+  // dim dim dim → BRIGHT dim dim → BRIGHT BRIGHT dim → BRIGHT BRIGHT BRIGHT → DEAD
+  const heartX=W-pad-10,heartY=pad+34;ctx.textAlign='right';
+  const hits=maxHealth-health; // 0=no hits, 1=one hit, 2=two hits, 3=dead
+  for(let i=0;i<3;i++){
+    const hx=heartX-(2-i)*30;
+    const isLit=i<hits; // lights up when this hit has been taken
+    const justLit=isLit&&i===hits-1&&damageFlash>0; // most recent hit — pulse!
+    if(justLit){
+      // Pulse/glow animation on fill-in
+      const pScale=1+damageFlash*0.4;
+      ctx.save();ctx.translate(hx,heartY);ctx.scale(pScale,pScale);
+      ctx.shadowColor='#FF2222';ctx.shadowBlur=20+damageFlash*15;
+      ctx.fillStyle='#FF2222';ctx.font=arcadeFont(16);
+      ctx.fillText('♥',0,0);
+      ctx.shadowBlur=0;ctx.restore();
+    }else if(isLit){
+      // Fully lit — bright red, visible glow
+      ctx.shadowColor='#FF4444';ctx.shadowBlur=10;
+      ctx.fillStyle='#FF4444';ctx.font=arcadeFont(15);
+      ctx.fillText('♥',hx,heartY);ctx.shadowBlur=0;
+    }else{
+      // Dim/shaded — dark outline, unfilled
+      ctx.shadowBlur=0;ctx.fillStyle='rgba(255,255,255,0.12)';ctx.font=arcadeFont(15);
+      ctx.fillText('♥',hx,heartY);
+      // Subtle outline for visibility
+      ctx.strokeStyle='rgba(255,80,80,0.2)';ctx.lineWidth=1;
+    }
+  }
+  ctx.shadowBlur=0;
 
   // Diamond counter
   ctx.fillStyle='rgba(0,0,0,0.5)';ctx.beginPath();ctx.roundRect(W-pad-120,heartY+14,120,26,13);ctx.fill();
