@@ -290,9 +290,11 @@ function spawnDeathExplosion(x,y){
   for(let i=0;i<40;i++){const a=rand(0,Math.PI*2),spd=rand(0.5,5);spawnP(x,y,'#FF6600',Math.cos(a)*spd,Math.sin(a)*spd,rand(0.3,0.8),rand(5,15),0.05);}
   for(let i=0;i<35;i++){deathParticles.push({x,y,vx:rand(-10,10),vy:rand(-12,6),rot:rand(0,6.28),rotV:rand(-0.4,0.4),size:rand(3,14),life:rand(0.8,2.5),maxLife:2.5,color:cols[randInt(0,7)]});}
 }
+// Swap-remove for O(1) particle deletion — GD-style performance
+function swapRemove(arr,i){arr[i]=arr[arr.length-1];arr.pop();}
 function updateParticles(dt){
-  for(let i=particles.length-1;i>=0;i--){const p=particles[i];p.x+=p.vx*dt*60;p.y+=p.vy*dt*60;p.vy+=p.grav*dt*60;p.life-=dt;if(p.life<=0)particles.splice(i,1);}
-  for(let i=deathParticles.length-1;i>=0;i--){const d=deathParticles[i];d.x+=d.vx*dt*60;d.y+=d.vy*dt*60;d.vy+=0.2*dt*60;d.rot+=d.rotV*dt*60;d.life-=dt;if(d.life<=0)deathParticles.splice(i,1);}
+  for(let i=particles.length-1;i>=0;i--){const p=particles[i];p.x+=p.vx*dt*60;p.y+=p.vy*dt*60;p.vy+=p.grav*dt*60;p.life-=dt;if(p.life<=0)swapRemove(particles,i);}
+  for(let i=deathParticles.length-1;i>=0;i--){const d=deathParticles[i];d.x+=d.vx*dt*60;d.y+=d.vy*dt*60;d.vy+=0.2*dt*60;d.rot+=d.rotV*dt*60;d.life-=dt;if(d.life<=0)swapRemove(deathParticles,i);}
 }
 function drawParticles(){
   for(const p of particles){const a=clamp(p.life/p.maxLife,0,1),sz=p.size*(0.3+a*0.7);if(sz<0.3)continue;ctx.globalAlpha=a*0.9;ctx.fillStyle=p.color;ctx.shadowColor=p.color;ctx.shadowBlur=Math.min(12,sz*2);ctx.beginPath();ctx.arc(p.x,p.y,sz,0,Math.PI*2);ctx.fill();}
@@ -307,7 +309,7 @@ function updateSpeedLines(dt){
   }
   for(let i=speedLines.length-1;i>=0;i--){
     const sl=speedLines[i];sl.x-=(rocketBoostActive?40:15)*dt*60;sl.life-=dt;
-    if(sl.life<=0||sl.x+sl.len<0)speedLines.splice(i,1);
+    if(sl.life<=0||sl.x+sl.len<0)swapRemove(speedLines,i);
   }
 }
 function drawSpeedLines(){
@@ -326,37 +328,84 @@ function updatePersistentSmoke(dt){
     if(Math.random()<rate){persistentSmoke.push({x:SHIP_X-SHIP_W*0.3+rand(-8,8),y:ship.y+rand(-5,5),size:damageLevel===1?rand(3,7):rand(5,12),maxSize:(damageLevel===1?rand(3,7):rand(5,12))*3,life:rand(0.4,0.9),maxLife:0.9,vx:rand(-3,-1.5),vy:rand(-1.5,1.5),dark:damageLevel>=2});}
     if(damageLevel>=2&&Math.random()<0.4){persistentSmoke.push({x:SHIP_X+rand(-5,5),y:ship.y+rand(-8,8),size:rand(4,8),maxSize:rand(15,25),life:rand(0.5,1.2),maxLife:1.2,vx:rand(-2.5,-0.5),vy:rand(-2,0),dark:true});}
   }
-  for(let i=persistentSmoke.length-1;i>=0;i--){const s=persistentSmoke[i];s.x+=s.vx*dt*60;s.y+=s.vy*dt*60;s.vy-=0.02*dt*60;s.size=lerp(s.size,s.maxSize,dt*2);s.life-=dt;if(s.life<=0)persistentSmoke.splice(i,1);}
+  for(let i=persistentSmoke.length-1;i>=0;i--){const s=persistentSmoke[i];s.x+=s.vx*dt*60;s.y+=s.vy*dt*60;s.vy-=0.02*dt*60;s.size=lerp(s.size,s.maxSize,dt*2);s.life-=dt;if(s.life<=0)swapRemove(persistentSmoke,i);}
 }
 function drawPersistentSmoke(){for(const s of persistentSmoke){ctx.globalAlpha=clamp(s.life/s.maxLife,0,1)*(s.dark?0.6:0.35);ctx.fillStyle=s.dark?'#222':'#999';ctx.beginPath();ctx.arc(s.x,s.y,s.size,0,Math.PI*2);ctx.fill();}ctx.globalAlpha=1;}
 
 // ─── FLOATING TEXT ─────────────────────────────────────────────
 function addFloatingText(x,y,text,color,size){floatingTexts.push({x,y,text,color,size:size||14,life:1.5,maxLife:1.5});}
-function updateFloatingTexts(dt){for(let i=floatingTexts.length-1;i>=0;i--){const ft=floatingTexts[i];ft.y-=50*dt;ft.life-=dt;if(ft.life<=0)floatingTexts.splice(i,1);}}
+function updateFloatingTexts(dt){for(let i=floatingTexts.length-1;i>=0;i--){const ft=floatingTexts[i];ft.y-=50*dt;ft.life-=dt;if(ft.life<=0)swapRemove(floatingTexts,i);}}
 function drawFloatingTexts(){for(const ft of floatingTexts){const a=clamp(ft.life/ft.maxLife,0,1),sc=1+(1-a)*0.2;ctx.globalAlpha=a;ctx.save();ctx.translate(ft.x,ft.y);ctx.scale(sc,sc);ctx.font=arcadeFont(ft.size);ctx.fillStyle=ft.color;ctx.textAlign='center';ctx.shadowColor=ft.color;ctx.shadowBlur=15;ctx.fillText(ft.text,0,0);ctx.shadowBlur=0;ctx.restore();}ctx.globalAlpha=1;}
 
-// ─── 3D MAZE WALLS (beveled/extruded) ──────────────────────────
+// ─── PATTERN-BASED MAZE WALLS (GD-style learnable sequences) ────
+// Patterns create rhythm — groups then gaps, zigzags, tunnels, waves
+const WALL_PATTERNS=[
+  'straight',   // straight corridor, same gap Y
+  'zigzag',     // alternating up-down gaps
+  'wave',       // sinusoidal wave motion
+  'tunnel',     // tight narrowing corridor
+  'scatter',    // random placement (classic)
+  'staircase',  // gaps step up or down progressively
+];
+let currentPattern='scatter',patternWallsLeft=0,patternBaseY=0,patternDir=1,patternStep=0;
+
+function pickNextPattern(){
+  const diff=clamp(distance/15000,0,1);
+  const pool=diff<0.2?['straight','scatter','wave']:diff<0.5?['straight','zigzag','wave','scatter','staircase']:WALL_PATTERNS;
+  currentPattern=pool[randInt(0,pool.length-1)];
+  patternWallsLeft=randInt(3,7);patternStep=0;patternDir=Math.random()<0.5?1:-1;
+  patternBaseY=H*0.3+rand(0,H*0.4);
+}
+
 function generateWalls(){
   const needUpTo=cameraX+W+600;
   const diff=clamp(distance/15000,0,1);
   const ld=(level-1)*0.08;
   while(nextWallX<needUpTo){
-    const spacing=Math.max(140,300-diff*100-ld*40+rand(-20,20));
+    // Pick new pattern when current one is done or on first call
+    if(patternWallsLeft<=0){
+      pickNextPattern();
+      // Breathing room between patterns — GD-style gap
+      nextWallX+=rand(180,280);
+    }
+    const spacing=Math.max(140,280-diff*90-ld*35+rand(-15,15));
     nextWallX+=spacing;
-    const gapH=Math.max(75,170-diff*50-ld*20+rand(-10,10));
+    const gapH=Math.max(75,170-diff*50-ld*20+rand(-8,8));
     const margin=gapH/2+25;
-    const gapY=clamp(H/2+Math.sin(nextWallX*0.003+level)*H*0.28+rand(-50,50),margin,H-margin);
+
+    // Pattern-driven gap Y position
+    let gapY;
+    switch(currentPattern){
+      case 'straight':
+        gapY=patternBaseY;break;
+      case 'zigzag':
+        gapY=patternBaseY+patternDir*(patternStep%2===0?H*0.15:-H*0.15);break;
+      case 'wave':
+        gapY=H/2+Math.sin(patternStep*0.8)*H*0.25;break;
+      case 'tunnel':
+        gapY=patternBaseY+patternDir*patternStep*15;break;
+      case 'staircase':
+        gapY=patternBaseY+patternDir*patternStep*35;break;
+      default: // scatter — original random
+        gapY=H/2+Math.sin(nextWallX*0.003+level)*H*0.28+rand(-50,50);break;
+    }
+    gapY=clamp(gapY,margin,H-margin);
+
     let type=0;
-    if(diff>0.3&&Math.random()<0.2+diff*0.15)type=1;
-    if(diff>0.5&&Math.random()<0.1+diff*0.1)type=2;
+    if(diff>0.3&&Math.random()<0.2+diff*0.15)type=1; // thick wall
+    if(diff>0.5&&Math.random()<0.1+diff*0.1)type=2;   // double wall
+
     walls.push({x:nextWallX,gapY,gapH,passed:false,type,hit:false});
     if(type===2){walls.push({x:nextWallX+55,gapY:clamp(gapY+rand(-40,40),margin,H-margin),gapH:gapH*0.9,passed:false,type:0,hit:false});}
-    // Collectibles
+
+    // Collectibles — placed in gap for rhythm (reward good pathing)
     if(Math.random()<0.55)diamonds.push({x:nextWallX+rand(5,35),y:gapY+rand(-gapH*0.2,gapH*0.2),collected:false,anim:rand(0,6.28)});
     if(Math.random()<0.25)diamonds.push({x:nextWallX-spacing*0.5,y:rand(50,H-50),collected:false,anim:rand(0,6.28)});
     if(Math.random()<0.04)bitcoins.push({x:nextWallX+rand(-15,15),y:gapY,collected:false,anim:rand(0,6.28)});
     if(Math.random()<0.05)blueDiamonds.push({x:nextWallX+rand(5,35),y:gapY+rand(-15,15),collected:false,anim:rand(0,6.28)});
     if(Math.random()<0.035)rocketBoosters.push({x:nextWallX+rand(5,30),y:gapY+rand(-gapH*0.15,gapH*0.15),collected:false,anim:rand(0,6.28)});
+
+    patternWallsLeft--;patternStep++;
   }
 }
 
@@ -431,11 +480,13 @@ function draw3DWall(x,y,w,h,theme,hit,isTop){
 // ─── BOUNDARY WALLS ────────────────────────────────────────────
 function drawBoundaryWalls(){
   const theme=getTheme();const bh=8;
+  // Boundary walls pulse with rhythm — GD breathing feel
+  const bp=6+Math.sin(performance.now()*0.004)*3;
   ctx.fillStyle=theme.wall;ctx.fillRect(0,0,W,bh);
-  ctx.shadowColor=theme.edge;ctx.shadowBlur=8;ctx.strokeStyle=theme.edge;ctx.lineWidth=2;
+  ctx.shadowColor=theme.edge;ctx.shadowBlur=bp;ctx.strokeStyle=theme.edge;ctx.lineWidth=2;
   ctx.beginPath();ctx.moveTo(0,bh);ctx.lineTo(W,bh);ctx.stroke();ctx.shadowBlur=0;
   ctx.fillStyle=theme.wall;ctx.fillRect(0,H-bh,W,bh);
-  ctx.shadowColor=theme.edge;ctx.shadowBlur=8;
+  ctx.shadowColor=theme.edge;ctx.shadowBlur=bp;
   ctx.beginPath();ctx.moveTo(0,H-bh);ctx.lineTo(W,H-bh);ctx.stroke();ctx.shadowBlur=0;
 }
 
@@ -652,9 +703,10 @@ function drawWreckage(time){
 // ─── UPDATE ────────────────────────────────────────────────────
 function updateShip(dt){
   if(state!==STATE.PLAYING)return;
-  const dy=ship.targetY-ship.y;ship.vy=dy*8;ship.vy=clamp(ship.vy,-SHIP_SPEED,SHIP_SPEED);
+  // RAZOR-SHARP controls — zero-lag, GD-style instant response
+  const dy=ship.targetY-ship.y;ship.vy=dy*16;ship.vy=clamp(ship.vy,-SHIP_SPEED,SHIP_SPEED);
   ship.y+=ship.vy*dt;ship.y=clamp(ship.y,25,H-25);
-  ship.bankAngle=lerp(ship.bankAngle,clamp(ship.vy/SHIP_SPEED*0.4,-0.4,0.4),0.15);
+  ship.bankAngle=lerp(ship.bankAngle,clamp(ship.vy/SHIP_SPEED*0.45,-0.45,0.45),0.3);
 
   if(invincTimer>0)invincTimer-=dt;
   if(hitFlashTimer>0)hitFlashTimer-=dt;
@@ -687,8 +739,9 @@ function updateShip(dt){
 
 function checkCollisions(){
   if(state!==STATE.PLAYING)return;
-  const sl=SHIP_X-SHIP_W*0.38+cameraX,sr=SHIP_X+SHIP_W*0.38+cameraX;
-  const st=ship.y-SHIP_H*0.32,sb=ship.y+SHIP_H*0.32;
+  // Tight geometric hitbox — forgiving enough for "near miss" thrill
+  const sl=SHIP_X-SHIP_W*0.33+cameraX,sr=SHIP_X+SHIP_W*0.33+cameraX;
+  const st=ship.y-SHIP_H*0.28,sb=ship.y+SHIP_H*0.28;
   const isInvincible=superBoostTimer>0||rocketBoostActive;
 
   // Walls
@@ -796,7 +849,7 @@ function startGame(){
   walls=[];diamonds=[];bitcoins=[];blueDiamonds=[];rocketBoosters=[];
   particles=[];deathParticles=[];persistentSmoke=[];floatingTexts=[];speedLines=[];
   shakeX=0;shakeY=0;shakeDur=0;screenFlash=0;deathTimer=0;blueDiamondHudFlash=0;rocketBoostHudFlash=0;
-  aButtonPressed=false;useMouseFollow=false;
+  aButtonPressed=false;useMouseFollow=false;patternWallsLeft=0;
   runStartTime=performance.now();generateWalls();
 }
 
@@ -841,14 +894,20 @@ function update(dt){
 
 // ─── HUD ───────────────────────────────────────────────────────
 function drawHUD(){
-  const pad=12,theme=getTheme();
+  const pad=12,theme=getTheme(),now=performance.now();
+  // Global pulse — everything breathes together (GD rhythm feel)
+  const pulse=Math.sin(now*0.004);
 
-  // Progress bar
+  // Progress bar — pulses glow when above 50%
   const barH=5,barY=pad;const progress=clamp(distance/(4000+level*1500),0,1);
   ctx.fillStyle='rgba(255,255,255,0.1)';ctx.fillRect(W*0.15,barY,W*0.7,barH);
   const bg2=ctx.createLinearGradient(W*0.15,0,W*0.15+W*0.7*progress,0);bg2.addColorStop(0,'#7DF900');bg2.addColorStop(1,'#A4FF44');
-  ctx.fillStyle=bg2;ctx.shadowColor='#7DF900';ctx.shadowBlur=6;ctx.fillRect(W*0.15,barY,W*0.7*progress,barH);ctx.shadowBlur=0;
-  ctx.font=arcadeFont(9);ctx.fillStyle='#FFF';ctx.textAlign='right';ctx.fillText(Math.floor(progress*100)+'%',W*0.15+W*0.7+40,barY+barH+1);
+  ctx.fillStyle=bg2;ctx.shadowColor='#7DF900';ctx.shadowBlur=progress>0.5?6+pulse*4:6;ctx.fillRect(W*0.15,barY,W*0.7*progress,barH);ctx.shadowBlur=0;
+  // Progress % — larger and pulsing
+  const prFontSz=progress>0.7?11:progress>0.4?10:9;
+  ctx.font=arcadeFont(prFontSz);ctx.fillStyle=progress>0.7?'#FDE047':'#FFF';ctx.textAlign='right';
+  if(progress>0.7){ctx.shadowColor='#FDE047';ctx.shadowBlur=8;}
+  ctx.fillText(Math.floor(progress*100)+'%',W*0.15+W*0.7+40,barY+barH+1);ctx.shadowBlur=0;
 
   // Score pill
   ctx.fillStyle='rgba(0,0,0,0.5)';ctx.beginPath();ctx.roundRect(pad+8,pad+20,170,30,15);ctx.fill();
@@ -1091,23 +1150,40 @@ function drawMenuScreen(){
 
 // ─── DEATH SCREEN ──────────────────────────────────────────────
 function drawGameOverScreen(){
-  if(deathTimer<0.3)return;const rT=clamp((deathTimer-0.3)/0.8,0,1),alpha=easeOutCubic(rT);
-  ctx.fillStyle=`rgba(5,10,20,${alpha*0.75})`;ctx.fillRect(0,0,W,H);if(rT<0.1)return;ctx.globalAlpha=alpha;
-  if(deathTimer>0.5)drawWreckage(performance.now());
-  const pW=Math.min(400,W*0.65),pH=Math.min(310,H*0.7),pX=(W-pW)/2,pY=(H-pH)/2;
+  if(deathTimer<0.2)return;const rT=clamp((deathTimer-0.2)/0.5,0,1),alpha=easeOutCubic(rT);
+  ctx.fillStyle=`rgba(5,10,20,${alpha*0.75})`;ctx.fillRect(0,0,W,H);if(rT<0.05)return;ctx.globalAlpha=alpha;
+  if(deathTimer>0.35)drawWreckage(performance.now());
+
+  // ─── BIG PROGRESS % — GD "I can beat that" motivation ───
+  const pr=clamp(distance/(4000+level*1500)*100,0,100);
+  const prText=Math.floor(pr)+'%';
+  const prPulse=1+Math.sin(performance.now()*0.006)*0.03;
+  ctx.save();ctx.translate(W/2,H*0.22);ctx.scale(prPulse,prPulse);
+  ctx.font=arcadeFont(Math.min(48,W*0.06));ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.shadowColor=getTheme().edge;ctx.shadowBlur=25;
+  ctx.fillStyle=getTheme().edge;ctx.fillText(prText,0,0);
+  ctx.shadowBlur=0;ctx.font=arcadeFont(Math.min(10,W*0.014));
+  ctx.fillStyle='rgba(255,255,255,0.6)';ctx.fillText('PROGRESS',0,30);
+  ctx.restore();
+
+  // Stats panel
+  const pW=Math.min(380,W*0.6),pH=Math.min(250,H*0.48),pX=(W-pW)/2,pY=H*0.36;
   ctx.fillStyle='rgba(15,25,50,0.93)';ctx.beginPath();ctx.roundRect(pX,pY,pW,pH,16);ctx.fill();
   ctx.strokeStyle='rgba(100,150,255,0.3)';ctx.lineWidth=2;ctx.stroke();
-  ctx.font=arcadeFont(Math.min(13,W*0.018));ctx.fillStyle=getTheme().edge;ctx.textAlign='center';ctx.fillText('LEVEL '+level+' — '+getTheme().name,W/2,pY+30);
-  const sY=pY+55,sG=27;ctx.font=arcadeFont(Math.min(9,W*0.013));
-  const el=((performance.now()-runStartTime)/1000).toFixed(1);const pr=clamp(distance/(4000+level*1500)*100,0,100).toFixed(0);
+  ctx.font=arcadeFont(Math.min(11,W*0.015));ctx.fillStyle=getTheme().edge;ctx.textAlign='center';ctx.fillText('LEVEL '+level+' — '+getTheme().name,W/2,pY+24);
+  const sY=pY+46,sG=24;ctx.font=arcadeFont(Math.min(8,W*0.011));
+  const el=((performance.now()-runStartTime)/1000).toFixed(1);
   const wp=walls.filter(w=>w.passed).length;
-  const sts=[['ATTEMPT',''+attempt],['SCORE',Math.floor(score).toLocaleString()],['WALLS',''+wp],['TIME',el+'s'],['PROGRESS',pr+'%'],['DIAMONDS',''+diamondsCollected]];
-  for(let i=0;i<sts.length;i++){const sy=sY+i*sG;ctx.fillStyle='rgba(255,255,255,0.5)';ctx.textAlign='left';ctx.fillText(sts[i][0],pX+25,sy);ctx.fillStyle='#FFF';ctx.textAlign='right';ctx.fillText(sts[i][1],pX+pW-25,sy);}
-  if(Math.floor(score)>=highScore&&score>0){ctx.font=arcadeFont(Math.min(11,W*0.015));ctx.fillStyle='#FDE047';ctx.textAlign='center';ctx.shadowColor='#FDE047';ctx.shadowBlur=12;ctx.fillText('★ NEW BEST! ★',W/2,pY+pH-58);ctx.shadowBlur=0;}
-  if(deathTimer>1.0){const bR=Math.min(28,W*0.035),bY2=pY+pH-24,bp2=1+Math.sin(performance.now()*0.004)*0.05;
+  const sts=[['ATTEMPT',''+attempt],['SCORE',Math.floor(score).toLocaleString()],['WALLS',''+wp],['TIME',el+'s'],['DIAMONDS',''+diamondsCollected]];
+  for(let i=0;i<sts.length;i++){const sy=sY+i*sG;ctx.fillStyle='rgba(255,255,255,0.5)';ctx.textAlign='left';ctx.fillText(sts[i][0],pX+20,sy);ctx.fillStyle='#FFF';ctx.textAlign='right';ctx.fillText(sts[i][1],pX+pW-20,sy);}
+  if(Math.floor(score)>=highScore&&score>0){ctx.font=arcadeFont(Math.min(10,W*0.013));ctx.fillStyle='#FDE047';ctx.textAlign='center';ctx.shadowColor='#FDE047';ctx.shadowBlur=12;ctx.fillText('★ NEW BEST! ★',W/2,pY+pH-48);ctx.shadowBlur=0;}
+
+  // Retry button — appears FAST (GD instant restart feel)
+  if(deathTimer>0.5){const bR=Math.min(26,W*0.032),bY2=pY+pH-18,bp2=1+Math.sin(performance.now()*0.005)*0.06;
     ctx.save();ctx.translate(W/2,bY2);ctx.scale(bp2,bp2);ctx.strokeStyle='#FFF';ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,bR+6,0,Math.PI*2);ctx.stroke();
     ctx.shadowColor='#7DF900';ctx.shadowBlur=15;ctx.fillStyle='#7DF900';ctx.beginPath();ctx.arc(0,0,bR,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;ctx.strokeStyle='#5BC700';ctx.lineWidth=2;ctx.stroke();
-    ctx.fillStyle='#FFF';ctx.strokeStyle='#FFF';ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,bR*0.4,-0.8,Math.PI*1.5,false);ctx.stroke();ctx.beginPath();ctx.moveTo(bR*0.15,-bR*0.5);ctx.lineTo(bR*0.45,-bR*0.25);ctx.lineTo(bR*0.05,-bR*0.15);ctx.closePath();ctx.fill();ctx.restore();}
+    ctx.fillStyle='#FFF';ctx.strokeStyle='#FFF';ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,bR*0.4,-0.8,Math.PI*1.5,false);ctx.stroke();ctx.beginPath();ctx.moveTo(bR*0.15,-bR*0.5);ctx.lineTo(bR*0.45,-bR*0.25);ctx.lineTo(bR*0.05,-bR*0.15);ctx.closePath();ctx.fill();ctx.restore();
+    ctx.font=arcadeFont(Math.min(7,W*0.009));ctx.fillStyle='rgba(255,255,255,0.5)';ctx.textAlign='center';ctx.fillText('TAP TO RETRY',W/2,bY2+bR+18);}
   ctx.globalAlpha=1;
 }
 
@@ -1135,7 +1211,8 @@ function draw(){
 function loop(time){requestAnimationFrame(loop);const dt=Math.min((time-lastTime)/1000,0.05);lastTime=time;update(dt);draw();}
 
 // ─── INPUT ─────────────────────────────────────────────────────
-function handleTap(){if(state===STATE.MENU){startGame();return;}if(state===STATE.DEAD&&deathTimer>0.8){startGame();return;}}
+// INSTANT restart — GD "one more try" addiction. Tap anywhere after brief death anim.
+function handleTap(){if(state===STATE.MENU){startGame();return;}if(state===STATE.DEAD&&deathTimer>0.45){startGame();return;}}
 
 canvas.addEventListener('touchstart',(e)=>{
   e.preventDefault();
