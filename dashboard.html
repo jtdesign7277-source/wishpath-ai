@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-08-v122';
+    var APP_VERSION = '2026-04-08-v123';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -1589,7 +1589,7 @@
 
     /* ── Home Screen Tabs — iOS Segmented Control ── */
     .home-header-row { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; }
-    .home-header-icon { background: none; border: none; color: rgba(255,255,255,0.6); cursor: pointer; padding: 4px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; -webkit-tap-highlight-color: transparent; transition: color 0.15s; }
+    .home-header-icon { background: none; border: none; color: rgba(255,255,255,0.85); cursor: pointer; padding: 6px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; -webkit-tap-highlight-color: transparent; transition: color 0.15s; min-width: 34px; min-height: 34px; }
     .home-header-icon:active { color: rgba(255,255,255,0.9); }
     .home-tabs { flex: 1; display: flex; background: rgba(255,255,255,0.06); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 4px; gap: 4px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.03); }
     .home-tab { flex: 1; padding: 10px 14px; font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.45); cursor: pointer; border: none; border-radius: 12px; background: transparent; font-family: inherit; text-align: center; white-space: nowrap; min-height: 38px; display: flex; align-items: center; justify-content: center; transition: color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease; -webkit-tap-highlight-color: transparent; line-height: 1; }
@@ -1752,9 +1752,9 @@
     .holdings-table td { padding: 12px 12px; border-bottom: 1px solid var(--kraken-border); font-size: 13px; font-weight: 500; color: var(--kraken-text); vertical-align: middle; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
     .holdings-table tbody tr { transition: background 0.1s ease; }
     .holdings-table tbody tr:hover { background: rgba(148,151,169,0.06); }
-    .holding-symbol-badge { background: var(--kraken-purple-tint); border: 1px solid rgba(120,80,220,0.35); color: #fff; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 8px; display: inline-block; }
-    .holding-symbol-btn { background: var(--kraken-purple-tint); border: 1px solid rgba(120,80,220,0.35); color: #fff; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; padding: 4px 10px; border-radius: 8px; display: inline-flex; align-items: center; gap: 4px; transition: background 0.15s ease; }
-    .holding-symbol-btn:hover { background: rgba(113,50,245,0.22); border-color: rgba(120,80,220,0.5); }
+    .holding-symbol-badge { background: none; border: none; color: #F0EFF5; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 12px; font-weight: 600; padding: 0; display: inline-block; }
+    .holding-symbol-btn { background: none; border: none; color: #F0EFF5; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; padding: 0; display: inline-flex; align-items: center; gap: 4px; transition: color 0.15s ease; }
+    .holding-symbol-btn:hover { color: #fff; }
     .holding-symbol-btn svg { width: 10px; height: 10px; opacity: 0.6; }
     .holdings-remove-btn { background: none; border: none; color: var(--kraken-text-muted); cursor: pointer; padding: 6px; border-radius: 8px; display: flex; align-items: center; justify-content: center; transition: color 0.15s ease, background 0.15s ease; }
     .holdings-remove-btn:hover { color: var(--kraken-red); background: rgba(209,29,69,0.1); }
@@ -1854,9 +1854,9 @@
     .watchlist-item:hover { background: rgba(255,255,255,0.03); }
     .watchlist-item-left { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
     .icon-circle { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 600; color: #fff; flex-shrink: 0; box-shadow: inset 0 1px 0 rgba(255,255,255,0.2); }
-    .wl-logo { width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0; object-fit: contain; background: #1a1a1a; }
+    .wl-logo { width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0; object-fit: contain; background: #1a1a1a; filter: brightness(0) invert(1); }
     .wl-logo-fallback { width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: #fff; }
-    .ticker-logo { border-radius: 8px; object-fit: contain; flex-shrink: 0; }
+    .ticker-logo { border-radius: 8px; object-fit: contain; flex-shrink: 0; filter: brightness(0) invert(1); }
     .ticker-logo-fallback { border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: none; }
     .stock-card .ticker-logo, .stock-card .ticker-logo-fallback { width: 32px; height: 32px; margin-bottom: 8px; }
     .stock-card { display: flex; flex-direction: column; align-items: flex-start; }
@@ -2125,7 +2125,7 @@
       #holdingsTableWrap, #mobileHoldingsTableWrap { overflow-x: hidden !important; }
       #fmPortfolioContent { overflow-x: hidden; }
       #holdingsTable, #fmHoldingsTable, #mobileHoldingsTable { min-width: 0 !important; }
-      .holding-symbol-badge, .holding-symbol-btn { font-size: 11px !important; padding: 3px 7px !important; }
+      .holding-symbol-badge, .holding-symbol-btn { font-size: 11px !important; padding: 0 !important; background: none !important; border: none !important; }
       .qty-label { display: none; }
       .portfolio-coach-input { font-size: 16px !important; }
       .portfolio-coach-suggestions { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
