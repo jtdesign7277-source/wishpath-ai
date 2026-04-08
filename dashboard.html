@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-08-v125';
+    var APP_VERSION = '2026-04-08-v126';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -800,7 +800,8 @@
       .sidebar-collapse-btn { display: none; }
       .main-header { padding: max(4px, env(safe-area-inset-top)) 46px 4px !important; margin-bottom: 0 !important; min-height: 48px !important; display: flex !important; align-items: center !important; justify-content: center !important; position: relative !important; }
       .main-header h1, .main-header h2 { font-size: 1.02rem; margin-bottom: 0 !important; width: 100%; text-align: center; pointer-events: none; }
-      body[data-active-view="fm"] .fm-widget-menu-btn { display: flex; position: absolute; right: 12px; bottom: 6px; z-index: 10; pointer-events: auto; }
+      body[data-active-view="fm"] .fm-widget-menu-btn { display: flex; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); z-index: 10; pointer-events: auto; }
+      body[data-active-view="fm"] .header-search-icon { display: none !important; }
       .mobile-home.active { padding-top: max(0px, env(safe-area-inset-top)) !important; }
       .main-content { padding: 6px 12px 12px; }
       .tab-bar { margin-top: 0 !important; padding-top: 0 !important; padding: 4px 8px !important; margin-left: -12px !important; margin-right: -12px !important; overflow-x: auto !important; }
