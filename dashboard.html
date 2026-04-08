@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-08-v127';
+    var APP_VERSION = '2026-04-08-v128';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -798,9 +798,9 @@
       .header-search-icon { display: flex !important; }
       .sidebar-expand-btn { display: none !important; }
       .sidebar-collapse-btn { display: none; }
-      .main-header { padding: max(4px, env(safe-area-inset-top)) 46px 4px !important; margin-bottom: 0 !important; min-height: 48px !important; display: flex !important; align-items: center !important; justify-content: center !important; position: relative !important; }
-      .main-header h1, .main-header h2 { font-size: 1.02rem; margin-bottom: 0 !important; width: 100%; text-align: center; pointer-events: none; }
-      body[data-active-view="fm"] .fm-widget-menu-btn { display: flex; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); z-index: 10; pointer-events: auto; }
+      .main-header { padding: max(4px, env(safe-area-inset-top)) 4px 4px !important; margin-bottom: 0 !important; min-height: 48px !important; display: flex !important; align-items: center !important; justify-content: flex-start !important; position: relative !important; gap: 2px !important; }
+      .main-header h1, .main-header h2 { font-size: 1.02rem; margin-bottom: 0 !important; width: auto !important; flex: 1 !important; text-align: center; pointer-events: none; }
+      body[data-active-view="fm"] .fm-widget-menu-btn { display: flex; flex-shrink: 0; z-index: 10; pointer-events: auto; }
       body[data-active-view="fm"] .header-search-icon { display: none !important; }
       .mobile-home.active { padding-top: max(0px, env(safe-area-inset-top)) !important; }
       .main-content { padding: 6px 12px 12px; }
@@ -2644,9 +2644,7 @@
       /* Header back button for FM widget tabs — same line as title + search btn */
       .fm-header-back-btn {
         display: none;
-        position: absolute;
-        left: 12px;
-        bottom: 6px;
+        flex-shrink: 0;
         z-index: 5;
         width: 32px;
         height: 32px;
@@ -3271,7 +3269,7 @@
   <!-- Main -->
   <main class="main">
     <div class="main-header">
-      <button class="header-hamburger" onclick="toggleMobileSidebar()" aria-label="Open menu" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(255,255,255,0.7);cursor:pointer;padding:4px;display:none;z-index:10;">
+      <button class="header-hamburger" onclick="toggleMobileSidebar()" aria-label="Open menu" style="background:none;border:none;color:rgba(255,255,255,0.7);cursor:pointer;padding:6px;display:none;z-index:10;flex-shrink:0;min-width:44px;min-height:44px;align-items:center;justify-content:center;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="22" height="22"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
       <button class="fm-header-back-btn" id="fmHeaderBackBtn" onclick="exitChartView()" aria-label="Back to Markets">&#x2190;</button>
@@ -3285,7 +3283,7 @@
       <button class="fm-widget-menu-btn" id="fmWidgetMenuBtn" onclick="toggleMobileFMMenu()" aria-label="Open Financial Markets menu">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
       </button>
-      <button class="header-search-icon" onclick="focusHomeSearch()" aria-label="Search" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(255,255,255,0.7);cursor:pointer;padding:4px;display:none;z-index:10;">
+      <button class="header-search-icon" onclick="focusHomeSearch()" aria-label="Search" style="background:none;border:none;color:rgba(255,255,255,0.7);cursor:pointer;padding:6px;display:none;z-index:10;flex-shrink:0;min-width:44px;min-height:44px;align-items:center;justify-content:center;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       </button>
     </div>
@@ -4663,25 +4661,31 @@
       updateMobileFMChrome();
     }
 
-    // ── Swipe-right from left edge to open sidebar ──
+    // ── Swipe-right from left edge to open; swipe-left to close sidebar ──
     (function() {
-      var startX = 0, startY = 0, tracking = false;
+      var startX = 0, startY = 0, trackingOpen = false, trackingClose = false;
       document.addEventListener('touchstart', function(e) {
         if (window.innerWidth > 768) return;
         var touch = e.touches[0];
-        if (touch.clientX < 20) { startX = touch.clientX; startY = touch.clientY; tracking = true; }
+        startX = touch.clientX; startY = touch.clientY;
+        trackingOpen = touch.clientX < 20;
+        trackingClose = document.querySelector('.sidebar').classList.contains('open');
       }, { passive: true });
       document.addEventListener('touchmove', function(e) {
-        if (!tracking) return;
+        if (!trackingOpen && !trackingClose) return;
         var dx = e.touches[0].clientX - startX;
         var dy = Math.abs(e.touches[0].clientY - startY);
-        if (dx > 60 && dy < 40) {
-          tracking = false;
-          var sidebar = document.querySelector('.sidebar');
+        if (dy > 40) { trackingOpen = trackingClose = false; return; }
+        var sidebar = document.querySelector('.sidebar');
+        if (trackingOpen && dx > 60) {
+          trackingOpen = trackingClose = false;
           if (!sidebar.classList.contains('open')) toggleMobileSidebar();
+        } else if (trackingClose && dx < -60) {
+          trackingOpen = trackingClose = false;
+          if (sidebar.classList.contains('open')) toggleMobileSidebar();
         }
       }, { passive: true });
-      document.addEventListener('touchend', function() { tracking = false; }, { passive: true });
+      document.addEventListener('touchend', function() { trackingOpen = trackingClose = false; }, { passive: true });
     })();
 
     // ── Mobile bottom nav ──
@@ -10063,7 +10067,7 @@
       if (!title) return;
       var tabsHtml = '<div class="home-tabs" style="margin:0 0 16px;">' +
         '<button class="home-tab active" onclick="switchMobileHomeTab(\'roadmap\', this)">Roadmap</button>' +
-        '<button class="home-tab" onclick="switchMobileHomeTab(\'markets\', this)">Markets</button>' +
+        '<button class="home-tab" onclick="showView(\'fm\')">Markets</button>' +
         '<button class="home-tab" onclick="switchMobileHomeTab(\'portfolio\', this)">Portfolio</button>' +
       '</div>';
 
