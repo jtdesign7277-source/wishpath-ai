@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-08-v117';
+    var APP_VERSION = '2026-04-08-v119';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -3310,29 +3310,93 @@
 
         <!-- Markets Tab -->
         <div class="home-tab-content" id="homeMarketsTab">
-          <div class="markets-section-label">
-            <span>&#x1F7E2; Magnificent 7 Tracker</span>
-            <button class="markets-refresh-btn" id="marketsRefreshBtn" onclick="refreshMarkets()"><span class="refresh-icon" style="display:inline-block;">&#x21BB;</span> Refresh</button>
-          </div>
-          <div class="markets-updated" id="marketsUpdatedTime"></div>
-          <div class="stock-grid" id="mag7Grid">
-            <div class="stock-card"><div class="stock-shimmer" style="width:50px;"></div><div class="stock-shimmer" style="width:80px;"></div><div class="stock-shimmer" style="width:60px;height:20px;"></div></div>
-            <div class="stock-card"><div class="stock-shimmer" style="width:50px;"></div><div class="stock-shimmer" style="width:80px;"></div><div class="stock-shimmer" style="width:60px;height:20px;"></div></div>
-            <div class="stock-card"><div class="stock-shimmer" style="width:50px;"></div><div class="stock-shimmer" style="width:80px;"></div><div class="stock-shimmer" style="width:60px;height:20px;"></div></div>
-            <div class="stock-card"><div class="stock-shimmer" style="width:50px;"></div><div class="stock-shimmer" style="width:80px;"></div><div class="stock-shimmer" style="width:60px;height:20px;"></div></div>
-            <div class="stock-card"><div class="stock-shimmer" style="width:50px;"></div><div class="stock-shimmer" style="width:80px;"></div><div class="stock-shimmer" style="width:60px;height:20px;"></div></div>
-            <div class="stock-card"><div class="stock-shimmer" style="width:50px;"></div><div class="stock-shimmer" style="width:80px;"></div><div class="stock-shimmer" style="width:60px;height:20px;"></div></div>
-            <div class="stock-card"><div class="stock-shimmer" style="width:50px;"></div><div class="stock-shimmer" style="width:80px;"></div><div class="stock-shimmer" style="width:60px;height:20px;"></div></div>
+          <!-- TradingView Ticker Tape -->
+          <div class="tradingview-widget-container" style="margin-bottom:16px;">
+            <div class="tradingview-widget-container__widget"></div>
+            <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
+            {
+              "symbols": [
+                {"proName":"NASDAQ:AAPL","title":"Apple"},
+                {"proName":"NASDAQ:GOOGL","title":"Alphabet"},
+                {"proName":"NASDAQ:AMZN","title":"Amazon"},
+                {"proName":"NASDAQ:MSFT","title":"Microsoft"},
+                {"proName":"NASDAQ:TSLA","title":"Tesla"},
+                {"proName":"NASDAQ:META","title":"Meta"},
+                {"proName":"NASDAQ:NVDA","title":"NVIDIA"},
+                {"description":"Bitcoin","proName":"BITSTAMP:BTCUSD"},
+                {"description":"Ethereum","proName":"BITSTAMP:ETHUSD"},
+                {"description":"Solana","proName":"COINBASE:SOLUSD"}
+              ],
+              "showSymbolLogo": true,
+              "isTransparent": true,
+              "displayMode": "adaptive",
+              "colorTheme": "dark",
+              "locale": "en"
+            }
+            </script>
           </div>
 
+          <!-- TradingView Market Overview — Mag 7 Stocks -->
+          <div class="markets-section-label"><span>&#x1F7E2; Magnificent 7 Tracker</span></div>
+          <div class="tradingview-widget-container" style="width:100%;margin-bottom:20px;">
+            <div class="tradingview-widget-container__widget"></div>
+            <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js" async>
+            {
+              "colorTheme": "dark",
+              "dateRange": "1D",
+              "showChart": true,
+              "locale": "en",
+              "width": "100%",
+              "height": "460",
+              "largeChartUrl": "",
+              "isTransparent": true,
+              "showSymbolLogo": true,
+              "showFloatingTooltip": true,
+              "plotLineColorGrowing": "rgba(113,50,245,1)",
+              "plotLineColorFalling": "rgba(239,68,68,1)",
+              "gridLineColor": "rgba(255,255,255,0.06)",
+              "scaleFontColor": "rgba(255,255,255,0.5)",
+              "belowLineFillColorGrowing": "rgba(113,50,245,0.12)",
+              "belowLineFillColorFalling": "rgba(239,68,68,0.12)",
+              "belowLineFillColorGrowingBottom": "rgba(113,50,245,0)",
+              "belowLineFillColorFallingBottom": "rgba(239,68,68,0)",
+              "symbolActiveColor": "rgba(113,50,245,0.12)",
+              "tabs": [
+                {
+                  "title": "Mag 7",
+                  "symbols": [
+                    {"s":"NASDAQ:AAPL","d":"Apple"},
+                    {"s":"NASDAQ:MSFT","d":"Microsoft"},
+                    {"s":"NASDAQ:GOOGL","d":"Alphabet"},
+                    {"s":"NASDAQ:AMZN","d":"Amazon"},
+                    {"s":"NASDAQ:NVDA","d":"NVIDIA"},
+                    {"s":"NASDAQ:META","d":"Meta"},
+                    {"s":"NASDAQ:TSLA","d":"Tesla"}
+                  ],
+                  "originalTitle": "Mag 7"
+                }
+              ]
+            }
+            </script>
+          </div>
+
+          <!-- TradingView Crypto Screener -->
           <div class="markets-section-label"><span>&#x1FA99; Crypto</span></div>
-          <div class="stock-grid" id="cryptoGrid">
-            <div class="stock-card"><div class="stock-shimmer" style="width:40px;"></div><div class="stock-shimmer" style="width:70px;"></div><div class="stock-shimmer" style="width:60px;height:20px;"></div></div>
-            <div class="stock-card"><div class="stock-shimmer" style="width:40px;"></div><div class="stock-shimmer" style="width:70px;"></div><div class="stock-shimmer" style="width:60px;height:20px;"></div></div>
-            <div class="stock-card"><div class="stock-shimmer" style="width:40px;"></div><div class="stock-shimmer" style="width:70px;"></div><div class="stock-shimmer" style="width:60px;height:20px;"></div></div>
+          <div class="tradingview-widget-container" style="width:100%;margin-bottom:20px;">
+            <div class="tradingview-widget-container__widget"></div>
+            <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-screener.js" async>
+            {
+              "width": "100%",
+              "height": "400",
+              "defaultColumn": "overview",
+              "screener_type": "crypto_mkt",
+              "displayCurrency": "USD",
+              "colorTheme": "dark",
+              "locale": "en",
+              "isTransparent": true
+            }
+            </script>
           </div>
-
-          <div id="marketsChartContainer" class="chart-container" style="display:none;"></div>
 
           <!-- Watchlists -->
           <div class="markets-section-label" style="margin-top:28px;">
@@ -3443,13 +3507,93 @@
 
         <!-- FM: Markets -->
         <div class="fm-sub-content active" id="fmMarketsContent">
+          <!-- TradingView Ticker Tape -->
+          <div class="tradingview-widget-container" style="margin-bottom:16px;">
+            <div class="tradingview-widget-container__widget"></div>
+            <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
+            {
+              "symbols": [
+                {"proName":"NASDAQ:AAPL","title":"Apple"},
+                {"proName":"NASDAQ:GOOGL","title":"Alphabet"},
+                {"proName":"NASDAQ:AMZN","title":"Amazon"},
+                {"proName":"NASDAQ:MSFT","title":"Microsoft"},
+                {"proName":"NASDAQ:TSLA","title":"Tesla"},
+                {"proName":"NASDAQ:META","title":"Meta"},
+                {"proName":"NASDAQ:NVDA","title":"NVIDIA"},
+                {"description":"Bitcoin","proName":"BITSTAMP:BTCUSD"},
+                {"description":"Ethereum","proName":"BITSTAMP:ETHUSD"},
+                {"description":"Solana","proName":"COINBASE:SOLUSD"}
+              ],
+              "showSymbolLogo": true,
+              "isTransparent": true,
+              "displayMode": "adaptive",
+              "colorTheme": "dark",
+              "locale": "en"
+            }
+            </script>
+          </div>
+
+          <!-- TradingView Market Overview — Mag 7 Stocks -->
           <div class="markets-section-label"><span>&#x1F7E2; Magnificent 7 Tracker</span></div>
-          <div class="markets-updated" id="fmMarketsUpdatedTime"></div>
-          <div class="stock-grid" id="fmMag7Grid"></div>
+          <div class="tradingview-widget-container" style="width:100%;margin-bottom:20px;">
+            <div class="tradingview-widget-container__widget"></div>
+            <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js" async>
+            {
+              "colorTheme": "dark",
+              "dateRange": "1D",
+              "showChart": true,
+              "locale": "en",
+              "width": "100%",
+              "height": "460",
+              "largeChartUrl": "",
+              "isTransparent": true,
+              "showSymbolLogo": true,
+              "showFloatingTooltip": true,
+              "plotLineColorGrowing": "rgba(113,50,245,1)",
+              "plotLineColorFalling": "rgba(239,68,68,1)",
+              "gridLineColor": "rgba(255,255,255,0.06)",
+              "scaleFontColor": "rgba(255,255,255,0.5)",
+              "belowLineFillColorGrowing": "rgba(113,50,245,0.12)",
+              "belowLineFillColorFalling": "rgba(239,68,68,0.12)",
+              "belowLineFillColorGrowingBottom": "rgba(113,50,245,0)",
+              "belowLineFillColorFallingBottom": "rgba(239,68,68,0)",
+              "symbolActiveColor": "rgba(113,50,245,0.12)",
+              "tabs": [
+                {
+                  "title": "Mag 7",
+                  "symbols": [
+                    {"s":"NASDAQ:AAPL","d":"Apple"},
+                    {"s":"NASDAQ:MSFT","d":"Microsoft"},
+                    {"s":"NASDAQ:GOOGL","d":"Alphabet"},
+                    {"s":"NASDAQ:AMZN","d":"Amazon"},
+                    {"s":"NASDAQ:NVDA","d":"NVIDIA"},
+                    {"s":"NASDAQ:META","d":"Meta"},
+                    {"s":"NASDAQ:TSLA","d":"Tesla"}
+                  ],
+                  "originalTitle": "Mag 7"
+                }
+              ]
+            }
+            </script>
+          </div>
+
+          <!-- TradingView Crypto Screener -->
           <div class="markets-section-label" style="margin-top:20px;"><span>&#x1FA99; Crypto</span></div>
-          <div class="stock-grid" id="fmCryptoGrid"></div>
-          <div id="fmMarketsChartContainer" class="chart-container" style="display:none;"></div>
-          <div class="logo-attribution">Ticker logos powered by <a href="https://www.allinvestview.com" target="_blank" rel="noopener">AllInvestView</a></div>
+          <div class="tradingview-widget-container" style="width:100%;margin-bottom:20px;">
+            <div class="tradingview-widget-container__widget"></div>
+            <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-screener.js" async>
+            {
+              "width": "100%",
+              "height": "400",
+              "defaultColumn": "overview",
+              "screener_type": "crypto_mkt",
+              "displayCurrency": "USD",
+              "colorTheme": "dark",
+              "locale": "en",
+              "isTransparent": true
+            }
+            </script>
+          </div>
         </div>
 
         <!-- FM: Portfolio -->
@@ -5064,8 +5208,7 @@
       }
       loadStreak();
       loadWishes();
-      // Auto-load markets data so it's ready when user taps Markets tab
-      refreshMarkets();
+      // Markets now powered by TradingView widgets — no Alpaca fetch needed
       window._marketsLoaded = true;
     })();
 
@@ -8196,7 +8339,7 @@
       if (btn) btn.classList.add('active');
       var tabEl = document.getElementById('home' + tab.charAt(0).toUpperCase() + tab.slice(1) + 'Tab');
       if (tabEl) tabEl.classList.add('active');
-      if (tab === 'markets' && !window._marketsLoaded) { refreshMarkets(); window._marketsLoaded = true; }
+      if (tab === 'markets' && !window._marketsLoaded) { window._marketsLoaded = true; /* TradingView widgets handle market data */ }
       if (tab === 'portfolio') refreshPortfolioPrices();
       // Update mobile nav label based on home sub-tab
       if (window.innerWidth <= 768) {
@@ -10920,7 +11063,7 @@
       if (roadmap) roadmap.style.display = tab === 'roadmap' ? '' : 'none';
       if (markets) markets.style.display = tab === 'markets' ? '' : 'none';
       if (portfolio) portfolio.style.display = tab === 'portfolio' ? '' : 'none';
-      if (tab === 'markets') { if (!window._marketsLoaded) { refreshMarkets(); window._marketsLoaded = true; } renderMobileMarkets(); }
+      if (tab === 'markets') { window._marketsLoaded = true; /* TradingView widgets handle market data */ }
       if (tab === 'portfolio') renderMobilePortfolio();
     }
 
@@ -12474,16 +12617,7 @@
       renderSidebarSavedChartTemplates();
     };
 
-    // ── Auto-refresh: Twelve Data polling as FALLBACK (only when Alpaca WS is disconnected) ──
-    setInterval(function() {
-      if (alpacaWS.stockConnected) return; // Alpaca streaming is live, skip polling
-      var marketsActive = document.getElementById('homeMarketsTab');
-      var fmActive = document.getElementById('fmMarketsContent');
-      if ((marketsActive && marketsActive.classList.contains('active')) || (fmActive && fmActive.classList.contains('active'))) {
-        if (window._marketsLoaded) refreshMarkets();
-        if (window._fmMarketsLoaded) refreshFMMarkets();
-      }
-    }, 60000);
+    // Auto-refresh polling disabled — TradingView widgets handle live market data
 
     setInterval(function() {
       if (activeWatchlistId) {
@@ -12530,28 +12664,9 @@
       if (fmCryptoGrid) fmCryptoGrid.innerHTML = cryptoHtml;
     }
 
-    setInterval(refreshCryptoPrices, 10000);
-
-    // ── Initialize Alpaca WebSocket after initial data load ──
-    (function() {
-      var origMarketsLoaded = false;
-      var checkAndInitAlpaca = setInterval(function() {
-        if (window._marketsLoaded && !origMarketsLoaded) {
-          origMarketsLoaded = true;
-          clearInterval(checkAndInitAlpaca);
-          console.log('[Alpaca] Initial market data loaded, starting WebSocket streams...');
-          alpacaWS.init();
-        }
-      }, 500);
-      setTimeout(function() {
-        if (!origMarketsLoaded) {
-          origMarketsLoaded = true;
-          clearInterval(checkAndInitAlpaca);
-          console.log('[Alpaca] Timeout — starting WebSocket streams without baseline data');
-          alpacaWS.init();
-        }
-      }, 5000);
-    })();
+    // Alpaca WebSocket and crypto polling disabled — TradingView widgets handle market data
+    // setInterval(refreshCryptoPrices, 10000);
+    // alpacaWS.init() removed — no longer needed
 
     // ── Ticker Autocomplete ──
     var _acDebounce = null;
