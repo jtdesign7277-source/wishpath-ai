@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-05-v107';
+    var APP_VERSION = '2026-04-08-v111';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -8466,6 +8466,50 @@
     var marketsCache = {};
     var SUPABASE_FN = 'https://mszilrexlupzthauoaxb.supabase.co/functions/v1';
 
+    // ── Alpaca Direct API ──
+    var ALPACA_KEY = 'AK5OCFFPWS7WVXLFTK2USWO5EI';
+    var ALPACA_SECRET = 'AjYwtiVdDR3u63giHrHrGp9wdgvGJjJ2TQhNRqa8ku4q';
+    var ALPACA_DATA = 'https://data.alpaca.markets';
+    var ALPACA_HEADERS = { 'APCA-API-KEY-ID': ALPACA_KEY, 'APCA-API-SECRET-KEY': ALPACA_SECRET };
+
+    async function fetchAlpacaQuotes(symbols) {
+      var stocks = symbols.filter(function(s) { return s.indexOf('/') === -1; });
+      var cryptos = symbols.filter(function(s) { return s.indexOf('/') !== -1; });
+      var results = [];
+      if (stocks.length > 0) {
+        try {
+          var res = await fetch(ALPACA_DATA + '/v2/stocks/snapshots?symbols=' + encodeURIComponent(stocks.join(',')), { headers: ALPACA_HEADERS });
+          var data = await res.json();
+          Object.keys(data).forEach(function(sym) {
+            var snap = data[sym];
+            var price = snap.latestTrade ? snap.latestTrade.p : (snap.dailyBar ? snap.dailyBar.c : 0);
+            var prevClose = snap.prevDailyBar ? snap.prevDailyBar.c : price;
+            var change = price - prevClose;
+            var pct = prevClose !== 0 ? (change / prevClose) * 100 : 0;
+            var nameObj = MAG7.find(function(s) { return s.symbol === sym; });
+            results.push({ symbol: sym, name: nameObj ? nameObj.name : sym, price: price, change: change, changePercent: pct, previousClose: prevClose });
+          });
+        } catch(e) { console.error('Alpaca stocks fetch error:', e); }
+      }
+      if (cryptos.length > 0) {
+        try {
+          var res = await fetch(ALPACA_DATA + '/v1beta3/crypto/us/snapshots?symbols=' + encodeURIComponent(cryptos.join(',')), { headers: ALPACA_HEADERS });
+          var data = await res.json();
+          var snaps = data.snapshots || data;
+          Object.keys(snaps).forEach(function(sym) {
+            var snap = snaps[sym];
+            var price = snap.latestTrade ? snap.latestTrade.p : (snap.dailyBar ? snap.dailyBar.c : 0);
+            var prevClose = snap.prevDailyBar ? snap.prevDailyBar.c : price;
+            var change = price - prevClose;
+            var pct = prevClose !== 0 ? (change / prevClose) * 100 : 0;
+            var nameObj = CRYPTO.find(function(c) { return c.symbol === sym; });
+            results.push({ symbol: sym, name: nameObj ? nameObj.name : sym, price: price, change: change, changePercent: pct, previousClose: prevClose });
+          });
+        } catch(e) { console.error('Alpaca crypto fetch error:', e); }
+      }
+      return results;
+    }
+
     // ── Alpaca WebSocket Streaming (primary) ──
     var alpacaWS = {
       stockSocket: null,
@@ -8479,12 +8523,12 @@
       renderDebounce: null,
 
       async fetchCredentials() {
-        try {
-          var res = await fetch(SUPABASE_FN + '/alpaca-stream-auth');
-          var data = await res.json();
-          if (data.error) { console.warn('Alpaca auth:', data.error, data.hint || ''); return null; }
-          return data;
-        } catch(e) { console.warn('Alpaca auth fetch failed:', e); return null; }
+        return {
+          key: ALPACA_KEY,
+          secret: ALPACA_SECRET,
+          stocksUrl: 'wss://stream.data.alpaca.markets/v2/iex',
+          cryptoUrl: 'wss://stream.data.alpaca.markets/v1beta3/crypto/us'
+        };
       },
 
       async init() {
@@ -8633,24 +8677,14 @@
       if (btn) btn.classList.add('spinning');
       if (fmBtn) fmBtn.classList.add('spinning');
 
-      // Fetch all quotes via dedicated watchlist-quotes edge function (one batch call)
+      // Fetch all quotes via Alpaca snapshot API directly
       var allSymbols = MAG7.map(function(s) { return s.symbol; }).concat(CRYPTO.map(function(c) { return c.symbol; }));
 
       try {
-        var res = await fetch(SUPABASE_FN + '/watchlist-quotes?symbols=' + encodeURIComponent(allSymbols.join(',')));
-        var data = await res.json();
-        if (data && Array.isArray(data.data)) {
-          data.data.forEach(function(q) {
-            marketsCache[q.symbol] = {
-              symbol: q.symbol,
-              name: q.name,
-              price: q.price,
-              change: q.change,
-              changePercent: q.percentChange,
-              previousClose: q.previousClose || (q.price - (q.change || 0))
-            };
-          });
-        }
+        var quotes = await fetchAlpacaQuotes(allSymbols);
+        quotes.forEach(function(q) {
+          marketsCache[q.symbol] = q;
+        });
       } catch(e) {
         console.error('Markets fetch error:', e);
       }
@@ -9723,15 +9757,11 @@
 
       if (missing.length > 0) {
         try {
-          var res = await fetch(SUPABASE_FN + '/watchlist-quotes?symbols=' + encodeURIComponent(missing.join(',')));
-          var data = await res.json();
-          if (data && Array.isArray(data.data)) {
-            data.data.forEach(function(q) {
-              var entry = { symbol: q.symbol, name: q.name, price: q.price, change: q.change, changePercent: q.percentChange };
-              portfolioPrices[q.symbol] = entry;
-              marketsCache[q.symbol] = entry;
-            });
-          }
+          var quotes = await fetchAlpacaQuotes(missing);
+          quotes.forEach(function(q) {
+            portfolioPrices[q.symbol] = q;
+            marketsCache[q.symbol] = q;
+          });
         } catch(e) { console.error('Portfolio price fetch error:', e); }
       }
       renderHoldings();
@@ -11173,12 +11203,8 @@
       wl.symbols.forEach(function(s) { if (marketsCache[s]) watchlistPrices[s] = marketsCache[s]; });
       if (toFetch.length > 0) {
         try {
-          var res = await fetch(EDGE_FN, { method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ coachMode: true, model: 'claude-sonnet-4-20250514', systemPrompt: 'You are a market data API. Fetch real-time quotes from Alpaca. Return ONLY valid JSON: {"quotes": [{"symbol": "AAPL", "price": 150.00, "change": 2.50, "changePercent": 1.5}]}',
-              messages: [{ role: 'user', content: 'Get live quotes for: ' + toFetch.join(', ') + '. Return only JSON.' }] }) });
-          var data = await res.json(); var reply = data.reply || '';
-          var jsonMatch = reply.match(/\{[\s\S]*"quotes"[\s\S]*\}/);
-          if (jsonMatch) { var parsed = JSON.parse(jsonMatch[0]); if (parsed.quotes) parsed.quotes.forEach(function(q) { watchlistPrices[q.symbol] = q; marketsCache[q.symbol] = q; }); }
+          var quotes = await fetchAlpacaQuotes(toFetch);
+          quotes.forEach(function(q) { watchlistPrices[q.symbol] = q; marketsCache[q.symbol] = q; });
         } catch(e) {}
       }
       renderWatchlistItems();
@@ -11805,12 +11831,8 @@
     async function fetchQuote(symbol) {
       if (marketsCache[symbol]) return marketsCache[symbol];
       try {
-        var res = await fetch(EDGE_FN, { method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ coachMode: true, model: 'claude-sonnet-4-20250514', systemPrompt: 'Return ONLY JSON: {"quotes":[{"symbol":"' + symbol + '","price":0,"change":0,"changePercent":0}]}. Use Alpaca to get the real-time quote for ' + symbol + '.', messages: [{ role: 'user', content: 'Get quote for ' + symbol }] }) });
-        var data = await res.json();
-        var reply = data.reply || '';
-        var m = reply.match(/\{[\s\S]*"quotes"[\s\S]*\}/);
-        if (m) { var p = JSON.parse(m[0]); if (p.quotes) p.quotes.forEach(function(q) { marketsCache[q.symbol] = q; }); }
+        var quotes = await fetchAlpacaQuotes([symbol]);
+        quotes.forEach(function(q) { marketsCache[q.symbol] = q; });
       } catch(e) {}
       return marketsCache[symbol] || {};
     }
@@ -12361,18 +12383,14 @@
       if (alpacaWS.cryptoConnected) return; // Alpaca streaming is live, skip polling
       var cryptoSymbols = CRYPTO.map(function(c) { return c.symbol; });
       try {
-        var res = await fetch(SUPABASE_FN + '/watchlist-quotes?symbols=' + encodeURIComponent(cryptoSymbols.join(',')));
-        var data = await res.json();
-        if (data && Array.isArray(data.data)) {
-          var changed = false;
-          data.data.forEach(function(q) {
-            var prev = marketsCache[q.symbol];
-            var newEntry = { symbol: q.symbol, name: q.name, price: q.price, change: q.change, changePercent: q.percentChange, previousClose: q.previousClose || (q.price - (q.change || 0)) };
-            if (!prev || prev.price !== q.price) changed = true;
-            marketsCache[q.symbol] = newEntry;
-          });
-          if (changed) renderCryptoCards();
-        }
+        var quotes = await fetchAlpacaQuotes(cryptoSymbols);
+        var changed = false;
+        quotes.forEach(function(q) {
+          var prev = marketsCache[q.symbol];
+          if (!prev || prev.price !== q.price) changed = true;
+          marketsCache[q.symbol] = q;
+        });
+        if (changed) renderCryptoCards();
       } catch(e) { /* silent — will retry in 10s */ }
     }
 
