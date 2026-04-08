@@ -11282,28 +11282,39 @@
     var STOCK_NAMES = { AAPL:'Apple', MSFT:'Microsoft', GOOGL:'Alphabet', GOOG:'Alphabet', AMZN:'Amazon', NVDA:'NVIDIA', META:'Meta', TSLA:'Tesla', NFLX:'Netflix', AMD:'Advanced Micro Devices', INTC:'Intel', CRM:'Salesforce', ORCL:'Oracle', ADBE:'Adobe', PYPL:'PayPal', SQ:'Block', SHOP:'Shopify', COIN:'Coinbase', PLTR:'Palantir Technologies Inc', UBER:'Uber', ABNB:'Airbnb', DIS:'Disney', BA:'Boeing', JPM:'JPMorgan', BAC:'Bank of America', GS:'Goldman Sachs', V:'Visa', MA:'Mastercard', WMT:'Walmart', TGT:'Target', COST:'Costco', HD:'Home Depot', NKE:'Nike Cl B', SBUX:'Starbucks', MCD:"McDonald's", KO:'Coca-Cola', PEP:'PepsiCo', JNJ:'J&J', PFE:'Pfizer', UNH:'UnitedHealth', XOM:'Exxon', CVX:'Chevron', FUBO:'fuboTV', TRUMP:'Trump Media', DJT:'Trump Media', ELF:'Elf Beauty Inc', NIO:'NIO Inc', ENPH:'Enphase Energy', HIMS:'Hims & Hers Health', CELH:'Celsius Holdings', BABA:'Alibaba', RIVN:'Rivian', SOFI:'SoFi Technologies', SNAP:'Snap', RBLX:'Roblox', ROKU:'Roku', DKNG:'DraftKings', CRWD:'CrowdStrike', PANW:'Palo Alto Networks', ZS:'Zscaler', NET:'Cloudflare', SNOW:'Snowflake', MSTR:'MicroStrategy', RIOT:'Riot Platforms', MARA:'Marathon Digital', SPOT:'Spotify', HOOD:'Robinhood', LCID:'Lucid Motors', F:'Ford', GM:'General Motors', T:'AT&T', VZ:'Verizon', WFC:'Wells Fargo', C:'Citigroup', MS:'Morgan Stanley', SCHW:'Charles Schwab', 'BTC/USD':'Bitcoin', 'ETH/USD':'Ethereum', 'SOL/USD':'Solana', DOGE:'Dogecoin', 'DOGE/USD':'Dogecoin' };
 
     // ════════════════════════════════
-    // ── TICKER LOGO SYSTEM (AllInvestView + EODHD fallback)
+    // ── TICKER LOGO SYSTEM (Parqet primary + EODHD fallback)
     // ════════════════════════════════
+
+    // v118: Clear stale logo cache from broken AllInvestView era
+    (function() {
+      try {
+        var old = JSON.parse(localStorage.getItem('wp_logo_cache') || '{}');
+        var dominated = false;
+        Object.keys(old).forEach(function(k) {
+          var u = (typeof old[k] === 'string') ? old[k] : (old[k] && old[k].url);
+          if (u && (u.indexOf('allinvestview') !== -1 || u.indexOf('tickerlogos.com') !== -1)) dominated = true;
+        });
+        if (dominated) { localStorage.removeItem('wp_logo_cache'); }
+      } catch(e) { localStorage.removeItem('wp_logo_cache'); }
+    })();
 
     // Persistent logo cache with 7-day TTL (survives page reloads)
     var _rawLogoCache = {};
     try { _rawLogoCache = JSON.parse(localStorage.getItem('wp_logo_cache') || '{}'); } catch(e) {}
     var logoCache = {};
     var LOGO_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
-    // Migrate old format (plain URL strings) and prune expired entries
     (function() {
       var now = Date.now(), changed = false;
       Object.keys(_rawLogoCache).forEach(function(k) {
         var entry = _rawLogoCache[k];
         if (typeof entry === 'string') {
-          // Old format — migrate to {url, ts}
           logoCache[k] = { url: entry, ts: now };
           changed = true;
         } else if (entry && entry.url && entry.ts) {
           if (now - entry.ts < LOGO_TTL_MS) {
             logoCache[k] = entry;
           } else {
-            changed = true; // expired — drop it
+            changed = true;
           }
         }
       });
@@ -11331,29 +11342,34 @@
       var cached = _getTickerLogoCached(ticker);
       if (cached) return cached;
 
-      // 1. AllInvestView (best quality + transparency) — 3s timeout
+      // 1. Parqet CDN — high quality SVGs for most US stocks + some crypto
+      var parqetUrl = 'https://assets.parqet.com/logos/symbol/' + ticker;
       try {
         var controller = new AbortController();
-        var timeoutId = setTimeout(function() { controller.abort(); }, 3000);
-        var res = await fetch('https://www.allinvestview.com/api/logo-search/?q=' + ticker, {
-          cache: 'force-cache',
-          signal: controller.signal
-        });
-        clearTimeout(timeoutId);
+        var tid = setTimeout(function() { controller.abort(); }, 3000);
+        var res = await fetch(parqetUrl, { method: 'HEAD', signal: controller.signal });
+        clearTimeout(tid);
         if (res.ok) {
-          var data = await res.json();
-          if (data && data.website) {
-            var url = 'https://cdn.tickerlogos.com/' + data.website;
-            _setTickerLogoCache(ticker, url);
-            return url;
-          }
+          _setTickerLogoCache(ticker, parqetUrl);
+          return parqetUrl;
         }
       } catch (e) { /* silent fallback */ }
 
-      // 2. EODHD direct fallback
+      // 2. EODHD fallback — works for many US tickers
       var eodhdUrl = 'https://eodhd.com/img/logos/US/' + ticker + '.png';
-      _setTickerLogoCache(ticker, eodhdUrl);
-      return eodhdUrl;
+      try {
+        var controller2 = new AbortController();
+        var tid2 = setTimeout(function() { controller2.abort(); }, 3000);
+        var res2 = await fetch(eodhdUrl, { method: 'HEAD', signal: controller2.signal });
+        clearTimeout(tid2);
+        if (res2.ok) {
+          _setTickerLogoCache(ticker, eodhdUrl);
+          return eodhdUrl;
+        }
+      } catch (e) { /* silent fallback */ }
+
+      // 3. No logo found — return null (caller will show text fallback)
+      return null;
     }
 
     function createLogoFallbackHtml(ticker, size) {
