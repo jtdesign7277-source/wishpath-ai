@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-08-v121';
+    var APP_VERSION = '2026-04-08-v122';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -794,6 +794,8 @@
         to { opacity: 1; transform: translateY(0); }
       }
       .menu-toggle { display: none !important; }
+      .header-hamburger { display: flex !important; }
+      .header-search-icon { display: flex !important; }
       .sidebar-expand-btn { display: none !important; }
       .sidebar-collapse-btn { display: none; }
       .main-header { padding: max(4px, env(safe-area-inset-top)) 46px 4px !important; margin-bottom: 0 !important; min-height: 48px !important; display: flex !important; align-items: center !important; justify-content: center !important; position: relative !important; }
@@ -1405,7 +1407,7 @@
       #coachView .coach-input-row::before { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: calc(100% + 32px); background: linear-gradient(to bottom, transparent 0%, var(--bg, #191919) 32px); pointer-events: none; z-index: -1; }
       #coachView .coach-input-row .coach-sidebar-btn { display: inline-flex !important; width: 36px !important; height: 36px !important; }
       #coachView .coach-input-row .chat-input-wrap { min-height: 36px !important; }
-      #coachView .coach-input-row .coach-input { min-height: 36px !important; padding: 8px 16px !important; font-size: 14px !important; }
+      #coachView .coach-input-row .coach-input { min-height: 48px !important; padding: 10px 16px !important; font-size: 15px !important; border-radius: 24px !important; }
       #coachView .coach-input-row .coach-send { width: 28px !important; height: 28px !important; }
       #coachView .coach-input-row .coach-send svg { width: 16px !important; height: 16px !important; }
       /* Hide bottom nav when full-screen AI is active */
@@ -1855,7 +1857,7 @@
     .wl-logo { width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0; object-fit: contain; background: #1a1a1a; }
     .wl-logo-fallback { width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: #fff; }
     .ticker-logo { border-radius: 8px; object-fit: contain; flex-shrink: 0; }
-    .ticker-logo-fallback { border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-family: Inter, sans-serif; border: 1px solid rgba(145,107,230,0.25); flex-shrink: 0; box-shadow: inset 0 1px 0 rgba(255,255,255,0.05); }
+    .ticker-logo-fallback { border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: none; }
     .stock-card .ticker-logo, .stock-card .ticker-logo-fallback { width: 32px; height: 32px; margin-bottom: 8px; }
     .stock-card { display: flex; flex-direction: column; align-items: flex-start; }
     .logo-attribution { font-size: 0.65rem; color: var(--text-dim); text-align: center; margin-top: 12px; padding: 4px 0; }
@@ -3268,6 +3270,9 @@
   <!-- Main -->
   <main class="main">
     <div class="main-header">
+      <button class="header-hamburger" onclick="toggleMobileSidebar()" aria-label="Open menu" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(255,255,255,0.7);cursor:pointer;padding:4px;display:none;z-index:10;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="22" height="22"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
       <button class="fm-header-back-btn" id="fmHeaderBackBtn" onclick="exitChartView()" aria-label="Back to Markets">&#x2190;</button>
       <h1 id="viewTitle">Home</h1>
       <!-- Daily Streak Counter -->
@@ -3278,6 +3283,9 @@
       </div>
       <button class="fm-widget-menu-btn" id="fmWidgetMenuBtn" onclick="toggleMobileFMMenu()" aria-label="Open Financial Markets menu">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      </button>
+      <button class="header-search-icon" onclick="focusHomeSearch()" aria-label="Search" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(255,255,255,0.7);cursor:pointer;padding:4px;display:none;z-index:10;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       </button>
     </div>
     <div class="main-content">
@@ -11154,136 +11162,67 @@
     var STOCK_NAMES = { AAPL:'Apple', MSFT:'Microsoft', GOOGL:'Alphabet', GOOG:'Alphabet', AMZN:'Amazon', NVDA:'NVIDIA', META:'Meta', TSLA:'Tesla', NFLX:'Netflix', AMD:'Advanced Micro Devices', INTC:'Intel', CRM:'Salesforce', ORCL:'Oracle', ADBE:'Adobe', PYPL:'PayPal', SQ:'Block', SHOP:'Shopify', COIN:'Coinbase', PLTR:'Palantir Technologies Inc', UBER:'Uber', ABNB:'Airbnb', DIS:'Disney', BA:'Boeing', JPM:'JPMorgan', BAC:'Bank of America', GS:'Goldman Sachs', V:'Visa', MA:'Mastercard', WMT:'Walmart', TGT:'Target', COST:'Costco', HD:'Home Depot', NKE:'Nike Cl B', SBUX:'Starbucks', MCD:"McDonald's", KO:'Coca-Cola', PEP:'PepsiCo', JNJ:'J&J', PFE:'Pfizer', UNH:'UnitedHealth', XOM:'Exxon', CVX:'Chevron', FUBO:'fuboTV', TRUMP:'Trump Media', DJT:'Trump Media', ELF:'Elf Beauty Inc', NIO:'NIO Inc', ENPH:'Enphase Energy', HIMS:'Hims & Hers Health', CELH:'Celsius Holdings', BABA:'Alibaba', RIVN:'Rivian', SOFI:'SoFi Technologies', SNAP:'Snap', RBLX:'Roblox', ROKU:'Roku', DKNG:'DraftKings', CRWD:'CrowdStrike', PANW:'Palo Alto Networks', ZS:'Zscaler', NET:'Cloudflare', SNOW:'Snowflake', MSTR:'MicroStrategy', RIOT:'Riot Platforms', MARA:'Marathon Digital', SPOT:'Spotify', HOOD:'Robinhood', LCID:'Lucid Motors', F:'Ford', GM:'General Motors', T:'AT&T', VZ:'Verizon', WFC:'Wells Fargo', C:'Citigroup', MS:'Morgan Stanley', SCHW:'Charles Schwab', 'BTC/USD':'Bitcoin', 'ETH/USD':'Ethereum', 'SOL/USD':'Solana', DOGE:'Dogecoin', 'DOGE/USD':'Dogecoin' };
 
     // ════════════════════════════════
-    // ── TICKER LOGO SYSTEM (Parqet primary + EODHD fallback)
+    // ── TICKER LOGO SYSTEM (hardcoded verified URLs)
     // ════════════════════════════════
 
-    // v118: Clear stale logo cache from broken AllInvestView era
-    (function() {
-      try {
-        var old = JSON.parse(localStorage.getItem('wp_logo_cache') || '{}');
-        var dominated = false;
-        Object.keys(old).forEach(function(k) {
-          var u = (typeof old[k] === 'string') ? old[k] : (old[k] && old[k].url);
-          if (u && (u.indexOf('allinvestview') !== -1 || u.indexOf('tickerlogos.com') !== -1)) dominated = true;
-        });
-        if (dominated) { localStorage.removeItem('wp_logo_cache'); }
-      } catch(e) { localStorage.removeItem('wp_logo_cache'); }
-    })();
+    // v122: Clear all stale logo caches from previous broken systems
+    localStorage.removeItem('wp_logo_cache');
 
-    // Persistent logo cache with 7-day TTL (survives page reloads)
-    var _rawLogoCache = {};
-    try { _rawLogoCache = JSON.parse(localStorage.getItem('wp_logo_cache') || '{}'); } catch(e) {}
-    var logoCache = {};
-    var LOGO_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
-    (function() {
-      var now = Date.now(), changed = false;
-      Object.keys(_rawLogoCache).forEach(function(k) {
-        var entry = _rawLogoCache[k];
-        if (typeof entry === 'string') {
-          logoCache[k] = { url: entry, ts: now };
-          changed = true;
-        } else if (entry && entry.url && entry.ts) {
-          if (now - entry.ts < LOGO_TTL_MS) {
-            logoCache[k] = entry;
-          } else {
-            changed = true;
-          }
-        }
-      });
-      if (changed) localStorage.setItem('wp_logo_cache', JSON.stringify(logoCache));
-    })();
+    // Hardcoded map of verified logo URLs — companiesmarketcap.com for stocks, coingecko for crypto
+    var TICKER_LOGO_MAP = {
+      'AAPL': 'https://companiesmarketcap.com/img/company-logos/64/AAPL.webp',
+      'MSFT': 'https://companiesmarketcap.com/img/company-logos/64/MSFT.webp',
+      'GOOGL': 'https://companiesmarketcap.com/img/company-logos/64/GOOG.webp',
+      'GOOG': 'https://companiesmarketcap.com/img/company-logos/64/GOOG.webp',
+      'AMZN': 'https://companiesmarketcap.com/img/company-logos/64/AMZN.webp',
+      'NVDA': 'https://companiesmarketcap.com/img/company-logos/64/NVDA.webp',
+      'META': 'https://companiesmarketcap.com/img/company-logos/64/META.webp',
+      'TSLA': 'https://companiesmarketcap.com/img/company-logos/64/TSLA.webp',
+      'NFLX': 'https://companiesmarketcap.com/img/company-logos/64/NFLX.webp',
+      'AMD': 'https://companiesmarketcap.com/img/company-logos/64/AMD.webp',
+      'INTC': 'https://companiesmarketcap.com/img/company-logos/64/INTC.webp',
+      'PLTR': 'https://companiesmarketcap.com/img/company-logos/64/PLTR.webp',
+      'COIN': 'https://companiesmarketcap.com/img/company-logos/64/COIN.webp',
+      'UBER': 'https://companiesmarketcap.com/img/company-logos/64/UBER.webp',
+      'SNAP': 'https://companiesmarketcap.com/img/company-logos/64/SNAP.webp',
+      'SHOP': 'https://companiesmarketcap.com/img/company-logos/64/SHOP.webp',
+      'SQ': 'https://companiesmarketcap.com/img/company-logos/64/SQ.webp',
+      'PYPL': 'https://companiesmarketcap.com/img/company-logos/64/PYPL.webp',
+      'SOFI': 'https://companiesmarketcap.com/img/company-logos/64/SOFI.webp',
+      'HIMS': 'https://companiesmarketcap.com/img/company-logos/64/HIMS.webp',
+      'FUBO': 'https://companiesmarketcap.com/img/company-logos/64/FUBO.webp',
+      'DIS': 'https://companiesmarketcap.com/img/company-logos/64/DIS.webp',
+      'CRM': 'https://companiesmarketcap.com/img/company-logos/64/CRM.webp',
+      'ORCL': 'https://companiesmarketcap.com/img/company-logos/64/ORCL.webp',
+      'AVGO': 'https://companiesmarketcap.com/img/company-logos/64/AVGO.webp',
+      'ADBE': 'https://companiesmarketcap.com/img/company-logos/64/ADBE.webp',
+      'BTC': 'https://companiesmarketcap.com/img/company-logos/64/BTC.webp',
+      'ETH': 'https://companiesmarketcap.com/img/company-logos/64/ETH.webp',
+      'SOL': 'https://companiesmarketcap.com/img/company-logos/64/SOL.webp'
+    };
 
-    function _getTickerLogoCached(ticker) {
-      var entry = logoCache[ticker];
-      if (!entry) return null;
-      if (Date.now() - entry.ts > LOGO_TTL_MS) {
-        delete logoCache[ticker];
-        return null;
-      }
-      return entry.url;
-    }
-
-    function _setTickerLogoCache(ticker, url) {
-      logoCache[ticker] = { url: url, ts: Date.now() };
-      try { localStorage.setItem('wp_logo_cache', JSON.stringify(logoCache)); } catch(e) {}
-    }
-
-    async function getTickerLogoUrl(ticker) {
+    function getTickerLogoUrl(ticker) {
       if (!ticker) return null;
       ticker = ticker.toUpperCase().trim().replace('/USD','');
-      var cached = _getTickerLogoCached(ticker);
-      if (cached) return cached;
-
-      // Single source: Parqet CDN — consistent SVG logos across the entire app
-      var parqetUrl = 'https://assets.parqet.com/logos/symbol/' + ticker;
-      try {
-        var controller = new AbortController();
-        var tid = setTimeout(function() { controller.abort(); }, 3000);
-        var res = await fetch(parqetUrl, { method: 'HEAD', signal: controller.signal });
-        clearTimeout(tid);
-        if (res.ok) {
-          _setTickerLogoCache(ticker, parqetUrl);
-          return parqetUrl;
-        }
-      } catch (e) { /* silent fallback */ }
-
-      return null;
+      return TICKER_LOGO_MAP[ticker] || null;
     }
 
     function createLogoFallbackHtml(ticker, size) {
       size = size || 36;
-      return '<div class="ticker-logo-fallback" style="width:' + size + 'px;height:' + size + 'px;background:#252525;color:#7132F5;font-size:' + Math.round(size * 0.42) + 'px;">' + (ticker || '').slice(0,2) + '</div>';
+      return '<div class="ticker-logo-fallback" style="width:' + size + 'px;height:' + size + 'px;background:rgba(255,255,255,0.06);border-radius:50%;"></div>';
     }
 
-    // Sync HTML builder — uses cache if available, queues async load if not
-    var _logoLoadQueue = [];
-    var _logoLoadRunning = false;
-
+    // Sync HTML builder — instant lookup from hardcoded map
     function buildTickerLogoHtml(ticker, size) {
       size = size || 32;
       var clean = (ticker || '').toUpperCase().trim().replace('/USD','');
-      var cached = _getTickerLogoCached(clean);
-      var uid = 'tl-' + clean + '-' + Math.random().toString(36).substr(2,5);
-      if (cached) {
-        return '<img id="' + uid + '" class="ticker-logo" src="' + cached + '" alt="' + clean + '" ' +
-          'style="width:' + size + 'px;height:' + size + 'px;" loading="lazy" ' +
+      var url = getTickerLogoUrl(clean);
+      if (url) {
+        return '<img class="ticker-logo" src="' + url + '" alt="' + clean + '" ' +
+          'style="width:' + size + 'px;height:' + size + 'px;border-radius:50%;object-fit:cover;" loading="lazy" ' +
           'onerror="this.outerHTML=createLogoFallbackHtml(\'' + clean + '\',' + size + ')" />';
       }
-      // No cache — render fallback, queue async hydration
-      _queueLogoLoad(clean, uid, size);
-      return '<div id="' + uid + '">' + createLogoFallbackHtml(clean, size) + '</div>';
-    }
-
-    function _queueLogoLoad(ticker, uid, size) {
-      _logoLoadQueue.push({ ticker: ticker, uid: uid, size: size });
-      if (!_logoLoadRunning) {
-        _logoLoadRunning = true;
-        setTimeout(_processLogoQueue, 50);
-      }
-    }
-
-    async function _processLogoQueue() {
-      while (_logoLoadQueue.length > 0) {
-        var batch = _logoLoadQueue.splice(0, 6); // process 6 at a time
-        await Promise.all(batch.map(async function(item) {
-          try {
-            var url = await getTickerLogoUrl(item.ticker);
-            if (!url) return;
-            var el = document.getElementById(item.uid);
-            if (!el) return;
-            var img = document.createElement('img');
-            img.className = 'ticker-logo';
-            img.src = url;
-            img.alt = item.ticker;
-            img.style.cssText = 'width:' + item.size + 'px;height:' + item.size + 'px;';
-            img.loading = 'lazy';
-            img.onerror = function() { el.innerHTML = createLogoFallbackHtml(item.ticker, item.size); };
-            el.innerHTML = '';
-            el.appendChild(img);
-          } catch(e) {}
-        }));
-      }
-      _logoLoadRunning = false;
+      return createLogoFallbackHtml(clean, size);
     }
 
     // Watchlist logo builder (uses larger 40px size to match existing style)
