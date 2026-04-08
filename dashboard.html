@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-08-v124';
+    var APP_VERSION = '2026-04-08-v125';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -3298,7 +3298,7 @@
           </button>
           <div class="home-tabs">
             <button class="home-tab active" onclick="switchHomeTab('roadmap', this)">Roadmap</button>
-            <button class="home-tab" onclick="openLifeCoachView()">Chats</button>
+            <button class="home-tab" onclick="showView('fm')">Markets</button>
             <button class="home-tab" onclick="switchHomeTab('portfolio', this)">Portfolio</button>
           </div>
           <button class="home-header-icon" onclick="focusHomeSearch()" aria-label="Search">
