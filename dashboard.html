@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-08-v123';
+    var APP_VERSION = '2026-04-08-v124';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -1854,9 +1854,9 @@
     .watchlist-item:hover { background: rgba(255,255,255,0.03); }
     .watchlist-item-left { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
     .icon-circle { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 600; color: #fff; flex-shrink: 0; box-shadow: inset 0 1px 0 rgba(255,255,255,0.2); }
-    .wl-logo { width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0; object-fit: contain; background: #1a1a1a; filter: brightness(0) invert(1); }
+    .wl-logo { width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0; object-fit: contain; background: #1a1a1a; }
     .wl-logo-fallback { width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: #fff; }
-    .ticker-logo { border-radius: 8px; object-fit: contain; flex-shrink: 0; filter: brightness(0) invert(1); }
+    .ticker-logo { border-radius: 8px; object-fit: contain; flex-shrink: 0; }
     .ticker-logo-fallback { border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: none; }
     .stock-card .ticker-logo, .stock-card .ticker-logo-fallback { width: 32px; height: 32px; margin-bottom: 8px; }
     .stock-card { display: flex; flex-direction: column; align-items: flex-start; }
@@ -11217,9 +11217,11 @@
       size = size || 32;
       var clean = (ticker || '').toUpperCase().trim().replace('/USD','');
       var url = getTickerLogoUrl(clean);
+      var invertTickers = ['AAPL', 'AMZN', 'ETH'];
+      var invertStyle = invertTickers.indexOf(clean) !== -1 ? 'filter:brightness(0) invert(1);' : '';
       if (url) {
         return '<img class="ticker-logo" src="' + url + '" alt="' + clean + '" ' +
-          'style="width:' + size + 'px;height:' + size + 'px;border-radius:50%;object-fit:cover;" loading="lazy" ' +
+          'style="width:' + size + 'px;height:' + size + 'px;border-radius:50%;object-fit:cover;' + invertStyle + '" loading="lazy" ' +
           'onerror="this.outerHTML=createLogoFallbackHtml(\'' + clean + '\',' + size + ')" />';
       }
       return createLogoFallbackHtml(clean, size);
