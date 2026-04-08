@@ -124,6 +124,9 @@ let persistentSmoke=[],floatingTexts=[];
 let shakeX=0,shakeY=0,shakeDur=0;
 let screenFlash=0,screenFlashColor='#FFF';
 
+// Combo system
+let comboMultiplier=1,comboTimer=0;
+
 // Speed lines (for rocket boost)
 let speedLines=[];
 
@@ -744,6 +747,7 @@ function updateShip(dt){
   if(levelWarpTimer>0)levelWarpTimer-=dt;
   if(blueDiamondHudFlash>0)blueDiamondHudFlash-=dt;
   if(rocketBoostHudFlash>0)rocketBoostHudFlash-=dt;
+  if(comboTimer>0){comboTimer-=dt;if(comboTimer<=0)comboMultiplier=1;}
 
   // Rocket boost drain
   if(rocketBoostActive){
@@ -758,10 +762,14 @@ function updateShip(dt){
     shakeX=rand(-2,2);shakeY=rand(-2,2);
   }
 
-  // Normal engine particles
-  if(Math.random()<0.4){
+  // Normal engine particles — extra juicy
+  if(Math.random()<0.7){
     const col=rocketBoostActive?'#F97316':superBoostTimer>0?'#FDE047':(Math.random()<0.5?'#FF2EC4':'#A855F7');
     spawnP(SHIP_X-SHIP_W*0.5-rand(5,15),ship.y+rand(-4,4),col,rand(-3,-6),rand(-0.5,0.5),rand(0.12,0.25),rand(1.5,3),0);
+  }
+  // Extra thrust sparkles
+  if(Math.random()<0.35){
+    spawnP(SHIP_X-SHIP_W*0.5-rand(2,10),ship.y+rand(-6,6),'#7132F5',rand(-4,-8)+(-ship.vy*0.02),rand(-1,1),rand(0.08,0.18),rand(1,2.5),0.02);
   }
 }
 
@@ -790,10 +798,12 @@ function checkCollisions(){
   for(const d of diamonds){
     if(d.collected)continue;
     if(Math.abs((SHIP_X+cameraX)-d.x)<28&&Math.abs(ship.y-d.y)<28){
-      d.collected=true;diamondsCollected++;totalCoinsAll++;score+=1000;
-      spawnOrbBurst(d.x-cameraX,d.y,['#7DF900','#A4FF44','#22D3EE','#67E8F9','#FFF'],60,8);
-      shakeDur=0.15;screenFlash=0.15;screenFlashColor='#7DF900';
-      addFloatingText(d.x-cameraX,d.y-25,'+1,000','#7DF900',22);
+      d.collected=true;diamondsCollected++;totalCoinsAll++;
+      comboMultiplier=Math.min(comboMultiplier+1,8);comboTimer=2;
+      const dScore=1000*comboMultiplier;score+=dScore;
+      spawnOrbBurst(d.x-cameraX,d.y,['#7DF900','#A4FF44','#22D3EE','#67E8F9','#FFF'],40+comboMultiplier*8,6+comboMultiplier);
+      shakeDur=0.1+comboMultiplier*0.02;screenFlash=0.15;screenFlashColor='#7DF900';
+      addFloatingText(d.x-cameraX,d.y-25,'+'+dScore.toLocaleString()+(comboMultiplier>1?' x'+comboMultiplier:''),'#7DF900',18+comboMultiplier*2);
     }
   }
 
@@ -801,10 +811,12 @@ function checkCollisions(){
   for(const bc of bitcoins){
     if(bc.collected)continue;
     if(Math.abs((SHIP_X+cameraX)-bc.x)<28&&Math.abs(ship.y-bc.y)<28){
-      bc.collected=true;bitcoinsCollected++;score+=2000;
-      spawnOrbBurst(bc.x-cameraX,bc.y,['#FDE047','#FEF08A','#EAB308','#FFF','#FFD700'],80,10);
-      shakeDur=0.2;screenFlash=0.2;screenFlashColor='#FDE047';
-      addFloatingText(bc.x-cameraX,bc.y-25,'₿ +2,000','#FDE047',24);
+      bc.collected=true;bitcoinsCollected++;
+      comboMultiplier=Math.min(comboMultiplier+1,8);comboTimer=2;
+      const bcScore=2000*comboMultiplier;score+=bcScore;
+      spawnOrbBurst(bc.x-cameraX,bc.y,['#FDE047','#FEF08A','#EAB308','#FFF','#FFD700'],60+comboMultiplier*8,8+comboMultiplier);
+      shakeDur=0.15+comboMultiplier*0.02;screenFlash=0.2;screenFlashColor='#FDE047';
+      addFloatingText(bc.x-cameraX,bc.y-25,'₿ +'+bcScore.toLocaleString()+(comboMultiplier>1?' x'+comboMultiplier:''),'#FDE047',20+comboMultiplier*2);
       if(bitcoinsCollected>=3){
         bitcoinsCollected=0;level++;levelWarpTimer=2.0;levelUpFlash=2.0;
         scrollSpeed=Math.min(maxSpeed,baseSpeed+(level-1)*22);
@@ -822,9 +834,10 @@ function checkCollisions(){
     if(bd.collected)continue;
     if(Math.abs((SHIP_X+cameraX)-bd.x)<28&&Math.abs(ship.y-bd.y)<28){
       bd.collected=true;blueDiamondsCollected++;blueDiamondHudFlash=0.5;
-      spawnOrbBurst(bd.x-cameraX,bd.y,['#3B82F6','#60A5FA','#93C5FD','#FFF'],40,6);
-      shakeDur=0.1;screenFlash=0.1;screenFlashColor='#3B82F6';
-      addFloatingText(bd.x-cameraX,bd.y-20,'◆ BOOST','#60A5FA',14);
+      comboMultiplier=Math.min(comboMultiplier+1,8);comboTimer=2;
+      spawnOrbBurst(bd.x-cameraX,bd.y,['#3B82F6','#60A5FA','#93C5FD','#FFF'],40+comboMultiplier*5,6+comboMultiplier);
+      shakeDur=0.1+comboMultiplier*0.01;screenFlash=0.1;screenFlashColor='#3B82F6';
+      addFloatingText(bd.x-cameraX,bd.y-20,'◆ BOOST'+(comboMultiplier>1?' x'+comboMultiplier:''),'#60A5FA',14);
       if(blueDiamondsCollected>=3){
         blueDiamondsCollected=0;superBoostTimer=5;
         screenFlash=0.6;screenFlashColor='#3B82F6';shakeDur=0.3;
@@ -839,9 +852,10 @@ function checkCollisions(){
     if(rb.collected)continue;
     if(Math.abs((SHIP_X+cameraX)-rb.x)<28&&Math.abs(ship.y-rb.y)<28){
       rb.collected=true;rocketBoostersCollected++;rocketBoostHudFlash=0.5;
-      spawnOrbBurst(rb.x-cameraX,rb.y,['#F97316','#EF4444','#FDE047','#FFF'],50,7);
-      shakeDur=0.12;screenFlash=0.15;screenFlashColor='#F97316';
-      addFloatingText(rb.x-cameraX,rb.y-20,'🚀 BOOSTER!','#F97316',16);
+      comboMultiplier=Math.min(comboMultiplier+1,8);comboTimer=2;
+      spawnOrbBurst(rb.x-cameraX,rb.y,['#F97316','#EF4444','#FDE047','#FFF'],50+comboMultiplier*5,7+comboMultiplier);
+      shakeDur=0.12+comboMultiplier*0.01;screenFlash=0.15;screenFlashColor='#F97316';
+      addFloatingText(rb.x-cameraX,rb.y-20,'🚀 BOOSTER!'+(comboMultiplier>1?' x'+comboMultiplier:''),'#F97316',16);
       if(rocketBoostersCollected>=3){
         rocketBoostersCollected=0;rocketBoostReady=true;rocketBoostFuel=ROCKET_BOOST_DURATION;
         screenFlash=0.4;screenFlashColor='#F97316';shakeDur=0.2;
@@ -854,6 +868,8 @@ function checkCollisions(){
 
 function takeDamage(){
   health--;damageLevel=maxHealth-health;invincTimer=1.5;hitFlashTimer=0.3;shakeDur=0.4;damageFlash=1.0;
+  if(comboMultiplier>1)addFloatingText(SHIP_X,ship.y-55,'COMBO LOST!','#FF4444',12);
+  comboMultiplier=1;comboTimer=0;
   screenFlash=0.3;screenFlashColor='#FF4444';
   spawnBurst(SHIP_X,ship.y,'#FF4444',25,5,0.5,4);
   // BIG smoke burst on impact — immediate visual feedback
@@ -883,6 +899,7 @@ function startGame(){
   walls=[];diamonds=[];bitcoins=[];blueDiamonds=[];rocketBoosters=[];
   particles=[];deathParticles=[];persistentSmoke=[];floatingTexts=[];speedLines=[];
   shakeX=0;shakeY=0;shakeDur=0;screenFlash=0;deathTimer=0;blueDiamondHudFlash=0;rocketBoostHudFlash=0;
+  comboMultiplier=1;comboTimer=0;
   aButtonPressed=false;useMouseFollow=false;patternWallsLeft=0;
   runStartTime=performance.now();generateWalls();
 }
@@ -952,6 +969,23 @@ function drawHUD(){
   ctx.fillStyle='rgba(0,0,0,0.5)';ctx.beginPath();ctx.roundRect(pad+8,pad+58,150,26,13);ctx.fill();
   ctx.font=arcadeFont(8);ctx.fillStyle=theme.edge;
   ctx.fillText('LV '+level+' '+theme.name.split(' ')[0],pad+18,pad+76);
+
+  // Combo multiplier pill
+  if(comboMultiplier>1){
+    const comboAlpha=comboTimer>0.5?1:comboTimer*2;
+    const comboPulse=1+Math.sin(now*0.012)*0.08*comboMultiplier;
+    ctx.save();ctx.globalAlpha=comboAlpha;
+    ctx.translate(pad+8+85,pad+100);ctx.scale(comboPulse,comboPulse);ctx.translate(-(pad+8+85),-(pad+100));
+    const comboW=90+comboMultiplier*8;
+    const comboHue=comboMultiplier>=6?0:comboMultiplier>=4?40:280;
+    const comboColor=`hsl(${comboHue},100%,${55+comboMultiplier*3}%)`;
+    ctx.fillStyle='rgba(0,0,0,0.6)';ctx.beginPath();ctx.roundRect(pad+8,pad+88,comboW,28,14);ctx.fill();
+    ctx.strokeStyle=comboColor;ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(pad+8,pad+88,comboW,28,14);ctx.stroke();
+    ctx.font=arcadeFont(10);ctx.fillStyle=comboColor;ctx.textAlign='left';
+    ctx.shadowColor=comboColor;ctx.shadowBlur=12;
+    ctx.fillText('x'+comboMultiplier+' COMBO',pad+18,pad+107);
+    ctx.shadowBlur=0;ctx.restore();
+  }
 
   // DAMAGE INDICATORS — dim when safe, lights up BRIGHT on each hit
   // dim dim dim → BRIGHT dim dim → BRIGHT BRIGHT dim → BRIGHT BRIGHT BRIGHT → DEAD
