@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-08-v112';
+    var APP_VERSION = '2026-04-08-v117';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -234,7 +234,7 @@
     .drag-handle-pill { width: 36px; height: 3px; background: rgba(120,80,220,0.45); border-radius: 2px; }
 
     /* Sidebar saved chats */
-    .sidebar-section { padding: 8px 12px 4px; font-size: 0.7rem; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 8px; }
+    .sidebar-section { padding: 8px 12px 4px; font-size: 0.88rem; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 8px; }
     .sidebar-collapsible { display: flex; align-items: center; justify-content: space-between; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: color 0.15s; }
     .sidebar-collapsible:active { color: var(--text-muted); }
     .sidebar-collapse-arrow { font-size: 0.55rem; transition: transform 0.25s ease; }
@@ -1851,6 +1851,13 @@
     .icon-circle { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 600; color: #fff; flex-shrink: 0; box-shadow: inset 0 1px 0 rgba(255,255,255,0.2); }
     .wl-logo { width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0; object-fit: contain; background: #1a1a1a; }
     .wl-logo-fallback { width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: #fff; }
+    .ticker-logo { border-radius: 8px; object-fit: contain; flex-shrink: 0; }
+    .ticker-logo-fallback { border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-family: Inter, sans-serif; border: 1px solid rgba(145,107,230,0.25); flex-shrink: 0; box-shadow: inset 0 1px 0 rgba(255,255,255,0.05); }
+    .stock-card .ticker-logo, .stock-card .ticker-logo-fallback { width: 32px; height: 32px; margin-bottom: 8px; }
+    .stock-card { display: flex; flex-direction: column; align-items: flex-start; }
+    .logo-attribution { font-size: 0.65rem; color: var(--text-dim); text-align: center; margin-top: 12px; padding: 4px 0; }
+    .logo-attribution a { color: var(--accent); text-decoration: none; opacity: 0.7; }
+    .logo-attribution a:hover { opacity: 1; }
     .watchlist-item-symbol { font-size: 15px; font-weight: 700; color: #F0EFF5; letter-spacing: 0.02em; }
     .watchlist-item-name { font-size: 11.5px; color: rgba(255,255,255,0.35); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; text-transform: uppercase; letter-spacing: 0.03em; }
     .watchlist-item-right { text-align: right; min-width: 110px; }
@@ -2255,7 +2262,7 @@
         align-items: center;
         justify-content: space-between;
         padding: 14px 16px;
-        border-bottom: 1px solid rgba(255,255,255,0.04);
+        border-bottom: 1px solid rgba(113,50,245,0.15);
         cursor: pointer;
         transition: background 0.15s ease;
         gap: 12px;
@@ -2281,7 +2288,7 @@
         color: rgba(255,255,255,0.35);
       }
       .lc-chat-item-chevron {
-        color: rgba(255,255,255,0.25);
+        color: #7132F5;
         font-size: 1.2rem;
         flex-shrink: 0;
       }
@@ -2342,6 +2349,20 @@
         color: rgba(255,255,255,0.85);
         text-align: center;
         line-height: 1.4;
+        min-height: 1.9em;
+      }
+      .lc-welcome-text .lc-cursor {
+        display: inline-block;
+        width: 2px;
+        height: 1.1em;
+        background: rgba(255,255,255,0.85);
+        margin-left: 2px;
+        vertical-align: text-bottom;
+        animation: lcBlink 0.6s step-end infinite;
+      }
+      @keyframes lcBlink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0; }
       }
       .lc-messages {
         flex: 1;
@@ -3106,9 +3127,8 @@
       var _sc = _s.count || 0;
       var _sd = _s.lastDate || null;
       if (_sd) {
-        var _dl = new Date(_sd); _dl.setHours(0,0,0,0);
-        var _dn = new Date(); _dn.setHours(0,0,0,0);
-        if (Math.floor((_dn - _dl) / 86400000) > 1) _sc = 0;
+        var _dt = new Date().toISOString().split('T')[0];
+        if (Math.floor((new Date(_dt) - new Date(_sd)) / 86400000) > 1) _sc = 0;
       }
       if (_sc <= 0) document.getElementById('streak-celebration').classList.add('dismissed');
     } catch(e) { document.getElementById('streak-celebration').classList.add('dismissed'); }
@@ -3216,16 +3236,15 @@
         <span class="sidebar-collapse-arrow" id="savedTemplatesArrow">&#x25BC;</span>
       </div>
       <div id="savedTemplatesList"></div>
-      <div class="sidebar-section sidebar-collapsible" id="savedChatsLabel" style="display:none;" onclick="toggleSidebarSection('savedChats')">
-        <span>&#x1F4AC; Saved Chats</span>
-        <span class="sidebar-collapse-arrow collapsed" id="savedChatsArrow">&#x25BC;</span>
-      </div>
-      <div id="savedChatsList" style="display:none;"></div>
       <a class="nav-item" data-view="newwish" onclick="showView('newwish')" style="margin-top: 12px;">
         <span style="font-size:1.1rem;flex-shrink:0;">&#x1FA84;</span>
         <span style="margin-left:2px;">Your Wish</span>
       </a>
-      <a class="nav-item" onclick="signOut()" style="margin-top: auto; color: var(--red);">
+      <a class="nav-item" href="game.html" style="margin-top: auto;">
+        <span style="font-size:1.1rem;flex-shrink:0;">&#x1F680;</span>
+        <span style="margin-left:2px;">Wish Runner</span>
+      </a>
+      <a class="nav-item" onclick="signOut()" style="color: var(--red);">
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7 4H4v12h3M10 10h7m0 0l-3-3m3 3l-3 3"/></svg>
         Log Out
       </a>
@@ -3430,6 +3449,7 @@
           <div class="markets-section-label" style="margin-top:20px;"><span>&#x1FA99; Crypto</span></div>
           <div class="stock-grid" id="fmCryptoGrid"></div>
           <div id="fmMarketsChartContainer" class="chart-container" style="display:none;"></div>
+          <div class="logo-attribution">Ticker logos powered by <a href="https://www.allinvestview.com" target="_blank" rel="noopener">AllInvestView</a></div>
         </div>
 
         <!-- FM: Portfolio -->
@@ -4006,7 +4026,7 @@
           <!-- Empty state -->
           <div class="lc-empty-state" id="lcEmptyState">
             <div class="lc-wand-icon">&#x1FA84;</div>
-            <div class="lc-welcome-text">Life Coach, how can I help you?</div>
+            <div class="lc-welcome-text" id="lcWelcomeText"></div>
           </div>
           <!-- Messages -->
           <div class="lc-messages" id="lcMessages"></div>
@@ -4774,9 +4794,8 @@
         }
         // Check if streak is broken (missed more than 1 day)
         if (_streakLastDate) {
-          var last = new Date(_streakLastDate);
-          var now = new Date();
-          var diffDays = Math.floor((now.setHours(0,0,0,0) - last.setHours(0,0,0,0)) / 86400000);
+          var today = new Date().toISOString().split('T')[0];
+          var diffDays = Math.floor((new Date(today) - new Date(_streakLastDate)) / 86400000);
           if (diffDays > 1) {
             _streakCount = 0;
             _streakLastDate = null;
@@ -4986,7 +5005,7 @@
           overlay.style.opacity = '1';
           overlay.style.transition = '';
         }, 1300);
-      }, 4000);
+      }, 3000);
     }
 
     function claimDailyStreak() {
@@ -7163,12 +7182,36 @@
       return date.toLocaleDateString();
     }
 
+    var _lcTypewriterTimer = null;
+    function typeWriterWelcome() {
+      var el = document.getElementById('lcWelcomeText');
+      if (!el) return;
+      if (_lcTypewriterTimer) { clearTimeout(_lcTypewriterTimer); _lcTypewriterTimer = null; }
+      var text = 'Life Coach, how can I help you?';
+      var i = 0;
+      el.innerHTML = '<span class="lc-cursor"></span>';
+      function tick() {
+        if (i < text.length) {
+          el.innerHTML = text.slice(0, i + 1) + '<span class="lc-cursor"></span>';
+          i++;
+          _lcTypewriterTimer = setTimeout(tick, 45);
+        } else {
+          // Remove cursor after a brief pause
+          setTimeout(function() {
+            el.textContent = text;
+          }, 1200);
+        }
+      }
+      _lcTypewriterTimer = setTimeout(tick, 300);
+    }
+
     function updateLCState() {
       var empty = document.getElementById('lcEmptyState');
       var msgs = document.getElementById('lcMessages');
       if (_lcHistory.length === 0) {
         empty.style.display = 'flex';
         msgs.classList.remove('has-messages');
+        typeWriterWelcome();
       } else {
         empty.style.display = 'none';
         msgs.classList.add('has-messages');
@@ -7829,6 +7872,7 @@
       // Show empty state
       var emptyState = document.getElementById('lcEmptyState');
       if (emptyState) emptyState.style.display = '';
+      typeWriterWelcome();
       // Hide mobile nav bar
       var navBar = document.getElementById('mobileNavBar');
       if (navBar) navBar.style.display = 'none';
@@ -8703,25 +8747,27 @@
 
     function renderMarketCards() {
       var mag7Html = MAG7.map(function(stock) {
+        var logo = buildTickerLogoHtml(stock.symbol, 32);
         var q = marketsCache[stock.symbol];
-        if (!q) return '<div class="stock-card" onclick="openTickerChart(\'' + stock.symbol + '\')" style="cursor:pointer;"><div class="stock-symbol">' + stock.symbol + '</div><div class="stock-name">' + stock.name + '</div><div class="stock-price" style="color:var(--text-dim);">--</div><div class="stock-change flat">Loading...</div></div>';
+        if (!q) return '<div class="stock-card" onclick="openTickerChart(\'' + stock.symbol + '\')" style="cursor:pointer;">' + logo + '<div class="stock-symbol">' + stock.symbol + '</div><div class="stock-name">' + stock.name + '</div><div class="stock-price" style="color:var(--text-dim);">--</div><div class="stock-change flat">Loading...</div></div>';
         var changeClass = q.change > 0 ? 'up' : q.change < 0 ? 'down' : 'flat';
         var arrow = q.change > 0 ? '&#x25B2;' : q.change < 0 ? '&#x25BC;' : '';
         var sign = q.change > 0 ? '+' : '';
         var liveClass = q._live ? ' crypto-live' : '';
         var liveDot = q._live ? '<div class="crypto-live-dot"></div>' : '';
-        return '<div class="stock-card' + liveClass + '" onclick="openTickerChart(\'' + stock.symbol + '\')" style="cursor:pointer;"><div class="stock-symbol">' + stock.symbol + '</div><div class="stock-name">' + stock.name + '</div>' +
+        return '<div class="stock-card' + liveClass + '" onclick="openTickerChart(\'' + stock.symbol + '\')" style="cursor:pointer;">' + logo + '<div class="stock-symbol">' + stock.symbol + '</div><div class="stock-name">' + stock.name + '</div>' +
           '<div class="stock-price">$' + formatNum(q.price) + '</div>' +
           '<div class="stock-change ' + changeClass + '">' + arrow + ' ' + sign + formatNum(q.change) + ' (' + sign + formatNum(q.changePercent) + '%)</div>' + liveDot + '</div>';
       }).join('');
 
       var cryptoHtml = CRYPTO.map(function(coin) {
+        var logo = buildTickerLogoHtml(coin.display, 32);
         var q = marketsCache[coin.symbol];
-        if (!q) return '<div class="stock-card" onclick="openTickerChart(\'' + coin.display + '\')" style="cursor:pointer;"><div class="stock-symbol">' + coin.display + '</div><div class="stock-name">' + coin.name + '</div><div class="stock-price" style="color:var(--text-dim);">--</div><div class="stock-change flat">Loading...</div></div>';
+        if (!q) return '<div class="stock-card" onclick="openTickerChart(\'' + coin.display + '\')" style="cursor:pointer;">' + logo + '<div class="stock-symbol">' + coin.display + '</div><div class="stock-name">' + coin.name + '</div><div class="stock-price" style="color:var(--text-dim);">--</div><div class="stock-change flat">Loading...</div></div>';
         var changeClass = q.change > 0 ? 'up' : q.change < 0 ? 'down' : 'flat';
         var arrow = q.change > 0 ? '&#x25B2;' : q.change < 0 ? '&#x25BC;' : '';
         var sign = q.change > 0 ? '+' : '';
-        return '<div class="stock-card" onclick="openTickerChart(\'' + coin.display + '\')" style="cursor:pointer;"><div class="stock-symbol">' + coin.display + '</div><div class="stock-name">' + coin.name + '</div>' +
+        return '<div class="stock-card" onclick="openTickerChart(\'' + coin.display + '\')" style="cursor:pointer;">' + logo + '<div class="stock-symbol">' + coin.display + '</div><div class="stock-name">' + coin.name + '</div>' +
           '<div class="stock-price">$' + formatNum(q.price) + '</div>' +
           '<div class="stock-change ' + changeClass + '">' + arrow + ' ' + sign + formatNum(q.change) + ' (' + sign + formatNum(q.changePercent) + '%)</div></div>';
       }).join('');
@@ -9704,7 +9750,8 @@
         if (hasPrice && h.avgCost > 0) { totalPL += totalItemPL; totalCostBasis += costBasis; }
         var dayClass = dayPLVal > 0 ? 'up' : dayPLVal < 0 ? 'down' : 'flat';
         var totalClass = totalItemPL > 0 ? 'up' : totalItemPL < 0 ? 'down' : 'flat';
-        return '<tr onclick="openHoldingActions(' + i + ')" style="cursor:pointer;"><td><button class="holding-symbol-btn" onclick="openHoldingActions(' + i + ')">' + h.symbol + '</button></td><td>' + h.qty + '<span class="qty-label"> shares</span></td><td>' + (hasPrice ? '$' + formatNum(price) : '--') + '</td><td style="font-weight:600;color:#fff;">' + (hasPrice ? '$' + formatNum(value) : '--') + '</td><td class="stock-change ' + dayClass + '">' + (hasPrice ? (dayPLVal>0?'+':'') + '$' + formatNum(dayPLVal) : '--') + '</td><td class="stock-change ' + totalClass + '">' + (hasPrice && h.avgCost>0 ? (totalItemPL>0?'+':'') + '$' + formatNum(totalItemPL) : '--') + '</td></tr>';
+        var logo = buildTickerLogoHtml(h.symbol, 24);
+        return '<tr onclick="openHoldingActions(' + i + ')" style="cursor:pointer;"><td><div style="display:flex;align-items:center;gap:8px;">' + logo + '<button class="holding-symbol-btn" onclick="openHoldingActions(' + i + ')">' + h.symbol + '</button></div></td><td>' + h.qty + '<span class="qty-label"> shares</span></td><td>' + (hasPrice ? '$' + formatNum(price) : '--') + '</td><td style="font-weight:600;color:#fff;">' + (hasPrice ? '$' + formatNum(value) : '--') + '</td><td class="stock-change ' + dayClass + '">' + (hasPrice ? (dayPLVal>0?'+':'') + '$' + formatNum(dayPLVal) : '--') + '</td><td class="stock-change ' + totalClass + '">' + (hasPrice && h.avgCost>0 ? (totalItemPL>0?'+':'') + '$' + formatNum(totalItemPL) : '--') + '</td></tr>';
       }).join('');
 
       var tvEl = document.getElementById(totalValId); if (tvEl) tvEl.textContent = '$' + formatNum(totalValue);
@@ -10882,18 +10929,20 @@
       var crypto = document.getElementById('mobileCryptoGrid');
       if (!grid) return;
       grid.innerHTML = MAG7.map(function(s) {
+        var logo = buildTickerLogoHtml(s.symbol, 28);
         var q = marketsCache[s.symbol];
-        if (!q) return '<div class="stock-card" onclick="openTickerChartFromHome(\'' + s.symbol + '\')" style="cursor:pointer;"><div class="stock-symbol">' + s.symbol + '</div><div class="stock-price" style="color:var(--text-dim);">--</div></div>';
+        if (!q) return '<div class="stock-card" onclick="openTickerChartFromHome(\'' + s.symbol + '\')" style="cursor:pointer;">' + logo + '<div class="stock-symbol">' + s.symbol + '</div><div class="stock-price" style="color:var(--text-dim);">--</div></div>';
         var cls = q.change > 0 ? 'up' : q.change < 0 ? 'down' : 'flat';
         var sign = q.change > 0 ? '+' : '';
-        return '<div class="stock-card" onclick="openTickerChartFromHome(\'' + s.symbol + '\')" style="cursor:pointer;"><div class="stock-symbol">' + s.symbol + '</div><div class="stock-price">$' + formatNum(q.price) + '</div><div class="stock-change ' + cls + '">' + sign + formatNum(q.changePercent) + '%</div></div>';
+        return '<div class="stock-card" onclick="openTickerChartFromHome(\'' + s.symbol + '\')" style="cursor:pointer;">' + logo + '<div class="stock-symbol">' + s.symbol + '</div><div class="stock-price">$' + formatNum(q.price) + '</div><div class="stock-change ' + cls + '">' + sign + formatNum(q.changePercent) + '%</div></div>';
       }).join('');
       crypto.innerHTML = CRYPTO.map(function(c) {
+        var logo = buildTickerLogoHtml(c.display, 28);
         var q = marketsCache[c.symbol];
-        if (!q) return '<div class="stock-card" onclick="openTickerChartFromHome(\'' + c.display + '\')" style="cursor:pointer;"><div class="stock-symbol">' + c.display + '</div><div class="stock-price" style="color:var(--text-dim);">--</div></div>';
+        if (!q) return '<div class="stock-card" onclick="openTickerChartFromHome(\'' + c.display + '\')" style="cursor:pointer;">' + logo + '<div class="stock-symbol">' + c.display + '</div><div class="stock-price" style="color:var(--text-dim);">--</div></div>';
         var cls = q.change > 0 ? 'up' : q.change < 0 ? 'down' : 'flat';
         var sign = q.change > 0 ? '+' : '';
-        return '<div class="stock-card" onclick="openTickerChartFromHome(\'' + c.display + '\')" style="cursor:pointer;"><div class="stock-symbol">' + c.display + '</div><div class="stock-price">$' + formatNum(q.price) + '</div><div class="stock-change ' + cls + '">' + sign + formatNum(q.changePercent) + '%</div></div>';
+        return '<div class="stock-card" onclick="openTickerChartFromHome(\'' + c.display + '\')" style="cursor:pointer;">' + logo + '<div class="stock-symbol">' + c.display + '</div><div class="stock-price">$' + formatNum(q.price) + '</div><div class="stock-change ' + cls + '">' + sign + formatNum(q.changePercent) + '%</div></div>';
       }).join('');
     }
 
@@ -10925,8 +10974,9 @@
         totalVal += val; totalDayPL += dayPL;
         if (hasPrice && h.avgCost > 0) { totalPL += totalItemPL; totalCostBasis += h.avgCost * h.qty; }
         var dayClass = dayPL > 0 ? 'color:#22c55e' : dayPL < 0 ? 'color:#ef4444' : 'color:var(--kraken-text-dim)';
+        var logo = buildTickerLogoHtml(h.symbol, 22);
         return '<tr onclick="openHoldingActions(' + i + ')" style="cursor:pointer;">' +
-          '<td><span class="holding-symbol-badge">' + h.symbol + '</span></td>' +
+          '<td><div style="display:flex;align-items:center;gap:6px;">' + logo + '<span class="holding-symbol-badge">' + h.symbol + '</span></div></td>' +
           '<td>' + h.qty + '</td>' +
           '<td>' + (hasPrice ? '$' + formatNum(p.price) : '--') + '</td>' +
           '<td>' + (hasPrice ? '$' + formatNum(val) : '--') + '</td>' +
@@ -11088,74 +11138,141 @@
 
     var STOCK_NAMES = { AAPL:'Apple', MSFT:'Microsoft', GOOGL:'Alphabet', GOOG:'Alphabet', AMZN:'Amazon', NVDA:'NVIDIA', META:'Meta', TSLA:'Tesla', NFLX:'Netflix', AMD:'Advanced Micro Devices', INTC:'Intel', CRM:'Salesforce', ORCL:'Oracle', ADBE:'Adobe', PYPL:'PayPal', SQ:'Block', SHOP:'Shopify', COIN:'Coinbase', PLTR:'Palantir Technologies Inc', UBER:'Uber', ABNB:'Airbnb', DIS:'Disney', BA:'Boeing', JPM:'JPMorgan', BAC:'Bank of America', GS:'Goldman Sachs', V:'Visa', MA:'Mastercard', WMT:'Walmart', TGT:'Target', COST:'Costco', HD:'Home Depot', NKE:'Nike Cl B', SBUX:'Starbucks', MCD:"McDonald's", KO:'Coca-Cola', PEP:'PepsiCo', JNJ:'J&J', PFE:'Pfizer', UNH:'UnitedHealth', XOM:'Exxon', CVX:'Chevron', FUBO:'fuboTV', TRUMP:'Trump Media', DJT:'Trump Media', ELF:'Elf Beauty Inc', NIO:'NIO Inc', ENPH:'Enphase Energy', HIMS:'Hims & Hers Health', CELH:'Celsius Holdings', BABA:'Alibaba', RIVN:'Rivian', SOFI:'SoFi Technologies', SNAP:'Snap', RBLX:'Roblox', ROKU:'Roku', DKNG:'DraftKings', CRWD:'CrowdStrike', PANW:'Palo Alto Networks', ZS:'Zscaler', NET:'Cloudflare', SNOW:'Snowflake', MSTR:'MicroStrategy', RIOT:'Riot Platforms', MARA:'Marathon Digital', SPOT:'Spotify', HOOD:'Robinhood', LCID:'Lucid Motors', F:'Ford', GM:'General Motors', T:'AT&T', VZ:'Verizon', WFC:'Wells Fargo', C:'Citigroup', MS:'Morgan Stanley', SCHW:'Charles Schwab', 'BTC/USD':'Bitcoin', 'ETH/USD':'Ethereum', 'SOL/USD':'Solana', DOGE:'Dogecoin', 'DOGE/USD':'Dogecoin' };
 
-    function getSymbolColor(sym) {
-      var colors = { 'AAPL':'#000000', 'TSLA':'#e31937', 'NFLX':'#e50914', 'MSFT':'#00a4ef', 'GOOGL':'#4285f4', 'AMZN':'#ff9900', 'NVDA':'#76b900', 'META':'#0668e1', 'SPX':'#e63939', 'NDQ':'#00a1e0', 'DJI':'#2a9d8f', 'BTC/USD':'#f7931a', 'ETH/USD':'#627eea', 'SOL/USD':'#00f0a0', 'BTC':'#f7931a', 'ETH':'#627eea', 'SOL':'#00f0a0', 'VIX':'#f4a261', 'DXY':'#2ec4b6', 'AMD':'#ed1c24', 'JPM':'#003087', 'BA':'#0039a6', 'DIS':'#003087', 'COIN':'#0052ff' };
-      return colors[sym] || '#7132F5';
-    }
+    // ════════════════════════════════
+    // ── TICKER LOGO SYSTEM (AllInvestView + EODHD fallback)
+    // ════════════════════════════════
 
-    function getSymbolInitial(sym) {
-      if (sym === 'BTC' || sym === 'BTC/USD') return '\u20BF';
-      if (sym === 'ETH' || sym === 'ETH/USD') return '\u039E';
-      return sym.replace('/USD','').substring(0,1);
-    }
-
-    // Authentic company logos — multi-source fallback chain by ticker
-    var _logoSources = [
-      function(t) { return 'https://eodhd.com/img/logos/US/' + t + '.png'; },
-      function(t) { return 'https://financialmodelingprep.com/image-stock/' + t + '.png'; },
-      function(t) {
-        var domains = {
-          AAPL:'apple.com',MSFT:'microsoft.com',GOOGL:'google.com',GOOG:'google.com',
-          AMZN:'amazon.com',NVDA:'nvidia.com',META:'meta.com',TSLA:'tesla.com',
-          NFLX:'netflix.com',AMD:'amd.com',INTC:'intel.com',CRM:'salesforce.com',
-          ORCL:'oracle.com',ADBE:'adobe.com',PYPL:'paypal.com',SQ:'squareup.com',
-          SHOP:'shopify.com',COIN:'coinbase.com',PLTR:'palantir.com',UBER:'uber.com',
-          ABNB:'airbnb.com',DIS:'disney.com',BA:'boeing.com',JPM:'jpmorganchase.com',
-          BAC:'bankofamerica.com',GS:'goldmansachs.com',V:'visa.com',MA:'mastercard.com',
-          WMT:'walmart.com',TGT:'target.com',COST:'costco.com',HD:'homedepot.com',
-          NKE:'nike.com',SBUX:'starbucks.com',MCD:'mcdonalds.com',KO:'coca-cola.com',
-          PEP:'pepsico.com',JNJ:'jnj.com',PFE:'pfizer.com',UNH:'unitedhealthgroup.com',
-          XOM:'exxonmobil.com',CVX:'chevron.com',FUBO:'fubo.tv',ELF:'elfcosmetics.com',
-          NIO:'nio.com',ENPH:'enphase.com',HIMS:'forhims.com',CELH:'celsius.com',
-          BABA:'alibaba.com',RIVN:'rivian.com',SOFI:'sofi.com',SNAP:'snap.com',
-          RBLX:'roblox.com',ROKU:'roku.com',DKNG:'draftkings.com',CRWD:'crowdstrike.com',
-          PANW:'paloaltonetworks.com',ZS:'zscaler.com',NET:'cloudflare.com',
-          SNOW:'snowflake.com',MSTR:'microstrategy.com',SPOT:'spotify.com',
-          HOOD:'robinhood.com',F:'ford.com',GM:'gm.com',SCHW:'schwab.com',
-          TRUMP:'truthsocial.com',DJT:'truthsocial.com',BTC:'bitcoin.org',ETH:'ethereum.org'
-        };
-        return domains[t] ? 'https://logo.clearbit.com/' + domains[t] + '?size=80' : '';
-      }
-    ];
-    function _tryLogoSource(img, sym, srcIdx) {
-      var clean = sym.replace('/USD','').toUpperCase();
-      while (srcIdx < _logoSources.length) {
-        var url = _logoSources[srcIdx](clean);
-        if (url) {
-          img.setAttribute('data-src-idx', srcIdx);
-          img.src = url;
-          return;
+    // Persistent logo cache with 7-day TTL (survives page reloads)
+    var _rawLogoCache = {};
+    try { _rawLogoCache = JSON.parse(localStorage.getItem('wp_logo_cache') || '{}'); } catch(e) {}
+    var logoCache = {};
+    var LOGO_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+    // Migrate old format (plain URL strings) and prune expired entries
+    (function() {
+      var now = Date.now(), changed = false;
+      Object.keys(_rawLogoCache).forEach(function(k) {
+        var entry = _rawLogoCache[k];
+        if (typeof entry === 'string') {
+          // Old format — migrate to {url, ts}
+          logoCache[k] = { url: entry, ts: now };
+          changed = true;
+        } else if (entry && entry.url && entry.ts) {
+          if (now - entry.ts < LOGO_TTL_MS) {
+            logoCache[k] = entry;
+          } else {
+            changed = true; // expired — drop it
+          }
         }
-        srcIdx++;
+      });
+      if (changed) localStorage.setItem('wp_logo_cache', JSON.stringify(logoCache));
+    })();
+
+    function _getTickerLogoCached(ticker) {
+      var entry = logoCache[ticker];
+      if (!entry) return null;
+      if (Date.now() - entry.ts > LOGO_TTL_MS) {
+        delete logoCache[ticker];
+        return null;
       }
-      // All sources exhausted — show fallback initial
-      img.style.display = 'none';
-      var fb = img.nextElementSibling;
-      if (fb) fb.style.display = 'flex';
+      return entry.url;
     }
-    function _onLogoError(img) {
-      var idx = parseInt(img.getAttribute('data-src-idx') || '0') + 1;
-      var sym = img.getAttribute('data-sym') || '';
-      _tryLogoSource(img, sym, idx);
+
+    function _setTickerLogoCache(ticker, url) {
+      logoCache[ticker] = { url: url, ts: Date.now() };
+      try { localStorage.setItem('wp_logo_cache', JSON.stringify(logoCache)); } catch(e) {}
     }
+
+    async function getTickerLogoUrl(ticker) {
+      if (!ticker) return null;
+      ticker = ticker.toUpperCase().trim().replace('/USD','');
+      var cached = _getTickerLogoCached(ticker);
+      if (cached) return cached;
+
+      // 1. AllInvestView (best quality + transparency) — 3s timeout
+      try {
+        var controller = new AbortController();
+        var timeoutId = setTimeout(function() { controller.abort(); }, 3000);
+        var res = await fetch('https://www.allinvestview.com/api/logo-search/?q=' + ticker, {
+          cache: 'force-cache',
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        if (res.ok) {
+          var data = await res.json();
+          if (data && data.website) {
+            var url = 'https://cdn.tickerlogos.com/' + data.website;
+            _setTickerLogoCache(ticker, url);
+            return url;
+          }
+        }
+      } catch (e) { /* silent fallback */ }
+
+      // 2. EODHD direct fallback
+      var eodhdUrl = 'https://eodhd.com/img/logos/US/' + ticker + '.png';
+      _setTickerLogoCache(ticker, eodhdUrl);
+      return eodhdUrl;
+    }
+
+    function createLogoFallbackHtml(ticker, size) {
+      size = size || 36;
+      return '<div class="ticker-logo-fallback" style="width:' + size + 'px;height:' + size + 'px;background:#252525;color:#7132F5;font-size:' + Math.round(size * 0.42) + 'px;">' + (ticker || '').slice(0,2) + '</div>';
+    }
+
+    // Sync HTML builder — uses cache if available, queues async load if not
+    var _logoLoadQueue = [];
+    var _logoLoadRunning = false;
+
+    function buildTickerLogoHtml(ticker, size) {
+      size = size || 32;
+      var clean = (ticker || '').toUpperCase().trim().replace('/USD','');
+      var cached = _getTickerLogoCached(clean);
+      var uid = 'tl-' + clean + '-' + Math.random().toString(36).substr(2,5);
+      if (cached) {
+        return '<img id="' + uid + '" class="ticker-logo" src="' + cached + '" alt="' + clean + '" ' +
+          'style="width:' + size + 'px;height:' + size + 'px;" loading="lazy" ' +
+          'onerror="this.outerHTML=createLogoFallbackHtml(\'' + clean + '\',' + size + ')" />';
+      }
+      // No cache — render fallback, queue async hydration
+      _queueLogoLoad(clean, uid, size);
+      return '<div id="' + uid + '">' + createLogoFallbackHtml(clean, size) + '</div>';
+    }
+
+    function _queueLogoLoad(ticker, uid, size) {
+      _logoLoadQueue.push({ ticker: ticker, uid: uid, size: size });
+      if (!_logoLoadRunning) {
+        _logoLoadRunning = true;
+        setTimeout(_processLogoQueue, 50);
+      }
+    }
+
+    async function _processLogoQueue() {
+      while (_logoLoadQueue.length > 0) {
+        var batch = _logoLoadQueue.splice(0, 6); // process 6 at a time
+        await Promise.all(batch.map(async function(item) {
+          try {
+            var url = await getTickerLogoUrl(item.ticker);
+            if (!url) return;
+            var el = document.getElementById(item.uid);
+            if (!el) return;
+            var img = document.createElement('img');
+            img.className = 'ticker-logo';
+            img.src = url;
+            img.alt = item.ticker;
+            img.style.cssText = 'width:' + item.size + 'px;height:' + item.size + 'px;';
+            img.loading = 'lazy';
+            img.onerror = function() { el.innerHTML = createLogoFallbackHtml(item.ticker, item.size); };
+            el.innerHTML = '';
+            el.appendChild(img);
+          } catch(e) {}
+        }));
+      }
+      _logoLoadRunning = false;
+    }
+
+    // Watchlist logo builder (uses larger 40px size to match existing style)
     function buildWatchlistLogo(sym) {
       var clean = sym.replace('/USD','').toUpperCase();
-      var color = getSymbolColor(sym);
-      var initial = getSymbolInitial(sym);
-      var firstUrl = _logoSources[0](clean);
-      return '<img class="wl-logo" src="' + firstUrl + '" alt="' + sym + '" data-sym="' + sym + '" data-src-idx="0" ' +
-        'onerror="_onLogoError(this);" />' +
-        '<div class="wl-logo-fallback" style="display:none;background:' + color + ';">' + initial + '</div>';
+      return buildTickerLogoHtml(clean, 40).replace('ticker-logo"', 'ticker-logo wl-logo"').replace('ticker-logo-fallback"', 'ticker-logo-fallback wl-logo-fallback"');
     }
 
     function renderWatchlistItems() {
@@ -12396,12 +12513,13 @@
 
     function renderCryptoCards() {
       var cryptoHtml = CRYPTO.map(function(coin) {
+        var logo = buildTickerLogoHtml(coin.display, 32);
         var q = marketsCache[coin.symbol];
-        if (!q) return '<div class="stock-card" onclick="openTickerChart(\'' + coin.display + '\')" style="cursor:pointer;"><div class="stock-symbol">' + coin.display + '</div><div class="stock-name">' + coin.name + '</div><div class="stock-price" style="color:var(--text-dim);">--</div><div class="stock-change flat">Loading...</div></div>';
+        if (!q) return '<div class="stock-card" onclick="openTickerChart(\'' + coin.display + '\')" style="cursor:pointer;">' + logo + '<div class="stock-symbol">' + coin.display + '</div><div class="stock-name">' + coin.name + '</div><div class="stock-price" style="color:var(--text-dim);">--</div><div class="stock-change flat">Loading...</div></div>';
         var changeClass = q.change > 0 ? 'up' : q.change < 0 ? 'down' : 'flat';
         var arrow = q.change > 0 ? '&#x25B2;' : q.change < 0 ? '&#x25BC;' : '';
         var sign = q.change > 0 ? '+' : '';
-        return '<div class="stock-card crypto-live" onclick="openTickerChart(\'' + coin.display + '\')" style="cursor:pointer;"><div class="stock-symbol">' + coin.display + '</div><div class="stock-name">' + coin.name + '</div>' +
+        return '<div class="stock-card crypto-live" onclick="openTickerChart(\'' + coin.display + '\')" style="cursor:pointer;">' + logo + '<div class="stock-symbol">' + coin.display + '</div><div class="stock-name">' + coin.name + '</div>' +
           '<div class="stock-price">$' + formatNum(q.price) + '</div>' +
           '<div class="stock-change ' + changeClass + '">' + arrow + ' ' + sign + formatNum(q.change) + ' (' + sign + formatNum(q.changePercent) + '%)</div>' +
           '<div class="crypto-live-dot"></div></div>';
@@ -12508,7 +12626,9 @@
         dropdown.innerHTML = filtered.map(function(r, i) {
           var typeLabel = (r.type || 'Stock').toLowerCase();
           var typeClass = typeLabel === 'cryptocurrency' ? 'crypto' : typeLabel === 'etf' ? 'etf' : 'stock';
+          var acLogo = buildTickerLogoHtml(r.symbol, 24);
           return '<div class="ticker-ac-item' + (i === 0 ? ' active' : '') + '" data-symbol="' + r.symbol + '" onmousedown="selectTicker(this,document.getElementById(\'' + input.id + '\'),document.getElementById(\'' + input.id + '_ac\'))">' +
+            acLogo +
             '<span class="ticker-ac-symbol">' + r.symbol + '</span>' +
             '<span class="ticker-ac-name">' + (r.name || '').substring(0, 30) + '</span>' +
             '<span class="ticker-ac-type ' + typeClass + '">' + r.type + '</span>' +
