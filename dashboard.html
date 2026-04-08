@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-08-v120';
+    var APP_VERSION = '2026-04-08-v121';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -1023,7 +1023,7 @@
       body[data-active-view="home"] .main-header { display: none !important; }
       body[data-active-view="home"] .main-content { padding-top: calc(max(6px, env(safe-area-inset-top)) + 4px) !important; }
       body[data-active-view="home"] #homeView { padding-top: 0 !important; }
-      body[data-active-view="home"] #homeView .home-tabs { margin-top: 0 !important; }
+      body[data-active-view="home"] #homeView .home-header-row { margin-top: 0 !important; }
 
       /* ── Ask AI full-screen overlay ── */
       body.mobile-ai-open { overflow: hidden !important; }
@@ -1586,7 +1586,10 @@
     }
 
     /* ── Home Screen Tabs — iOS Segmented Control ── */
-    .home-tabs { display: flex; background: rgba(255,255,255,0.06); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 4px; gap: 4px; margin-bottom: 24px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.03); }
+    .home-header-row { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; }
+    .home-header-icon { background: none; border: none; color: rgba(255,255,255,0.6); cursor: pointer; padding: 4px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; -webkit-tap-highlight-color: transparent; transition: color 0.15s; }
+    .home-header-icon:active { color: rgba(255,255,255,0.9); }
+    .home-tabs { flex: 1; display: flex; background: rgba(255,255,255,0.06); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 4px; gap: 4px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.03); }
     .home-tab { flex: 1; padding: 10px 14px; font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.45); cursor: pointer; border: none; border-radius: 12px; background: transparent; font-family: inherit; text-align: center; white-space: nowrap; min-height: 38px; display: flex; align-items: center; justify-content: center; transition: color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease; -webkit-tap-highlight-color: transparent; line-height: 1; }
     .home-tab:hover { color: rgba(255,255,255,0.65); }
     .home-tab:active { transform: scale(0.97); }
@@ -2100,7 +2103,8 @@
       .wish-card-btn { min-height: 44px !important; }
       /* Library table scrollable */
       .library-header { flex-wrap: wrap; gap: 8px; }
-      .home-tabs { margin: 0 0 16px; overflow: visible; }
+      .home-header-row { margin-bottom: 16px; gap: 8px; }
+      .home-tabs { overflow: visible; }
       .home-tab { padding: 9px 8px; font-size: 13px; min-height: 38px !important; }
       .stock-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
       .stock-card { padding: 12px; }
@@ -3280,10 +3284,18 @@
 
       <!-- Home View — Tabbed Interface -->
       <div class="view active" id="homeView">
-        <div class="home-tabs">
-          <button class="home-tab active" onclick="switchHomeTab('roadmap', this)">Roadmap</button>
-          <button class="home-tab" onclick="openLifeCoachView()">Chats</button>
-          <button class="home-tab" onclick="switchHomeTab('portfolio', this)">Portfolio</button>
+        <div class="home-header-row">
+          <button class="home-header-icon" onclick="toggleMobileSidebar()" aria-label="Open menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="22" height="22"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+          <div class="home-tabs">
+            <button class="home-tab active" onclick="switchHomeTab('roadmap', this)">Roadmap</button>
+            <button class="home-tab" onclick="openLifeCoachView()">Chats</button>
+            <button class="home-tab" onclick="switchHomeTab('portfolio', this)">Portfolio</button>
+          </div>
+          <button class="home-header-icon" onclick="focusHomeSearch()" aria-label="Search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </button>
         </div>
 
         <!-- Roadmap Tab -->
@@ -4173,15 +4185,7 @@
   </div>
 
   <!-- Mobile Bottom Bar — Notion style: Search | Ask AI | Compose -->
-  <nav class="mobile-nav-bar" id="mobileNavBar">
-    <button class="mobile-nav-side-btn" onclick="handleNavSearchBtn()" aria-label="Search">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    </button>
-    <div class="mobile-nav-ask-pill" id="mobileAskAIBtn" onclick="handleMobileNavPill()">
-      <span class="nav-pill-label" id="navAskLabel">Ask AI</span>
-      <span class="nav-pill-send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M12 19V5M5 12l7-7 7 7"/></svg></span>
-    </div>
-  </nav>
+  <!-- Bottom nav bar removed in v121 -->
 
   <!-- In-App Article Reader -->
   <div class="article-reader-overlay" id="articleReaderOverlay">
@@ -7980,6 +7984,11 @@
 
     function handleNavSearchBtn() {
       toggleMobileSidebar();
+    }
+
+    function focusHomeSearch() {
+      var input = document.getElementById('homeWishInput');
+      if (input) { input.scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(function() { input.focus(); }, 200); }
     }
 
     function handleMobileNavPill() {
