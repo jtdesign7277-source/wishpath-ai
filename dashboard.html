@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-09-v130';
+    var APP_VERSION = '2026-04-09-v132';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -3471,19 +3471,20 @@
 
         <!-- FM: Markets -->
         <div class="fm-sub-content active" id="fmMarketsContent">
-          <!-- Summary / Full Markets toggle -->
-          <div style="display:flex;justify-content:center;margin:8px 0 12px;">
-            <div style="display:inline-flex;background:rgba(255,255,255,0.06);border-radius:20px;padding:3px;gap:2px;border:1px solid rgba(255,255,255,0.08);">
-              <button id="fmToggleSummary" onclick="setFMMarketsMode('summary')" style="padding:6px 18px;border-radius:17px;border:none;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;background:rgba(113,50,245,0.5);color:#fff;">Summary</button>
-              <button id="fmToggleFull" onclick="setFMMarketsMode('full')" style="padding:6px 18px;border-radius:17px;border:none;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;background:transparent;color:rgba(255,255,255,0.5);">Full Markets</button>
-            </div>
+          <!-- TradingView Chart — always visible at top -->
+          <div id="fmMainChartWrap" style="margin:8px 0 16px;border-radius:12px;overflow:hidden;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.06);">
+            <div id="fmMainTVChart" style="height:380px;"></div>
           </div>
-          <div id="fmSummaryContent">
-          <div class="markets-section-label"><span>&#x1F7E2; Magnificent 7 Tracker</span></div>
-          <div class="markets-updated" id="fmMarketsUpdatedTime"></div>
-          <div class="stock-grid" id="fmMag7Grid"></div>
-          <div class="markets-section-label" style="margin-top:20px;"><span>&#x1FA99; Crypto</span></div>
-          <div class="stock-grid" id="fmCryptoGrid"></div>
+          <!-- Time range buttons -->
+          <div id="fmTimeRangeBar" style="display:flex;justify-content:center;gap:6px;margin-bottom:16px;">
+            <button class="fm-time-btn" onclick="setFMChartRange('1D',this)" style="padding:5px 14px;border-radius:14px;border:1px solid rgba(255,255,255,0.1);background:rgba(113,50,245,0.4);color:#fff;font-size:11px;font-weight:600;cursor:pointer;">1D</button>
+            <button class="fm-time-btn" onclick="setFMChartRange('1M',this)" style="padding:5px 14px;border-radius:14px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:rgba(255,255,255,0.5);font-size:11px;font-weight:600;cursor:pointer;">1M</button>
+            <button class="fm-time-btn" onclick="setFMChartRange('3M',this)" style="padding:5px 14px;border-radius:14px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:rgba(255,255,255,0.5);font-size:11px;font-weight:600;cursor:pointer;">3M</button>
+            <button class="fm-time-btn" onclick="setFMChartRange('1Y',this)" style="padding:5px 14px;border-radius:14px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:rgba(255,255,255,0.5);font-size:11px;font-weight:600;cursor:pointer;">1Y</button>
+            <button class="fm-time-btn" onclick="setFMChartRange('5Y',this)" style="padding:5px 14px;border-radius:14px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:rgba(255,255,255,0.5);font-size:11px;font-weight:600;cursor:pointer;">5Y</button>
+            <button class="fm-time-btn" onclick="setFMChartRange('All',this)" style="padding:5px 14px;border-radius:14px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:rgba(255,255,255,0.5);font-size:11px;font-weight:600;cursor:pointer;">All</button>
+          </div>
+          <div id="fmStockList" style="display:flex;flex-direction:column;gap:0;"></div>
           <div id="fmMarketsChartContainer" class="chart-container" style="display:none;"></div>
           <!-- Floating chat FAB -->
           <style>
@@ -3525,18 +3526,6 @@
           <button id="fmChatFab" onclick="handleMobileNavPill()">
             <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,0.2));"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           </button>
-          </div><!-- /fmSummaryContent -->
-
-          <!-- Full Markets mode — TradingView chart + extended view -->
-          <div id="fmFullContent" style="display:none;">
-            <div style="margin-bottom:12px;">
-              <div id="fmFullTVChart" style="height:400px;border-radius:12px;overflow:hidden;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.06);"></div>
-            </div>
-            <div class="markets-section-label"><span>&#x1F7E2; Magnificent 7 Tracker</span></div>
-            <div class="stock-grid" id="fmFullMag7Grid"></div>
-            <div class="markets-section-label" style="margin-top:20px;"><span>&#x1FA99; Crypto</span></div>
-            <div class="stock-grid" id="fmFullCryptoGrid"></div>
-          </div>
         </div>
 
         <!-- FM: Portfolio -->
@@ -5422,9 +5411,13 @@
           addWishChatMsg('ai', '✨ Welcome! Tell me your wish above, then tap the chips below to add context — I\'ll collect everything before generating your roadmap.');
         }
       }
-      if (view === 'fm' && !document.querySelector('#fmView .fm-sub-content.active')) {
-        var firstBtn = document.querySelector('#fmView .fm-sub-tab');
-        switchFMTab('fmMarkets', firstBtn);
+      if (view === 'fm') {
+        if (!document.querySelector('#fmView .fm-sub-content.active')) {
+          var firstBtn = document.querySelector('#fmView .fm-sub-tab');
+          switchFMTab('fmMarkets', firstBtn);
+        }
+        // Load TradingView chart at top of FM Markets
+        if (!_fmMainChartLoaded) { setTimeout(loadFMMainChart, 100); }
       }
       // Close sidebar on mobile after navigation
       if (window.innerWidth <= 768) {
@@ -8300,35 +8293,14 @@
       }
     }
 
-    // FM Markets toggle: Summary vs Full Markets (on fmView)
-    var _fmFullChartLoaded = false;
-    function setFMMarketsMode(mode) {
-      var summaryBtn = document.getElementById('fmToggleSummary');
-      var fullBtn = document.getElementById('fmToggleFull');
-      var summaryDiv = document.getElementById('fmSummaryContent');
-      var fullDiv = document.getElementById('fmFullContent');
-      if (mode === 'full') {
-        if (summaryDiv) summaryDiv.style.display = 'none';
-        if (fullDiv) fullDiv.style.display = '';
-        if (summaryBtn) { summaryBtn.style.background = 'transparent'; summaryBtn.style.color = 'rgba(255,255,255,0.5)'; }
-        if (fullBtn) { fullBtn.style.background = 'rgba(113,50,245,0.5)'; fullBtn.style.color = '#fff'; }
-        // Load TradingView chart once
-        if (!_fmFullChartLoaded) {
-          _fmFullChartLoaded = true;
-          loadFMFullChart();
-        }
-        // Clone Mag7 + Crypto grids into full view
-        cloneFMGrids();
-      } else {
-        if (summaryDiv) summaryDiv.style.display = '';
-        if (fullDiv) fullDiv.style.display = 'none';
-        if (summaryBtn) { summaryBtn.style.background = 'rgba(113,50,245,0.5)'; summaryBtn.style.color = '#fff'; }
-        if (fullBtn) { fullBtn.style.background = 'transparent'; fullBtn.style.color = 'rgba(255,255,255,0.5)'; }
-      }
-      try { localStorage.setItem('wp_fm_markets_mode', mode); } catch(e) {}
-    }
-    function loadFMFullChart() {
-      var container = document.getElementById('fmFullTVChart');
+    // FM Main Chart — TradingView advanced chart at top of Financial Markets
+    var _fmMainChartLoaded = false;
+    var _fmChartRange = '1D';
+    var _fmRangeToInterval = { '1D': '15', '1M': 'D', '3M': 'D', '1Y': 'W', '5Y': 'W', 'All': 'M' };
+    var _fmRangeToRange = { '1D': '1D', '1M': '1M', '3M': '3M', '1Y': '12M', '5Y': '60M', 'All': 'ALL' };
+
+    function loadFMMainChart() {
+      var container = document.getElementById('fmMainTVChart');
       if (!container) return;
       container.innerHTML = '';
       var script = document.createElement('script');
@@ -8336,15 +8308,26 @@
       script.async = true;
       script.innerHTML = JSON.stringify({
         "autosize": true,
-        "symbol": "NASDAQ:AAPL",
-        "interval": "D",
+        "symbol": "FOREXCOM:SPXUSD",
+        "interval": _fmRangeToInterval[_fmChartRange] || 'D',
+        "range": _fmRangeToRange[_fmChartRange] || '1D',
         "timezone": "America/New_York",
         "theme": "dark",
-        "style": "1",
+        "style": "3",
         "locale": "en",
         "backgroundColor": "rgba(0, 0, 0, 0)",
         "gridColor": "rgba(255, 255, 255, 0.03)",
+        "colorTheme": "dark",
+        "hide_top_toolbar": true,
+        "hide_legend": false,
         "allow_symbol_change": true,
+        "save_image": false,
+        "overrides": {
+          "mainSeriesProperties.lineStyle.color": "#7132F5",
+          "mainSeriesProperties.areaStyle.color1": "rgba(113,50,245,0.3)",
+          "mainSeriesProperties.areaStyle.color2": "rgba(113,50,245,0.02)",
+          "mainSeriesProperties.areaStyle.linecolor": "#7132F5"
+        },
         "support_host": "https://www.tradingview.com"
       });
       var wrapper = document.createElement('div');
@@ -8356,15 +8339,23 @@
       wrapper.appendChild(widgetDiv);
       wrapper.appendChild(script);
       container.appendChild(wrapper);
+      _fmMainChartLoaded = true;
     }
-    function cloneFMGrids() {
-      var src7 = document.getElementById('fmMag7Grid');
-      var dst7 = document.getElementById('fmFullMag7Grid');
-      if (src7 && dst7) dst7.innerHTML = src7.innerHTML;
-      var srcC = document.getElementById('fmCryptoGrid');
-      var dstC = document.getElementById('fmFullCryptoGrid');
-      if (srcC && dstC) dstC.innerHTML = srcC.innerHTML;
+
+    function setFMChartRange(range, btn) {
+      _fmChartRange = range;
+      // Update button styles
+      document.querySelectorAll('#fmTimeRangeBar .fm-time-btn').forEach(function(b) {
+        b.style.background = 'transparent';
+        b.style.color = 'rgba(255,255,255,0.5)';
+      });
+      if (btn) { btn.style.background = 'rgba(113,50,245,0.4)'; btn.style.color = '#fff'; }
+      // Reload chart with new range
+      loadFMMainChart();
     }
+
+    // Auto-load FM chart when fmView becomes active
+    var _origShowView = typeof showView === 'function' ? showView : null;
 
     // Home Markets toggle: Summary vs Full Markets (on homeView)
     function setMarketsMode(mode) {
@@ -8951,15 +8942,39 @@
           '<div class="stock-change ' + changeClass + '">' + arrow + ' ' + sign + formatNum(q.change) + ' (' + sign + formatNum(q.changePercent) + '%)</div></div>';
       }).join('');
 
-      // Populate both Home Markets tab and FM Markets tab
+      // Populate Home Markets tab (card grid)
       var mag7Grid = document.getElementById('mag7Grid');
-      var fmMag7Grid = document.getElementById('fmMag7Grid');
       var cryptoGrid = document.getElementById('cryptoGrid');
-      var fmCryptoGrid = document.getElementById('fmCryptoGrid');
       if (mag7Grid) mag7Grid.innerHTML = mag7Html;
-      if (fmMag7Grid) fmMag7Grid.innerHTML = mag7Html;
       if (cryptoGrid) cryptoGrid.innerHTML = cryptoHtml;
-      if (fmCryptoGrid) fmCryptoGrid.innerHTML = cryptoHtml;
+
+      // Populate FM Markets tab (list rows)
+      var fmStockList = document.getElementById('fmStockList');
+      if (fmStockList) {
+        var listHtml = '';
+        MAG7.concat(CRYPTO.map(function(c){ return { symbol: c.display || c.symbol, name: c.name }; })).forEach(function(stock) {
+          var sym = stock.symbol || stock.display;
+          var q = marketsCache[sym];
+          var logo = buildTickerLogoHtml(sym, 36);
+          var price = q ? '$' + formatNum(q.price) : '--';
+          var changeClass = q && q.change > 0 ? 'up' : q && q.change < 0 ? 'down' : 'flat';
+          var sign = q && q.change > 0 ? '+' : '';
+          var changeText = q ? sign + formatNum(q.change) + ' (' + sign + formatNum(q.changePercent) + '%)' : '';
+          var changeColor = changeClass === 'up' ? '#22c55e' : changeClass === 'down' ? '#ef4444' : 'rgba(255,255,255,0.4)';
+          listHtml += '<div onclick="openTickerChart(\'' + sym + '\')" style="display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.06);cursor:pointer;">'
+            + '<div style="flex-shrink:0;width:36px;height:36px;margin-right:12px;display:flex;align-items:center;justify-content:center;">' + logo + '</div>'
+            + '<div style="flex:1;min-width:0;">'
+            + '<div style="font-size:14px;font-weight:600;color:#fff;">' + sym + '</div>'
+            + '<div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:1px;">' + stock.name + '</div>'
+            + '</div>'
+            + '<div style="text-align:right;">'
+            + '<div style="font-size:14px;font-weight:600;color:#fff;">' + price + '</div>'
+            + '<div style="font-size:11px;color:' + changeColor + ';margin-top:1px;">' + changeText + '</div>'
+            + '</div>'
+            + '</div>';
+        });
+        fmStockList.innerHTML = listHtml;
+      }
 
       // Render Mag7 comparison chart
       renderMag7Chart();
@@ -12639,9 +12654,38 @@
           '<div class="crypto-live-dot"></div></div>';
       }).join('');
       var cryptoGrid = document.getElementById('cryptoGrid');
-      var fmCryptoGrid = document.getElementById('fmCryptoGrid');
       if (cryptoGrid) cryptoGrid.innerHTML = cryptoHtml;
-      if (fmCryptoGrid) fmCryptoGrid.innerHTML = cryptoHtml;
+      // Also refresh FM stock list if visible
+      if (document.getElementById('fmStockList')) refreshFMStockList();
+    }
+
+    function refreshFMStockList() {
+      var fmStockList = document.getElementById('fmStockList');
+      if (!fmStockList) return;
+      var allStocks = MAG7.concat(CRYPTO.map(function(c){ return { symbol: c.display || c.symbol, name: c.name }; }));
+      var listHtml = '';
+      allStocks.forEach(function(stock) {
+        var sym = stock.symbol || stock.display;
+        var q = marketsCache[sym];
+        var logo = buildTickerLogoHtml(sym, 36);
+        var price = q ? '$' + formatNum(q.price) : '--';
+        var changeClass = q && q.change > 0 ? 'up' : q && q.change < 0 ? 'down' : 'flat';
+        var sign = q && q.change > 0 ? '+' : '';
+        var changeText = q ? sign + formatNum(q.change) + ' (' + sign + formatNum(q.changePercent) + '%)' : '';
+        var changeColor = changeClass === 'up' ? '#22c55e' : changeClass === 'down' ? '#ef4444' : 'rgba(255,255,255,0.4)';
+        listHtml += '<div onclick="openTickerChart(\'' + sym + '\')" style="display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.06);cursor:pointer;">'
+          + '<div style="flex-shrink:0;width:36px;height:36px;margin-right:12px;display:flex;align-items:center;justify-content:center;">' + logo + '</div>'
+          + '<div style="flex:1;min-width:0;">'
+          + '<div style="font-size:14px;font-weight:600;color:#fff;">' + sym + '</div>'
+          + '<div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:1px;">' + stock.name + '</div>'
+          + '</div>'
+          + '<div style="text-align:right;">'
+          + '<div style="font-size:14px;font-weight:600;color:#fff;">' + price + '</div>'
+          + '<div style="font-size:11px;color:' + changeColor + ';margin-top:1px;">' + changeText + '</div>'
+          + '</div>'
+          + '</div>';
+      });
+      fmStockList.innerHTML = listHtml;
     }
 
     setInterval(refreshCryptoPrices, 10000);
