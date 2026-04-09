@@ -256,6 +256,39 @@
     .mobile-ask-ai-overlay { display: none; }
     .mobile-home { display: none; }
 
+    /* Bottom tabs + profile pages (styles are mobile-first but only shown on mobile via media query) */
+    .wp-bottom-tabs { display: none; }
+    .wp-bottom-tabs .mobile-nav-item { appearance: none; -webkit-appearance: none; }
+    .wp-bottom-tabs .mobile-nav-item { background: none; border: none; padding: 0; margin: 0; font: inherit; color: inherit; }
+
+    .you-page { max-width: 560px; margin: 0 auto; padding: 8px 0 24px; }
+    .you-card { background: rgba(37,37,37,0.9); border: 1px solid rgba(104,107,130,0.24); border-radius: 16px; padding: 16px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 10px 30px rgba(0,0,0,0.35); }
+    .you-page .you-card + .you-card { margin-top: 12px; }
+    .you-title-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+    .you-title { font-size: 1.1rem; font-weight: 800; color: #F0EFF5; }
+    .you-pill { font-size: 0.75rem; font-weight: 700; color: #9497A9; border: 1px solid rgba(104,107,130,0.24); border-radius: 999px; padding: 6px 10px; background: rgba(0,0,0,0.22); }
+    .you-muted { color: rgba(240,239,245,0.7); font-size: 0.9rem; line-height: 1.5; }
+    .you-primary-btn { margin-top: 12px; width: 100%; min-height: 48px; border-radius: 14px; border: 1px solid rgba(113,50,245,0.45); background: linear-gradient(135deg, rgba(113,50,245,0.22), rgba(113,50,245,0.12)); color: #F0EFF5; font-weight: 800; cursor: pointer; }
+    .you-primary-btn:active { transform: scale(0.98); }
+
+    .you-profile-row { display: flex; align-items: center; gap: 12px; }
+    .you-avatar { width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.1rem; background: rgba(113,50,245,0.18); border: 1px solid rgba(113,50,245,0.45); color: #F0EFF5; flex-shrink: 0; }
+    .you-profile-meta { min-width: 0; flex: 1; }
+    .you-name { font-weight: 900; color: #F0EFF5; font-size: 1.05rem; line-height: 1.2; }
+    .you-email { color: rgba(148,151,169,0.95); font-size: 0.86rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 3px; }
+    .you-tier { font-size: 0.78rem; font-weight: 900; color: #7132F5; background: rgba(113,50,245,0.12); border: 1px solid rgba(113,50,245,0.3); padding: 7px 10px; border-radius: 999px; flex-shrink: 0; }
+
+    .you-stats { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; margin-top: 14px; }
+    .you-stat { background: rgba(0,0,0,0.22); border: 1px solid rgba(104,107,130,0.2); border-radius: 14px; padding: 12px 10px; text-align: center; }
+    .you-stat-label { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(148,151,169,0.95); font-weight: 800; }
+    .you-stat-value { margin-top: 6px; font-size: 1.05rem; font-weight: 900; color: #F0EFF5; }
+
+    .you-links { display: flex; flex-direction: column; gap: 8px; }
+    .you-link { width: 100%; text-align: left; padding: 14px 12px; border-radius: 14px; background: rgba(0,0,0,0.18); border: 1px solid rgba(104,107,130,0.18); color: #F0EFF5; font-weight: 800; cursor: pointer; }
+    .you-link:active { transform: scale(0.99); }
+    .you-logout { width: 100%; min-height: 52px; margin-top: 14px; border-radius: 16px; border: 1px solid rgba(209,29,69,0.42); background: rgba(209,29,69,0.12); color: #F0EFF5; font-weight: 900; cursor: pointer; }
+    .you-logout:active { transform: scale(0.98); }
+
     /* Library view */
     .library-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
     .library-header h2 { font-size: 1.4rem; font-weight: 800; }
@@ -3077,6 +3110,62 @@
       .main-header .streak-container { display: none; }
     }
 
+    /* ── Mobile: bottom tabs (Home / Inbox / You) ── */
+    @media (max-width: 768px) {
+      .wp-bottom-tabs {
+        display: flex !important;
+        position: fixed;
+        left: 0; right: 0; bottom: 0;
+        height: 60px;
+        padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+        background: #252525;
+        border-top: 1px solid rgba(104,107,130,0.24);
+        z-index: 10010;
+        align-items: center;
+        justify-content: space-around;
+        gap: 8px;
+      }
+      .wp-bottom-tabs::before { content: none !important; display: none !important; }
+      .wp-bottom-tabs .mobile-nav-item {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        color: #9497A9;
+        border-radius: 14px;
+        padding: 8px 6px;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .wp-bottom-tabs .mobile-nav-item:active { transform: scale(0.98); opacity: 0.95; }
+      .wp-bottom-tabs .mobile-nav-item.active { color: #7132F5; }
+      .wp-bottom-tabs .mobile-nav-icon { font-size: 18px; line-height: 1; position: relative; }
+      .wp-bottom-tabs .mobile-nav-label { font-size: 11px; font-weight: 800; letter-spacing: 0.02em; }
+      .wp-bottom-tabs .mobile-nav-badge {
+        position: absolute;
+        top: -6px; right: -10px;
+        min-width: 18px;
+        height: 18px;
+        padding: 0 6px;
+        border-radius: 999px;
+        background: #ef4444;
+        color: #fff;
+        font-size: 11px;
+        font-weight: 900;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid #252525;
+      }
+
+      /* Prevent content hidden behind tabs */
+      .main-content { padding-bottom: calc(12px + 60px + env(safe-area-inset-bottom)) !important; }
+      .you-page { padding-bottom: calc(24px + 60px + env(safe-area-inset-bottom)) !important; }
+    }
+
     /* ── Desktop containment + layout fixes (do not affect mobile) ── */
     @media (min-width: 768px) {
       /* Fixed sidebar left column + main content beside it */
@@ -3105,7 +3194,8 @@
       /* Desktop: hide mobile-only floating overlays/panels */
       .mobile-templates-overlay,
       .todo-mobile-overlay,
-      .mobile-fm-menu { display: none !important; }
+      .mobile-fm-menu,
+      .wp-bottom-tabs { display: none !important; }
     }
   </style>
   <!-- Meta Pixel Code -->
@@ -4286,8 +4376,84 @@
       </div>
       <!-- End Feedback View -->
 
+      <!-- Inbox View (placeholder) -->
+      <div class="view" id="inboxView">
+        <div class="you-page">
+          <div class="you-card">
+            <div class="you-title-row">
+              <div class="you-title">Inbox</div>
+              <div class="you-pill">Coming soon</div>
+            </div>
+            <div class="you-muted">Connect your Gmail to see your inbox.</div>
+            <button class="you-primary-btn" type="button" onclick="showToast('Gmail connect coming soon')">Connect Gmail</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- You / Profile View -->
+      <div class="view" id="youView">
+        <div class="you-page">
+          <div class="you-card">
+            <div class="you-profile-row">
+              <div class="you-avatar" id="youAvatar">U</div>
+              <div class="you-profile-meta">
+                <div class="you-name" id="youDisplayName">You</div>
+                <div class="you-email" id="youEmail">—</div>
+              </div>
+              <div class="you-tier" id="youTier">Free Plan</div>
+            </div>
+
+            <div class="you-stats">
+              <div class="you-stat">
+                <div class="you-stat-label">Karma</div>
+                <div class="you-stat-value" id="youKarma">0</div>
+              </div>
+              <div class="you-stat">
+                <div class="you-stat-label">Wishes</div>
+                <div class="you-stat-value" id="youWishes">0</div>
+              </div>
+              <div class="you-stat">
+                <div class="you-stat-label">Age</div>
+                <div class="you-stat-value" id="youAge">—</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="you-card">
+            <div class="you-links">
+              <button class="you-link" onclick="hideMobileHome();showView('wishes')">My Wishes</button>
+              <button class="you-link" onclick="hideMobileHome();showView('wishes')">My Roadmaps</button>
+              <button class="you-link" onclick="hideMobileHome();showView('notes')">Notes</button>
+              <button class="you-link" onclick="hideMobileHome();showView('todos')">To-Dos</button>
+              <button class="you-link" onclick="showToast('Settings coming soon')">Settings</button>
+            </div>
+          </div>
+
+          <button class="you-logout" onclick="signOut()">Log Out</button>
+        </div>
+      </div>
+
     </div>
   </main>
+
+  <!-- Mobile bottom tabs (Home / Inbox / You) -->
+  <nav class="mobile-nav-bar wp-bottom-tabs" id="mobileNavBar" aria-label="Primary">
+    <button class="mobile-nav-item" data-nav="home" onclick="mobileNavTo('home')" aria-label="Home">
+      <div class="mobile-nav-icon">🏠</div>
+      <div class="mobile-nav-label">Home</div>
+    </button>
+    <button class="mobile-nav-item" data-nav="inbox" onclick="mobileNavTo('inbox')" aria-label="Inbox">
+      <div class="mobile-nav-icon" style="position:relative;">
+        🔔
+        <span class="mobile-nav-badge" aria-hidden="true">1</span>
+      </div>
+      <div class="mobile-nav-label">Inbox</div>
+    </button>
+    <button class="mobile-nav-item" data-nav="you" onclick="mobileNavTo('you')" aria-label="You">
+      <div class="mobile-nav-icon">👤</div>
+      <div class="mobile-nav-label">You</div>
+    </button>
+  </nav>
 
   <!-- Hidden input kept for legacy JS compat -->
   <input type="text" id="mobileAIInput" style="display:none;" />
@@ -4803,6 +4969,58 @@
       } else {
         hideMobileHome();
         showView(view);
+      }
+    }
+
+    function _formatAccountAge(createdAtIso) {
+      if (!createdAtIso) return '—';
+      try {
+        var created = new Date(createdAtIso);
+        if (isNaN(created.getTime())) return '—';
+        var days = Math.max(0, Math.floor((Date.now() - created.getTime()) / 86400000));
+        if (days < 1) return 'Today';
+        if (days === 1) return '1 day';
+        if (days < 30) return days + ' days';
+        var months = Math.floor(days / 30);
+        if (months === 1) return '1 mo';
+        if (months < 12) return months + ' mo';
+        var years = Math.floor(months / 12);
+        return years === 1 ? '1 yr' : (years + ' yr');
+      } catch (e) { return '—'; }
+    }
+
+    async function renderYouView() {
+      try {
+        var session = await getSession();
+        var email = session && session.user ? (session.user.email || '') : '';
+        var createdAt = session && session.user ? (session.user.created_at || session.user.createdAt || '') : '';
+
+        var profile = null;
+        try { profile = await getUserProfile(); } catch (e) { profile = null; }
+
+        var isPro = false;
+        if (typeof userIsPro !== 'undefined') isPro = !!userIsPro;
+        if (profile && typeof profile.is_pro !== 'undefined') isPro = !!profile.is_pro;
+        if (profile && (profile.plan === 'pro')) isPro = true;
+
+        var displayName = (profile && (profile.display_name || profile.full_name || profile.name)) ? (profile.display_name || profile.full_name || profile.name) : (email || 'You');
+        var initial = (displayName || email || 'U').trim().charAt(0).toUpperCase() || 'U';
+
+        var youEmail = document.getElementById('youEmail');
+        var youName = document.getElementById('youDisplayName');
+        var youAvatar = document.getElementById('youAvatar');
+        var youTier = document.getElementById('youTier');
+        var youWishes = document.getElementById('youWishes');
+        var youAge = document.getElementById('youAge');
+
+        if (youEmail) youEmail.textContent = email || '—';
+        if (youName) youName.textContent = displayName || 'You';
+        if (youAvatar) youAvatar.textContent = initial;
+        if (youTier) youTier.textContent = isPro ? 'Pro' : 'Free Plan';
+        if (youWishes) youWishes.textContent = (window.wishes && Array.isArray(window.wishes)) ? String(window.wishes.length) : (typeof wishes !== 'undefined' && Array.isArray(wishes) ? String(wishes.length) : '0');
+        if (youAge) youAge.textContent = _formatAccountAge(createdAt);
+      } catch (e) {
+        console.error('renderYouView error:', e);
       }
     }
 
@@ -5366,7 +5584,7 @@
     }
 
     // View switching
-    var viewTitles = { home: 'Home', lifecoach: 'Life Coach', news: 'News', fm: 'Financial Markets', cc: 'Command Center', wishes: 'My Wishes', coach: 'AI Coach', library: 'Library', notes: 'Notes', todos: 'To-Dos', feedback: 'Feedback', newwish: 'Your Wish' };
+    var viewTitles = { home: 'Home', inbox: 'Inbox', you: 'You', lifecoach: 'Life Coach', news: 'News', fm: 'Financial Markets', cc: 'Command Center', wishes: 'My Wishes', coach: 'AI Coach', library: 'Library', notes: 'Notes', todos: 'To-Dos', feedback: 'Feedback', newwish: 'Your Wish' };
     // ── iOS-style drag handle for chat/content split ──
     (function initDragHandles() {
       if (window.innerWidth > 768) return;
@@ -5486,6 +5704,7 @@
       if (view === 'library') renderLibrary();
       if (view === 'notes') { renderNotesListPage(); document.getElementById('notesList').classList.remove('hidden'); document.getElementById('notesEditor').classList.remove('active'); }
       if (view === 'todos') renderTodoSelect();
+      if (view === 'you') renderYouView();
       if (view === 'cc') loadCommandCenters();
       if (view === 'newwish') {
         var feed = document.getElementById('wishChatFeed');
