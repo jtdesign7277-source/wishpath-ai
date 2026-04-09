@@ -1889,6 +1889,29 @@
     .fm-sub-tab.active { color: var(--accent); border-bottom-color: var(--accent); background: linear-gradient(135deg, rgba(120,80,220,0.08) 0%, rgba(255,255,255,0.02) 100%); box-shadow: 0 0 12px rgba(120,80,220,0.08); }
     .fm-sub-content { display: none; }
     .fm-sub-content.active { display: block; }
+    /* FM Markets: make ticker tape + main chart edge-to-edge and seamless */
+    #fmMarketsContent #fmTickerTapeWrap,
+    #fmMarketsContent #fmMainChartWrap {
+      margin: 0 !important;
+      padding: 0 !important;
+      border: none !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      background: transparent !important;
+      width: calc(100% + 24px);
+      margin-left: -12px !important;
+      margin-right: -12px !important;
+      overflow: hidden;
+    }
+    #fmMarketsContent #fmTickerTapeWrap { background: #191919 !important; }
+    #fmMarketsContent #fmMainTVChart { background: #191919 !important; }
+    #fmMarketsContent #fmTickerTapeWrap .tradingview-widget-container,
+    #fmMarketsContent #fmTickerTapeWrap iframe {
+      background: transparent !important;
+      border: 0 !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+    }
     .fm-widget-container { background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; min-height: 500px; box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.05); transition: all 0.3s ease; }
     .fm-widget-container iframe { width: 100%; border: none; }
     .fm-ticker-input-row { display: flex; gap: 8px; margin-bottom: 16px; }
@@ -3068,6 +3091,14 @@
       #fmView .fm-sub-tabs { max-width: 100%; overflow-x: auto; overflow-y: hidden; }
       #fmView .fm-sub-tab { flex: 0 0 auto; }
 
+      /* FM Markets: match desktop padding (32px) for edge-to-edge embeds */
+      #fmMarketsContent #fmTickerTapeWrap,
+      #fmMarketsContent #fmMainChartWrap {
+        width: calc(100% + 64px);
+        margin-left: -32px !important;
+        margin-right: -32px !important;
+      }
+
       /* Prevent absolute dropdowns from escaping to page corner */
       .news-customize-wrap { position: relative; }
 
@@ -3495,6 +3526,34 @@
         <!-- FM: Markets -->
         <div class="fm-sub-content active" id="fmMarketsContent">
           <!-- TradingView Chart — always visible at top -->
+          <!-- TradingView Ticker Tape — edge-to-edge above main chart -->
+          <div id="fmTickerTapeWrap">
+            <div class="tradingview-widget-container">
+              <div class="tradingview-widget-container__widget"></div>
+              <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
+              {
+                "symbols": [
+                  { "proName": "NASDAQ:AAPL", "title": "AAPL" },
+                  { "proName": "NASDAQ:MSFT", "title": "MSFT" },
+                  { "proName": "NASDAQ:GOOGL", "title": "GOOGL" },
+                  { "proName": "NASDAQ:AMZN", "title": "AMZN" },
+                  { "proName": "NASDAQ:NVDA", "title": "NVDA" },
+                  { "proName": "NASDAQ:META", "title": "META" },
+                  { "proName": "NASDAQ:TSLA", "title": "TSLA" },
+                  { "proName": "BITSTAMP:BTCUSD", "title": "BTCUSD" },
+                  { "proName": "BITSTAMP:ETHUSD", "title": "ETHUSD" },
+                  { "proName": "COINBASE:SOLUSD", "title": "SOLUSD" },
+                  { "proName": "SP:SPX", "title": "SPX" }
+                ],
+                "showSymbolLogo": true,
+                "isTransparent": true,
+                "displayMode": "adaptive",
+                "colorTheme": "dark",
+                "locale": "en"
+              }
+              </script>
+            </div>
+          </div>
           <div id="fmMainChartWrap" style="margin:8px 0 16px;border-radius:12px;overflow:hidden;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.06);">
             <div id="fmMainTVChart" style="height:380px;"></div>
           </div>
