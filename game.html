@@ -131,6 +131,24 @@ let screenFlash=0,screenFlashColor='#FFF';
 // Combo system
 let comboMultiplier=1,comboTimer=0;
 
+// ENEMY SPACECRAFT — fly in from right, shootable
+let enemies=[];
+let enemySpawnTimer=0;
+const ENEMY_SPAWN_INTERVAL=2.5; // seconds between spawns
+const ENEMY_SPEED=180;
+const ENEMY_TYPES=[
+  {w:40,h:20,hp:1,pts:1500,color:'#EF4444',name:'Scout'},
+  {w:50,h:26,hp:2,pts:3000,color:'#A855F7',name:'Cruiser'},
+  {w:60,h:30,hp:3,pts:5000,color:'#F97316',name:'Destroyer'},
+];
+
+// SPACESHIP GUNS — always available, "SHOOT" button
+let gunAmmo=10,gunCooldown=0;
+let projectiles=[];
+const GUN_COOLDOWN=0.2,PROJECTILE_SPEED=900,MAX_AMMO=15;
+let shootButtonPressed=false;
+let ammoPickups=[];
+
 // Speed lines (for rocket boost)
 let speedLines=[];
 
@@ -320,7 +338,8 @@ function spawnTowerExplosion(sx,sy,w){
   const numCoins=randInt(4,8);
   for(let i=0;i<numCoins;i++){
     const cx=sx+rand(-60,60),cy=sy+rand(-80,80);
-    diamonds.push({x:cx+cameraX,y:clamp(cy,30,H-30),collected:false,anim:rand(0,6.28)});
+    {const rr=Math.random(),dsz=rr<0.4?0.6:rr<0.8?1.0:1.5,dpt=dsz===0.6?500:dsz===1.0?1000:2000;
+    diamonds.push({x:cx+cameraX,y:clamp(cy,30,H-30),collected:false,anim:rand(0,6.28),dSize:dsz,dPts:dpt});}
   }
   // Score + text
   const wallScore=800*comboMultiplier;score+=wallScore;
@@ -516,8 +535,8 @@ function generateWalls(){
     if(type===2){walls.push({x:nextWallX+55,gapY:clamp(gapY+rand(-40,40),margin,H-margin),gapH:gapH*0.9,passed:false,type:0,hit:false});}
 
     // Collectibles — placed in gap for rhythm (reward good pathing)
-    if(Math.random()<0.55)diamonds.push({x:nextWallX+rand(5,35),y:gapY+rand(-gapH*0.2,gapH*0.2),collected:false,anim:rand(0,6.28)});
-    if(Math.random()<0.25)diamonds.push({x:nextWallX-spacing*0.5,y:rand(50,H-50),collected:false,anim:rand(0,6.28)});
+    if(Math.random()<0.55){const rr=Math.random(),dsz=rr<0.4?0.6:rr<0.8?1.0:1.5,dpt=dsz===0.6?500:dsz===1.0?1000:2000;diamonds.push({x:nextWallX+rand(5,35),y:gapY+rand(-gapH*0.2,gapH*0.2),collected:false,anim:rand(0,6.28),dSize:dsz,dPts:dpt});}
+    if(Math.random()<0.25){const rr=Math.random(),dsz=rr<0.4?0.6:rr<0.8?1.0:1.5,dpt=dsz===0.6?500:dsz===1.0?1000:2000;diamonds.push({x:nextWallX-spacing*0.5,y:rand(50,H-50),collected:false,anim:rand(0,6.28),dSize:dsz,dPts:dpt});}
     if(Math.random()<0.04)bitcoins.push({x:nextWallX+rand(-15,15),y:gapY,collected:false,anim:rand(0,6.28)});
     if(Math.random()<0.05)blueDiamonds.push({x:nextWallX+rand(5,35),y:gapY+rand(-15,15),collected:false,anim:rand(0,6.28)});
     if(Math.random()<0.035)rocketBoosters.push({x:nextWallX+rand(5,30),y:gapY+rand(-gapH*0.15,gapH*0.15),collected:false,anim:rand(0,6.28)});
@@ -609,12 +628,15 @@ function drawBoundaryWalls(){
 
 // ─── COLLECTIBLES ──────────────────────────────────────────────
 function drawDiamond(d,time){
-  if(d.collected)return;const sx=d.x-cameraX;if(sx<-30||sx>W+30)return;
+  if(d.collected)return;const sx=d.x-cameraX;if(sx<-50||sx>W+50)return;
   const bob=Math.sin(time*0.003+d.anim)*5;
-  ctx.save();ctx.translate(sx,d.y+bob);ctx.rotate(Math.sin(time*0.002+d.anim)*0.2);
-  const sz=13;ctx.shadowColor='#7DF900';ctx.shadowBlur=14;
+  const scale=d.dSize||1.0;
+  ctx.save();ctx.translate(sx,d.y+bob);ctx.scale(scale,scale);ctx.rotate(Math.sin(time*0.002+d.anim)*0.2);
+  const sz=13;
+  ctx.shadowColor=scale>=1.5?'#FDE047':'#7DF900';ctx.shadowBlur=scale>=1.5?22:14;
+  const fill=scale>=1.5?'#A4FF44':scale<=0.6?'#5EC700':'#7DF900';
   ctx.beginPath();ctx.moveTo(0,-sz);ctx.lineTo(sz,0);ctx.lineTo(0,sz);ctx.lineTo(-sz,0);ctx.closePath();
-  ctx.fillStyle='#7DF900';ctx.fill();ctx.strokeStyle='#A4FF44';ctx.lineWidth=2;ctx.stroke();
+  ctx.fillStyle=fill;ctx.fill();ctx.strokeStyle='#A4FF44';ctx.lineWidth=2;ctx.stroke();
   ctx.fillStyle='rgba(255,255,255,0.3)';ctx.beginPath();ctx.moveTo(0,-sz*0.5);ctx.lineTo(sz*0.35,0);ctx.lineTo(0,sz*0.1);ctx.lineTo(-sz*0.1,-sz*0.1);ctx.closePath();ctx.fill();
   ctx.shadowBlur=0;ctx.restore();
 }
@@ -838,6 +860,18 @@ function drawShip(time){
   cg2.addColorStop(0,'rgba(255,255,255,0.7)');cg2.addColorStop(0.5,'rgba(103,232,249,0.5)');cg2.addColorStop(1,'rgba(34,211,238,0.2)');
   ctx.fillStyle=cg2;ctx.beginPath();ctx.ellipse(SHIP_W*0.15,-1,8,5,-0.15,0,Math.PI*2);ctx.fill();
 
+  // Gun barrels — two on the nose
+  ctx.fillStyle='#C084FC';ctx.strokeStyle='#FF2EC4';ctx.lineWidth=1;
+  ctx.fillRect(SHIP_W*0.4,-SHIP_H*0.18,SHIP_W*0.2,3);ctx.strokeRect(SHIP_W*0.4,-SHIP_H*0.18,SHIP_W*0.2,3);
+  ctx.fillRect(SHIP_W*0.4,SHIP_H*0.12,SHIP_W*0.2,3);ctx.strokeRect(SHIP_W*0.4,SHIP_H*0.12,SHIP_W*0.2,3);
+  // Muzzle glow when shooting
+  if(shootButtonPressed&&gunAmmo>0){
+    ctx.shadowColor='#FF2EC4';ctx.shadowBlur=12;
+    ctx.fillStyle='#FF2EC4';ctx.beginPath();ctx.arc(SHIP_W*0.62,-SHIP_H*0.16,3,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(SHIP_W*0.62,SHIP_H*0.14,3,0,Math.PI*2);ctx.fill();
+    ctx.shadowBlur=0;
+  }
+
   // Fins
   ctx.fillStyle='#7C3AED';
   ctx.beginPath();ctx.moveTo(-SHIP_W*0.2,-SHIP_H*0.38);ctx.lineTo(-SHIP_W*0.35,-SHIP_H*0.7);ctx.lineTo(-SHIP_W*0.42,-SHIP_H*0.35);ctx.closePath();ctx.fill();ctx.strokeStyle='#A855F7';ctx.lineWidth=1;ctx.stroke();
@@ -952,13 +986,16 @@ function checkCollisions(){
   // Diamonds
   for(const d of diamonds){
     if(d.collected)continue;
-    if(Math.abs((SHIP_X+cameraX)-d.x)<28&&Math.abs(ship.y-d.y)<28){
+    const hitR=28*(d.dSize||1.0);
+    if(Math.abs((SHIP_X+cameraX)-d.x)<hitR&&Math.abs(ship.y-d.y)<hitR){
       d.collected=true;diamondsCollected++;totalCoinsAll++;
       comboMultiplier=Math.min(comboMultiplier+1,8);comboTimer=2;
-      const dScore=1000*comboMultiplier;score+=dScore;
-      spawnOrbBurst(d.x-cameraX,d.y,['#7DF900','#A4FF44','#22D3EE','#67E8F9','#FFF'],40+comboMultiplier*8,6+comboMultiplier);
+      const basePts=d.dPts||1000;const dScore=basePts*comboMultiplier;score+=dScore;
+      const burst=d.dSize>=1.5?60:d.dSize<=0.6?25:40;
+      spawnOrbBurst(d.x-cameraX,d.y,['#7DF900','#A4FF44','#22D3EE','#67E8F9','#FFF'],burst+comboMultiplier*8,6+comboMultiplier);
       shakeDur=0.1+comboMultiplier*0.02;screenFlash=0.15;screenFlashColor='#7DF900';
-      addFloatingText(d.x-cameraX,d.y-25,'+'+dScore.toLocaleString()+(comboMultiplier>1?' x'+comboMultiplier:''),'#7DF900',18+comboMultiplier*2);
+      const szLabel=d.dSize>=1.5?' ★':d.dSize<=0.6?' •':'';
+      addFloatingText(d.x-cameraX,d.y-25,'+'+dScore.toLocaleString()+szLabel+(comboMultiplier>1?' x'+comboMultiplier:''),'#7DF900',18+comboMultiplier*2);
     }
   }
 
@@ -1056,6 +1093,7 @@ function startGame(){
   ship.y=H/2;ship.vy=0;ship.targetY=H/2;ship.bankAngle=0;ship.trail=[];
   walls=[];diamonds=[];bitcoins=[];blueDiamonds=[];rocketBoosters=[];
   particles=[];deathParticles=[];persistentSmoke=[];floatingTexts=[];speedLines=[];sparkles=[];
+  enemies=[];enemySpawnTimer=0;projectiles=[];gunAmmo=MAX_AMMO;gunCooldown=0;shootButtonPressed=false;ammoPickups=[];
   shakeX=0;shakeY=0;shakeDur=0;screenFlash=0;deathTimer=0;blueDiamondHudFlash=0;rocketBoostHudFlash=0;
   comboMultiplier=1;comboTimer=0;
   aButtonPressed=false;useMouseFollow=false;patternWallsLeft=0;
@@ -1087,13 +1125,110 @@ function update(dt){
   }
   if(!aButtonPressed&&rocketBoostActive){rocketBoostActive=false;}
 
+  // GUNS — fire projectiles
+  if(gunCooldown>0)gunCooldown-=dt;
+  if(shootButtonPressed&&gunAmmo>0&&gunCooldown<=0){
+    projectiles.push({x:SHIP_X+cameraX+SHIP_W,y:ship.y,dead:false});
+    gunAmmo--;gunCooldown=GUN_COOLDOWN;
+    shakeDur=Math.max(shakeDur,0.04);
+    spawnOrbBurst(SHIP_X+SHIP_W,ship.y,['#FF2EC4','#FF6BD6','#FFF'],6,2);
+  }
+
+  // Update projectiles
+  for(const p of projectiles){
+    if(p.dead)continue;
+    p.x+=PROJECTILE_SPEED*dt;
+    if(p.x-cameraX>W+50){p.dead=true;continue;}
+    // Hit enemies
+    for(const e of enemies){
+      if(e.dead)continue;
+      const ex=e.x-cameraX,px=p.x-cameraX;
+      if(Math.abs(px-ex)<e.type.w*0.6&&Math.abs(p.y-e.y)<e.type.h*0.8){
+        p.dead=true;e.hp--;
+        if(e.hp<=0){
+          e.dead=true;
+          const pts=e.type.pts*comboMultiplier;score+=pts;
+          comboMultiplier=Math.min(comboMultiplier+1,8);comboTimer=2;
+          spawnOrbBurst(ex,e.y,[e.type.color,'#FDE047','#FFF','#FF6BD6'],60,10);
+          addFloatingText(ex,e.y-30,'💥 +'+pts.toLocaleString(),e.type.color,20);
+          shakeDur=0.2;screenFlash=0.25;screenFlashColor=e.type.color;
+          // Drop ammo 50% chance
+          if(Math.random()<0.5)ammoPickups.push({x:e.x,y:e.y,collected:false,anim:rand(0,6.28)});
+        } else {
+          spawnOrbBurst(ex,e.y,['#FFF','#FF2EC4'],15,4);
+          addFloatingText(ex,e.y-20,'HIT!','#FF2EC4',14);
+        }
+        break;
+      }
+    }
+    // Hit walls
+    for(const w of walls){
+      if(w.hit)continue;
+      const sx=w.x-cameraX,px=p.x-cameraX;
+      if(px>sx-10&&px<sx+50){
+        const isInGap=p.y>w.gapY-w.gapH/2&&p.y<w.gapY+w.gapH/2;
+        if(!isInGap){p.dead=true;break;}
+      }
+    }
+  }
+  projectiles=projectiles.filter(p=>!p.dead);
+
+  // ENEMY SPAWNING
+  enemySpawnTimer-=dt;
+  if(enemySpawnTimer<=0){
+    enemySpawnTimer=ENEMY_SPAWN_INTERVAL*(0.7+Math.random()*0.6);
+    // Harder enemies as score increases
+    const r=Math.random();const typeIdx=score>10000?(r<0.3?2:r<0.65?1:0):(score>3000?(r<0.15?2:r<0.5?1:0):0);
+    const type=ENEMY_TYPES[typeIdx];
+    enemies.push({x:cameraX+W+100,y:rand(50,H-50),type,hp:type.hp,dead:false,phase:rand(0,6.28),speed:ENEMY_SPEED+rand(-40,40)});
+  }
+
+  // Update enemies — fly left with sine wave motion
+  for(const e of enemies){
+    if(e.dead)continue;
+    e.x-=e.speed*dt;e.phase+=dt*3;
+    e.y+=Math.sin(e.phase)*1.5;
+    e.y=clamp(e.y,30,H-30);
+    // Off-screen left = remove
+    if(e.x<cameraX-100){e.dead=true;continue;}
+    // Collide with player ship
+    if(!shieldActive&&invincTimer<=0){
+      const ex=e.x-cameraX;
+      if(Math.abs(SHIP_X-ex)<(SHIP_W+e.type.w)*0.4&&Math.abs(ship.y-e.y)<(SHIP_H+e.type.h)*0.5){
+        e.dead=true;
+        spawnOrbBurst(ex,e.y,['#EF4444','#FF6BD6','#FFF'],40,8);
+        health--;damageLevel=maxHealth-health;invincTimer=1.5;hitFlashTimer=0.3;shakeDur=0.4;damageFlash=1.0;
+        if(health<=0){die();return;}
+      }
+    } else if(shieldActive){
+      const ex=e.x-cameraX;
+      if(Math.abs(SHIP_X-ex)<(SHIP_W+e.type.w)*0.5&&Math.abs(ship.y-e.y)<(SHIP_H+e.type.h)*0.6){
+        e.dead=true;const pts=e.type.pts*2*comboMultiplier;score+=pts;
+        spawnOrbBurst(ex,e.y,[e.type.color,'#FFD700','#FFF'],70,12);
+        addFloatingText(ex,e.y-30,'💥 SHIELDED! +'+pts.toLocaleString(),'#FFD700',22);
+        shakeDur=0.2;screenFlash=0.3;screenFlashColor='#FFD700';
+      }
+    }
+  }
+  enemies=enemies.filter(e=>!e.dead);
+
+  // Ammo pickups
+  for(const a of ammoPickups){
+    if(a.collected)continue;
+    if(Math.abs((SHIP_X+cameraX)-a.x)<24&&Math.abs(ship.y-a.y)<24){
+      a.collected=true;gunAmmo=Math.min(gunAmmo+5,MAX_AMMO);
+      spawnOrbBurst(a.x-cameraX,a.y,['#FF2EC4','#FF6BD6','#FFF'],20,5);
+      addFloatingText(a.x-cameraX,a.y-20,'+5 AMMO','#FF2EC4',14);
+    }
+  }
+
   generateWalls();updateShip(dt);checkCollisions();
   updateParticles(dt);updatePersistentSmoke(dt);updateFloatingTexts(dt);updateSpeedLines(dt);updateSparkles(dt);
 
   const cleanX=cameraX-200;
   walls=walls.filter(w=>w.x+60>cleanX);diamonds=diamonds.filter(d=>d.x>cleanX);
   bitcoins=bitcoins.filter(b=>b.x>cleanX);blueDiamonds=blueDiamonds.filter(b=>b.x>cleanX);
-  rocketBoosters=rocketBoosters.filter(r=>r.x>cleanX);
+  rocketBoosters=rocketBoosters.filter(r=>r.x>cleanX);ammoPickups=ammoPickups.filter(a=>a.x>cleanX);
 
   if(!rocketBoostActive){
     if(shakeDur>0){shakeDur-=dt;shakeX=rand(-8,8)*(shakeDur/0.5);shakeY=rand(-8,8)*(shakeDur/0.5);}else{shakeX=0;shakeY=0;}
@@ -1123,30 +1258,7 @@ function drawHUD(){
   ctx.font=arcadeFont(10);ctx.fillStyle='#FDE047';ctx.textAlign='left';
   ctx.fillText('★ '+Math.floor(score).toLocaleString(),pad+20,pad+40);
 
-  // Level badge — premium pill with 3D depth
-  {const lvlX=pad+8,lvlY=pad+56,lvlW=118,lvlH=30,lvlR=15;
-  // Drop shadow
-  ctx.save();
-  ctx.shadowColor='rgba(0,0,0,0.7)';ctx.shadowBlur=10;ctx.shadowOffsetX=0;ctx.shadowOffsetY=3;
-  // Sage/gray-green gradient for 3D depth
-  const lvlBg=ctx.createLinearGradient(lvlX,lvlY,lvlX,lvlY+lvlH);
-  lvlBg.addColorStop(0,'#9AAE8A');lvlBg.addColorStop(0.45,'#6E8560');lvlBg.addColorStop(1,'#4A5C42');
-  ctx.fillStyle=lvlBg;ctx.beginPath();ctx.roundRect(lvlX,lvlY,lvlW,lvlH,lvlR);ctx.fill();
-  ctx.shadowBlur=0;ctx.shadowOffsetY=0;ctx.restore();
-  // Top highlight shimmer for embossed look
-  const lvlHi=ctx.createLinearGradient(lvlX,lvlY,lvlX,lvlY+lvlH*0.5);
-  lvlHi.addColorStop(0,'rgba(255,255,255,0.38)');lvlHi.addColorStop(1,'rgba(255,255,255,0)');
-  ctx.fillStyle=lvlHi;ctx.beginPath();ctx.roundRect(lvlX,lvlY,lvlW,lvlH,lvlR);ctx.fill();
-  // Bottom shadow edge
-  const lvlSh=ctx.createLinearGradient(lvlX,lvlY+lvlH*0.6,lvlX,lvlY+lvlH);
-  lvlSh.addColorStop(0,'rgba(0,0,0,0)');lvlSh.addColorStop(1,'rgba(0,0,0,0.25)');
-  ctx.fillStyle=lvlSh;ctx.beginPath();ctx.roundRect(lvlX,lvlY,lvlW,lvlH,lvlR);ctx.fill();
-  // Bold text with drop shadow
-  ctx.save();ctx.shadowColor='rgba(0,0,0,0.8)';ctx.shadowBlur=4;ctx.shadowOffsetX=0;ctx.shadowOffsetY=1;
-  ctx.font='900 16px "Arial Black","Helvetica Neue",Arial,sans-serif';
-  ctx.fillStyle='#FFFFFF';ctx.textAlign='left';ctx.textBaseline='middle';
-  ctx.fillText('Level '+level,lvlX+14,lvlY+lvlH/2+1);
-  ctx.restore();ctx.textBaseline='alphabetic';}
+  // (Level pill removed per user request)
 
   // Combo multiplier pill
   if(comboMultiplier>1){
@@ -1237,14 +1349,7 @@ function drawHUD(){
     if(i<blueDiamondsCollected){ctx.fillStyle='#3B82F6';ctx.shadowColor='#3B82F6';ctx.shadowBlur=10;ctx.fill();}else{ctx.strokeStyle='rgba(59,130,246,0.3)';ctx.lineWidth=2;ctx.stroke();}ctx.shadowBlur=0;}
   if(superBoostTimer>0){const p2=0.7+Math.sin(performance.now()*0.01)*0.3;ctx.globalAlpha=p2;ctx.font=arcadeFont(10);ctx.fillStyle='#FDE047';ctx.textAlign='left';ctx.shadowColor='#FDE047';ctx.shadowBlur=10;ctx.fillText('⚡ '+superBoostTimer.toFixed(1)+'s',slotX,slotY+28);ctx.shadowBlur=0;ctx.globalAlpha=1;}
 
-  // Rocket booster slots (bottom-left, below blue diamonds)
-  const rbSlotX=slotX+110,rbSlotY=slotY;
-  for(let i=0;i<3;i++){const rx=rbSlotX+i*28;
-    ctx.beginPath();ctx.arc(rx+8,rbSlotY,8,0,Math.PI*2);
-    if(i<rocketBoostersCollected){ctx.fillStyle='#F97316';ctx.shadowColor='#F97316';ctx.shadowBlur=8;ctx.fill();}
-    else{ctx.strokeStyle='rgba(249,115,22,0.3)';ctx.lineWidth=2;ctx.stroke();}ctx.shadowBlur=0;
-  }
-  if(rocketBoostHudFlash>0){ctx.globalAlpha=rocketBoostHudFlash;ctx.fillStyle='#F97316';ctx.fillRect(rbSlotX-5,rbSlotY-15,100,30);ctx.globalAlpha=1;}
+  // (Rocket booster circles removed per user request)
 
   // ROCKET BOOST BUTTON — Premium hand-drawn rocket icon
   if(rocketBoostReady||rocketBoostActive){
@@ -1518,6 +1623,55 @@ function drawGameOverScreen(){
 }
 
 // ─── DRAW ──────────────────────────────────────────────────────
+// ─── SHOOT MORE GUNS BUTTON ────────────────────────────────────
+function drawShootButton(){
+  // Pill-shaped button at bottom-right so "SHOOT MORE GUNS" fits
+  const pw=140,ph=52;
+  const bx=W-pw/2-16,by=H-ph/2-20;
+  const pulse=shootButtonPressed?0.92:1+Math.sin(performance.now()*0.005)*0.04;
+  const hasAmmo=gunAmmo>0;
+  ctx.save();ctx.translate(bx,by);ctx.scale(pulse,pulse);
+  // Glow
+  ctx.shadowColor=hasAmmo?'#FF2EC4':'#444';ctx.shadowBlur=hasAmmo?22:5;
+  // Pill background gradient
+  const bg=ctx.createLinearGradient(0,-ph/2,0,ph/2);
+  bg.addColorStop(0,hasAmmo?'rgba(255,46,196,0.55)':'rgba(80,80,80,0.3)');
+  bg.addColorStop(1,hasAmmo?'rgba(168,85,247,0.35)':'rgba(40,40,40,0.15)');
+  ctx.fillStyle=bg;
+  const r=ph/2;
+  ctx.beginPath();
+  ctx.moveTo(-pw/2+r,-ph/2);
+  ctx.lineTo(pw/2-r,-ph/2);
+  ctx.arc(pw/2-r,0,r,-Math.PI/2,Math.PI/2);
+  ctx.lineTo(-pw/2+r,ph/2);
+  ctx.arc(-pw/2+r,0,r,Math.PI/2,Math.PI*1.5);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle=hasAmmo?'#FF6BD6':'#555';ctx.lineWidth=2.5;ctx.stroke();
+  ctx.shadowBlur=0;
+  // "SHOOT MORE GUNS" text
+  ctx.font='900 13px "Arial Black",Arial,sans-serif';
+  ctx.fillStyle=hasAmmo?'#FFF':'#888';
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('SHOOT MORE GUNS',0,-6);
+  // Ammo count below
+  ctx.font=arcadeFont(8);
+  ctx.fillStyle=gunAmmo>5?'#FFF':gunAmmo>0?'#FDE047':'#FF4444';
+  ctx.fillText('AMMO '+gunAmmo+'/'+MAX_AMMO,0,12);
+  // Cooldown bar along bottom edge
+  if(gunCooldown>0){
+    ctx.globalAlpha=0.5;
+    ctx.strokeStyle='#FFF';ctx.lineWidth=2;
+    const pct=1-gunCooldown/GUN_COOLDOWN;
+    ctx.beginPath();
+    ctx.moveTo(-pw/2+r,ph/2-3);
+    ctx.lineTo(-pw/2+r+(pw-2*r)*pct,ph/2-3);
+    ctx.stroke();
+    ctx.globalAlpha=1;
+  }
+  ctx.restore();
+}
+
 function draw(){
   const time=performance.now();ctx.clearRect(0,0,W,H);
   drawBackground(time);
@@ -1528,12 +1682,33 @@ function draw(){
   for(const bc of bitcoins)drawBitcoin(bc,time);
   for(const bd of blueDiamonds)drawBlueDiamondObj(bd,time);
   for(const rb of rocketBoosters)drawRocketBooster(rb,time);
+  // Draw ammo pickups
+  for(const a of ammoPickups){if(!a.collected){const sx=a.x-cameraX;if(sx>-30&&sx<W+30){const bob=Math.sin(time*0.005+a.anim)*4;ctx.save();ctx.translate(sx,a.y+bob);ctx.shadowColor='#FF2EC4';ctx.shadowBlur=10;ctx.fillStyle='rgba(255,46,196,0.3)';ctx.beginPath();ctx.arc(0,0,12,0,Math.PI*2);ctx.fill();ctx.fillStyle='#FF2EC4';ctx.font='bold 14px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('⊕',0,0);ctx.shadowBlur=0;ctx.restore();}}}
+  // Draw projectiles
+  for(const p of projectiles){if(!p.dead){const sx=p.x-cameraX;if(sx<W+20){ctx.save();ctx.translate(sx,p.y);ctx.shadowColor='#FF2EC4';ctx.shadowBlur=12;const lg=ctx.createLinearGradient(-18,0,18,0);lg.addColorStop(0,'rgba(255,46,196,0.1)');lg.addColorStop(0.3,'#FF2EC4');lg.addColorStop(0.7,'#FF6BD6');lg.addColorStop(1,'rgba(255,46,196,0.1)');ctx.fillStyle=lg;ctx.fillRect(-18,-2.5,36,5);ctx.fillStyle='rgba(255,255,255,0.8)';ctx.fillRect(-10,-1,20,2);ctx.shadowBlur=0;ctx.restore();}}}
+  // Draw enemies
+  for(const e of enemies){if(!e.dead){const ex=e.x-cameraX;if(ex>-60&&ex<W+60){ctx.save();ctx.translate(ex,e.y);
+    const ew=e.type.w,eh=e.type.h;
+    ctx.shadowColor=e.type.color;ctx.shadowBlur=15;
+    // Enemy ship body
+    ctx.fillStyle=e.type.color;ctx.beginPath();ctx.moveTo(ew/2,0);ctx.lineTo(-ew/2,-eh/2);ctx.lineTo(-ew/3,0);ctx.lineTo(-ew/2,eh/2);ctx.closePath();ctx.fill();
+    // Cockpit
+    ctx.fillStyle='rgba(255,255,255,0.3)';ctx.beginPath();ctx.arc(ew*0.15,0,eh*0.25,0,Math.PI*2);ctx.fill();
+    // Engine glow
+    ctx.fillStyle=e.type.color;ctx.globalAlpha=0.5+Math.sin(time*0.02+e.phase)*0.3;
+    ctx.beginPath();ctx.moveTo(-ew/2,0);ctx.lineTo(-ew/2-12,-eh*0.2);ctx.lineTo(-ew/2-12,eh*0.2);ctx.closePath();ctx.fill();
+    ctx.globalAlpha=1;
+    // HP bar for multi-hit enemies
+    if(e.type.hp>1){const bw=ew*0.8,bh=3,bx=-bw/2,by=-eh/2-8;
+      ctx.fillStyle='rgba(0,0,0,0.5)';ctx.fillRect(bx,by,bw,bh);
+      ctx.fillStyle=e.hp>1?'#22c55e':'#ef4444';ctx.fillRect(bx,by,bw*(e.hp/e.type.hp),bh);}
+    ctx.shadowBlur=0;ctx.restore();}}}
   drawPersistentSmoke();
   if(state===STATE.PLAYING||state===STATE.DEAD)drawShip(time);
   drawParticles();drawFloatingTexts();ctx.restore();
   if(screenFlash>0){ctx.globalAlpha=screenFlash*0.35;ctx.fillStyle=screenFlashColor;ctx.fillRect(0,0,W,H);ctx.globalAlpha=1;}
   drawSparkles();
-  if(state===STATE.PLAYING)drawHUD();
+  if(state===STATE.PLAYING){drawHUD();drawShootButton();}
   if(state===STATE.MENU)drawMenuScreen();
   if(state===STATE.DEAD)drawGameOverScreen();
 }
@@ -1555,6 +1730,10 @@ canvas.addEventListener('touchstart',(e)=>{
   const canvasX=tx*(W/(isP?rect.height:rect.width));
   const canvasY=ty*(H/(isP?rect.width:rect.height));
 
+  // Check if touching SHOOT MORE GUNS pill button (bottom-right, ~156x68 hit zone)
+  if(canvasX>W-172&&canvasY>H-72){
+    shootButtonPressed=true;return;
+  }
   // Check if touching A button area
   if((rocketBoostReady||rocketBoostActive)&&canvasX>W-120&&canvasY>H-110){
     aButtonPressed=true;return;
@@ -1573,7 +1752,7 @@ canvas.addEventListener('touchmove',(e)=>{
   ship.targetY=clamp(dragShipStartY+(currentY-dragStartY)*scale,25,H-25);
 },{passive:false});
 
-canvas.addEventListener('touchend',(e)=>{e.preventDefault();isDragging=false;aButtonPressed=false;},{passive:false});
+canvas.addEventListener('touchend',(e)=>{e.preventDefault();isDragging=false;aButtonPressed=false;shootButtonPressed=false;},{passive:false});
 
 canvas.addEventListener('mousedown',(e)=>{
   if(state!==STATE.PLAYING){handleTap();return;}
@@ -1587,8 +1766,9 @@ document.addEventListener('keydown',(e)=>{
   keysDown[e.code]=true;
   if(['ArrowUp','ArrowDown','KeyW','KeyS'].includes(e.code)){e.preventDefault();useMouseFollow=false;}
   if(e.code==='KeyA'&&(rocketBoostReady||rocketBoostActive)){aButtonPressed=true;}
+  if(e.code==='KeyF'||e.code==='KeyX'){shootButtonPressed=true;}
 });
-document.addEventListener('keyup',(e)=>{keysDown[e.code]=false;if(e.code==='KeyA')aButtonPressed=false;});
+document.addEventListener('keyup',(e)=>{keysDown[e.code]=false;if(e.code==='KeyA')aButtonPressed=false;if(e.code==='KeyF'||e.code==='KeyX')shootButtonPressed=false;});
 
 function processKeyboardInput(dt){
   if(state!==STATE.PLAYING||useMouseFollow)return;let dir=0;
