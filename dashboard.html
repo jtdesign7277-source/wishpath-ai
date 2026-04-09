@@ -3116,16 +3116,19 @@
         display: flex !important;
         position: fixed;
         left: 0; right: 0; bottom: 0;
-        height: 60px;
-        padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+        height: 72px;
+        padding: 8px 10px calc(20px + env(safe-area-inset-bottom));
         background: #252525;
         border-top: 1px solid rgba(104,107,130,0.24);
         z-index: 10010;
         align-items: center;
         justify-content: space-around;
         gap: 8px;
+        transition: transform 0.3s ease;
+        transform: translateY(0);
       }
       .wp-bottom-tabs::before { content: none !important; display: none !important; }
+      .wp-bottom-tabs.nav-hidden { transform: translateY(100%); }
       .wp-bottom-tabs .mobile-nav-item {
         flex: 1;
         min-width: 0;
@@ -3162,8 +3165,8 @@
       }
 
       /* Prevent content hidden behind tabs */
-      .main-content { padding-bottom: calc(12px + 60px + env(safe-area-inset-bottom)) !important; }
-      .you-page { padding-bottom: calc(24px + 60px + env(safe-area-inset-bottom)) !important; }
+      .main-content { padding-bottom: calc(12px + 72px + env(safe-area-inset-bottom)) !important; }
+      .you-page { padding-bottom: calc(24px + 72px + env(safe-area-inset-bottom)) !important; }
     }
 
     /* ── Desktop containment + layout fixes (do not affect mobile) ── */
@@ -4817,14 +4820,15 @@
           var scrollY = window.pageYOffset || document.documentElement.scrollTop || 0;
           var navBar = document.getElementById('mobileNavBar');
           if (navBar && window.innerWidth <= 768) {
-            var activeView = document.body.getAttribute('data-active-view');
-            if (activeView === 'fm' || activeView === 'coach') {
-              // Auto-hide: scrolling down past 60px hides, scrolling up shows
-              if (scrollY > _navLastScrollY && scrollY > 60) {
-                navBar.classList.add('nav-hidden');
-              } else if (scrollY < _navLastScrollY) {
-                navBar.classList.remove('nav-hidden');
-              }
+            // Requested behavior:
+            // - scrolling DOWN (scrollY increases) => SHOW nav
+            // - scrolling UP (scrollY decreases)   => HIDE nav
+            if (scrollY <= 0) {
+              navBar.classList.remove('nav-hidden');
+            } else if (scrollY > _navLastScrollY) {
+              navBar.classList.remove('nav-hidden');
+            } else if (scrollY < _navLastScrollY) {
+              navBar.classList.add('nav-hidden');
             }
           }
           _navLastScrollY = scrollY;
