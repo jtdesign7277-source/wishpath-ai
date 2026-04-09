@@ -2069,7 +2069,7 @@
     .fm-sub-tab.active { color: var(--accent); border-bottom-color: var(--accent); background: linear-gradient(135deg, rgba(120,80,220,0.08) 0%, rgba(255,255,255,0.02) 100%); box-shadow: 0 0 12px rgba(120,80,220,0.08); }
     .fm-sub-content { display: none; }
     .fm-sub-content.active { display: block; }
-    /* FM Markets: make ticker tape + main chart edge-to-edge and seamless */
+    /* FM Markets: full-bleed ticker + chart (no card chrome), seamless stack */
     #fmMarketsContent #fmTickerTapeWrap,
     #fmMarketsContent #fmMainChartWrap {
       margin: 0 !important;
@@ -2078,19 +2078,48 @@
       border-radius: 0 !important;
       box-shadow: none !important;
       background: transparent !important;
-      width: calc(100% + 24px);
-      margin-left: -12px !important;
-      margin-right: -12px !important;
+      width: 100vw;
+      max-width: 100vw;
+      margin-left: calc(50% - 50vw) !important;
+      margin-right: calc(50% - 50vw) !important;
       overflow: hidden;
     }
-    #fmMarketsContent #fmTickerTapeWrap { background: #191919 !important; }
-    #fmMarketsContent #fmMainTVChart { background: #191919 !important; }
     #fmMarketsContent #fmTickerTapeWrap .tradingview-widget-container,
+    #fmMarketsContent #fmTickerTapeWrap .tradingview-widget-container__widget,
     #fmMarketsContent #fmTickerTapeWrap iframe {
+      margin: 0 !important;
+      padding: 0 !important;
       background: transparent !important;
       border: 0 !important;
       border-radius: 0 !important;
       box-shadow: none !important;
+    }
+    #fmMarketsContent #fmMainTVChart {
+      background: #191919 !important;
+      height: 380px;
+      margin: 0 !important;
+      padding: 0 !important;
+      border: none !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+    }
+    #fmMarketsContent #fmMainTVChart .tradingview-widget-container,
+    #fmMarketsContent #fmMainTVChart .fm-main-tv-inner,
+    #fmMarketsContent #fmMainTVChart .tradingview-widget-container__widget,
+    #fmMarketsContent #fmMainTVChart iframe {
+      margin: 0 !important;
+      padding: 0 !important;
+      border: none !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      background: transparent !important;
+    }
+    #fmMarketsContent #fmTimeRangeBar {
+      margin-top: 0 !important;
+      margin-bottom: 12px !important;
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+      padding: 0 !important;
     }
     .fm-widget-container { background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; min-height: 500px; box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.05); transition: all 0.3s ease; }
     .fm-widget-container iframe { width: 100%; border: none; }
@@ -3330,10 +3359,11 @@
       #fmView .fm-sub-tabs { max-width: 100%; overflow-x: auto; overflow-y: hidden; }
       #fmView .fm-sub-tab { flex: 0 0 auto; }
 
-      /* FM Markets: match desktop padding (32px) for edge-to-edge embeds */
+      /* FM Markets: bleed to main column edges (sidebar stays clear of 100vw) */
       #fmMarketsContent #fmTickerTapeWrap,
       #fmMarketsContent #fmMainChartWrap {
         width: calc(100% + 64px);
+        max-width: none;
         margin-left: -32px !important;
         margin-right: -32px !important;
       }
@@ -3765,40 +3795,38 @@
 
         <!-- FM: Markets -->
         <div class="fm-sub-content active" id="fmMarketsContent">
-          <!-- TradingView Chart — always visible at top -->
-          <!-- TradingView Ticker Tape — edge-to-edge above main chart -->
+          <!-- TradingView Ticker Tape (official embed) — full-bleed above chart -->
           <div id="fmTickerTapeWrap">
-            <div class="tradingview-widget-container">
+            <div class="tradingview-widget-container" style="width:100%;margin:0;padding:0;">
               <div class="tradingview-widget-container__widget"></div>
               <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
-              {
-                "symbols": [
-                  { "proName": "NASDAQ:AAPL", "title": "AAPL" },
-                  { "proName": "NASDAQ:MSFT", "title": "MSFT" },
-                  { "proName": "NASDAQ:GOOGL", "title": "GOOGL" },
-                  { "proName": "NASDAQ:AMZN", "title": "AMZN" },
-                  { "proName": "NASDAQ:NVDA", "title": "NVDA" },
-                  { "proName": "NASDAQ:META", "title": "META" },
-                  { "proName": "NASDAQ:TSLA", "title": "TSLA" },
-                  { "proName": "BITSTAMP:BTCUSD", "title": "BTCUSD" },
-                  { "proName": "BITSTAMP:ETHUSD", "title": "ETHUSD" },
-                  { "proName": "COINBASE:SOLUSD", "title": "SOLUSD" },
-                  { "proName": "SP:SPX", "title": "SPX" }
-                ],
-                "showSymbolLogo": true,
-                "isTransparent": true,
-                "displayMode": "adaptive",
-                "colorTheme": "dark",
-                "locale": "en"
-              }
+{
+  "symbols": [
+    {"proName": "FOREXCOM:SPXUSD", "title": "S&amp;P 500"},
+    {"proName": "NASDAQ:AAPL", "title": "Apple"},
+    {"proName": "NASDAQ:MSFT", "title": "Microsoft"},
+    {"proName": "NASDAQ:GOOGL", "title": "Google"},
+    {"proName": "NASDAQ:AMZN", "title": "Amazon"},
+    {"proName": "NASDAQ:NVDA", "title": "NVIDIA"},
+    {"proName": "NASDAQ:META", "title": "Meta"},
+    {"proName": "NASDAQ:TSLA", "title": "Tesla"},
+    {"proName": "BITSTAMP:BTCUSD", "title": "Bitcoin"},
+    {"proName": "BITSTAMP:ETHUSD", "title": "Ethereum"}
+  ],
+  "showSymbolLogo": true,
+  "isTransparent": true,
+  "displayMode": "adaptive",
+  "colorTheme": "dark",
+  "locale": "en"
+}
               </script>
             </div>
           </div>
-          <div id="fmMainChartWrap" style="margin:8px 0 16px;border-radius:12px;overflow:hidden;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.06);">
-            <div id="fmMainTVChart" style="height:380px;"></div>
+          <div id="fmMainChartWrap">
+            <div id="fmMainTVChart"></div>
           </div>
           <!-- Time range buttons -->
-          <div id="fmTimeRangeBar" style="display:flex;justify-content:center;gap:6px;margin-bottom:16px;">
+          <div id="fmTimeRangeBar" style="display:flex;justify-content:center;gap:6px;">
             <button class="fm-time-btn" onclick="setFMChartRange('1D',this)" style="padding:5px 14px;border-radius:14px;border:1px solid rgba(255,255,255,0.1);background:rgba(113,50,245,0.4);color:#fff;font-size:11px;font-weight:600;cursor:pointer;">1D</button>
             <button class="fm-time-btn" onclick="setFMChartRange('1M',this)" style="padding:5px 14px;border-radius:14px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:rgba(255,255,255,0.5);font-size:11px;font-weight:600;cursor:pointer;">1M</button>
             <button class="fm-time-btn" onclick="setFMChartRange('3M',this)" style="padding:5px 14px;border-radius:14px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:rgba(255,255,255,0.5);font-size:11px;font-weight:600;cursor:pointer;">3M</button>
@@ -8982,8 +9010,14 @@
         "support_host": "https://www.tradingview.com"
       });
       var wrapper = document.createElement('div');
-      wrapper.className = 'tradingview-widget-container';
+      wrapper.className = 'tradingview-widget-container fm-main-tv-inner';
       wrapper.style.height = '100%';
+      wrapper.style.margin = '0';
+      wrapper.style.padding = '0';
+      wrapper.style.border = 'none';
+      wrapper.style.borderRadius = '0';
+      wrapper.style.boxShadow = 'none';
+      wrapper.style.background = 'transparent';
       var widgetDiv = document.createElement('div');
       widgetDiv.className = 'tradingview-widget-container__widget';
       widgetDiv.style.height = '100%';
