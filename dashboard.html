@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-08-v128';
+    var APP_VERSION = '2026-04-08-v129';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -3297,7 +3297,7 @@
           </button>
           <div class="home-tabs">
             <button class="home-tab active" onclick="switchHomeTab('roadmap', this)">Roadmap</button>
-            <button class="home-tab" onclick="showView('fm')">Markets</button>
+            <button class="home-tab" onclick="switchHomeTab('markets', this)">Markets</button>
             <button class="home-tab" onclick="switchHomeTab('portfolio', this)">Portfolio</button>
           </div>
           <button class="home-header-icon" onclick="focusHomeSearch()" aria-label="Search">
@@ -3329,6 +3329,12 @@
 
         <!-- Markets Tab -->
         <div class="home-tab-content" id="homeMarketsTab">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+            <div style="display:flex;background:rgba(255,255,255,0.06);border-radius:20px;padding:3px;gap:2px;">
+              <button id="mktToggleSummary" onclick="switchMarketsMode('summary')" style="padding:6px 16px;border-radius:17px;border:none;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;background:rgba(113,50,245,0.85);color:#fff;">Summary</button>
+              <button id="mktToggleFull" onclick="switchMarketsMode('full')" style="padding:6px 16px;border-radius:17px;border:none;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;background:transparent;color:rgba(255,255,255,0.5);">Full Markets</button>
+            </div>
+          </div>
           <div class="markets-section-label">
             <span>&#x1F7E2; Magnificent 7 Tracker</span>
             <button class="markets-refresh-btn" id="marketsRefreshBtn" onclick="refreshMarkets()"><span class="refresh-icon" style="display:inline-block;">&#x21BB;</span> Refresh</button>
@@ -8255,6 +8261,7 @@
     // ════════════════════════════════════════════════════
 
     function switchHomeTab(tab, btn) {
+      if (tab === 'markets' && localStorage.getItem('wp_markets_mode') === 'full') { showView('fm'); return; }
       document.querySelectorAll('#homeView .home-tab').forEach(function(t) { t.classList.remove('active'); });
       document.querySelectorAll('#homeView .home-tab-content').forEach(function(c) { c.classList.remove('active'); });
       if (btn) btn.classList.add('active');
@@ -10067,11 +10074,17 @@
       if (!title) return;
       var tabsHtml = '<div class="home-tabs" style="margin:0 0 16px;">' +
         '<button class="home-tab active" onclick="switchMobileHomeTab(\'roadmap\', this)">Roadmap</button>' +
-        '<button class="home-tab" onclick="showView(\'fm\')">Markets</button>' +
+        '<button class="home-tab" onclick="switchMobileHomeTab(\'markets\', this)">Markets</button>' +
         '<button class="home-tab" onclick="switchMobileHomeTab(\'portfolio\', this)">Portfolio</button>' +
       '</div>';
 
       var marketsContent = '<div id="mobileMarketsTab" style="display:none;">' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">' +
+          '<div style="display:flex;background:rgba(255,255,255,0.06);border-radius:20px;padding:3px;gap:2px;">' +
+            '<button id="mktToggleSummaryMobile" onclick="switchMarketsMode(\'summary\')" style="padding:6px 16px;border-radius:17px;border:none;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;background:rgba(113,50,245,0.85);color:#fff;">Summary</button>' +
+            '<button id="mktToggleFullMobile" onclick="switchMarketsMode(\'full\')" style="padding:6px 16px;border-radius:17px;border:none;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;background:transparent;color:rgba(255,255,255,0.5);">Full Markets</button>' +
+          '</div>' +
+        '</div>' +
         '<div class="markets-section-label"><span>&#x1F7E2; Magnificent 7</span><button class="markets-refresh-btn" onclick="refreshMarkets();renderMobileMarkets()"><span class="refresh-icon" style="display:inline-block;">&#x21BB;</span> Refresh</button></div>' +
         '<div class="stock-grid" id="mobileStockGrid" style="margin-bottom:20px;"></div>' +
         '<div class="markets-section-label"><span>&#x1FA99; Crypto</span></div>' +
@@ -10972,7 +10985,23 @@
       renderCSGallery();
     }
 
+    function switchMarketsMode(mode) {
+      localStorage.setItem('wp_markets_mode', mode);
+      // Update desktop toggles
+      var ds = document.getElementById('mktToggleSummary');
+      var df = document.getElementById('mktToggleFull');
+      if (ds) { ds.style.background = mode === 'summary' ? 'rgba(113,50,245,0.85)' : 'transparent'; ds.style.color = mode === 'summary' ? '#fff' : 'rgba(255,255,255,0.5)'; }
+      if (df) { df.style.background = mode === 'full' ? 'rgba(113,50,245,0.85)' : 'transparent'; df.style.color = mode === 'full' ? '#fff' : 'rgba(255,255,255,0.5)'; }
+      // Update mobile toggles
+      var ms = document.getElementById('mktToggleSummaryMobile');
+      var mf = document.getElementById('mktToggleFullMobile');
+      if (ms) { ms.style.background = mode === 'summary' ? 'rgba(113,50,245,0.85)' : 'transparent'; ms.style.color = mode === 'summary' ? '#fff' : 'rgba(255,255,255,0.5)'; }
+      if (mf) { mf.style.background = mode === 'full' ? 'rgba(113,50,245,0.85)' : 'transparent'; mf.style.color = mode === 'full' ? '#fff' : 'rgba(255,255,255,0.5)'; }
+      if (mode === 'full') showView('fm');
+    }
+
     function switchMobileHomeTab(tab, btn) {
+      if (tab === 'markets' && localStorage.getItem('wp_markets_mode') === 'full') { showView('fm'); return; }
       // Toggle tabs
       var tabs = btn.parentNode.querySelectorAll('.home-tab');
       tabs.forEach(function(t) { t.classList.remove('active'); });
@@ -11239,7 +11268,8 @@
       'ADBE': 'https://companiesmarketcap.com/img/company-logos/64/ADBE.webp',
       'BTC': 'https://companiesmarketcap.com/img/company-logos/64/BTC.webp',
       'ETH': 'https://companiesmarketcap.com/img/company-logos/64/ETH.webp',
-      'SOL': 'https://companiesmarketcap.com/img/company-logos/64/SOL.webp'
+      'SOL': 'https://companiesmarketcap.com/img/company-logos/64/SOL.webp',
+      'NKE': 'https://companiesmarketcap.com/img/company-logos/64/NKE.webp'
     };
 
     function getTickerLogoUrl(ticker) {
@@ -11250,7 +11280,9 @@
 
     function createLogoFallbackHtml(ticker, size) {
       size = size || 36;
-      return '<div class="ticker-logo-fallback" style="width:' + size + 'px;height:' + size + 'px;background:rgba(255,255,255,0.06);border-radius:50%;"></div>';
+      var label = (ticker || '').toUpperCase().slice(0, 3);
+      var fs = Math.max(8, Math.round(size * 0.33));
+      return '<div class="ticker-logo-fallback" style="width:' + size + 'px;height:' + size + 'px;background:rgba(255,255,255,0.1);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:' + fs + 'px;font-weight:700;color:#ffffff;font-family:system-ui,sans-serif;flex-shrink:0;letter-spacing:-0.5px;">' + label + '</div>';
     }
 
     // Sync HTML builder — instant lookup from hardcoded map
@@ -11258,7 +11290,7 @@
       size = size || 32;
       var clean = (ticker || '').toUpperCase().trim().replace('/USD','');
       var url = getTickerLogoUrl(clean);
-      var invertTickers = ['AAPL', 'AMZN', 'ETH'];
+      var invertTickers = ['AAPL', 'AMZN', 'ETH', 'HIMS', 'FUBO', 'NKE'];
       var invertStyle = invertTickers.indexOf(clean) !== -1 ? 'filter:brightness(0) invert(1);' : '';
       if (url) {
         return '<img class="ticker-logo" src="' + url + '" alt="' + clean + '" ' +
