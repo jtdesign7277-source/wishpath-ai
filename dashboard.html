@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-09-v132';
+    var APP_VERSION = '2026-04-09-v133';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -3052,6 +3052,29 @@
     .streak-container.streak-zero .streak-flame { animation: none; }
     @media (max-width: 768px) {
       .main-header .streak-container { display: none; }
+    }
+
+    /* ── Desktop containment + layout fixes (do not affect mobile) ── */
+    @media (min-width: 768px) {
+      /* Fixed sidebar left column + main content beside it */
+      body { overflow-x: hidden !important; }
+      .main { min-width: 0; margin-left: 240px; width: calc(100vw - 240px); max-width: calc(100vw - 240px); }
+      .sidebar.collapsed + .main { margin-left: 0; width: 100vw; max-width: 100vw; }
+      .main-header, .main-content, .view { max-width: 100%; }
+      .main-content { position: relative; overflow-x: hidden; }
+
+      /* Financial Markets sub-tabs stay inside content and scroll horizontally */
+      #fmView { max-width: 100%; }
+      #fmView .fm-sub-tabs { max-width: 100%; overflow-x: auto; overflow-y: hidden; }
+      #fmView .fm-sub-tab { flex: 0 0 auto; }
+
+      /* Prevent absolute dropdowns from escaping to page corner */
+      .news-customize-wrap { position: relative; }
+
+      /* Desktop: hide mobile-only floating overlays/panels */
+      .mobile-templates-overlay,
+      .todo-mobile-overlay,
+      .mobile-fm-menu { display: none !important; }
     }
   </style>
   <!-- Meta Pixel Code -->
@@ -11333,69 +11356,221 @@
     var STOCK_NAMES = { AAPL:'Apple', MSFT:'Microsoft', GOOGL:'Alphabet', GOOG:'Alphabet', AMZN:'Amazon', NVDA:'NVIDIA', META:'Meta', TSLA:'Tesla', NFLX:'Netflix', AMD:'Advanced Micro Devices', INTC:'Intel', CRM:'Salesforce', ORCL:'Oracle', ADBE:'Adobe', PYPL:'PayPal', SQ:'Block', SHOP:'Shopify', COIN:'Coinbase', PLTR:'Palantir Technologies Inc', UBER:'Uber', ABNB:'Airbnb', DIS:'Disney', BA:'Boeing', JPM:'JPMorgan', BAC:'Bank of America', GS:'Goldman Sachs', V:'Visa', MA:'Mastercard', WMT:'Walmart', TGT:'Target', COST:'Costco', HD:'Home Depot', NKE:'Nike Cl B', SBUX:'Starbucks', MCD:"McDonald's", KO:'Coca-Cola', PEP:'PepsiCo', JNJ:'J&J', PFE:'Pfizer', UNH:'UnitedHealth', XOM:'Exxon', CVX:'Chevron', FUBO:'fuboTV', TRUMP:'Trump Media', DJT:'Trump Media', ELF:'Elf Beauty Inc', NIO:'NIO Inc', ENPH:'Enphase Energy', HIMS:'Hims & Hers Health', CELH:'Celsius Holdings', BABA:'Alibaba', RIVN:'Rivian', SOFI:'SoFi Technologies', SNAP:'Snap', RBLX:'Roblox', ROKU:'Roku', DKNG:'DraftKings', CRWD:'CrowdStrike', PANW:'Palo Alto Networks', ZS:'Zscaler', NET:'Cloudflare', SNOW:'Snowflake', MSTR:'MicroStrategy', RIOT:'Riot Platforms', MARA:'Marathon Digital', SPOT:'Spotify', HOOD:'Robinhood', LCID:'Lucid Motors', F:'Ford', GM:'General Motors', T:'AT&T', VZ:'Verizon', WFC:'Wells Fargo', C:'Citigroup', MS:'Morgan Stanley', SCHW:'Charles Schwab', 'BTC/USD':'Bitcoin', 'ETH/USD':'Ethereum', 'SOL/USD':'Solana', DOGE:'Dogecoin', 'DOGE/USD':'Dogecoin' };
 
     // ════════════════════════════════
-    // ── TICKER LOGO SYSTEM (hardcoded verified URLs)
+    // ── TICKER LOGO SYSTEM (v133: TradingView CDN)
     // ════════════════════════════════
+    // Uses TradingView's public logo CDN: s3-symbol-logo.tradingview.com
+    // URLs are keyed by a "logoid" (slug like "apple", "nike", "invesco-qqq-trust")
+    // We seed the cache with known-good logoids for common tickers, then resolve
+    // unknowns via TradingView's public symbol-search endpoint on first sight.
+    // Fallback chain: TradingView → Financial Modeling Prep → initials circle.
 
-    // v122: Clear all stale logo caches from previous broken systems
+    // v133: Clear stale caches from previous broken systems
     localStorage.removeItem('wp_logo_cache');
 
-    // Hardcoded map of verified logo URLs — companiesmarketcap.com for stocks, coingecko for crypto
-    var TICKER_LOGO_MAP = {
-      'AAPL': 'https://companiesmarketcap.com/img/company-logos/64/AAPL.webp',
-      'MSFT': 'https://companiesmarketcap.com/img/company-logos/64/MSFT.webp',
-      'GOOGL': 'https://companiesmarketcap.com/img/company-logos/64/GOOG.webp',
-      'GOOG': 'https://companiesmarketcap.com/img/company-logos/64/GOOG.webp',
-      'AMZN': 'https://companiesmarketcap.com/img/company-logos/64/AMZN.webp',
-      'NVDA': 'https://companiesmarketcap.com/img/company-logos/64/NVDA.webp',
-      'META': 'https://companiesmarketcap.com/img/company-logos/64/META.webp',
-      'TSLA': 'https://companiesmarketcap.com/img/company-logos/64/TSLA.webp',
-      'NFLX': 'https://companiesmarketcap.com/img/company-logos/64/NFLX.webp',
-      'AMD': 'https://companiesmarketcap.com/img/company-logos/64/AMD.webp',
-      'INTC': 'https://companiesmarketcap.com/img/company-logos/64/INTC.webp',
-      'PLTR': 'https://companiesmarketcap.com/img/company-logos/64/PLTR.webp',
-      'COIN': 'https://companiesmarketcap.com/img/company-logos/64/COIN.webp',
-      'UBER': 'https://companiesmarketcap.com/img/company-logos/64/UBER.webp',
-      'SNAP': 'https://companiesmarketcap.com/img/company-logos/64/SNAP.webp',
-      'SHOP': 'https://companiesmarketcap.com/img/company-logos/64/SHOP.webp',
-      'SQ': 'https://companiesmarketcap.com/img/company-logos/64/SQ.webp',
-      'PYPL': 'https://companiesmarketcap.com/img/company-logos/64/PYPL.webp',
-      'SOFI': 'https://companiesmarketcap.com/img/company-logos/64/SOFI.webp',
-      'HIMS': 'https://companiesmarketcap.com/img/company-logos/64/HIMS.webp',
-      'FUBO': 'https://companiesmarketcap.com/img/company-logos/64/FUBO.webp',
-      'DIS': 'https://companiesmarketcap.com/img/company-logos/64/DIS.webp',
-      'CRM': 'https://companiesmarketcap.com/img/company-logos/64/CRM.webp',
-      'ORCL': 'https://companiesmarketcap.com/img/company-logos/64/ORCL.webp',
-      'AVGO': 'https://companiesmarketcap.com/img/company-logos/64/AVGO.webp',
-      'ADBE': 'https://companiesmarketcap.com/img/company-logos/64/ADBE.webp',
-      'BTC': 'https://companiesmarketcap.com/img/company-logos/64/BTC.webp',
-      'ETH': 'https://companiesmarketcap.com/img/company-logos/64/ETH.webp',
-      'SOL': 'https://companiesmarketcap.com/img/company-logos/64/SOL.webp'
+    // Seed cache — verified TradingView logoids for the biggest names
+    var TV_LOGOID_SEED = {
+      // Mag 7 + mega-cap tech
+      'AAPL': 'apple',
+      'MSFT': 'microsoft',
+      'GOOG': 'google',
+      'GOOGL': 'google',
+      'AMZN': 'amazon-com-inc',
+      'META': 'meta-platforms',
+      'TSLA': 'tesla',
+      'NVDA': 'nvidia',
+      'NFLX': 'netflix',
+      // Semis + enterprise
+      'AMD': 'amd',
+      'INTC': 'intel',
+      'AVGO': 'broadcom',
+      'CRM': 'salesforce',
+      'ORCL': 'oracle',
+      'ADBE': 'adobe',
+      'QCOM': 'qualcomm',
+      'TXN': 'texas-instruments',
+      'MU': 'micron-technology',
+      // Consumer / media
+      'DIS': 'walt-disney',
+      'NKE': 'nike',
+      'SBUX': 'starbucks',
+      'MCD': 'mcdonalds',
+      'KO': 'coca-cola-co',
+      'PEP': 'pepsico',
+      'WMT': 'walmart',
+      'TGT': 'target',
+      'COST': 'costco-wholesale',
+      'HD': 'home-depot',
+      'LOW': 'lowes-companies',
+      // Fintech / payments
+      'COIN': 'coinbase-global',
+      'PLTR': 'palantir-technologies',
+      'UBER': 'uber-technologies',
+      'LYFT': 'lyft',
+      'HIMS': 'hims-and-hers-health',
+      'FUBO': 'fubotv',
+      'SHOP': 'shopify',
+      'SQ': 'block',
+      'PYPL': 'paypal-holdings',
+      'SOFI': 'sofi-technologies',
+      'SNAP': 'snap-inc',
+      'ABNB': 'airbnb',
+      'PINS': 'pinterest',
+      'ROKU': 'roku',
+      'SPOT': 'spotify-technology',
+      // Finance
+      'JPM': 'jpmorgan-chase',
+      'BAC': 'bank-of-america',
+      'WFC': 'wells-fargo',
+      'GS': 'goldman-sachs-group',
+      'MS': 'morgan-stanley',
+      'V': 'visa',
+      'MA': 'mastercard',
+      'BRK.B': 'berkshire-hathaway',
+      // Healthcare / pharma
+      'UNH': 'unitedhealth-group',
+      'JNJ': 'johnson-and-johnson',
+      'PFE': 'pfizer',
+      'LLY': 'eli-lilly-and-co',
+      'MRNA': 'moderna',
+      'BNTX': 'biontech',
+      // Energy
+      'XOM': 'exxon-mobil',
+      'CVX': 'chevron',
+      // Popular ETFs
+      'QQQ': 'invesco-qqq-trust',
+      'SPY': 'spdr-sandp-500-etf-trust',
+      'IWM': 'ishares-russell-2000-etf',
+      'VOO': 'vanguard-sandp-500-etf',
+      'VTI': 'vanguard-total-stock-market-etf',
+      'DIA': 'spdr-dow-jones-industrial-average-etf-trust',
+      'ARKK': 'ark-innovation-etf',
+      'GLD': 'spdr-gold-shares',
+      'SLV': 'ishares-silver-trust',
+      'TLT': 'ishares-20-plus-year-treasury-bond-etf',
+      'XLK': 'technology-select-sector-spdr',
+      'XLF': 'financial-select-sector-spdr',
+      'XLE': 'energy-select-sector-spdr',
+      // Crypto — TradingView uses crypto/XTVC{SYM} path
+      'BTC': 'crypto/XTVCBTC',
+      'ETH': 'crypto/XTVCETH',
+      'SOL': 'crypto/XTVCSOL',
+      'XRP': 'crypto/XTVCXRP',
+      'DOGE': 'crypto/XTVCDOGE',
+      'ADA': 'crypto/XTVCADA',
+      'AVAX': 'crypto/XTVCAVAX',
+      'DOT': 'crypto/XTVCDOT',
+      'LINK': 'crypto/XTVCLINK',
+      'MATIC': 'crypto/XTVCMATIC',
+      'SHIB': 'crypto/XTVCSHIB',
+      'LTC': 'crypto/XTVCLTC',
+      'UNI': 'crypto/XTVCUNI',
+      'ATOM': 'crypto/XTVCATOM',
+      'NEAR': 'crypto/XTVCNEAR',
+      'APT': 'crypto/XTVCAPT',
+      'ARB': 'crypto/XTVCARB',
+      'OP': 'crypto/XTVCOP',
+      'BCH': 'crypto/XTVCBCH',
+      'TRX': 'crypto/XTVCTRX'
     };
+
+    // Runtime cache — seeds + anything resolved later via symbol-search
+    var TV_LOGOID_CACHE = {};
+    try {
+      var _persisted = JSON.parse(localStorage.getItem('wp_tv_logoids') || '{}');
+      TV_LOGOID_CACHE = Object.assign({}, _persisted, TV_LOGOID_SEED);
+    } catch (e) { TV_LOGOID_CACHE = Object.assign({}, TV_LOGOID_SEED); }
+
+    function saveTvLogoidCache() {
+      try { localStorage.setItem('wp_tv_logoids', JSON.stringify(TV_LOGOID_CACHE)); } catch (e) {}
+    }
+
+    function buildTvLogoUrl(logoid) {
+      if (!logoid) return null;
+      return 'https://s3-symbol-logo.tradingview.com/' + logoid + '--big.svg';
+    }
+
+    function buildFmpLogoUrl(ticker) {
+      return 'https://financialmodelingprep.com/image-stock/' + (ticker || '').toUpperCase() + '.png';
+    }
 
     function getTickerLogoUrl(ticker) {
       if (!ticker) return null;
-      ticker = ticker.toUpperCase().trim().replace('/USD','');
-      return TICKER_LOGO_MAP[ticker] || null;
+      var clean = ticker.toUpperCase().trim().replace('/USD','');
+      var lid = TV_LOGOID_CACHE[clean];
+      return lid ? buildTvLogoUrl(lid) : null;
     }
 
     function createLogoFallbackHtml(ticker, size) {
       size = size || 36;
-      return '<div class="ticker-logo-fallback" style="width:' + size + 'px;height:' + size + 'px;background:rgba(255,255,255,0.06);border-radius:50%;"></div>';
+      var clean = (ticker || '').toUpperCase().trim().replace('/USD','');
+      var initial = clean.charAt(0) || '?';
+      var hue = 0;
+      for (var i = 0; i < clean.length; i++) hue = (hue + clean.charCodeAt(i) * 37) % 360;
+      return '<div class="ticker-logo-fallback" style="width:' + size + 'px;height:' + size + 'px;background:hsl(' + hue + ',35%,22%);color:hsl(' + hue + ',70%,78%);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:' + Math.round(size * 0.42) + 'px;border:1px solid hsla(' + hue + ',60%,50%,0.3);">' + initial + '</div>';
     }
 
-    // Sync HTML builder — instant lookup from hardcoded map
+    // Async: resolve an unknown ticker to its TradingView logoid via the
+    // public symbol-search endpoint (same endpoint the TradingView widget uses).
+    var _tvLookupInFlight = {};
+    function resolveTvLogoid(ticker) {
+      var clean = (ticker || '').toUpperCase().trim().replace('/USD','');
+      if (!clean) return Promise.resolve(null);
+      if (TV_LOGOID_CACHE[clean]) return Promise.resolve(TV_LOGOID_CACHE[clean]);
+      if (_tvLookupInFlight[clean]) return _tvLookupInFlight[clean];
+      var isCrypto = /^(BTC|ETH|SOL|XRP|DOGE|ADA|AVAX|DOT|LINK|MATIC|SHIB|LTC|UNI|ATOM|NEAR|APT|ARB|OP|FIL|ICP|TRX|BCH|PEPE|FLOKI|WIF|BONK)$/.test(clean);
+      var type = isCrypto ? 'bitcoin' : 'stock';
+      var url = 'https://symbol-search.tradingview.com/symbol_search/?text=' + encodeURIComponent(clean) + '&hl=1&exchange=&lang=en&search_type=undefined&domain=production&type=' + type;
+      _tvLookupInFlight[clean] = fetch(url)
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (data) {
+          if (!data || !data.length) return null;
+          // Prefer an exact symbol match, else take the first result
+          var match = data.find(function (x) { return (x.symbol || '').toUpperCase() === clean; }) || data[0];
+          if (match && match.logoid) {
+            TV_LOGOID_CACHE[clean] = match.logoid;
+            saveTvLogoidCache();
+            return match.logoid;
+          }
+          return null;
+        })
+        .catch(function () { return null; })
+        .then(function (lid) { delete _tvLookupInFlight[clean]; return lid; });
+      return _tvLookupInFlight[clean];
+    }
+
+    // Sync HTML builder — returns an <img> with the best known src, kicks off
+    // async TV resolution for unknowns, and chains TV → FMP → initials on error.
     function buildTickerLogoHtml(ticker, size) {
       size = size || 32;
       var clean = (ticker || '').toUpperCase().trim().replace('/USD','');
-      var url = getTickerLogoUrl(clean);
-      var invertTickers = ['AAPL', 'AMZN', 'ETH'];
-      var invertStyle = invertTickers.indexOf(clean) !== -1 ? 'filter:brightness(0) invert(1);' : '';
-      if (url) {
-        return '<img class="ticker-logo" src="' + url + '" alt="' + clean + '" ' +
-          'style="width:' + size + 'px;height:' + size + 'px;border-radius:50%;object-fit:cover;' + invertStyle + '" loading="lazy" ' +
-          'onerror="this.outerHTML=createLogoFallbackHtml(\'' + clean + '\',' + size + ')" />';
+      var lid = TV_LOGOID_CACHE[clean];
+      var primarySrc = lid ? buildTvLogoUrl(lid) : buildFmpLogoUrl(clean);
+      var fmpUrl = buildFmpLogoUrl(clean);
+      // onerror chain: if TV fails → try FMP; if FMP fails → initials circle
+      var onerrStr =
+        "if(this.dataset.step!=='fmp'){this.dataset.step='fmp';this.src='" + fmpUrl + "';}" +
+        "else{this.outerHTML=createLogoFallbackHtml('" + clean + "'," + size + ");}";
+      var html = '<img class="ticker-logo" data-ticker="' + clean + '" src="' + primarySrc + '" alt="' + clean + '" ' +
+        'style="width:' + size + 'px;height:' + size + 'px;border-radius:50%;object-fit:cover;background:#1a1a1a;" loading="lazy" ' +
+        "onerror=\"" + onerrStr + "\" />";
+      // Unknown ticker → kick off async TradingView lookup, then swap src once resolved
+      if (!lid) {
+        setTimeout(function () {
+          resolveTvLogoid(clean).then(function (resolvedLid) {
+            if (!resolvedLid) return;
+            var newSrc = buildTvLogoUrl(resolvedLid);
+            var imgs = document.querySelectorAll('img.ticker-logo[data-ticker="' + clean + '"]');
+            imgs.forEach(function (img) {
+              // Only upgrade if we haven't already degraded to FMP fallback
+              if (img.dataset.step !== 'fmp' && img.src !== newSrc) {
+                img.src = newSrc;
+                img.dataset.step = 'tv';
+              }
+            });
+          });
+        }, 0);
       }
-      return createLogoFallbackHtml(clean, size);
+      return html;
     }
 
     // Watchlist logo builder (uses larger 40px size to match existing style)
