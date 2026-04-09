@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-08-v128';
+    var APP_VERSION = '2026-04-09-v129';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -3297,7 +3297,7 @@
           </button>
           <div class="home-tabs">
             <button class="home-tab active" onclick="switchHomeTab('roadmap', this)">Roadmap</button>
-            <button class="home-tab" onclick="showView('fm')">Markets</button>
+            <button class="home-tab" onclick="switchHomeTab('markets', this)">Markets</button>
             <button class="home-tab" onclick="switchHomeTab('portfolio', this)">Portfolio</button>
           </div>
           <button class="home-header-icon" onclick="focusHomeSearch()" aria-label="Search">
@@ -3329,6 +3329,14 @@
 
         <!-- Markets Tab -->
         <div class="home-tab-content" id="homeMarketsTab">
+          <!-- Summary / Full Markets toggle -->
+          <div style="display:flex;justify-content:center;margin:10px 0 14px;">
+            <div id="marketsTogglePill" style="display:inline-flex;background:rgba(255,255,255,0.06);border-radius:20px;padding:3px;gap:2px;border:1px solid rgba(255,255,255,0.08);">
+              <button id="marketsToggleSummary" onclick="setMarketsMode('summary')" style="padding:6px 18px;border-radius:17px;border:none;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;background:rgba(113,50,245,0.5);color:#fff;">Summary</button>
+              <button id="marketsToggleFull" onclick="setMarketsMode('full')" style="padding:6px 18px;border-radius:17px;border:none;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;background:transparent;color:rgba(255,255,255,0.5);">Full Markets</button>
+            </div>
+          </div>
+          <div id="marketsSummaryContent">
           <div class="markets-section-label">
             <span>&#x1F7E2; Magnificent 7 Tracker</span>
             <button class="markets-refresh-btn" id="marketsRefreshBtn" onclick="refreshMarkets()"><span class="refresh-icon" style="display:inline-block;">&#x21BB;</span> Refresh</button>
@@ -3378,6 +3386,7 @@
               <button class="watchlist-create-btn" onclick="createNewWatchlist()">&#x1F4CB; Create Watchlist</button>
             </div>
           </div>
+          </div><!-- /marketsSummaryContent -->
 
         </div>
 
@@ -8269,6 +8278,26 @@
           label.textContent = (tab === 'portfolio') ? 'Ask about your portfolio' : 'Ask AI';
         }
       }
+    }
+
+    // Markets toggle: Summary vs Full Markets
+    function setMarketsMode(mode) {
+      var summaryBtn = document.getElementById('marketsToggleSummary');
+      var fullBtn = document.getElementById('marketsToggleFull');
+      var summaryContent = document.getElementById('marketsSummaryContent');
+      if (mode === 'full') {
+        // Navigate to full FM view
+        showView('fm');
+        // Reset toggle state for when they come back
+        if (summaryBtn) { summaryBtn.style.background = 'rgba(113,50,245,0.5)'; summaryBtn.style.color = '#fff'; }
+        if (fullBtn) { fullBtn.style.background = 'transparent'; fullBtn.style.color = 'rgba(255,255,255,0.5)'; }
+      } else {
+        // Show summary inline
+        if (summaryContent) summaryContent.style.display = '';
+        if (summaryBtn) { summaryBtn.style.background = 'rgba(113,50,245,0.5)'; summaryBtn.style.color = '#fff'; }
+        if (fullBtn) { fullBtn.style.background = 'transparent'; fullBtn.style.color = 'rgba(255,255,255,0.5)'; }
+      }
+      try { localStorage.setItem('wp_markets_mode', mode); } catch(e) {}
     }
 
     // Home wish form helpers (mirrors the existing newwish form)
