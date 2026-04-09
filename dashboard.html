@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-09-v129';
+    var APP_VERSION = '2026-04-09-v130';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -3471,6 +3471,14 @@
 
         <!-- FM: Markets -->
         <div class="fm-sub-content active" id="fmMarketsContent">
+          <!-- Summary / Full Markets toggle -->
+          <div style="display:flex;justify-content:center;margin:8px 0 12px;">
+            <div style="display:inline-flex;background:rgba(255,255,255,0.06);border-radius:20px;padding:3px;gap:2px;border:1px solid rgba(255,255,255,0.08);">
+              <button id="fmToggleSummary" onclick="setFMMarketsMode('summary')" style="padding:6px 18px;border-radius:17px;border:none;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;background:rgba(113,50,245,0.5);color:#fff;">Summary</button>
+              <button id="fmToggleFull" onclick="setFMMarketsMode('full')" style="padding:6px 18px;border-radius:17px;border:none;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;background:transparent;color:rgba(255,255,255,0.5);">Full Markets</button>
+            </div>
+          </div>
+          <div id="fmSummaryContent">
           <div class="markets-section-label"><span>&#x1F7E2; Magnificent 7 Tracker</span></div>
           <div class="markets-updated" id="fmMarketsUpdatedTime"></div>
           <div class="stock-grid" id="fmMag7Grid"></div>
@@ -3517,6 +3525,18 @@
           <button id="fmChatFab" onclick="handleMobileNavPill()">
             <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,0.2));"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           </button>
+          </div><!-- /fmSummaryContent -->
+
+          <!-- Full Markets mode — TradingView chart + extended view -->
+          <div id="fmFullContent" style="display:none;">
+            <div style="margin-bottom:12px;">
+              <div id="fmFullTVChart" style="height:400px;border-radius:12px;overflow:hidden;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.06);"></div>
+            </div>
+            <div class="markets-section-label"><span>&#x1F7E2; Magnificent 7 Tracker</span></div>
+            <div class="stock-grid" id="fmFullMag7Grid"></div>
+            <div class="markets-section-label" style="margin-top:20px;"><span>&#x1FA99; Crypto</span></div>
+            <div class="stock-grid" id="fmFullCryptoGrid"></div>
+          </div>
         </div>
 
         <!-- FM: Portfolio -->
@@ -8280,7 +8300,73 @@
       }
     }
 
-    // Markets toggle: Summary vs Full Markets
+    // FM Markets toggle: Summary vs Full Markets (on fmView)
+    var _fmFullChartLoaded = false;
+    function setFMMarketsMode(mode) {
+      var summaryBtn = document.getElementById('fmToggleSummary');
+      var fullBtn = document.getElementById('fmToggleFull');
+      var summaryDiv = document.getElementById('fmSummaryContent');
+      var fullDiv = document.getElementById('fmFullContent');
+      if (mode === 'full') {
+        if (summaryDiv) summaryDiv.style.display = 'none';
+        if (fullDiv) fullDiv.style.display = '';
+        if (summaryBtn) { summaryBtn.style.background = 'transparent'; summaryBtn.style.color = 'rgba(255,255,255,0.5)'; }
+        if (fullBtn) { fullBtn.style.background = 'rgba(113,50,245,0.5)'; fullBtn.style.color = '#fff'; }
+        // Load TradingView chart once
+        if (!_fmFullChartLoaded) {
+          _fmFullChartLoaded = true;
+          loadFMFullChart();
+        }
+        // Clone Mag7 + Crypto grids into full view
+        cloneFMGrids();
+      } else {
+        if (summaryDiv) summaryDiv.style.display = '';
+        if (fullDiv) fullDiv.style.display = 'none';
+        if (summaryBtn) { summaryBtn.style.background = 'rgba(113,50,245,0.5)'; summaryBtn.style.color = '#fff'; }
+        if (fullBtn) { fullBtn.style.background = 'transparent'; fullBtn.style.color = 'rgba(255,255,255,0.5)'; }
+      }
+      try { localStorage.setItem('wp_fm_markets_mode', mode); } catch(e) {}
+    }
+    function loadFMFullChart() {
+      var container = document.getElementById('fmFullTVChart');
+      if (!container) return;
+      container.innerHTML = '';
+      var script = document.createElement('script');
+      script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
+      script.async = true;
+      script.innerHTML = JSON.stringify({
+        "autosize": true,
+        "symbol": "NASDAQ:AAPL",
+        "interval": "D",
+        "timezone": "America/New_York",
+        "theme": "dark",
+        "style": "1",
+        "locale": "en",
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "gridColor": "rgba(255, 255, 255, 0.03)",
+        "allow_symbol_change": true,
+        "support_host": "https://www.tradingview.com"
+      });
+      var wrapper = document.createElement('div');
+      wrapper.className = 'tradingview-widget-container';
+      wrapper.style.height = '100%';
+      var widgetDiv = document.createElement('div');
+      widgetDiv.className = 'tradingview-widget-container__widget';
+      widgetDiv.style.height = '100%';
+      wrapper.appendChild(widgetDiv);
+      wrapper.appendChild(script);
+      container.appendChild(wrapper);
+    }
+    function cloneFMGrids() {
+      var src7 = document.getElementById('fmMag7Grid');
+      var dst7 = document.getElementById('fmFullMag7Grid');
+      if (src7 && dst7) dst7.innerHTML = src7.innerHTML;
+      var srcC = document.getElementById('fmCryptoGrid');
+      var dstC = document.getElementById('fmFullCryptoGrid');
+      if (srcC && dstC) dstC.innerHTML = srcC.innerHTML;
+    }
+
+    // Home Markets toggle: Summary vs Full Markets (on homeView)
     function setMarketsMode(mode) {
       var summaryBtn = document.getElementById('marketsToggleSummary');
       var fullBtn = document.getElementById('marketsToggleFull');
