@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-09-v138';
+    var APP_VERSION = '2026-04-09-v139';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -2084,32 +2084,44 @@
       margin-right: calc(50% - 50vw) !important;
       overflow: hidden;
     }
-    /* Instant visual while TradingView ticker script paints (no fake quotes) */
+    /* Instant marquee tape (cached-style snapshot; not live quotes) */
     #fmMarketsContent #fmTickerTapeWrap { position: relative; min-height: 44px; }
-    #fmMarketsContent .fm-ticker-skeleton {
-      position: absolute;
-      inset: 0;
-      z-index: 0;
-      pointer-events: none;
-      background: linear-gradient(105deg, #202333 0%, #2a2d42 40%, #202333 80%);
-      background-size: 200% 100%;
-      animation: fmTickerShimmer 1.1s ease-in-out infinite;
+    #fmMarketsContent #ticker-tape {
+      background: #202333;
+      padding: 10px 0;
+      overflow: hidden;
+      white-space: nowrap;
+      border-bottom: 1px solid rgba(104,107,130,0.24);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      font-size: 13px;
+      font-weight: 500;
+      color: #F0EFF5;
+      height: 44px;
+      display: flex;
+      align-items: center;
     }
-    @keyframes fmTickerShimmer {
-      0% { background-position: 100% 50%; }
-      100% { background-position: -100% 50%; }
+    #fmMarketsContent #ticker-inner {
+      display: inline-flex;
+      align-items: center;
+      animation: ticker-scroll 40s linear infinite;
+      will-change: transform;
     }
-    #fmMarketsContent .fm-ticker-tv-host { position: relative; z-index: 1; width: 100%; margin: 0; padding: 0; }
-    #fmMarketsContent #fmTickerTapeWrap .tradingview-widget-container,
-    #fmMarketsContent #fmTickerTapeWrap .tradingview-widget-container__widget,
-    #fmMarketsContent #fmTickerTapeWrap iframe {
-      margin: 0 !important;
-      padding: 0 !important;
-      background: transparent !important;
-      border: 0 !important;
-      border-radius: 0 !important;
-      box-shadow: none !important;
+    @media (prefers-reduced-motion: reduce) {
+      #fmMarketsContent #ticker-inner { animation: none; }
     }
+    @keyframes ticker-scroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    #fmMarketsContent .fm-ticker-chip {
+      margin-right: 32px;
+      display: inline-flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    #fmMarketsContent .fm-ticker-chip .fm-ticker-sym { color: #F0EFF5; font-weight: 600; }
+    #fmMarketsContent .fm-ticker-chip .fm-ticker-up { color: #149E61; }
+    #fmMarketsContent .fm-ticker-chip .fm-ticker-dn { color: #D11D45; }
     #fmMarketsContent #fmMainTVChart {
       background: #191919 !important;
       height: 380px;
@@ -3859,34 +3871,25 @@
 
         <!-- FM: Markets -->
         <div class="fm-sub-content active" id="fmMarketsContent">
-          <!-- TradingView Ticker Tape (official embed) — full-bleed above chart -->
+          <!-- Instant ticker tape: scrolls on paint; figures are illustrative snapshot (not live) -->
           <div id="fmTickerTapeWrap">
-            <div class="fm-ticker-skeleton" aria-hidden="true"></div>
-            <div class="fm-ticker-tv-host">
-            <div class="tradingview-widget-container" style="width:100%;margin:0;padding:0;">
-              <div class="tradingview-widget-container__widget"></div>
-              <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
-{
-  "symbols": [
-    {"proName": "FOREXCOM:SPXUSD", "title": "S&amp;P 500"},
-    {"proName": "NASDAQ:AAPL", "title": "Apple"},
-    {"proName": "NASDAQ:MSFT", "title": "Microsoft"},
-    {"proName": "NASDAQ:GOOGL", "title": "Google"},
-    {"proName": "NASDAQ:AMZN", "title": "Amazon"},
-    {"proName": "NASDAQ:NVDA", "title": "NVIDIA"},
-    {"proName": "NASDAQ:META", "title": "Meta"},
-    {"proName": "NASDAQ:TSLA", "title": "Tesla"},
-    {"proName": "BITSTAMP:BTCUSD", "title": "Bitcoin"},
-    {"proName": "BITSTAMP:ETHUSD", "title": "Ethereum"}
-  ],
-  "showSymbolLogo": true,
-  "isTransparent": true,
-  "displayMode": "adaptive",
-  "colorTheme": "dark",
-  "locale": "en"
-}
-              </script>
-            </div>
+            <div id="ticker-tape" class="fm-ticker-tape" role="region" aria-label="Market price ticker (illustrative snapshot)">
+              <div id="ticker-inner">
+                <span class="fm-ticker-chip"><span class="fm-ticker-sym">BTC</span>&nbsp;&nbsp; 72,198&nbsp; <span class="fm-ticker-up">+386.00 (+0.54%)</span></span>
+                <span class="fm-ticker-chip"><span class="fm-ticker-sym">ETH</span>&nbsp;&nbsp; 2,218.1&nbsp; <span class="fm-ticker-up">+28.20 (+1.29%)</span></span>
+                <span class="fm-ticker-chip"><span class="fm-ticker-sym">S&amp;P 500</span>&nbsp;&nbsp; 6,830.5&nbsp; <span class="fm-ticker-up">+9.80 (+0.14%)</span></span>
+                <span class="fm-ticker-chip"><span class="fm-ticker-sym">MSFT</span>&nbsp;&nbsp; 373.07&nbsp; <span class="fm-ticker-dn">-1.26 (-0.34%)</span></span>
+                <span class="fm-ticker-chip"><span class="fm-ticker-sym">GOOGL</span>&nbsp;&nbsp; 318.49&nbsp; <span class="fm-ticker-up">+1.17 (+0.37%)</span></span>
+                <span class="fm-ticker-chip"><span class="fm-ticker-sym">AMZN</span>&nbsp;&nbsp; 233.65&nbsp; <span class="fm-ticker-up">+12.40 (+5.60%)</span></span>
+                <span class="fm-ticker-chip"><span class="fm-ticker-sym">AAPL</span>&nbsp;&nbsp; 259.91&nbsp; <span class="fm-ticker-up">+1.01 (+0.39%)</span></span>
+                <span class="fm-ticker-chip"><span class="fm-ticker-sym">BTC</span>&nbsp;&nbsp; 72,198&nbsp; <span class="fm-ticker-up">+386.00 (+0.54%)</span></span>
+                <span class="fm-ticker-chip"><span class="fm-ticker-sym">ETH</span>&nbsp;&nbsp; 2,218.1&nbsp; <span class="fm-ticker-up">+28.20 (+1.29%)</span></span>
+                <span class="fm-ticker-chip"><span class="fm-ticker-sym">S&amp;P 500</span>&nbsp;&nbsp; 6,830.5&nbsp; <span class="fm-ticker-up">+9.80 (+0.14%)</span></span>
+                <span class="fm-ticker-chip"><span class="fm-ticker-sym">MSFT</span>&nbsp;&nbsp; 373.07&nbsp; <span class="fm-ticker-dn">-1.26 (-0.34%)</span></span>
+                <span class="fm-ticker-chip"><span class="fm-ticker-sym">GOOGL</span>&nbsp;&nbsp; 318.49&nbsp; <span class="fm-ticker-up">+1.17 (+0.37%)</span></span>
+                <span class="fm-ticker-chip"><span class="fm-ticker-sym">AMZN</span>&nbsp;&nbsp; 233.65&nbsp; <span class="fm-ticker-up">+12.40 (+5.60%)</span></span>
+                <span class="fm-ticker-chip"><span class="fm-ticker-sym">AAPL</span>&nbsp;&nbsp; 259.91&nbsp; <span class="fm-ticker-up">+1.01 (+0.39%)</span></span>
+              </div>
             </div>
           </div>
           <div id="fmMainChartWrap">
