@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <title>Your Bonus Roadmap — WishPath.ai</title>
+  <meta name="theme-color" content="#000000" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x2728;</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0f; --bg2: #0f0f1a; --bg3: #13131f;
+      --purple: #7c3aed; --purple-light: #9d5cf6; --purple-dim: rgba(124,58,237,0.15);
+      --blue: #3b82f6; --gold: #c7a86e; --green: #22c55e; --red: #ef4444;
+      --text: #e8e8f0; --text-muted: #8888aa;
+      --border: rgba(124,58,237,0.2); --border-subtle: rgba(255,255,255,0.06);
+      --radius: 16px;
+    }
+    html { background: #000; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    .glow-blob { position: fixed; border-radius: 50%; filter: blur(120px); pointer-events: none; z-index: 0; }
+    .glow-blob-1 { width: 500px; height: 500px; background: radial-gradient(circle, rgba(124,58,237,0.15) 0%, transparent 70%); top: -100px; left: -100px; }
+    nav { position: sticky; top: 0; z-index: 100; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); background: rgba(0,0,0,0.85); border-bottom: 1px solid var(--border-subtle); padding: calc(16px + env(safe-area-inset-top)) 24px 16px; display: flex; align-items: center; justify-content: space-between; }
+    .nav-logo { font-size: 1.1rem; font-weight: 700; background: linear-gradient(135deg, #9d5cf6, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; text-decoration: none; }
+    .container { max-width: 560px; margin: 0 auto; padding: 48px 24px 80px; position: relative; z-index: 1; }
+
+    .state { display: none; }
+    .state.active { display: block; }
+
+    /* Form state */
+    .form-state { text-align: center; }
+    .form-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: 600; color: var(--green); background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2); border-radius: 99px; padding: 5px 14px; margin-bottom: 20px; letter-spacing: 0.04em; text-transform: uppercase; }
+    .form-state h1 { font-size: 1.6rem; font-weight: 800; margin-bottom: 12px; }
+    .form-state p { color: var(--text-muted); margin-bottom: 32px; font-size: 0.95rem; }
+    .form-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; text-align: left; }
+    .form-label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--purple-light); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 8px; }
+    .form-input, .form-textarea { width: 100%; padding: 12px 16px; border-radius: 10px; border: 1px solid var(--border-subtle); background: rgba(255,255,255,0.04); color: var(--text); font: inherit; font-size: 0.95rem; outline: none; transition: border-color 0.15s; }
+    .form-input:focus, .form-textarea:focus { border-color: var(--purple); }
+    .form-input::placeholder, .form-textarea::placeholder { color: rgba(255,255,255,0.2); }
+    .form-textarea { resize: vertical; min-height: 120px; }
+    .form-group { margin-bottom: 20px; }
+    .form-submit { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--purple), var(--blue)); color: white; border: none; border-radius: 999px; font-size: 1.05rem; font-weight: 700; cursor: pointer; transition: transform 0.15s; margin-top: 8px; }
+    .form-submit:hover { transform: translateY(-1px); }
+    .form-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .form-error { color: var(--red); font-size: 0.85rem; margin-top: 12px; min-height: 20px; }
+
+    /* Loading state */
+    .loading-state { text-align: center; padding: 60px 0; }
+    .loading-orb { width: 70px; height: 70px; margin: 0 auto 28px; border-radius: 50%; background: radial-gradient(circle, rgba(124,58,237,0.6), rgba(59,130,246,0.3), transparent); animation: pulse 2s ease-in-out infinite; box-shadow: 0 0 50px rgba(124,58,237,0.3); }
+    @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.15); opacity: 1; } }
+    .loading-state h2 { font-size: 1.3rem; margin-bottom: 10px; }
+    .loading-state p { color: var(--text-muted); }
+
+    /* Done state */
+    .done-state { text-align: center; padding: 60px 0; }
+    .done-icon { font-size: 3rem; margin-bottom: 20px; }
+    .done-state h2 { font-size: 1.4rem; margin-bottom: 12px; }
+    .done-state p { color: var(--text-muted); margin-bottom: 28px; line-height: 1.6; }
+    .done-btn { display: inline-block; padding: 14px 36px; background: linear-gradient(135deg, var(--purple), var(--blue)); color: white; border-radius: 999px; text-decoration: none; font-weight: 700; font-size: 1rem; }
+
+    .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgba(124,58,237,0.95); color: #fff; padding: 12px 22px; border-radius: 99px; font-size: 0.9rem; font-weight: 600; z-index: 9999; box-shadow: 0 4px 24px rgba(0,0,0,0.4); }
+
+    @media (max-width: 600px) { .container { padding: 32px 16px 60px; } }
+  </style>
+</head>
+<body>
+  <div class="glow-blob glow-blob-1"></div>
+  <nav>
+    <a class="nav-logo" href="/">&#x2728; WishPath.ai</a>
+  </nav>
+
+  <div class="container">
+
+    <!-- Form State -->
+    <div class="state form-state active" id="formState">
+      <div class="form-badge">&#x2705; Payment Confirmed</div>
+      <h1>Enter Your Bonus Roadmap</h1>
+      <p>Describe any goal or problem — for yourself or a friend.<br>We'll generate and email it instantly.</p>
+
+      <div class="form-card">
+        <div class="form-group">
+          <label class="form-label" for="bonusEmail">&#x2709;&#xfe0f; Email to deliver to</label>
+          <input class="form-input" id="bonusEmail" type="email" placeholder="you@example.com" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="bonusWish">&#x2728; The Goal or Wish</label>
+          <textarea class="form-textarea" id="bonusWish" placeholder="e.g., I want to learn Spanish fluently in 6 months while working full-time..." maxlength="800"></textarea>
+        </div>
+        <button class="form-submit" id="bonusSubmit" onclick="submitBonus()">&#x2728; Generate My Bonus Roadmap</button>
+        <div class="form-error" id="bonusError"></div>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div class="state loading-state" id="loadingState">
+      <div class="loading-orb"></div>
+      <h2>Generating Your Bonus Roadmap...</h2>
+      <p>Our AI is researching and building your plan. This takes about 30 seconds.</p>
+    </div>
+
+    <!-- Done State -->
+    <div class="state done-state" id="doneState">
+      <div class="done-icon">&#x1f389;</div>
+      <h2>Your Bonus Roadmap Has Been Sent!</h2>
+      <p id="doneMsg">Check your inbox — your personalized roadmap is on its way.</p>
+      <a class="done-btn" href="/">&#x2728; Back to WishPath.ai</a>
+    </div>
+
+  </div>
+
+  <script>
+    var EDGE_FN = 'https://mszilrexlupzthauoaxb.supabase.co/functions/v1/wishpath-generate';
+
+    function showState(id) {
+      document.querySelectorAll('.state').forEach(function(el) { el.classList.remove('active'); });
+      document.getElementById(id).classList.add('active');
+    }
+
+    function showToast(msg) {
+      var t = document.createElement('div');
+      t.className = 'toast'; t.textContent = msg;
+      document.body.appendChild(t);
+      setTimeout(function() { t.style.opacity = '0'; t.style.transition = 'opacity 0.4s'; setTimeout(function() { t.remove(); }, 400); }, 3000);
+    }
+
+    async function submitBonus() {
+      var email = document.getElementById('bonusEmail').value.trim();
+      var wish = document.getElementById('bonusWish').value.trim();
+      var errEl = document.getElementById('bonusError');
+      var btn = document.getElementById('bonusSubmit');
+
+      errEl.textContent = '';
+
+      if (!email || !email.includes('@')) {
+        errEl.textContent = 'Please enter a valid email address.';
+        return;
+      }
+      if (!wish || wish.length < 10) {
+        errEl.textContent = 'Please describe your goal in at least 10 characters.';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Generating...';
+      showState('loadingState');
+
+      try {
+        var res = await fetch(EDGE_FN, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ wish: wish, email: email }),
+        });
+
+        var data = await res.json();
+
+        if (!res.ok || data.error) {
+          showState('formState');
+          errEl.textContent = data.error || 'Something went wrong. Please try again.';
+          btn.disabled = false;
+          btn.textContent = '\u2728 Generate My Bonus Roadmap';
+          return;
+        }
+
+        document.getElementById('doneMsg').textContent =
+          'We sent your personalized roadmap to ' + email + '. Check your inbox!';
+        showState('doneState');
+
+      } catch (err) {
+        showState('formState');
+        errEl.textContent = 'Connection error. Please try again.';
+        btn.disabled = false;
+        btn.textContent = '\u2728 Generate My Bonus Roadmap';
+      }
+    }
+  </script>
+</body>
+</html>
