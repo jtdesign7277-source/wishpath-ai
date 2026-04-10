@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-09-v141';
+    var APP_VERSION = '2026-04-09-v142';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -5292,20 +5292,39 @@
       }
     }
 
-    /** Bottom nav: close overlays then route (links call these for reliable Home taps). */
+    /**
+     * Bottom nav — same idea as “hide sections, show one main pane”, but this app uses:
+     *   • `.view` blocks: `#homeView`, `#inboxView`, `#youView` (activated via showView)
+     *   • Mobile dashboard tiles: `#mobileHome` (showMobileHome), not a separate `main-dashboard-view` id
+     */
     function showMainDashboard() {
       try { if (typeof closeArticleReader === 'function') closeArticleReader(); } catch (e) {}
-      mobileNavTo('home');
+      if (window.innerWidth > 768) {
+        showView('home');
+      } else {
+        mobileNavTo('home');
+      }
+      try { window.scrollTo(0, 0); } catch (e) {}
+      var mc = document.querySelector('.main-content');
+      if (mc) try { mc.scrollTop = 0; } catch (e) {}
+      var mhc = document.getElementById('mobileHomeContent');
+      if (mhc) try { mhc.scrollTop = 0; } catch (e) {}
       return false;
     }
     function showInboxView() {
       try { if (typeof closeArticleReader === 'function') closeArticleReader(); } catch (e) {}
       mobileNavTo('inbox');
+      try { window.scrollTo(0, 0); } catch (e) {}
+      var mc = document.querySelector('.main-content');
+      if (mc) try { mc.scrollTop = 0; } catch (e) {}
       return false;
     }
     function showYouView() {
       try { if (typeof closeArticleReader === 'function') closeArticleReader(); } catch (e) {}
       mobileNavTo('you');
+      try { window.scrollTo(0, 0); } catch (e) {}
+      var mc = document.querySelector('.main-content');
+      if (mc) try { mc.scrollTop = 0; } catch (e) {}
       return false;
     }
 
