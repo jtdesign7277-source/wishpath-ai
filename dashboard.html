@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-09-v140';
+    var APP_VERSION = '2026-04-09-v141';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -259,7 +259,10 @@
     /* Bottom tabs + profile pages (styles are mobile-first but only shown on mobile via media query) */
     .wp-bottom-tabs { display: none; }
     .wp-bottom-tabs .mobile-nav-item { appearance: none; -webkit-appearance: none; }
-    .wp-bottom-tabs .mobile-nav-item { background: none; border: none; padding: 0; margin: 0; font: inherit; color: inherit; }
+    .wp-bottom-tabs .mobile-nav-item {
+      background: none; border: none; padding: 0; margin: 0; font: inherit; color: inherit;
+      text-decoration: none; -webkit-tap-highlight-color: transparent;
+    }
 
     .you-page { max-width: 560px; margin: 0 auto; padding: 8px 0 24px; }
     .you-card { background: rgba(37,37,37,0.9); border: 1px solid rgba(104,107,130,0.24); border-radius: 16px; padding: 16px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 10px 30px rgba(0,0,0,0.35); }
@@ -3385,7 +3388,7 @@
         background: #191919;
         border-top: 1px solid rgba(104,107,130,0.24);
         box-shadow: 0 -2px 8px rgba(0,0,0,0.3);
-        z-index: 10010;
+        z-index: 9999;
         align-items: center;
         justify-content: space-around;
         gap: 0;
@@ -3396,38 +3399,32 @@
       .wp-bottom-tabs.nav-hidden { transform: translateY(100%); }
       .wp-bottom-tabs .mobile-nav-item {
         flex: 1;
-        min-width: 0;
+        min-width: 44px;
         display: flex;
         flex-direction: row;
         align-items: center;
         justify-content: center;
         color: #F0EFF5;
         border-radius: 12px;
-        padding: 0;
+        padding: 12px 20px;
         cursor: pointer;
-        -webkit-tap-highlight-color: transparent;
+        position: relative;
+        box-sizing: border-box;
       }
       .wp-bottom-tabs .mobile-nav-item:active { transform: scale(0.96); opacity: 0.92; }
-      .wp-bottom-tabs .mobile-nav-item.active { color: #7132F5; }
-      .wp-bottom-tabs .mobile-nav-icon {
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        line-height: 0;
+      .wp-bottom-tabs .mobile-nav-item.active {
+        color: #7132F5;
+        background: rgba(113,50,245,0.12);
       }
-      .wp-bottom-tabs .mobile-nav-icon svg {
-        width: 22px;
-        height: 22px;
-        flex-shrink: 0;
-        stroke: currentColor;
-        fill: none;
+      .wp-bottom-tabs .mobile-nav-emoji {
+        font-size: 22px;
+        line-height: 1;
+        display: block;
       }
-      .wp-bottom-tabs .mobile-nav-icon--badge { position: relative; }
-      .wp-bottom-tabs .mobile-nav-badge {
+      #inbox-badge {
         position: absolute;
-        top: -2px;
-        right: -4px;
+        top: 6px;
+        right: 8px;
         min-width: 14px;
         height: 14px;
         padding: 0 3px;
@@ -3437,12 +3434,13 @@
         font-size: 10px;
         font-weight: 600;
         line-height: 1;
-        display: inline-flex;
         align-items: center;
         justify-content: center;
         border: 1px solid #191919;
         box-sizing: border-box;
+        display: none;
       }
+      #inbox-badge.is-visible { display: flex; }
 
       /* 56px bar + safe area + buffer */
       .main-content { padding-bottom: calc(12px + 56px + env(safe-area-inset-bottom)) !important; }
@@ -4747,24 +4745,18 @@
     </div>
   </main>
 
-  <!-- Mobile bottom tabs (icon-only; SVGs match sidebar Home + Chats stroke style) -->
+  <!-- Mobile bottom tabs: reliable Home (closes reader) + inbox + you -->
   <nav class="bottom-nav mobile-nav-bar wp-bottom-tabs" id="mobileNavBar" aria-label="Primary">
-    <button type="button" class="mobile-nav-item" data-nav="home" onclick="mobileNavTo('home')" aria-label="Home">
-      <span class="mobile-nav-icon" aria-hidden="true">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-      </span>
-    </button>
-    <button type="button" class="mobile-nav-item" data-nav="inbox" onclick="mobileNavTo('inbox')" aria-label="Inbox">
-      <span class="mobile-nav-icon mobile-nav-icon--badge" aria-hidden="true">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        <span class="mobile-nav-badge">1</span>
-      </span>
-    </button>
-    <button type="button" class="mobile-nav-item" data-nav="you" onclick="mobileNavTo('you')" aria-label="You">
-      <span class="mobile-nav-icon" aria-hidden="true">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      </span>
-    </button>
+    <a href="javascript:void(0)" class="mobile-nav-item" data-nav="home" onclick="return showMainDashboard();" aria-label="Home">
+      <span class="mobile-nav-emoji" aria-hidden="true">🏠</span>
+    </a>
+    <a href="javascript:void(0)" class="mobile-nav-item" data-nav="inbox" onclick="return showInboxView();" aria-label="Inbox">
+      <span class="mobile-nav-emoji" aria-hidden="true">💬</span>
+      <span id="inbox-badge" aria-hidden="true">1</span>
+    </a>
+    <a href="javascript:void(0)" class="mobile-nav-item" data-nav="you" onclick="return showYouView();" aria-label="You">
+      <span class="mobile-nav-emoji" aria-hidden="true">👤</span>
+    </a>
   </nav>
 
   <!-- Avatar picker overlay -->
@@ -5298,6 +5290,23 @@
         hideMobileHome();
         showView(view);
       }
+    }
+
+    /** Bottom nav: close overlays then route (links call these for reliable Home taps). */
+    function showMainDashboard() {
+      try { if (typeof closeArticleReader === 'function') closeArticleReader(); } catch (e) {}
+      mobileNavTo('home');
+      return false;
+    }
+    function showInboxView() {
+      try { if (typeof closeArticleReader === 'function') closeArticleReader(); } catch (e) {}
+      mobileNavTo('inbox');
+      return false;
+    }
+    function showYouView() {
+      try { if (typeof closeArticleReader === 'function') closeArticleReader(); } catch (e) {}
+      mobileNavTo('you');
+      return false;
     }
 
     function _formatAccountAge(createdAtIso) {
