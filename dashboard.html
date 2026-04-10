@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-09-v137';
+    var APP_VERSION = '2026-04-09-v138';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -3333,22 +3333,22 @@
       .main-header .streak-container { display: none; }
     }
 
-    /* ── Mobile: bottom tabs (Home / Inbox / You) ── */
+    /* ── Mobile: bottom tabs (icon-only, sidebar-matching SVGs, compact 56px row) ── */
     @media (max-width: 768px) {
       .wp-bottom-tabs {
         display: flex !important;
         position: fixed;
         left: 0; right: 0; bottom: 0;
         box-sizing: border-box;
-        min-height: 68px;
-        padding: 10px 10px calc(8px + env(safe-area-inset-bottom));
+        height: calc(56px + env(safe-area-inset-bottom));
+        padding: 0 20px env(safe-area-inset-bottom);
         background: #191919;
         border-top: 1px solid rgba(104,107,130,0.24);
-        box-shadow: 0 -2px 10px rgba(0,0,0,0.4);
+        box-shadow: 0 -2px 8px rgba(0,0,0,0.3);
         z-index: 10010;
         align-items: center;
         justify-content: space-around;
-        gap: 4px;
+        gap: 0;
         transition: transform 0.3s ease;
         transform: translateY(0);
       }
@@ -3358,55 +3358,55 @@
         flex: 1;
         min-width: 0;
         display: flex;
-        flex-direction: column;
+        flex-direction: row;
         align-items: center;
         justify-content: center;
-        gap: 2px;
         color: #F0EFF5;
-        border-radius: 14px;
-        padding: 4px 6px;
+        border-radius: 12px;
+        padding: 0;
         cursor: pointer;
         -webkit-tap-highlight-color: transparent;
       }
-      .wp-bottom-tabs .mobile-nav-item:active { transform: scale(0.98); opacity: 0.95; }
+      .wp-bottom-tabs .mobile-nav-item:active { transform: scale(0.96); opacity: 0.92; }
       .wp-bottom-tabs .mobile-nav-item.active { color: #7132F5; }
-      .wp-bottom-tabs .mobile-nav-item.active .mobile-nav-label { color: #7132F5; }
       .wp-bottom-tabs .mobile-nav-icon {
-        font-size: 24px;
-        line-height: 1;
         position: relative;
-        margin-bottom: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 0;
+      }
+      .wp-bottom-tabs .mobile-nav-icon svg {
+        width: 22px;
+        height: 22px;
+        flex-shrink: 0;
+        stroke: currentColor;
+        fill: none;
       }
       .wp-bottom-tabs .mobile-nav-icon--badge { position: relative; }
-      .wp-bottom-tabs .mobile-nav-label {
-        font-size: 10px;
-        font-weight: 500;
-        color: #9497A9;
-        letter-spacing: 0.02em;
-      }
       .wp-bottom-tabs .mobile-nav-badge {
         position: absolute;
-        top: 4px;
-        right: -2px;
-        width: 16px;
-        height: 16px;
-        min-width: 16px;
-        padding: 0;
+        top: -2px;
+        right: -4px;
+        min-width: 14px;
+        height: 14px;
+        padding: 0 3px;
         border-radius: 50%;
         background: #D11D45;
         color: #fff;
         font-size: 10px;
         font-weight: 600;
+        line-height: 1;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        border: 2px solid #191919;
+        border: 1px solid #191919;
         box-sizing: border-box;
       }
 
-      /* Prevent content hidden behind tabs (~68px bar + safe area + small buffer) */
-      .main-content { padding-bottom: calc(12px + 68px + 8px + env(safe-area-inset-bottom)) !important; }
-      .you-page, .you-root { padding-bottom: calc(24px + 68px + 8px + env(safe-area-inset-bottom)) !important; }
+      /* 56px bar + safe area + buffer */
+      .main-content { padding-bottom: calc(12px + 56px + env(safe-area-inset-bottom)) !important; }
+      .you-page, .you-root { padding-bottom: calc(24px + 56px + env(safe-area-inset-bottom)) !important; }
     }
 
     /* ── Desktop containment + layout fixes (do not affect mobile) ── */
@@ -3915,7 +3915,7 @@
             }
             #fmChatFab {
               position: fixed;
-              bottom: 90px;
+              bottom: calc(68px + env(safe-area-inset-bottom));
               right: 20px;
               width: 52px;
               height: 52px;
@@ -4716,22 +4716,23 @@
     </div>
   </main>
 
-  <!-- Mobile bottom tabs (Home / Inbox / You) -->
+  <!-- Mobile bottom tabs (icon-only; SVGs match sidebar Home + Chats stroke style) -->
   <nav class="bottom-nav mobile-nav-bar wp-bottom-tabs" id="mobileNavBar" aria-label="Primary">
-    <button class="mobile-nav-item" data-nav="home" onclick="mobileNavTo('home')" aria-label="Home">
-      <div class="mobile-nav-icon">🏠</div>
-      <div class="mobile-nav-label">Home</div>
+    <button type="button" class="mobile-nav-item" data-nav="home" onclick="mobileNavTo('home')" aria-label="Home">
+      <span class="mobile-nav-icon" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      </span>
     </button>
-    <button class="mobile-nav-item" data-nav="inbox" onclick="mobileNavTo('inbox')" aria-label="Inbox">
-      <div class="mobile-nav-icon mobile-nav-icon--badge">
-        🛎️
-        <span class="mobile-nav-badge" aria-hidden="true">1</span>
-      </div>
-      <div class="mobile-nav-label">Inbox</div>
+    <button type="button" class="mobile-nav-item" data-nav="inbox" onclick="mobileNavTo('inbox')" aria-label="Inbox">
+      <span class="mobile-nav-icon mobile-nav-icon--badge" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span class="mobile-nav-badge">1</span>
+      </span>
     </button>
-    <button class="mobile-nav-item" data-nav="you" onclick="mobileNavTo('you')" aria-label="You">
-      <div class="mobile-nav-icon">👤</div>
-      <div class="mobile-nav-label">You</div>
+    <button type="button" class="mobile-nav-item" data-nav="you" onclick="mobileNavTo('you')" aria-label="You">
+      <span class="mobile-nav-icon" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </span>
     </button>
   </nav>
 
