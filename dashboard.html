@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-09-v155';
+    var APP_VERSION = '2026-04-09-v156';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -3554,8 +3554,9 @@
       }
       .wp-bottom-tabs .mobile-nav-item:active { transform: scale(0.96); opacity: 0.92; }
       .wp-bottom-tabs .mobile-nav-item.active {
-        color: #7132F5;
-        background: rgba(113,50,245,0.12);
+        color: #B794F6;
+        background: transparent;
+        box-shadow: none;
       }
       .wp-bottom-tabs .mobile-nav-emoji {
         font-size: 22px;
@@ -4901,11 +4902,11 @@
       <span class="mobile-nav-emoji" aria-hidden="true">🏠</span>
     </a>
     <a href="javascript:void(0)" class="mobile-nav-item" data-nav="inbox" onclick="return showInboxView();" aria-label="Inbox">
-      <span class="mobile-nav-emoji" aria-hidden="true">💬</span>
+      <span class="mobile-nav-emoji" aria-hidden="true">📥</span>
       <span id="inbox-badge" aria-hidden="true">1</span>
     </a>
     <a href="javascript:void(0)" class="mobile-nav-item" data-nav="you" onclick="return showYouView();" aria-label="You">
-      <span class="mobile-nav-emoji" aria-hidden="true">👤</span>
+      <span class="mobile-nav-emoji" aria-hidden="true">👨</span>
     </a>
   </nav>
 
