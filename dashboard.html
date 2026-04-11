@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-09-v142';
+    var APP_VERSION = '2026-04-09-v143';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -75,7 +75,10 @@
     /* Layered background with depth */
     body::before {
       content: ''; position: fixed; inset: 0; z-index: -2;
-      background: linear-gradient(170deg, var(--kraken-bg) 0%, var(--kraken-surface1) 30%, var(--kraken-surface2) 65%, var(--kraken-surface3) 100%);
+      background:
+        linear-gradient(170deg, transparent 0%, rgba(46,51,80,0.35) 100%),
+        radial-gradient(circle at 50% 18%, rgba(113,50,245,0.08) 0%, #0B0611 40%, #16121F 100%);
+      background-attachment: fixed;
     }
     /* Subtle animated grain overlay */
     body::after {
@@ -86,18 +89,56 @@
     }
     @keyframes grainShift { 0% { transform: translate(0,0); } 25% { transform: translate(-2px,3px); } 50% { transform: translate(3px,-1px); } 75% { transform: translate(-1px,-3px); } 100% { transform: translate(0,0); } }
 
-    /* Glass card utility */
+    /* Glass card — Kraken premium frost */
     .glass-card {
       background: rgba(37,37,37,0.85);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
       border: 1px solid rgba(104,107,130,0.3);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 8px 32px rgba(0,0,0,0.5);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border-radius: 20px;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow:
+        0 8px 32px rgba(0,0,0,0.4),
+        inset 0 1px 0 rgba(255,255,255,0.08),
+        inset 0 -1px 0 rgba(0,0,0,0.6);
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+    @media (hover: hover) {
+      .glass-card:hover {
+        transform: translateY(-2px);
+        box-shadow:
+          0 12px 40px rgba(113,50,245,0.15),
+          inset 0 1px 0 rgba(255,255,255,0.1);
+        border-color: rgba(145,107,230,0.4);
+      }
     }
     .glass-card:active {
       transform: scale(0.98);
-      box-shadow: 0 0 25px rgba(113,50,245,0.5);
+      box-shadow: 0 4px 20px rgba(113,50,245,0.25), inset 0 1px 0 rgba(255,255,255,0.06);
+    }
+
+    .premium-heading {
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.2;
+      background: linear-gradient(90deg, #F0EFF5, #7132F5);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.5px;
+    }
+    @supports not (-webkit-background-clip: text) {
+      .premium-heading { color: #F0EFF5; background: none; -webkit-text-fill-color: unset; }
+    }
+
+    .input-premium {
+      background: rgba(32,35,51,0.9);
+      border: 1px solid rgba(104,107,130,0.4);
+      border-radius: 16px;
+      color: #F0EFF5;
+    }
+    .input-premium:focus-within {
+      border-color: #7132F5;
+      box-shadow: 0 0 0 3px rgba(113,50,245,0.2);
     }
 
     /* Accent glow pulse for interactive elements */
@@ -140,6 +181,13 @@
     .main { margin-left: 240px; flex: 1; min-height: 100vh; }
     .main-header { padding: 24px 32px; border-bottom: 1px solid var(--kraken-border); display: flex; align-items: center; justify-content: space-between; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); background: rgba(11,6,17,0.6); }
     .main-header h1 { font-size: 1.4rem; font-weight: 700; }
+    .wp-updating-pill, .wp-updating-inline {
+      font-size: 0.72rem; font-weight: 500; color: rgba(255,255,255,0.42);
+      letter-spacing: 0.02em; vertical-align: middle;
+      animation: wpUpdatingFade 1.1s ease-in-out infinite;
+    }
+    .wp-updating-pill { margin-left: 8px; }
+    @keyframes wpUpdatingFade { 0%, 100% { opacity: 0.45; } 50% { opacity: 0.95; } }
     .fm-widget-menu-btn { display: none; background: none; border: 1px solid rgba(120,80,220,0.35); border-radius: 10px; padding: 6px 8px; color: var(--accent); cursor: pointer; transition: all 0.15s ease; -webkit-tap-highlight-color: transparent; }
     .fm-widget-menu-btn:active { background: rgba(120,80,220,0.15); transform: scale(0.95); }
     .main-content { padding: 32px; }
@@ -1401,7 +1449,7 @@
       .mobile-home.active {
         display: flex; flex-direction: column;
         position: fixed; top: 0; left: 0; right: 0;
-        bottom: 0; background: #191919; z-index: 500;
+        bottom: 0; background: transparent; z-index: 500;
         overflow: hidden;
       }
       #mobileHomeContent {
@@ -1426,14 +1474,24 @@
       }
       .mobile-chat-back:active { color: rgba(255,255,255,0.85); }
       .mobile-home-inner { padding: 0 20px 0; }
-      .mobile-home-title { font-size: 26px; font-weight: 700; color: rgba(255,255,255,0.9); line-height: 1.3; margin-bottom: 24px; text-align: center; }
-      .mobile-home-input-wrap { position: relative; margin-bottom: 14px; border: 1px solid rgba(120,80,220,0.25); border-radius: 20px; background: #242424; box-shadow: 8px 8px 16px rgba(0,0,0,0.6), -4px -4px 12px rgba(255,255,255,0.03), 0 0 0 0 rgba(120,80,220,0.3); animation: homeInputPulse 2.5s ease-in-out infinite; transition: all 0.3s ease; }
-      .mobile-home-input-wrap:focus-within { border-color: rgba(120,80,220,0.5); box-shadow: 8px 8px 16px rgba(0,0,0,0.6), -4px -4px 12px rgba(255,255,255,0.03), 0 0 16px rgba(120,80,220,0.2); animation: none; }
-      @keyframes homeInputPulse {
-        0%, 100% { box-shadow: 8px 8px 16px rgba(0,0,0,0.6), -4px -4px 12px rgba(255,255,255,0.03), 0 0 0 0 rgba(120,80,220,0.3); border-color: rgba(120,80,220,0.25); }
-        50% { box-shadow: 8px 8px 16px rgba(0,0,0,0.6), -4px -4px 12px rgba(255,255,255,0.03), 0 0 12px 2px rgba(120,80,220,0.18); border-color: rgba(140,100,240,0.4); }
+      .mobile-home-hero-card.glass-card { margin: 0 0 24px; padding: 22px 18px 20px; }
+      .mobile-home-title { margin-bottom: 24px; text-align: center; }
+      .mobile-home .premium-heading { font-size: clamp(22px, 5.5vw, 28px); }
+      .mobile-home-input-wrap { position: relative; margin-bottom: 14px; transition: border-color 0.2s ease, box-shadow 0.2s ease; }
+      .mobile-home-input-wrap.input-premium {
+        border: 1px solid rgba(104,107,130,0.4);
+        border-radius: 16px;
+        background: rgba(32,35,51,0.92);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06);
+        animation: none;
       }
-      .mobile-home-input { width: 100%; padding: 16px 54px 16px 18px; background: transparent; border: none; border-radius: 20px; color: rgba(255,255,255,0.9); font: inherit; font-size: 16px; outline: none; resize: none; min-height: 56px; max-height: 120px; overflow-y: auto; display: block; line-height: 1.4; transition: all 0.2s ease; }
+      .mobile-home-input-wrap.input-premium:focus-within {
+        border-color: #7132F5;
+        box-shadow: 0 0 0 3px rgba(113,50,245,0.2), 0 8px 28px rgba(0,0,0,0.4);
+      }
+      .mobile-home-input { width: 100%; padding: 16px 54px 16px 18px; background: transparent; border: none; border-radius: 14px; color: rgba(255,255,255,0.9); font: inherit; font-size: 16px; outline: none; resize: none; min-height: 56px; max-height: 120px; overflow-y: auto; display: block; line-height: 1.4; transition: all 0.2s ease; }
       .mobile-home-input::placeholder { color: rgba(255,255,255,0.3); }
       .mobile-home-input-send { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 34px; height: 34px; border-radius: 0; background: none; border: none; color: rgb(120,80,220); cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: none; transition: opacity 0.15s ease, transform 0.1s ease; }
       .mobile-home-input-send svg { stroke: rgb(120,80,220); }
@@ -1446,6 +1504,7 @@
         max-width: 540px;
         margin: 0 auto 32px;
       }
+      .mobile-home-hero-card .mobile-chips-row { margin-bottom: 0; }
       .mobile-chip {
         display: inline-flex;
         align-items: center;
@@ -1453,20 +1512,28 @@
         gap: 6px;
         width: 100%;
         min-height: 52px;
-        background: #252525;
-        border: 1px solid rgba(255,255,255,0.1);
-        border-radius: 20px;
+        background: rgba(37,37,37,0.88);
+        border: 1px solid rgba(104,107,130,0.3);
+        border-radius: 16px;
         padding: 8px 14px;
         font-size: 13px;
-        color: rgba(255,255,255,0.7);
+        color: rgba(255,255,255,0.78);
         cursor: pointer;
         white-space: nowrap;
-        box-shadow: 4px 4px 8px rgba(0,0,0,0.5), -2px -2px 6px rgba(255,255,255,0.02);
-        transition: all 0.2s ease;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06);
+        transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
         -webkit-tap-highlight-color: transparent;
       }
       .mobile-chip span { font-size: 13px; line-height: 1; }
-      .mobile-chip:active { border-color: rgba(120,80,220,0.2); color: rgba(255,255,255,0.95); box-shadow: 2px 2px 4px rgba(0,0,0,0.5), -1px -1px 3px rgba(255,255,255,0.02), 0 0 10px rgba(120,80,220,0.1); transform: scale(0.97); }
+      @media (hover: hover) {
+        .mobile-chip:hover {
+          border-color: rgba(145,107,230,0.35);
+          box-shadow: 0 8px 28px rgba(113,50,245,0.12), inset 0 1px 0 rgba(255,255,255,0.08);
+        }
+      }
+      .mobile-chip:active { border-color: rgba(113,50,245,0.45); color: rgba(255,255,255,0.95); box-shadow: 0 4px 16px rgba(0,0,0,0.4); transform: scale(0.97); }
       .mobile-sec-label { font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 12px; }
       .mobile-recents-row { display: flex; gap: 12px; overflow-x: auto; -webkit-overflow-scrolling: touch; scroll-snap-type: x mandatory; padding-bottom: 8px; margin-bottom: 24px; }
       .mobile-recents-row::-webkit-scrollbar { display: none; }
@@ -1485,9 +1552,29 @@
       .mobile-news-title { font-size: 12.5px; font-weight: 700; color: rgba(255,255,255,0.9); line-height: 1.34; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; min-height: 50px; }
       .mobile-news-meta { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 10.5px; color: rgba(255,255,255,0.42); }
       .mobile-news-source { color: var(--accent); font-weight: 600; }
-      .mobile-nav-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-      .mobile-nav-tile { background: #252525; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 18px 16px; cursor: pointer; display: flex; align-items: center; gap: 10px; box-shadow: 8px 8px 16px rgba(0,0,0,0.6), -4px -4px 12px rgba(255,255,255,0.03); transition: all 0.3s ease; }
-      .mobile-nav-tile:active { border-color: rgba(120,80,220,0.2); box-shadow: 4px 4px 8px rgba(0,0,0,0.5), -2px -2px 6px rgba(255,255,255,0.02); transform: scale(0.97); }
+      .mobile-nav-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      .mobile-nav-tile {
+        background: rgba(37,37,37,0.88);
+        border: 1px solid rgba(104,107,130,0.3);
+        border-radius: 18px;
+        padding: 16px 14px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        box-shadow: 0 8px 28px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.07);
+        transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+      }
+      @media (hover: hover) {
+        .mobile-nav-tile:hover {
+          border-color: rgba(145,107,230,0.4);
+          box-shadow: 0 12px 36px rgba(113,50,245,0.14), inset 0 1px 0 rgba(255,255,255,0.09);
+          transform: translateY(-2px);
+        }
+      }
+      .mobile-nav-tile:active { border-color: rgba(113,50,245,0.35); box-shadow: 0 4px 16px rgba(0,0,0,0.45); transform: scale(0.97); }
       .mobile-nav-tile-icon { font-size: 20px; }
       .mobile-nav-tile-label { font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.85); }
 
@@ -3693,13 +3780,14 @@
   </aside>
 
   <!-- Main -->
-  <main class="main">
+  <main class="main main-dashboard-view">
     <div class="main-header">
       <button class="header-hamburger" onclick="toggleMobileSidebar()" aria-label="Open menu" style="background:none;border:none;color:rgba(255,255,255,0.7);cursor:pointer;padding:6px;display:none;z-index:10;flex-shrink:0;min-width:44px;min-height:44px;align-items:center;justify-content:center;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="22" height="22"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
       <button class="fm-header-back-btn" id="fmHeaderBackBtn" onclick="exitChartView()" aria-label="Back to Markets">&#x2190;</button>
       <h1 id="viewTitle">Home</h1>
+      <span id="wpUpdatingPill" class="wp-updating-pill" style="display:none;" aria-live="polite"></span>
       <!-- Daily Streak Counter -->
       <div id="streak-counter" class="streak-container" onclick="claimDailyStreak()">
         <div class="streak-flame">&#x1F525;</div>
@@ -3765,6 +3853,7 @@
           <div id="marketsSummaryContent">
           <div class="markets-section-label">
             <span>&#x1F7E2; Magnificent 7 Tracker</span>
+            <span id="wpUpdatingMag7" class="wp-updating-inline" style="display:none;margin-left:8px;" aria-live="polite"></span>
             <button class="markets-refresh-btn" id="marketsRefreshBtn" onclick="refreshMarkets()"><span class="refresh-icon" style="display:inline-block;">&#x21BB;</span> Refresh</button>
           </div>
           <div class="markets-updated" id="marketsUpdatedTime"></div>
@@ -3778,7 +3867,10 @@
             <div class="stock-card"><div class="stock-shimmer" style="width:50px;"></div><div class="stock-shimmer" style="width:80px;"></div><div class="stock-shimmer" style="width:60px;height:20px;"></div></div>
           </div>
 
-          <div class="markets-section-label"><span>&#x1FA99; Crypto</span></div>
+          <div class="markets-section-label">
+            <span>&#x1FA99; Crypto</span>
+            <span id="wpUpdatingCrypto" class="wp-updating-inline" style="display:none;margin-left:8px;" aria-live="polite"></span>
+          </div>
           <div class="stock-grid" id="cryptoGrid">
             <div class="stock-card"><div class="stock-shimmer" style="width:40px;"></div><div class="stock-shimmer" style="width:70px;"></div><div class="stock-shimmer" style="width:60px;height:20px;"></div></div>
             <div class="stock-card"><div class="stock-shimmer" style="width:40px;"></div><div class="stock-shimmer" style="width:70px;"></div><div class="stock-shimmer" style="width:60px;height:20px;"></div></div>
@@ -3790,6 +3882,7 @@
           <!-- Watchlists -->
           <div class="markets-section-label" style="margin-top:28px;">
             <span>&#x1F4CB; My Watchlists</span>
+            <span id="wpUpdatingWatchlist" class="wp-updating-inline" style="display:none;margin-left:8px;" aria-live="polite"></span>
             <button class="markets-refresh-btn" onclick="createNewWatchlist()">+ New Watchlist</button>
           </div>
           <div id="watchlistContainer">
@@ -3819,7 +3912,7 @@
         <!-- Portfolio Tab -->
         <div class="home-tab-content" id="homePortfolioTab">
           <div class="portfolio-hero" id="portfolioSummary">
-            <div class="portfolio-hero-label">Portfolio value</div>
+            <div class="portfolio-hero-label">Portfolio value <span id="wpUpdatingPortfolioHome" class="wp-updating-inline" style="display:none;margin-left:6px;" aria-live="polite"></span></div>
             <div class="portfolio-hero-value" id="portfolioTotalValue">$0.00</div>
             <div class="portfolio-hero-change">
               <span class="portfolio-hero-arrow" id="portfolioArrow">&#x2197;</span>
@@ -3930,6 +4023,7 @@
             <button type="button" class="fm-time-btn tab" role="tab" aria-selected="false" onclick="setFMChartRange('5Y',this)">5Y</button>
             <button type="button" class="fm-time-btn tab" role="tab" aria-selected="false" onclick="setFMChartRange('All',this)">All</button>
           </div>
+          <div style="display:flex;align-items:center;justify-content:flex-end;padding:0 8px 6px;min-height:18px;"><span id="wpUpdatingFmMarkets" class="wp-updating-inline" style="display:none;" aria-live="polite"></span></div>
           <div id="fmStockList" style="display:flex;flex-direction:column;gap:0;"></div>
           <div id="fmMarketsChartContainer" class="chart-container" style="display:none;"></div>
           <!-- Floating chat FAB -->
@@ -3977,7 +4071,7 @@
         <!-- FM: Portfolio -->
         <div class="fm-sub-content" id="fmPortfolioContent">
           <div class="portfolio-hero" id="fmPortfolioSummary">
-            <div class="portfolio-hero-label">Portfolio value</div>
+            <div class="portfolio-hero-label">Portfolio value <span id="wpUpdatingPortfolioFm" class="wp-updating-inline" style="display:none;margin-left:6px;" aria-live="polite"></span></div>
             <div class="portfolio-hero-value" id="fmPortfolioTotalValue">$0.00</div>
             <div class="portfolio-hero-change">
               <span class="portfolio-hero-arrow" id="fmPortfolioArrow">&#x2197;</span>
@@ -4072,6 +4166,7 @@
         <!-- FM: Watchlists -->
         <div class="fm-sub-content" id="fmWatchlistsContent">
           <div class="markets-section-label"><span>&#x1F4CB; My Watchlists</span>
+            <span id="wpUpdatingFmWatchlist" class="wp-updating-inline" style="display:none;margin-left:8px;" aria-live="polite"></span>
             <button class="markets-refresh-btn" onclick="createNewWatchlist()">+ New Watchlist</button>
           </div>
           <div id="fmWatchlistSelector" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;"></div>
@@ -4099,7 +4194,7 @@
 
         <!-- FM: News Feed -->
         <div class="fm-sub-content" id="fmNewsFeedContent">
-          <div class="markets-section-label"><span>&#x1F4F0; Personalized News Feed</span>
+          <div class="markets-section-label"><span>&#x1F4F0; Personalized News Feed</span><span id="wpUpdatingNews" class="wp-updating-inline" style="display:none;margin-left:8px;" aria-live="polite"></span>
             <div class="news-customize-wrap">
               <button class="news-customize-btn" id="newsCustomizeBtn" onclick="toggleNewsCustomize()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v1m0 16v1m8.66-13.5l-.87.5M4.21 16l-.87.5M20.66 16l-.87-.5M4.21 8l-.87-.5M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
@@ -4321,6 +4416,7 @@
           <div class="coach-left">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-shrink:0;" class="coach-select-row">
               <select class="coach-select" id="coachSelect" style="margin-bottom:0;flex:1;"><option value="">Loading wishes...</option></select>
+              <span id="wpUpdatingCoach" class="wp-updating-inline" style="display:none;flex-shrink:0;" aria-live="polite"></span>
             </div>
             <!-- Notion-style empty state (mobile only, hidden when messages exist) -->
             <div class="coach-notion-empty" id="coachNotionEmpty">
@@ -4896,10 +4992,11 @@
         <button class="mobile-info-btn" title="About WishPath">ⓘ</button>
       </div>
       <div class="mobile-home-inner">
+        <div class="mobile-home-hero-card glass-card">
         <!-- Hero title -->
-        <div class="mobile-home-title">What do you want to build today?</div>
+        <div class="mobile-home-title premium-heading">What do you want to build today?</div>
         <!-- Ask AI input -->
-        <div class="mobile-home-input-wrap">
+        <div class="mobile-home-input-wrap input-premium">
           <textarea class="mobile-home-input" id="mobileHomeInput" placeholder="Describe your goal, dream, or problem..." rows="2" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMobileHomeInput();}"></textarea>
           <button class="mobile-home-input-send" onclick="sendMobileHomeInput()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
@@ -4913,6 +5010,7 @@
           <div class="mobile-chip" onclick="prefillMobileHomeInput('Help me track my progress')"><span>📊</span>Track progress</div>
           <div class="mobile-chip" onclick="prefillMobileHomeInput('Help me start a side hustle')"><span>🚀</span>Start a side hustle</div>
           <div class="mobile-chip" onclick="openMobileTemplates()"><span>🗂️</span>Browse Templates</div>
+        </div>
         </div>
         <!-- News -->
         <div class="mobile-sec-label">News</div>
@@ -5921,6 +6019,119 @@
       document.getElementById('paywallOverlay').classList.add('active');
     }
 
+    // ── localStorage cache-first (instant paint + background refresh) ──
+    var WP_CACHE_TTL_MARKET_MS = 60 * 1000;
+    var WP_CACHE_TTL_NEWS_MS = 5 * 60 * 1000;
+    var wpCache = {
+      get: function(key, maxAgeMs) {
+        try {
+          if (typeof localStorage === 'undefined') return null;
+          var raw = localStorage.getItem(key);
+          if (!raw) return null;
+          var o = JSON.parse(raw);
+          if (!o || typeof o.timestamp !== 'number') return null;
+          if (maxAgeMs != null && maxAgeMs > 0 && (Date.now() - o.timestamp) > maxAgeMs) return null;
+          return o;
+        } catch (e) { return null; }
+      },
+      set: function(key, data) {
+        try {
+          if (typeof localStorage === 'undefined') return;
+          localStorage.setItem(key, JSON.stringify({ data: data, timestamp: Date.now() }));
+        } catch (e) {}
+      },
+      showUpdating: function(elementId, visible) {
+        try {
+          var el = elementId ? document.getElementById(elementId) : null;
+          if (!el) return;
+          if (visible) {
+            el.style.display = 'inline-block';
+            el.textContent = 'Updating...';
+          } else {
+            el.style.display = 'none';
+            el.textContent = '';
+          }
+        } catch (e) {}
+      },
+      showPortfolioUpdating: function(visible) {
+        wpCache.showUpdating('wpUpdatingPortfolioHome', visible);
+        wpCache.showUpdating('wpUpdatingPortfolioFm', visible);
+      },
+      load: function(key, fetchFn, renderFn, maxAgeMs) {
+        var cached = wpCache.get(key, maxAgeMs == null ? null : maxAgeMs);
+        if (cached && cached.data != null && typeof renderFn === 'function') {
+          try { renderFn(cached.data, true); } catch (e) {}
+        }
+        return Promise.resolve().then(fetchFn).then(function(fresh) {
+          wpCache.set(key, fresh);
+          if (typeof renderFn === 'function') {
+            try { renderFn(fresh, false); } catch (e) {}
+          }
+          return fresh;
+        });
+      }
+    };
+
+    function wpMergeQuoteMapIntoMarkets(map) {
+      if (!map || typeof map !== 'object') return;
+      Object.keys(map).forEach(function(k) {
+        if (map[k] && typeof map[k] === 'object') marketsCache[k] = map[k];
+      });
+    }
+
+    function wpPersistStockWatchlistCache() {
+      try {
+        var stocksPayload = {};
+        MAG7.forEach(function(s) {
+          if (marketsCache[s.symbol]) stocksPayload[s.symbol] = marketsCache[s.symbol];
+        });
+        (watchlists || []).forEach(function(wl) {
+          (wl.symbols || []).forEach(function(sym) {
+            if (marketsCache[sym]) stocksPayload[sym] = marketsCache[sym];
+          });
+        });
+        wpCache.set('wp_cache_watchlist', { stocks: stocksPayload });
+      } catch (e) {}
+    }
+
+    function wpPersistCryptoCache() {
+      try {
+        var cq = {};
+        CRYPTO.forEach(function(c) {
+          if (marketsCache[c.symbol]) cq[c.symbol] = marketsCache[c.symbol];
+        });
+        wpCache.set('wp_cache_crypto', { quotes: cq });
+      } catch (e) {}
+    }
+
+    function normalizeNewsArticlesForFeed(articles) {
+      if (!Array.isArray(articles)) return [];
+      return articles.map(function(a) {
+        if (!a) return a;
+        var copy = Object.assign({}, a);
+        if (!copy.snippet && copy.description) copy.snippet = copy.description;
+        if (!copy.aiSummary && copy.description) copy.aiSummary = copy.description.substring(0, 100);
+        if (!copy.published && copy.timeAgo) copy.published = copy.timeAgo;
+        if (!copy.image_url && copy.image) copy.image_url = copy.image;
+        return copy;
+      });
+    }
+
+    function hydrateNewsFromCacheForHome() {
+      var c = wpCache.get('wp_cache_news', WP_CACHE_TTL_NEWS_MS);
+      if (!c || !c.data || !Array.isArray(c.data.articles) || !c.data.articles.length) return;
+      window._newsFeedArticles = c.data.articles;
+      window._marketNewsArticles = c.data.articles;
+      renderMobileHomeNews();
+    }
+
+    function wpSyncNewsToMobile(articles) {
+      if (!Array.isArray(articles)) return;
+      window._newsFeedArticles = articles;
+      window._marketNewsArticles = articles;
+      renderMobileHomeNews();
+    }
+
     var wishes = [];
     var coachHistory = [];
     var currentConvoId = null;
@@ -5953,6 +6164,13 @@
     })();
 
     async function loadWishes() {
+      var wc = wpCache.get('wp_cache_wishes', null);
+      if (wc && Array.isArray(wc.data) && wc.data.length) {
+        wishes = wc.data;
+        renderWishes();
+        populateCoachSelect();
+      }
+      wpCache.showUpdating('wpUpdatingPill', true);
       try {
         // Get explicitly saved wishes
         var savedWishes = await getUserWishes();
@@ -6005,8 +6223,11 @@
         renderWishes();
         populateCoachSelect();
         renderSavedChatsSidebar();
+        wpCache.set('wp_cache_wishes', wishes);
       } catch (e) {
         console.error('Load wishes error:', e);
+      } finally {
+        wpCache.showUpdating('wpUpdatingPill', false);
       }
     }
 
@@ -6041,6 +6262,7 @@
         if (error) throw error;
         wishes.splice(idx, 1);
         renderWishes();
+        try { wpCache.set('wp_cache_wishes', wishes); } catch (e) {}
         showToast('Wish deleted');
       } catch (e) {
         console.error('Delete wish error:', e);
@@ -6210,6 +6432,7 @@
       if (navItem) navItem.classList.add('active');
       document.getElementById('viewTitle').textContent = viewTitles[view] || view;
       if (view === 'wishes') closeViewer();
+      if (view === 'home') hydrateNewsFromCacheForHome();
       if (view === 'library') renderLibrary();
       if (view === 'notes') { renderNotesListPage(); document.getElementById('notesList').classList.remove('hidden'); document.getElementById('notesEditor').classList.remove('active'); }
       if (view === 'todos') renderTodoSelect();
@@ -6411,12 +6634,30 @@
 
     async function loadConversation(wishId) {
       showCoachChat();
-      coachHistory = [];
-      currentConvoId = null;
       currentWishId = wishId;
       var msgs = document.getElementById('coachMessages');
-      msgs.innerHTML = '<div class="msg ai">Loading your conversation...</div>';
+      var cc = wpCache.get('wp_cache_coach', null);
+      var blob = cc && cc.data && cc.data[wishId] ? cc.data[wishId] : null;
+      if (blob && Array.isArray(blob.messages)) {
+        coachHistory = blob.messages.slice();
+        currentConvoId = blob.currentConvoId || null;
+        msgs.innerHTML = '';
+        coachHistory.forEach(function(m) {
+          var cls = m.role === 'user' ? 'user' : 'ai';
+          var content = m.role === 'user' ? m.content.replace(/</g,'&lt;') : m.content.replace(/\n/g,'<br>').replace(/</g,'&lt;').replace(/&lt;br>/g,'<br>');
+          msgs.innerHTML += '<div class="msg ' + cls + '">' + content + '</div>';
+        });
+        if (coachHistory.length === 0) {
+          msgs.innerHTML = '<div class="msg ai">Welcome back! I remember our conversation. What would you like to work on today?</div>';
+        }
+        msgs.scrollTop = msgs.scrollHeight;
+      } else {
+        coachHistory = [];
+        currentConvoId = null;
+        msgs.innerHTML = '<div class="msg ai">Loading your conversation...</div>';
+      }
 
+      wpCache.showUpdating('wpUpdatingCoach', true);
       try {
         var sb = getSupabase();
         var { data, error } = await sb
@@ -6443,8 +6684,14 @@
           msgs.innerHTML = '<div class="msg ai">Hi! I\'m your WishPath Coach. I\'ve studied your roadmap in detail. What would you like to tackle first? I can help you break down any phase into daily actions.</div>';
         }
         msgs.scrollTop = msgs.scrollHeight;
+        var prevCoach = wpCache.get('wp_cache_coach', null);
+        var store = prevCoach && prevCoach.data && typeof prevCoach.data === 'object' ? Object.assign({}, prevCoach.data) : {};
+        store[wishId] = { messages: coachHistory.slice(), currentConvoId: currentConvoId };
+        wpCache.set('wp_cache_coach', store);
       } catch (e) {
-        msgs.innerHTML = '<div class="msg ai">Hi! I\'m your WishPath Coach. Select a roadmap above and let\'s get to work.</div>';
+        if (!blob) msgs.innerHTML = '<div class="msg ai">Hi! I\'m your WishPath Coach. Select a roadmap above and let\'s get to work.</div>';
+      } finally {
+        wpCache.showUpdating('wpUpdatingCoach', false);
       }
     }
 
@@ -6530,6 +6777,12 @@
         }).select('id').single();
         if (data) currentConvoId = data.id;
       }
+      try {
+        var prevC = wpCache.get('wp_cache_coach', null);
+        var st = prevC && prevC.data && typeof prevC.data === 'object' ? Object.assign({}, prevC.data) : {};
+        st[wishId] = { messages: coachHistory.slice(), currentConvoId: currentConvoId };
+        wpCache.set('wp_cache_coach', st);
+      } catch (e) {}
     }
 
     function prefillCoachSuggestion(text) {
@@ -6727,6 +6980,38 @@
 
     async function renderNotesListPage() {
       var scrollEl = document.getElementById('notesListScroll');
+      var nc = wpCache.get('wp_cache_notes', null);
+      if (nc && Array.isArray(nc.data)) {
+        var vis0 = nc.data.filter(function(n) {
+          var t = n.title || '';
+          return !t.startsWith('__WP_');
+        });
+        if (vis0.length === 0) {
+          scrollEl.innerHTML = '<div class="notes-list-empty"><div class="notes-list-empty-icon">📝</div><div class="notes-list-empty-text">No notes yet</div></div>';
+        } else {
+          scrollEl.innerHTML = vis0.map(function(n) {
+            var preview = n.content ? n.content.substring(0, 50) : 'No content';
+            var timeAgo = getTimeAgo(new Date(n.updated_at));
+            return '<div class="notes-swipe-wrap">' +
+              '<div class="notes-swipe-delete" onclick="deleteNoteById(\'' + n.id + '\', this.parentElement)">' +
+                '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>' +
+              '</div>' +
+              '<div class="notes-item" onclick="openNotesEditor(\'' + n.id + '\')">' +
+                '<div class="notes-item-info">' +
+                  '<div class="notes-item-title">' + (n.title || 'Untitled').replace(/</g,'&lt;') + '</div>' +
+                  '<div class="notes-item-preview">' + preview.replace(/</g,'&lt;') + '</div>' +
+                '</div>' +
+                '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">' +
+                  '<div class="notes-item-time">' + timeAgo + '</div>' +
+                  '<div class="notes-item-chevron">></div>' +
+                '</div>' +
+              '</div>' +
+            '</div>';
+          }).join('');
+          initNoteSwipeHandlers();
+        }
+      }
+      wpCache.showUpdating('wpUpdatingPill', true);
       try {
         var sb = getSupabase();
         var { data } = await sb.from('user_notes').select('*').eq('user_id', currentUserId).order('updated_at', { ascending: false });
@@ -6737,6 +7022,7 @@
         });
         if (visible.length === 0) {
           scrollEl.innerHTML = '<div class="notes-list-empty"><div class="notes-list-empty-icon">📝</div><div class="notes-list-empty-text">No notes yet</div></div>';
+          wpCache.set('wp_cache_notes', data || []);
           return;
         }
         scrollEl.innerHTML = visible.map(function(n) {
@@ -6759,7 +7045,9 @@
           '</div>';
         }).join('');
         initNoteSwipeHandlers();
+        wpCache.set('wp_cache_notes', data || []);
       } catch(e) { console.error('Error rendering notes list:', e); }
+      finally { wpCache.showUpdating('wpUpdatingPill', false); }
     }
 
     function initNoteSwipeHandlers() {
@@ -6968,17 +7256,27 @@
 
     async function renderTodoSelect() {
       var sel = document.getElementById('todoSelect');
+      var tc = wpCache.get('wp_cache_todos', null);
+      if (tc && tc.data && Array.isArray(tc.data.lists) && tc.data.lists.length) {
+        sel.innerHTML = tc.data.lists.map(function(t) {
+          return '<option value="' + t.id + '"' + (t.id === currentTodoId ? ' selected' : '') + '>' + (t.title || 'Untitled') + '</option>';
+        }).join('');
+      }
+      wpCache.showUpdating('wpUpdatingPill', true);
       try {
         var sb = getSupabase();
         var { data } = await sb.from('user_todos').select('*').eq('user_id', currentUserId).order('updated_at', { ascending: false });
         if (!data || data.length === 0) {
           sel.innerHTML = '<option value="">No lists yet — ask the agent or click + New</option>';
+          wpCache.set('wp_cache_todos', { lists: [] });
           return;
         }
         sel.innerHTML = data.map(function(t) {
           return '<option value="' + t.id + '"' + (t.id === currentTodoId ? ' selected' : '') + '>' + (t.title || 'Untitled') + '</option>';
         }).join('');
+        wpCache.set('wp_cache_todos', { lists: data });
       } catch(e) {}
+      finally { wpCache.showUpdating('wpUpdatingPill', false); }
     }
 
     document.getElementById('todoSelect').addEventListener('change', function() {
@@ -6993,11 +7291,28 @@
 
     async function openTodoList(todoId) {
       currentTodoId = todoId;
-      var sb = getSupabase();
-      var { data } = await sb.from('user_todos').select('*').eq('id', todoId).single();
-      if (!data) return;
-      renderTodoPanel(data);
-      document.getElementById('todoSelect').value = todoId;
+      var tc = wpCache.get('wp_cache_todos', null);
+      if (tc && tc.data && Array.isArray(tc.data.lists)) {
+        var cachedRow = tc.data.lists.find(function(t) { return t.id === todoId; });
+        if (cachedRow) {
+          renderTodoPanel(cachedRow);
+          document.getElementById('todoSelect').value = todoId;
+        }
+      }
+      wpCache.showUpdating('wpUpdatingPill', true);
+      try {
+        var sb = getSupabase();
+        var { data } = await sb.from('user_todos').select('*').eq('id', todoId).single();
+        if (!data) return;
+        renderTodoPanel(data);
+        document.getElementById('todoSelect').value = todoId;
+        var lists = (tc && tc.data && Array.isArray(tc.data.lists)) ? tc.data.lists.slice() : [];
+        var ix = lists.findIndex(function(t) { return t.id === todoId; });
+        if (ix >= 0) lists[ix] = data; else lists.push(data);
+        wpCache.set('wp_cache_todos', { lists: lists });
+      } finally {
+        wpCache.showUpdating('wpUpdatingPill', false);
+      }
       if (window.innerWidth <= 768) openTodoMobileOverlay();
     }
 
@@ -7660,6 +7975,7 @@
       closeMobileFMMenu();
       document.getElementById('mobileHome').classList.add('active');
       document.body.setAttribute('data-active-view', 'home');
+      hydrateNewsFromCacheForHome();
       renderMobileRecents();
       renderMobileHomeNews();
       if (!window._marketNewsArticles || !window._marketNewsArticles.length) fetchMarketNews();
@@ -9708,6 +10024,16 @@
       if (btn) btn.classList.add('spinning');
       if (fmBtn) fmBtn.classList.add('spinning');
 
+      var wlC = wpCache.get('wp_cache_watchlist', WP_CACHE_TTL_MARKET_MS);
+      var cyC = wpCache.get('wp_cache_crypto', WP_CACHE_TTL_MARKET_MS);
+      if (wlC && wlC.data && wlC.data.stocks) wpMergeQuoteMapIntoMarkets(wlC.data.stocks);
+      if (cyC && cyC.data && cyC.data.quotes) wpMergeQuoteMapIntoMarkets(cyC.data.quotes);
+      if (wlC || cyC) renderMarketCards();
+
+      wpCache.showUpdating('wpUpdatingMag7', true);
+      wpCache.showUpdating('wpUpdatingCrypto', true);
+      wpCache.showUpdating('wpUpdatingFmMarkets', true);
+
       // Fetch all quotes via Alpaca snapshot API directly
       var allSymbols = MAG7.map(function(s) { return s.symbol; }).concat(CRYPTO.map(function(c) { return c.symbol; }));
 
@@ -9730,6 +10056,11 @@
       if (fmTs) fmTs.textContent = timeStr;
       if (btn) btn.classList.remove('spinning');
       if (fmBtn) fmBtn.classList.remove('spinning');
+      wpPersistStockWatchlistCache();
+      wpPersistCryptoCache();
+      wpCache.showUpdating('wpUpdatingMag7', false);
+      wpCache.showUpdating('wpUpdatingCrypto', false);
+      wpCache.showUpdating('wpUpdatingFmMarkets', false);
     }
 
     function renderMarketCards() {
@@ -9826,6 +10157,14 @@
       var fmNewsList = document.getElementById('fmMarketNewsList');
       var existingArticles = Array.isArray(window._marketNewsArticles) ? window._marketNewsArticles.slice() : [];
       window._marketNewsStatus = 'loading';
+      var mnPre = wpCache.get('wp_cache_news', WP_CACHE_TTL_NEWS_MS);
+      if (mnPre && mnPre.data && Array.isArray(mnPre.data.articles) && mnPre.data.articles.length) {
+        window._marketNewsArticles = mnPre.data.articles.slice();
+        window._newsFeedArticles = mnPre.data.articles.slice();
+        window._marketNewsStatus = 'ready';
+        renderMobileHomeNews();
+      }
+      wpCache.showUpdating('wpUpdatingNews', true);
       try {
         var holdings = Array.isArray(portfolioHoldings) ? portfolioHoldings : [];
         var lists = Array.isArray(watchlists) ? watchlists : [];
@@ -9869,6 +10208,7 @@
           if (newsList) newsList.innerHTML = html;
           if (fmNewsList) fmNewsList.innerHTML = html;
           persistMarketNewsCache(window._marketNewsArticles);
+          try { wpCache.set('wp_cache_news', { articles: window._marketNewsArticles }); } catch (eWp) {}
           renderMobileHomeNews();
           queueArticlePrefetch(window._marketNewsArticles);
         } else {
@@ -9897,6 +10237,8 @@
         if (newsList) newsList.innerHTML = errHtml;
         if (fmNewsList) fmNewsList.innerHTML = errHtml;
         renderMobileHomeNews();
+      } finally {
+        wpCache.showUpdating('wpUpdatingNews', false);
       }
     }
 
@@ -10523,6 +10865,13 @@
 
     async function loadPortfolioFromDB() {
       if (!currentUserId) return;
+      var pc = wpCache.get('wp_cache_portfolio', null);
+      if (pc && pc.data && Array.isArray(pc.data.holdings)) {
+        portfolioHoldings = pc.data.holdings.slice();
+        if (pc.data.prices && typeof pc.data.prices === 'object') portfolioPrices = Object.assign({}, pc.data.prices);
+        renderHoldings();
+      }
+      wpCache.showPortfolioUpdating(true);
       try {
         var sb = getSupabase();
         var { data } = await sb.from('user_notes').select('*').eq('user_id', currentUserId).eq('title', '__WP_PORTFOLIO__').limit(1);
@@ -10530,7 +10879,13 @@
           try { portfolioHoldings = JSON.parse(data[0].content); } catch(e) { portfolioHoldings = []; }
           window._portfolioNoteId = data[0].id;
         }
+        try {
+          wpCache.set('wp_cache_portfolio', { holdings: portfolioHoldings.slice(), prices: Object.assign({}, portfolioPrices) });
+        } catch (e2) {}
       } catch(e) { console.error('Load portfolio error:', e); }
+      finally {
+        wpCache.showPortfolioUpdating(false);
+      }
       _portfolioLoaded = true;
       if (window.innerWidth <= 768 && document.getElementById('mobileHome') && document.getElementById('mobileHome').classList.contains('active')) {
         setTimeout(function() { fetchMarketNews(); }, 0);
@@ -10844,16 +11199,24 @@
       // Copy from marketsCache to portfolioPrices
       symbols.forEach(function(s) { if (marketsCache[s]) portfolioPrices[s] = marketsCache[s]; });
 
-      if (missing.length > 0) {
+      if (missing.length > 0) wpCache.showPortfolioUpdating(true);
+      try {
+        if (missing.length > 0) {
+          try {
+            var quotes = await fetchAlpacaQuotes(missing);
+            quotes.forEach(function(q) {
+              portfolioPrices[q.symbol] = q;
+              marketsCache[q.symbol] = q;
+            });
+          } catch(e) { console.error('Portfolio price fetch error:', e); }
+        }
+        renderHoldings();
         try {
-          var quotes = await fetchAlpacaQuotes(missing);
-          quotes.forEach(function(q) {
-            portfolioPrices[q.symbol] = q;
-            marketsCache[q.symbol] = q;
-          });
-        } catch(e) { console.error('Portfolio price fetch error:', e); }
+          wpCache.set('wp_cache_portfolio', { holdings: portfolioHoldings.slice(), prices: Object.assign({}, portfolioPrices) });
+        } catch (e) {}
+      } finally {
+        if (missing.length > 0) wpCache.showPortfolioUpdating(false);
       }
-      renderHoldings();
     }
 
     // ── Portfolio AI Coach ──
@@ -12444,16 +12807,31 @@
     async function refreshWatchlistPrices() {
       var wl = watchlists.find(function(w) { return w.id === activeWatchlistId; });
       if (!wl || !wl.symbols.length) return;
+      var wlC = wpCache.get('wp_cache_watchlist', WP_CACHE_TTL_MARKET_MS);
+      if (wlC && wlC.data && wlC.data.stocks) {
+        wl.symbols.forEach(function(s) {
+          if (wlC.data.stocks[s]) watchlistPrices[s] = wlC.data.stocks[s];
+        });
+        renderWatchlistItems();
+      }
       watchlistPrevPrices = JSON.parse(JSON.stringify(watchlistPrices));
+      wpCache.showUpdating('wpUpdatingWatchlist', true);
+      wpCache.showUpdating('wpUpdatingFmWatchlist', true);
       var toFetch = wl.symbols.filter(function(s) { return !marketsCache[s]; });
       wl.symbols.forEach(function(s) { if (marketsCache[s]) watchlistPrices[s] = marketsCache[s]; });
-      if (toFetch.length > 0) {
-        try {
-          var quotes = await fetchAlpacaQuotes(toFetch);
-          quotes.forEach(function(q) { watchlistPrices[q.symbol] = q; marketsCache[q.symbol] = q; });
-        } catch(e) {}
+      try {
+        if (toFetch.length > 0) {
+          try {
+            var quotes = await fetchAlpacaQuotes(toFetch);
+            quotes.forEach(function(q) { watchlistPrices[q.symbol] = q; marketsCache[q.symbol] = q; });
+          } catch(e) {}
+        }
+        renderWatchlistItems();
+        wpPersistStockWatchlistCache();
+      } finally {
+        wpCache.showUpdating('wpUpdatingWatchlist', false);
+        wpCache.showUpdating('wpUpdatingFmWatchlist', false);
       }
-      renderWatchlistItems();
     }
 
     function refreshActiveWatchlist() {
@@ -12904,21 +13282,26 @@
       var container = document.getElementById('newsFeedContainer');
       var customizeBtn = document.getElementById('newsCustomizeBtn');
       if (customizeBtn) customizeBtn.style.opacity = '0.5';
-      container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-dim);">Loading personalized news...</div>';
 
-      // Get filter values
       var countryEl = document.getElementById('newsCountryFilter');
       var industryEl = document.getElementById('newsIndustryFilter');
       var country = overrideCountry || (countryEl ? countryEl.value : '');
       var industry = overrideIndustry || (industryEl ? industryEl.value : '');
-      // Hide landing text once filters are used or news loads
       var landing = document.getElementById('newsFilterLanding');
       if (landing) landing.style.display = 'none';
 
-      // Build tickers from portfolio + watchlists for personalization
       var userTickers = portfolioHoldings.map(function(h) { return h.symbol; });
       watchlists.forEach(function(wl) { wl.symbols.forEach(function(s) { if (userTickers.indexOf(s) === -1) userTickers.push(s); }); });
       var tickerStr = userTickers.length > 0 ? userTickers.slice(0, 15).join(',') : 'AAPL,MSFT,GOOGL,AMZN,NVDA,META,TSLA';
+
+      var newsCached = wpCache.get('wp_cache_news', WP_CACHE_TTL_NEWS_MS);
+      if (newsCached && newsCached.data && Array.isArray(newsCached.data.articles) && newsCached.data.articles.length) {
+        renderNewsFeed(normalizeNewsArticlesForFeed(newsCached.data.articles), userTickers);
+        wpSyncNewsToMobile(window._newsFeedArticles || newsCached.data.articles);
+      } else {
+        container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-dim);">Loading personalized news...</div>';
+      }
+      wpCache.showUpdating('wpUpdatingNews', true);
 
       try {
         var requests = buildNewsFeedRequests(tickerStr, country, industry);
@@ -12944,20 +13327,23 @@
             };
           });
           renderNewsFeed(articles, userTickers);
+          wpCache.set('wp_cache_news', { articles: articles, userTickers: userTickers.slice() });
+          wpSyncNewsToMobile(articles);
         } else {
           container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-dim);">No news found for that filter yet. Try another country or industry.</div>';
         }
       } catch(e) {
         console.error('News feed error:', e);
-        // Retry once after 2s
         if (!window._newsFeedRetried) {
           window._newsFeedRetried = true;
           setTimeout(function() { refreshNewsFeed(overrideCountry, overrideIndustry); }, 2000);
           return;
         }
         container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-dim);">Connection error loading news. <button onclick="window._newsFeedRetried=false;refreshNewsFeed();" style="color:var(--accent);background:none;border:1px solid var(--accent);border-radius:8px;padding:6px 14px;cursor:pointer;font-size:0.85rem;margin-top:8px;">Retry</button></div>';
+      } finally {
+        wpCache.showUpdating('wpUpdatingNews', false);
+        if (customizeBtn) customizeBtn.style.opacity = '1';
       }
-      if (customizeBtn) customizeBtn.style.opacity = '1';
     }
 
     function renderNewsFeed(articles, userTickers) {
@@ -13627,6 +14013,12 @@
     // ── Live Crypto Refresh — fallback polling (only when Alpaca WS is disconnected) ──
     async function refreshCryptoPrices() {
       if (alpacaWS.cryptoConnected) return; // Alpaca streaming is live, skip polling
+      var cyC = wpCache.get('wp_cache_crypto', WP_CACHE_TTL_MARKET_MS);
+      if (cyC && cyC.data && cyC.data.quotes) {
+        wpMergeQuoteMapIntoMarkets(cyC.data.quotes);
+        renderCryptoCards();
+      }
+      wpCache.showUpdating('wpUpdatingCrypto', true);
       var cryptoSymbols = CRYPTO.map(function(c) { return c.symbol; });
       try {
         var quotes = await fetchAlpacaQuotes(cryptoSymbols);
@@ -13637,7 +14029,11 @@
           marketsCache[q.symbol] = q;
         });
         if (changed) renderCryptoCards();
+        wpPersistCryptoCache();
       } catch(e) { /* silent — will retry in 10s */ }
+      finally {
+        wpCache.showUpdating('wpUpdatingCrypto', false);
+      }
     }
 
     function renderCryptoCards() {
