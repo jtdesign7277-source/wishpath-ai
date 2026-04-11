@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-09-v157';
+    var APP_VERSION = '2026-04-09-v158';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -2634,6 +2634,19 @@
       #fmPortfolioContent { overflow-x: hidden; }
       #holdingsTable, #fmHoldingsTable, #mobileHoldingsTable { min-width: 0 !important; }
       .holding-symbol-badge, .holding-symbol-btn { font-size: 11px !important; padding: 0 !important; background: none !important; border: none !important; }
+      #mobilePortfolioTab .holdings-table th,
+      #mobilePortfolioTab .holdings-table td {
+        font-size: 15px !important;
+        padding: 12px 8px !important;
+      }
+      #mobilePortfolioTab .holdings-table th {
+        font-size: 12px !important;
+        font-weight: 700;
+      }
+      #mobilePortfolioTab .holding-symbol-badge,
+      #mobilePortfolioTab .holding-symbol-btn {
+        font-size: 15px !important;
+      }
       .qty-label { display: none; }
       .portfolio-coach-input { font-size: 16px !important; }
       .portfolio-coach-suggestions { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
@@ -10161,6 +10174,7 @@
       }
 
       renderMarketCards();
+      if (document.getElementById('mobileStockGrid')) renderMobileMarkets();
 
       // Update timestamp
       var ts = document.getElementById('marketsUpdatedTime');
@@ -10210,28 +10224,32 @@
       if (mag7Grid) mag7Grid.innerHTML = mag7Html;
       if (cryptoGrid) cryptoGrid.innerHTML = cryptoHtml;
 
-      // Populate FM Markets tab (list rows)
+      // Populate FM Markets tab (list rows) — quoteKey must match marketsCache (e.g. BTC/USD not BTC)
       var fmStockList = document.getElementById('fmStockList');
       if (fmStockList) {
+        var fmRows = MAG7.map(function(s) {
+          return { label: s.symbol, name: s.name, quoteKey: s.symbol, chartSym: s.symbol };
+        }).concat(CRYPTO.map(function(c) {
+          return { label: c.display || c.symbol, name: c.name, quoteKey: c.symbol, chartSym: c.display || c.symbol.replace(/\/USD$/, '') };
+        }));
         var listHtml = '';
-        MAG7.concat(CRYPTO.map(function(c){ return { symbol: c.display || c.symbol, name: c.name }; })).forEach(function(stock) {
-          var sym = stock.symbol || stock.display;
-          var q = marketsCache[sym];
-          var logo = buildTickerLogoHtml(sym, 36);
+        fmRows.forEach(function(row) {
+          var q = marketsCache[row.quoteKey];
+          var logo = buildTickerLogoHtml(row.label, 36);
           var price = q ? '$' + formatNum(q.price) : '--';
           var changeClass = q && q.change > 0 ? 'up' : q && q.change < 0 ? 'down' : 'flat';
           var sign = q && q.change > 0 ? '+' : '';
           var changeText = q ? sign + formatNum(q.change) + ' (' + sign + formatNum(q.changePercent) + '%)' : '';
           var changeColor = changeClass === 'up' ? '#22c55e' : changeClass === 'down' ? '#ef4444' : 'rgba(255,255,255,0.4)';
-          listHtml += '<div onclick="openTickerChart(\'' + sym + '\')" style="display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.06);cursor:pointer;">'
+          listHtml += '<div onclick="openTickerChart(\'' + row.chartSym + '\')" style="display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.06);cursor:pointer;">'
             + '<div style="flex-shrink:0;width:36px;height:36px;margin-right:12px;display:flex;align-items:center;justify-content:center;">' + logo + '</div>'
             + '<div style="flex:1;min-width:0;">'
-            + '<div style="font-size:14px;font-weight:600;color:#fff;">' + sym + '</div>'
-            + '<div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:1px;">' + stock.name + '</div>'
+            + '<div style="font-size:15px;font-weight:600;color:#fff;">' + row.label + '</div>'
+            + '<div style="font-size:12px;color:rgba(255,255,255,0.45);margin-top:1px;">' + row.name + '</div>'
             + '</div>'
             + '<div style="text-align:right;">'
-            + '<div style="font-size:14px;font-weight:600;color:#fff;">' + price + '</div>'
-            + '<div style="font-size:11px;color:' + changeColor + ';margin-top:1px;">' + changeText + '</div>'
+            + '<div style="font-size:15px;font-weight:600;color:#fff;">' + price + '</div>'
+            + '<div style="font-size:12px;color:' + changeColor + ';margin-top:1px;">' + changeText + '</div>'
             + '</div>'
             + '</div>';
         });
@@ -11520,7 +11538,7 @@
 
       var tabsHtml = '<div class="home-tabs premium-top-tabs sleek-home-tabs" role="tablist" aria-label="Home sections">' +
         '<button type="button" class="home-tab tab-btn active" role="tab" aria-selected="true" onclick="switchMobileHomeTab(\'roadmap\', this)">Roadmap</button>' +
-        '<button type="button" class="home-tab tab-btn" role="tab" aria-selected="false" onclick="showView(\'fm\')">Markets</button>' +
+        '<button type="button" class="home-tab tab-btn" role="tab" aria-selected="false" onclick="switchMobileHomeTab(\'markets\', this)">Markets</button>' +
         '<button type="button" class="home-tab tab-btn" role="tab" aria-selected="false" onclick="switchMobileHomeTab(\'portfolio\', this)">Portfolio</button>' +
         '</div>';
 
@@ -12486,9 +12504,9 @@
         totalVal += val; totalDayPL += dayPL;
         if (hasPrice && h.avgCost > 0) { totalPL += totalItemPL; totalCostBasis += h.avgCost * h.qty; }
         var dayClass = dayPL > 0 ? 'color:#22c55e' : dayPL < 0 ? 'color:#ef4444' : 'color:var(--kraken-text-dim)';
-        var logo = buildTickerLogoHtml(h.symbol, 22);
+        var logo = buildTickerLogoHtml(h.symbol, 28);
         return '<tr onclick="openHoldingActions(' + i + ')" style="cursor:pointer;">' +
-          '<td><div style="display:flex;align-items:center;gap:6px;">' + logo + '<span class="holding-symbol-badge">' + h.symbol + '</span></div></td>' +
+          '<td><div style="display:flex;align-items:center;gap:8px;">' + logo + '<span class="holding-symbol-badge">' + h.symbol + '</span></div></td>' +
           '<td>' + h.qty + '</td>' +
           '<td>' + (hasPrice ? '$' + formatNum(p.price) : '--') + '</td>' +
           '<td>' + (hasPrice ? '$' + formatNum(val) : '--') + '</td>' +
@@ -14165,26 +14183,29 @@
     function refreshFMStockList() {
       var fmStockList = document.getElementById('fmStockList');
       if (!fmStockList) return;
-      var allStocks = MAG7.concat(CRYPTO.map(function(c){ return { symbol: c.display || c.symbol, name: c.name }; }));
+      var fmRows = MAG7.map(function(s) {
+        return { label: s.symbol, name: s.name, quoteKey: s.symbol, chartSym: s.symbol };
+      }).concat(CRYPTO.map(function(c) {
+        return { label: c.display || c.symbol, name: c.name, quoteKey: c.symbol, chartSym: c.display || c.symbol.replace(/\/USD$/, '') };
+      }));
       var listHtml = '';
-      allStocks.forEach(function(stock) {
-        var sym = stock.symbol || stock.display;
-        var q = marketsCache[sym];
-        var logo = buildTickerLogoHtml(sym, 36);
+      fmRows.forEach(function(row) {
+        var q = marketsCache[row.quoteKey];
+        var logo = buildTickerLogoHtml(row.label, 36);
         var price = q ? '$' + formatNum(q.price) : '--';
         var changeClass = q && q.change > 0 ? 'up' : q && q.change < 0 ? 'down' : 'flat';
         var sign = q && q.change > 0 ? '+' : '';
         var changeText = q ? sign + formatNum(q.change) + ' (' + sign + formatNum(q.changePercent) + '%)' : '';
         var changeColor = changeClass === 'up' ? '#22c55e' : changeClass === 'down' ? '#ef4444' : 'rgba(255,255,255,0.4)';
-        listHtml += '<div onclick="openTickerChart(\'' + sym + '\')" style="display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.06);cursor:pointer;">'
+        listHtml += '<div onclick="openTickerChart(\'' + row.chartSym + '\')" style="display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.06);cursor:pointer;">'
           + '<div style="flex-shrink:0;width:36px;height:36px;margin-right:12px;display:flex;align-items:center;justify-content:center;">' + logo + '</div>'
           + '<div style="flex:1;min-width:0;">'
-          + '<div style="font-size:14px;font-weight:600;color:#fff;">' + sym + '</div>'
-          + '<div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:1px;">' + stock.name + '</div>'
+          + '<div style="font-size:15px;font-weight:600;color:#fff;">' + row.label + '</div>'
+          + '<div style="font-size:12px;color:rgba(255,255,255,0.45);margin-top:1px;">' + row.name + '</div>'
           + '</div>'
           + '<div style="text-align:right;">'
-          + '<div style="font-size:14px;font-weight:600;color:#fff;">' + price + '</div>'
-          + '<div style="font-size:11px;color:' + changeColor + ';margin-top:1px;">' + changeText + '</div>'
+          + '<div style="font-size:15px;font-weight:600;color:#fff;">' + price + '</div>'
+          + '<div style="font-size:12px;color:' + changeColor + ';margin-top:1px;">' + changeText + '</div>'
           + '</div>'
           + '</div>';
       });
