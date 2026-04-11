@@ -131,7 +131,7 @@ let screenFlash=0,screenFlashColor='#FFF';
 // Combo system
 let comboMultiplier=1,comboTimer=0;
 
-// ENEMY SPACECRAFT — fly in from right, shootable
+// ENEMY SPACECRAFT — fly in from right, auto-blaster hits them
 let enemies=[];
 let enemySpawnTimer=0;
 const ENEMY_SPAWN_INTERVAL=2.5; // seconds between spawns
@@ -142,12 +142,19 @@ const ENEMY_TYPES=[
   {w:60,h:30,hp:3,pts:5000,color:'#F97316',name:'Destroyer'},
 ];
 
-// SPACESHIP GUNS — always available, "SHOOT" button
-let gunAmmo=10,gunCooldown=0;
+// SPACESHIP GUNS — auto-fire; tier up from diamond gun-orbs
+let gunTier=0,gunCooldown=0;
 let projectiles=[];
-const GUN_COOLDOWN=0.2,PROJECTILE_SPEED=900,MAX_AMMO=15;
-let shootButtonPressed=false;
-let ammoPickups=[];
+const PROJECTILE_SPEED=900;
+const GUN_CONFIG=[
+  { interval:0.14, bullets:[{dy:0,vy:0,color:'#FF2EC4'}] },
+  { interval:0.11, bullets:[{dy:-9,vy:0,color:'#FF2EC4'},{dy:9,vy:0,color:'#FF6BD6'}] },
+  { interval:0.09, bullets:[{dy:-11,vy:-55,color:'#22D3EE'},{dy:0,vy:0,color:'#7DF900'},{dy:11,vy:55,color:'#FDE047'}] },
+  { interval:0.058, bullets:[{dy:-14,vy:-140,color:'#22D3EE'},{dy:-5,vy:-45,color:'#A855F7'},{dy:5,vy:45,color:'#F97316'},{dy:14,vy:140,color:'#FF2EC4'}] },
+  { interval:0.044, bullets:[{dy:-15,vy:-200,color:'#67E8F9'},{dy:-5,vy:-70,color:'#C084FC'},{dy:5,vy:70,color:'#FBBF24'},{dy:15,vy:200,color:'#FB7185'}] },
+  { interval:0.032, bullets:[{dy:-16,vy:-260,color:'#22D3EE'},{dy:-5,vy:-90,color:'#A855F7'},{dy:5,vy:90,color:'#7DF900'},{dy:16,vy:260,color:'#FF2EC4'}] },
+];
+let gunOrbPickups=[];
 
 // Speed lines (for rocket boost)
 let speedLines=[];
@@ -540,6 +547,7 @@ function generateWalls(){
     if(Math.random()<0.04)bitcoins.push({x:nextWallX+rand(-15,15),y:gapY,collected:false,anim:rand(0,6.28)});
     if(Math.random()<0.05)blueDiamonds.push({x:nextWallX+rand(5,35),y:gapY+rand(-15,15),collected:false,anim:rand(0,6.28)});
     if(Math.random()<0.035)rocketBoosters.push({x:nextWallX+rand(5,30),y:gapY+rand(-gapH*0.15,gapH*0.15),collected:false,anim:rand(0,6.28)});
+    if(Math.random()<0.026)gunOrbPickups.push({x:nextWallX+rand(8,42),y:gapY+rand(-gapH*0.22,gapH*0.22),collected:false,anim:rand(0,6.28)});
 
     patternWallsLeft--;patternStep++;
   }
@@ -864,12 +872,15 @@ function drawShip(time){
   ctx.fillStyle='#C084FC';ctx.strokeStyle='#FF2EC4';ctx.lineWidth=1;
   ctx.fillRect(SHIP_W*0.4,-SHIP_H*0.18,SHIP_W*0.2,3);ctx.strokeRect(SHIP_W*0.4,-SHIP_H*0.18,SHIP_W*0.2,3);
   ctx.fillRect(SHIP_W*0.4,SHIP_H*0.12,SHIP_W*0.2,3);ctx.strokeRect(SHIP_W*0.4,SHIP_H*0.12,SHIP_W*0.2,3);
-  // Muzzle glow when shooting
-  if(shootButtonPressed&&gunAmmo>0){
-    ctx.shadowColor='#FF2EC4';ctx.shadowBlur=12;
-    ctx.fillStyle='#FF2EC4';ctx.beginPath();ctx.arc(SHIP_W*0.62,-SHIP_H*0.16,3,0,Math.PI*2);ctx.fill();
-    ctx.beginPath();ctx.arc(SHIP_W*0.62,SHIP_H*0.14,3,0,Math.PI*2);ctx.fill();
-    ctx.shadowBlur=0;
+  // Muzzle glow while auto-firing (recent shot)
+  if(state===STATE.PLAYING){
+    const gc=GUN_CONFIG[Math.min(gunTier,GUN_CONFIG.length-1)];
+    if(gunCooldown>gc.interval*0.82){
+      ctx.shadowColor='#FF2EC4';ctx.shadowBlur=10+gunTier*2;
+      ctx.fillStyle='#FF6BD6';ctx.beginPath();ctx.arc(SHIP_W*0.62,-SHIP_H*0.16,2.5+gunTier*0.4,0,Math.PI*2);ctx.fill();
+      ctx.beginPath();ctx.arc(SHIP_W*0.62,SHIP_H*0.14,2.5+gunTier*0.4,0,Math.PI*2);ctx.fill();
+      ctx.shadowBlur=0;
+    }
   }
 
   // Fins
@@ -1058,6 +1069,22 @@ function checkCollisions(){
       }
     }
   }
+
+  // Gun upgrade orbs — diamond cluster; each pickup raises blaster tier (max 5)
+  for(const go of gunOrbPickups){
+    if(go.collected)continue;
+    if(Math.abs((SHIP_X+cameraX)-go.x)<30&&Math.abs(ship.y-go.y)<30){
+      go.collected=true;
+      const prev=gunTier;
+      gunTier=Math.min(gunTier+1,GUN_CONFIG.length-1);
+      const names=['DUAL BLAST','TRIPLE','QUAD STREAM','RAPID FIRE','MAX BLASTER'];
+      const msg=gunTier>prev?'⚡ '+names[gunTier-1]+'!':'⚡ MAX — BONUS!';
+      spawnOrbBurst(go.x-cameraX,go.y,['#22D3EE','#A855F7','#FDE047','#FF2EC4','#FFF'],45,10);
+      shakeDur=0.18;screenFlash=0.22;screenFlashColor='#A855F7';
+      addFloatingText(go.x-cameraX,go.y-22,msg,'#FDE047',15);
+      score+=500*comboMultiplier;
+    }
+  }
 }
 
 function takeDamage(){
@@ -1093,7 +1120,7 @@ function startGame(){
   ship.y=H/2;ship.vy=0;ship.targetY=H/2;ship.bankAngle=0;ship.trail=[];
   walls=[];diamonds=[];bitcoins=[];blueDiamonds=[];rocketBoosters=[];
   particles=[];deathParticles=[];persistentSmoke=[];floatingTexts=[];speedLines=[];sparkles=[];
-  enemies=[];enemySpawnTimer=0;projectiles=[];gunAmmo=MAX_AMMO;gunCooldown=0;shootButtonPressed=false;ammoPickups=[];
+  enemies=[];enemySpawnTimer=0;projectiles=[];gunTier=0;gunCooldown=0;gunOrbPickups=[];
   shakeX=0;shakeY=0;shakeDur=0;screenFlash=0;deathTimer=0;blueDiamondHudFlash=0;rocketBoostHudFlash=0;
   comboMultiplier=1;comboTimer=0;
   aButtonPressed=false;useMouseFollow=false;patternWallsLeft=0;
@@ -1125,19 +1152,25 @@ function update(dt){
   }
   if(!aButtonPressed&&rocketBoostActive){rocketBoostActive=false;}
 
-  // GUNS — fire projectiles
+  // GUNS — continuous auto-fire (tier sets rate + barrel count / colors)
   if(gunCooldown>0)gunCooldown-=dt;
-  if(shootButtonPressed&&gunAmmo>0&&gunCooldown<=0){
-    projectiles.push({x:SHIP_X+cameraX+SHIP_W,y:ship.y,dead:false});
-    gunAmmo--;gunCooldown=GUN_COOLDOWN;
-    shakeDur=Math.max(shakeDur,0.04);
-    spawnOrbBurst(SHIP_X+SHIP_W,ship.y,['#FF2EC4','#FF6BD6','#FFF'],6,2);
+  if(gunCooldown<=0){
+    const cfg=GUN_CONFIG[Math.min(gunTier,GUN_CONFIG.length-1)];
+    gunCooldown=cfg.interval;
+    const bx=SHIP_X+cameraX+SHIP_W,by=ship.y;
+    for(const b of cfg.bullets){
+      projectiles.push({x:bx,y:by+b.dy,vy:b.vy||0,dead:false,color:b.color||'#FF2EC4'});
+    }
+    shakeDur=Math.max(shakeDur,0.025);
+    spawnOrbBurst(SHIP_X+SHIP_W,ship.y,['#FF2EC4','#FF6BD6','#FFF'],4+gunTier,2);
   }
 
   // Update projectiles
   for(const p of projectiles){
     if(p.dead)continue;
     p.x+=PROJECTILE_SPEED*dt;
+    p.y+=(p.vy||0)*dt;
+    p.y=clamp(p.y,8,H-8);
     if(p.x-cameraX>W+50){p.dead=true;continue;}
     // Hit enemies
     for(const e of enemies){
@@ -1152,8 +1185,7 @@ function update(dt){
           spawnOrbBurst(ex,e.y,[e.type.color,'#FDE047','#FFF','#FF6BD6'],60,10);
           addFloatingText(ex,e.y-30,'💥 +'+pts.toLocaleString(),e.type.color,20);
           shakeDur=0.2;screenFlash=0.25;screenFlashColor=e.type.color;
-          // Drop ammo 50% chance
-          if(Math.random()<0.5)ammoPickups.push({x:e.x,y:e.y,collected:false,anim:rand(0,6.28)});
+          if(Math.random()<0.12)gunOrbPickups.push({x:e.x,y:e.y,collected:false,anim:rand(0,6.28)});
         } else {
           spawnOrbBurst(ex,e.y,['#FFF','#FF2EC4'],15,4);
           addFloatingText(ex,e.y-20,'HIT!','#FF2EC4',14);
@@ -1212,23 +1244,13 @@ function update(dt){
   }
   enemies=enemies.filter(e=>!e.dead);
 
-  // Ammo pickups
-  for(const a of ammoPickups){
-    if(a.collected)continue;
-    if(Math.abs((SHIP_X+cameraX)-a.x)<24&&Math.abs(ship.y-a.y)<24){
-      a.collected=true;gunAmmo=Math.min(gunAmmo+5,MAX_AMMO);
-      spawnOrbBurst(a.x-cameraX,a.y,['#FF2EC4','#FF6BD6','#FFF'],20,5);
-      addFloatingText(a.x-cameraX,a.y-20,'+5 AMMO','#FF2EC4',14);
-    }
-  }
-
   generateWalls();updateShip(dt);checkCollisions();
   updateParticles(dt);updatePersistentSmoke(dt);updateFloatingTexts(dt);updateSpeedLines(dt);updateSparkles(dt);
 
   const cleanX=cameraX-200;
   walls=walls.filter(w=>w.x+60>cleanX);diamonds=diamonds.filter(d=>d.x>cleanX);
   bitcoins=bitcoins.filter(b=>b.x>cleanX);blueDiamonds=blueDiamonds.filter(b=>b.x>cleanX);
-  rocketBoosters=rocketBoosters.filter(r=>r.x>cleanX);ammoPickups=ammoPickups.filter(a=>a.x>cleanX);
+  rocketBoosters=rocketBoosters.filter(r=>r.x>cleanX);gunOrbPickups=gunOrbPickups.filter(g=>g.x>cleanX);
 
   if(!rocketBoostActive){
     if(shakeDur>0){shakeDur-=dt;shakeX=rand(-8,8)*(shakeDur/0.5);shakeY=rand(-8,8)*(shakeDur/0.5);}else{shakeX=0;shakeY=0;}
@@ -1257,6 +1279,11 @@ function drawHUD(){
   ctx.fillStyle='rgba(0,0,0,0.5)';ctx.beginPath();ctx.roundRect(pad+8,pad+20,170,30,15);ctx.fill();
   ctx.font=arcadeFont(10);ctx.fillStyle='#FDE047';ctx.textAlign='left';
   ctx.fillText('★ '+Math.floor(score).toLocaleString(),pad+20,pad+40);
+  if(gunTier>0){
+    ctx.fillStyle='rgba(0,0,0,0.45)';ctx.beginPath();ctx.roundRect(pad+8,pad+52,138,22,11);ctx.fill();
+    ctx.font=arcadeFont(8);ctx.fillStyle='#67E8F9';ctx.textAlign='left';
+    ctx.fillText('BLASTER Lv '+gunTier,pad+18,pad+67);
+  }
 
   // (Level pill removed per user request)
 
@@ -1578,7 +1605,7 @@ function drawMenuScreen(){
   ctx.fillStyle='#FFF';ctx.beginPath();ctx.moveTo(-btnR*0.22,-btnR*0.32);ctx.lineTo(-btnR*0.22,btnR*0.32);ctx.lineTo(btnR*0.32,0);ctx.closePath();ctx.fill();
   ctx.restore();
   ctx.font=arcadeFont(Math.min(9,W*0.013));ctx.fillStyle='rgba(255,255,255,0.45)';ctx.textAlign='center';ctx.fillText('TAP / CLICK TO PLAY',W/2,btnY+btnR+28);
-  ctx.font=arcadeFont(Math.min(7,W*0.01));ctx.fillStyle='rgba(255,255,255,0.3)';ctx.fillText('DRAG / ARROWS / MOUSE TO STEER · HOLD 🚀 TO BOOST',W/2,btnY+btnR+46);
+  ctx.font=arcadeFont(Math.min(7,W*0.01));ctx.fillStyle='rgba(255,255,255,0.3)';ctx.fillText('AUTO-BLAST · GRAB CYAN GUN DIAMONDS TO POWER UP · HOLD 🚀 TO BOOST',W/2,btnY+btnR+46);
   ctx.font=arcadeFont(Math.min(10,W*0.014));ctx.fillStyle='rgba(255,255,255,0.4)';ctx.fillText('ATTEMPT '+attempt,W/2,H*0.84);
   if(highScore>0){ctx.fillStyle='#FDE047';ctx.fillText('★ BEST: '+highScore.toLocaleString(),W/2,H*0.9);}
 }
@@ -1623,55 +1650,6 @@ function drawGameOverScreen(){
 }
 
 // ─── DRAW ──────────────────────────────────────────────────────
-// ─── SHOOT MORE GUNS BUTTON ────────────────────────────────────
-function drawShootButton(){
-  // Pill-shaped button at bottom-right so "SHOOT MORE GUNS" fits
-  const pw=140,ph=52;
-  const bx=W-pw/2-16,by=H-ph/2-20;
-  const pulse=shootButtonPressed?0.92:1+Math.sin(performance.now()*0.005)*0.04;
-  const hasAmmo=gunAmmo>0;
-  ctx.save();ctx.translate(bx,by);ctx.scale(pulse,pulse);
-  // Glow
-  ctx.shadowColor=hasAmmo?'#FF2EC4':'#444';ctx.shadowBlur=hasAmmo?22:5;
-  // Pill background gradient
-  const bg=ctx.createLinearGradient(0,-ph/2,0,ph/2);
-  bg.addColorStop(0,hasAmmo?'rgba(255,46,196,0.55)':'rgba(80,80,80,0.3)');
-  bg.addColorStop(1,hasAmmo?'rgba(168,85,247,0.35)':'rgba(40,40,40,0.15)');
-  ctx.fillStyle=bg;
-  const r=ph/2;
-  ctx.beginPath();
-  ctx.moveTo(-pw/2+r,-ph/2);
-  ctx.lineTo(pw/2-r,-ph/2);
-  ctx.arc(pw/2-r,0,r,-Math.PI/2,Math.PI/2);
-  ctx.lineTo(-pw/2+r,ph/2);
-  ctx.arc(-pw/2+r,0,r,Math.PI/2,Math.PI*1.5);
-  ctx.closePath();
-  ctx.fill();
-  ctx.strokeStyle=hasAmmo?'#FF6BD6':'#555';ctx.lineWidth=2.5;ctx.stroke();
-  ctx.shadowBlur=0;
-  // "SHOOT MORE GUNS" text
-  ctx.font='900 13px "Arial Black",Arial,sans-serif';
-  ctx.fillStyle=hasAmmo?'#FFF':'#888';
-  ctx.textAlign='center';ctx.textBaseline='middle';
-  ctx.fillText('SHOOT MORE GUNS',0,-6);
-  // Ammo count below
-  ctx.font=arcadeFont(8);
-  ctx.fillStyle=gunAmmo>5?'#FFF':gunAmmo>0?'#FDE047':'#FF4444';
-  ctx.fillText('AMMO '+gunAmmo+'/'+MAX_AMMO,0,12);
-  // Cooldown bar along bottom edge
-  if(gunCooldown>0){
-    ctx.globalAlpha=0.5;
-    ctx.strokeStyle='#FFF';ctx.lineWidth=2;
-    const pct=1-gunCooldown/GUN_COOLDOWN;
-    ctx.beginPath();
-    ctx.moveTo(-pw/2+r,ph/2-3);
-    ctx.lineTo(-pw/2+r+(pw-2*r)*pct,ph/2-3);
-    ctx.stroke();
-    ctx.globalAlpha=1;
-  }
-  ctx.restore();
-}
-
 function draw(){
   const time=performance.now();ctx.clearRect(0,0,W,H);
   drawBackground(time);
@@ -1682,10 +1660,27 @@ function draw(){
   for(const bc of bitcoins)drawBitcoin(bc,time);
   for(const bd of blueDiamonds)drawBlueDiamondObj(bd,time);
   for(const rb of rocketBoosters)drawRocketBooster(rb,time);
-  // Draw ammo pickups
-  for(const a of ammoPickups){if(!a.collected){const sx=a.x-cameraX;if(sx>-30&&sx<W+30){const bob=Math.sin(time*0.005+a.anim)*4;ctx.save();ctx.translate(sx,a.y+bob);ctx.shadowColor='#FF2EC4';ctx.shadowBlur=10;ctx.fillStyle='rgba(255,46,196,0.3)';ctx.beginPath();ctx.arc(0,0,12,0,Math.PI*2);ctx.fill();ctx.fillStyle='#FF2EC4';ctx.font='bold 14px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('⊕',0,0);ctx.shadowBlur=0;ctx.restore();}}}
+  for(const go of gunOrbPickups){
+    if(go.collected)continue;
+    const sx=go.x-cameraX;
+    if(sx<-40||sx>W+40)continue;
+    const bob=Math.sin(time*0.006+go.anim)*5;
+    const rot=time*0.002+go.anim;
+    ctx.save();ctx.translate(sx,go.y+bob);ctx.rotate(rot);
+    ctx.shadowColor='#22D3EE';ctx.shadowBlur=16;
+    ctx.strokeStyle='rgba(255,255,255,0.9)';ctx.lineWidth=2;
+    ctx.beginPath();
+    ctx.moveTo(0,-14);ctx.lineTo(10,0);ctx.lineTo(0,14);ctx.lineTo(-10,0);ctx.closePath();
+    const gg=ctx.createLinearGradient(-10,-14,10,14);
+    gg.addColorStop(0,'rgba(34,211,238,0.95)');gg.addColorStop(0.5,'rgba(168,85,247,0.9)');gg.addColorStop(1,'rgba(253,224,71,0.85)');
+    ctx.fillStyle=gg;ctx.fill();ctx.stroke();
+    ctx.rotate(-rot);
+    ctx.fillStyle='rgba(255,255,255,0.95)';ctx.font='bold 9px Arial';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('GUN',0,0);
+    ctx.shadowBlur=0;ctx.restore();
+  }
   // Draw projectiles
-  for(const p of projectiles){if(!p.dead){const sx=p.x-cameraX;if(sx<W+20){ctx.save();ctx.translate(sx,p.y);ctx.shadowColor='#FF2EC4';ctx.shadowBlur=12;const lg=ctx.createLinearGradient(-18,0,18,0);lg.addColorStop(0,'rgba(255,46,196,0.1)');lg.addColorStop(0.3,'#FF2EC4');lg.addColorStop(0.7,'#FF6BD6');lg.addColorStop(1,'rgba(255,46,196,0.1)');ctx.fillStyle=lg;ctx.fillRect(-18,-2.5,36,5);ctx.fillStyle='rgba(255,255,255,0.8)';ctx.fillRect(-10,-1,20,2);ctx.shadowBlur=0;ctx.restore();}}}
+  for(const p of projectiles){if(!p.dead){const sx=p.x-cameraX;if(sx<W+20){const col=p.color||'#FF2EC4';ctx.save();ctx.translate(sx,p.y);ctx.shadowColor=col;ctx.shadowBlur=10;const lg=ctx.createLinearGradient(-18,0,18,0);lg.addColorStop(0,'rgba(255,255,255,0.05)');lg.addColorStop(0.35,col);lg.addColorStop(0.65,col);lg.addColorStop(1,'rgba(255,255,255,0.05)');ctx.fillStyle=lg;ctx.fillRect(-18,-2.5,36,5);ctx.fillStyle='rgba(255,255,255,0.85)';ctx.fillRect(-8,-1,16,2);ctx.shadowBlur=0;ctx.restore();}}}
   // Draw enemies
   for(const e of enemies){if(!e.dead){const ex=e.x-cameraX;if(ex>-60&&ex<W+60){ctx.save();ctx.translate(ex,e.y);
     const ew=e.type.w,eh=e.type.h;
@@ -1708,7 +1703,7 @@ function draw(){
   drawParticles();drawFloatingTexts();ctx.restore();
   if(screenFlash>0){ctx.globalAlpha=screenFlash*0.35;ctx.fillStyle=screenFlashColor;ctx.fillRect(0,0,W,H);ctx.globalAlpha=1;}
   drawSparkles();
-  if(state===STATE.PLAYING){drawHUD();drawShootButton();}
+  if(state===STATE.PLAYING){drawHUD();}
   if(state===STATE.MENU)drawMenuScreen();
   if(state===STATE.DEAD)drawGameOverScreen();
 }
@@ -1730,10 +1725,6 @@ canvas.addEventListener('touchstart',(e)=>{
   const canvasX=tx*(W/(isP?rect.height:rect.width));
   const canvasY=ty*(H/(isP?rect.width:rect.height));
 
-  // Check if touching SHOOT MORE GUNS pill button (bottom-right, ~156x68 hit zone)
-  if(canvasX>W-172&&canvasY>H-72){
-    shootButtonPressed=true;return;
-  }
   // Check if touching A button area
   if((rocketBoostReady||rocketBoostActive)&&canvasX>W-120&&canvasY>H-110){
     aButtonPressed=true;return;
@@ -1752,7 +1743,7 @@ canvas.addEventListener('touchmove',(e)=>{
   ship.targetY=clamp(dragShipStartY+(currentY-dragStartY)*scale,25,H-25);
 },{passive:false});
 
-canvas.addEventListener('touchend',(e)=>{e.preventDefault();isDragging=false;aButtonPressed=false;shootButtonPressed=false;},{passive:false});
+canvas.addEventListener('touchend',(e)=>{e.preventDefault();isDragging=false;aButtonPressed=false;},{passive:false});
 
 canvas.addEventListener('mousedown',(e)=>{
   if(state!==STATE.PLAYING){handleTap();return;}
@@ -1766,9 +1757,8 @@ document.addEventListener('keydown',(e)=>{
   keysDown[e.code]=true;
   if(['ArrowUp','ArrowDown','KeyW','KeyS'].includes(e.code)){e.preventDefault();useMouseFollow=false;}
   if(e.code==='KeyA'&&(rocketBoostReady||rocketBoostActive)){aButtonPressed=true;}
-  if(e.code==='KeyF'||e.code==='KeyX'){shootButtonPressed=true;}
 });
-document.addEventListener('keyup',(e)=>{keysDown[e.code]=false;if(e.code==='KeyA')aButtonPressed=false;if(e.code==='KeyF'||e.code==='KeyX')shootButtonPressed=false;});
+document.addEventListener('keyup',(e)=>{keysDown[e.code]=false;if(e.code==='KeyA')aButtonPressed=false;});
 
 function processKeyboardInput(dt){
   if(state!==STATE.PLAYING||useMouseFollow)return;let dir=0;
