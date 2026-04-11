@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-09-v153';
+    var APP_VERSION = '2026-04-09-v155';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -1881,16 +1881,6 @@
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
-    }
-    @media (max-width: 768px) {
-      /* Direct child only: bar sits *above* the hero glass card, full width (negates inner 20px padding) */
-      .mobile-home-inner > .home-tabs.premium-top-tabs {
-        margin: 8px -20px 20px;
-        width: calc(100% + 40px);
-        max-width: none;
-        flex: none;
-        box-sizing: border-box;
-      }
     }
     .home-tab {
       flex: 1;
@@ -11474,83 +11464,7 @@
     // ── Initialize: render holdings on load ──
     renderHoldings();
 
-    // ════════════════════════════════
-    // ── MOBILE HOME TABS
-    // ════════════════════════════════
-
-    // Patch mobile home to include tabs
-    (function initMobileHomeTabs() {
-      var inner = document.querySelector('.mobile-home-inner');
-      if (!inner) return;
-      if (inner.querySelector(':scope > .home-tabs.premium-top-tabs')) return;
-      var hero = inner.querySelector('.mobile-home-hero-card');
-      var title = hero && hero.querySelector('.mobile-home-title');
-      if (!hero || !title) return;
-      var tabsHtml = '<div class="home-tabs premium-top-tabs" role="tablist" aria-label="Home sections">' +
-        '<button type="button" class="home-tab tab-btn active" role="tab" aria-selected="true" onclick="switchMobileHomeTab(\'roadmap\', this)">Roadmap</button>' +
-        '<button type="button" class="home-tab tab-btn" role="tab" aria-selected="false" onclick="showView(\'fm\')">Markets</button>' +
-        '<button type="button" class="home-tab tab-btn" role="tab" aria-selected="false" onclick="switchMobileHomeTab(\'portfolio\', this)">Portfolio</button>' +
-      '</div>';
-
-      var marketsContent = '<div id="mobileMarketsTab" style="display:none;">' +
-        '<div class="markets-section-label"><span>&#x1F7E2; Magnificent 7</span><button class="markets-refresh-btn" onclick="refreshMarkets();renderMobileMarkets()"><span class="refresh-icon" style="display:inline-block;">&#x21BB;</span> Refresh</button></div>' +
-        '<div class="stock-grid" id="mobileStockGrid" style="margin-bottom:20px;"></div>' +
-        '<div class="markets-section-label"><span>&#x1FA99; Crypto</span></div>' +
-        '<div class="stock-grid" id="mobileCryptoGrid" style="margin-bottom:20px;"></div>' +
-      '</div>';
-
-      var portfolioContent = '<div id="mobilePortfolioTab" style="display:none;">' +
-        '<div class="portfolio-hero" id="mobilePortfolioHero">' +
-          '<div class="portfolio-hero-label">Portfolio value</div>' +
-          '<div class="portfolio-hero-value" id="mobilePortfolioValue">$0.00</div>' +
-          '<div class="portfolio-hero-change" id="mobilePortfolioChange">' +
-            '<span class="portfolio-hero-arrow" id="mobilePortfolioArrow">&#x2197;</span>' +
-            '<span id="mobilePortfolioTotalPL">$0.00</span>' +
-            '<span id="mobilePortfolioTotalPLPct"></span>' +
-            '<span class="portfolio-hero-period">this month</span>' +
-          '</div>' +
-        '</div>' +
-        '<div style="margin:12px 0;">' +
-          '<button class="add-holding-btn add-holding-btn-small" onclick="openAddHoldingModal()">+ Add</button>' +
-        '</div>' +
-        '<div id="mobileHoldingsTableWrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:16px;">' +
-          '<table class="holdings-table" id="mobileHoldingsTable" style="display:none;">' +
-            '<thead><tr><th>Symbol</th><th>Qty</th><th>Price</th><th>Value</th><th>Day P&L</th></tr></thead>' +
-            '<tbody id="mobileHoldingsBody"></tbody>' +
-          '</table>' +
-          '<div id="mobileHoldingsEmpty" style="text-align:center;padding:32px 24px;color:var(--kraken-text-muted);font-size:14px;font-family:\'IBM Plex Sans\',system-ui,sans-serif;background:var(--kraken-card-bg);border-radius:16px;border:1px dashed var(--kraken-border);">No holdings yet. Add a stock or crypto above.</div>' +
-        '</div>' +
-        '<div class="portfolio-coach-section" style="border-top:1px solid rgba(255,255,255,0.08);padding-top:16px;">' +
-          '<div class="portfolio-coach-header">&#x1F916; Portfolio Coach</div>' +
-          '<div class="portfolio-coach-suggestions" style="margin:10px 0;">' +
-            '<button class="portfolio-coach-chip" onclick="askPortfolioCoach(\'What is my sector breakdown?\')">Sectors</button>' +
-            '<button class="portfolio-coach-chip" onclick="askPortfolioCoach(\'Should I rebalance?\')">Rebalance</button>' +
-            '<button class="portfolio-coach-chip" onclick="askPortfolioCoach(\'What is my risk profile?\')">Risk</button>' +
-          '</div>' +
-        '</div>' +
-      '</div>';
-
-      var tabsDiv = document.createElement('div');
-      tabsDiv.innerHTML = tabsHtml;
-      inner.insertBefore(tabsDiv.firstElementChild, hero);
-
-      // Create container for roadmap content (existing stuff)
-      var roadmapTab = document.createElement('div');
-      roadmapTab.id = 'mobileRoadmapTab';
-      // Move existing content into roadmap tab
-      var existingContent = [];
-      var node = title;
-      while (node) {
-        existingContent.push(node);
-        node = node.nextElementSibling;
-      }
-      existingContent.forEach(function(n) { roadmapTab.appendChild(n); });
-      inner.appendChild(roadmapTab);
-
-      // Add markets and portfolio tabs
-      inner.insertAdjacentHTML('beforeend', marketsContent);
-      inner.insertAdjacentHTML('beforeend', portfolioContent);
-    })();
+    // Tile home: no injected Roadmap/Markets/Portfolio bar (was double-boxed vs .glass-card). Markets/portfolio: main app + nav.
 
     // ── Templates Browser ──
     var CHART_STUDIO_DEFAULT_PLACEHOLDER = 'Describe a chart to create...';
@@ -12391,26 +12305,6 @@
       var input = getChartStudioInputEl();
       if (input) { input.value = ''; input.placeholder = 'Describe a chart to create...'; input.style.height = 'auto'; }
       renderCSGallery();
-    }
-
-    function switchMobileHomeTab(tab, btn) {
-      // Toggle tabs
-      var tabs = btn.parentNode.querySelectorAll('.home-tab');
-      tabs.forEach(function(t) {
-        t.classList.remove('active');
-        t.setAttribute('aria-selected', 'false');
-      });
-      btn.classList.add('active');
-      btn.setAttribute('aria-selected', 'true');
-      // Toggle content
-      var roadmap = document.getElementById('mobileRoadmapTab');
-      var markets = document.getElementById('mobileMarketsTab');
-      var portfolio = document.getElementById('mobilePortfolioTab');
-      if (roadmap) roadmap.style.display = tab === 'roadmap' ? '' : 'none';
-      if (markets) markets.style.display = tab === 'markets' ? '' : 'none';
-      if (portfolio) portfolio.style.display = tab === 'portfolio' ? '' : 'none';
-      if (tab === 'markets') { if (!window._marketsLoaded) { refreshMarkets(); window._marketsLoaded = true; } renderMobileMarkets(); }
-      if (tab === 'portfolio') renderMobilePortfolio();
     }
 
     function renderMobileMarkets() {
