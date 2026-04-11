@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-09-v156';
+    var APP_VERSION = '2026-04-09-v157';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -1925,6 +1925,50 @@
     .home-tab-icon { display: none; }
     .home-tab-content { display: none; }
     .home-tab-content.active { display: block; }
+
+    /* Tile home only: slim underline tabs (no second glass card — see initMobileHomeTabs) */
+    @media (max-width: 768px) {
+      .mobile-home-inner > .home-tabs.sleek-home-tabs {
+        flex: none;
+        width: 100%;
+        max-width: none;
+        margin: 2px 0 12px;
+        padding: 0;
+        gap: 0;
+        background: transparent;
+        border: none;
+        border-radius: 0;
+        border-bottom: 1px solid rgba(104, 107, 130, 0.22);
+        box-shadow: none;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+      }
+      .mobile-home-inner > .home-tabs.sleek-home-tabs .home-tab {
+        flex: 1;
+        padding: 8px 4px 11px;
+        margin: 0;
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.03em;
+        color: #6d7080;
+        border-radius: 0;
+        background: transparent;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -1px;
+        box-shadow: none;
+      }
+      .mobile-home-inner > .home-tabs.sleek-home-tabs .home-tab.active {
+        color: #F0EFF5;
+        background: transparent;
+        box-shadow: none;
+        border-bottom-color: #7132F5;
+      }
+      .mobile-home-inner > .home-tabs.sleek-home-tabs .tab-btn.active {
+        background: transparent !important;
+        color: #F0EFF5 !important;
+        box-shadow: none !important;
+      }
+    }
 
     /* ── Markets Tab ── */
     .markets-section-label { font-size: 0.72rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
@@ -11465,7 +11509,73 @@
     // ── Initialize: render holdings on load ──
     renderHoldings();
 
-    // Tile home: no injected Roadmap/Markets/Portfolio bar (was double-boxed vs .glass-card). Markets/portfolio: main app + nav.
+    // ════════════════════════════════
+    // ── Mobile tile home: Roadmap / Markets / Portfolio (sleek tabs + correct DOM)
+    // ════════════════════════════════
+    (function initMobileHomeTabs() {
+      var inner = document.querySelector('.mobile-home-inner');
+      if (!inner || inner.querySelector(':scope > .home-tabs.sleek-home-tabs')) return;
+      var hero = inner.querySelector('.mobile-home-hero-card');
+      if (!hero) return;
+
+      var tabsHtml = '<div class="home-tabs premium-top-tabs sleek-home-tabs" role="tablist" aria-label="Home sections">' +
+        '<button type="button" class="home-tab tab-btn active" role="tab" aria-selected="true" onclick="switchMobileHomeTab(\'roadmap\', this)">Roadmap</button>' +
+        '<button type="button" class="home-tab tab-btn" role="tab" aria-selected="false" onclick="showView(\'fm\')">Markets</button>' +
+        '<button type="button" class="home-tab tab-btn" role="tab" aria-selected="false" onclick="switchMobileHomeTab(\'portfolio\', this)">Portfolio</button>' +
+        '</div>';
+
+      var marketsContent = '<div id="mobileMarketsTab" style="display:none;">' +
+        '<div class="markets-section-label"><span>&#x1F7E2; Magnificent 7</span><button class="markets-refresh-btn" onclick="refreshMarkets();renderMobileMarkets()"><span class="refresh-icon" style="display:inline-block;">&#x21BB;</span> Refresh</button></div>' +
+        '<div class="stock-grid" id="mobileStockGrid" style="margin-bottom:20px;"></div>' +
+        '<div class="markets-section-label"><span>&#x1FA99; Crypto</span></div>' +
+        '<div class="stock-grid" id="mobileCryptoGrid" style="margin-bottom:20px;"></div>' +
+        '</div>';
+
+      var portfolioContent = '<div id="mobilePortfolioTab" style="display:none;">' +
+        '<div class="portfolio-hero" id="mobilePortfolioHero">' +
+          '<div class="portfolio-hero-label">Portfolio value</div>' +
+          '<div class="portfolio-hero-value" id="mobilePortfolioValue">$0.00</div>' +
+          '<div class="portfolio-hero-change" id="mobilePortfolioChange">' +
+            '<span class="portfolio-hero-arrow" id="mobilePortfolioArrow">&#x2197;</span>' +
+            '<span id="mobilePortfolioTotalPL">$0.00</span>' +
+            '<span id="mobilePortfolioTotalPLPct"></span>' +
+            '<span class="portfolio-hero-period">this month</span>' +
+          '</div>' +
+        '</div>' +
+        '<div style="margin:12px 0;">' +
+          '<button class="add-holding-btn add-holding-btn-small" onclick="openAddHoldingModal()">+ Add</button>' +
+        '</div>' +
+        '<div id="mobileHoldingsTableWrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:16px;">' +
+          '<table class="holdings-table" id="mobileHoldingsTable" style="display:none;">' +
+            '<thead><tr><th>Symbol</th><th>Qty</th><th>Price</th><th>Value</th><th>Day P&L</th></tr></thead>' +
+            '<tbody id="mobileHoldingsBody"></tbody>' +
+          '</table>' +
+          '<div id="mobileHoldingsEmpty" style="text-align:center;padding:32px 24px;color:var(--kraken-text-muted);font-size:14px;font-family:\'IBM Plex Sans\',system-ui,sans-serif;background:var(--kraken-card-bg);border-radius:16px;border:1px dashed var(--kraken-border);">No holdings yet. Add a stock or crypto above.</div>' +
+        '</div>' +
+        '<div class="portfolio-coach-section" style="border-top:1px solid rgba(255,255,255,0.08);padding-top:16px;">' +
+          '<div class="portfolio-coach-header">&#x1F916; Portfolio Coach</div>' +
+          '<div class="portfolio-coach-suggestions" style="margin:10px 0;">' +
+            '<button class="portfolio-coach-chip" onclick="askPortfolioCoach(\'What is my sector breakdown?\')">Sectors</button>' +
+            '<button class="portfolio-coach-chip" onclick="askPortfolioCoach(\'Should I rebalance?\')">Rebalance</button>' +
+            '<button class="portfolio-coach-chip" onclick="askPortfolioCoach(\'What is my risk profile?\')">Risk</button>' +
+          '</div>' +
+        '</div>' +
+        '</div>';
+
+      var wrap = document.createElement('div');
+      wrap.innerHTML = tabsHtml;
+      inner.insertBefore(wrap.firstElementChild, hero);
+
+      var roadmapTab = document.createElement('div');
+      roadmapTab.id = 'mobileRoadmapTab';
+      while (hero.firstChild) roadmapTab.appendChild(hero.firstChild);
+      inner.insertBefore(roadmapTab, hero);
+      hero.remove();
+
+      roadmapTab.insertAdjacentHTML('afterend', marketsContent);
+      var mTab = document.getElementById('mobileMarketsTab');
+      if (mTab) mTab.insertAdjacentHTML('afterend', portfolioContent);
+    })();
 
     // ── Templates Browser ──
     var CHART_STUDIO_DEFAULT_PLACEHOLDER = 'Describe a chart to create...';
@@ -12306,6 +12416,24 @@
       var input = getChartStudioInputEl();
       if (input) { input.value = ''; input.placeholder = 'Describe a chart to create...'; input.style.height = 'auto'; }
       renderCSGallery();
+    }
+
+    function switchMobileHomeTab(tab, btn) {
+      var tabs = btn.parentNode.querySelectorAll('.home-tab');
+      tabs.forEach(function(t) {
+        t.classList.remove('active');
+        t.setAttribute('aria-selected', 'false');
+      });
+      btn.classList.add('active');
+      btn.setAttribute('aria-selected', 'true');
+      var roadmap = document.getElementById('mobileRoadmapTab');
+      var markets = document.getElementById('mobileMarketsTab');
+      var portfolio = document.getElementById('mobilePortfolioTab');
+      if (roadmap) roadmap.style.display = tab === 'roadmap' ? '' : 'none';
+      if (markets) markets.style.display = tab === 'markets' ? '' : 'none';
+      if (portfolio) portfolio.style.display = tab === 'portfolio' ? '' : 'none';
+      if (tab === 'markets') { if (!window._marketsLoaded) { refreshMarkets(); window._marketsLoaded = true; } renderMobileMarkets(); }
+      if (tab === 'portfolio') renderMobilePortfolio();
     }
 
     function renderMobileMarkets() {
