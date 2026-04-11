@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-09-v151';
+    var APP_VERSION = '2026-04-09-v152';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -1920,18 +1920,17 @@
     .home-tab:active { transform: scale(0.98); }
     .home-tab.active {
       background: #7132F5;
-      color: #F0EFF5;
+      color: #fff;
       font-weight: 600;
       box-shadow: 0 2px 10px rgba(113,50,245,0.4);
     }
     @media (hover: hover) {
       .home-tab.active:hover { filter: brightness(1.05); }
     }
-    .tab-btn { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+    .tab-btn { transition: all 0.25s ease; }
     .tab-btn.active {
       background: #7132F5 !important;
-      color: #F0EFF5 !important;
-      box-shadow: 0 2px 10px rgba(113,50,245,0.4) !important;
+      color: #fff !important;
     }
     .home-tab-icon { display: none; }
     .home-tab-content { display: none; }
