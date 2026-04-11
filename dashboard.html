@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-09-v145';
+    var APP_VERSION = '2026-04-09-v146';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -1867,33 +1867,43 @@
     .home-header-row { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; }
     .home-header-icon { background: none; border: none; color: rgba(255,255,255,0.85); cursor: pointer; padding: 6px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; -webkit-tap-highlight-color: transparent; transition: color 0.15s; min-width: 34px; min-height: 34px; }
     .home-header-icon:active { color: rgba(255,255,255,0.9); }
+    /* Flat premium bar — inset highlight only, no outer drop shadow */
     .home-tabs.premium-top-tabs,
     .premium-top-tabs.home-tabs {
       flex: 1;
       display: flex;
-      gap: 4px;
-      background: rgba(32, 35, 51, 0.85);
-      border-radius: 16px;
-      padding: 6px;
+      gap: 3px;
+      margin: 0;
+      background: rgba(32, 35, 51, 0.75);
+      border-radius: 14px;
+      padding: 5px;
       border: 1px solid rgba(104,107,130,0.25);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 4px 12px rgba(0,0,0,0.3);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    @media (max-width: 768px) {
+      .mobile-home-inner .home-tabs.premium-top-tabs {
+        margin: 12px auto 24px;
+        flex: none;
+        width: 100%;
+        max-width: 540px;
+      }
     }
     .home-tab {
       flex: 1;
-      padding: 12px 20px;
+      padding: 13px 8px;
       font-size: 15px;
       font-weight: 500;
       color: #9497A9;
       cursor: pointer;
       border: none;
-      border-radius: 12px;
+      border-radius: 10px;
       background: transparent;
       font-family: inherit;
       text-align: center;
       white-space: nowrap;
-      min-height: 44px;
+      min-height: 0;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1912,7 +1922,7 @@
       box-shadow: 0 2px 8px rgba(113,50,245,0.35);
     }
     @media (hover: hover) {
-      .home-tab.active:hover { filter: brightness(1.06); }
+      .home-tab.active:hover { filter: brightness(1.05); }
     }
     .home-tab-icon { display: none; }
     .home-tab-content { display: none; }
@@ -2563,7 +2573,7 @@
       .library-header { flex-wrap: wrap; gap: 8px; }
       .home-header-row { margin-bottom: 16px; gap: 8px; }
       .home-tabs { overflow: visible; }
-      .home-tab { padding: 10px 8px; font-size: 13px; min-height: 40px !important; }
+      .home-tab { padding: 12px 6px; font-size: 13px; }
       .stock-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
       .stock-card { padding: 12px; }
       .stock-price { font-size: 1rem; }
@@ -11467,7 +11477,7 @@
       // Insert tabs before the title
       var title = inner.querySelector('.mobile-home-title');
       if (!title) return;
-      var tabsHtml = '<div class="home-tabs premium-top-tabs" role="tablist" aria-label="Home sections" style="margin:0 0 20px;">' +
+      var tabsHtml = '<div class="home-tabs premium-top-tabs" role="tablist" aria-label="Home sections">' +
         '<button type="button" class="home-tab active" role="tab" aria-selected="true" onclick="switchMobileHomeTab(\'roadmap\', this)">Roadmap</button>' +
         '<button type="button" class="home-tab" role="tab" aria-selected="false" onclick="showView(\'fm\')">Markets</button>' +
         '<button type="button" class="home-tab" role="tab" aria-selected="false" onclick="switchMobileHomeTab(\'portfolio\', this)">Portfolio</button>' +
