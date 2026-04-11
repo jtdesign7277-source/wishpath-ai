@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-09-v152';
+    var APP_VERSION = '2026-04-09-v153';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -1883,13 +1883,13 @@
       -webkit-backdrop-filter: blur(12px);
     }
     @media (max-width: 768px) {
-      .mobile-home-inner .home-tabs.premium-top-tabs {
-        margin: 8px 16px 20px;
+      /* Direct child only: bar sits *above* the hero glass card, full width (negates inner 20px padding) */
+      .mobile-home-inner > .home-tabs.premium-top-tabs {
+        margin: 8px -20px 20px;
+        width: calc(100% + 40px);
+        max-width: none;
         flex: none;
-        width: calc(100% - 32px);
-        max-width: 540px;
-        margin-left: auto;
-        margin-right: auto;
+        box-sizing: border-box;
       }
     }
     .home-tab {
@@ -11482,9 +11482,10 @@
     (function initMobileHomeTabs() {
       var inner = document.querySelector('.mobile-home-inner');
       if (!inner) return;
-      // Insert tabs before the title
-      var title = inner.querySelector('.mobile-home-title');
-      if (!title) return;
+      if (inner.querySelector(':scope > .home-tabs.premium-top-tabs')) return;
+      var hero = inner.querySelector('.mobile-home-hero-card');
+      var title = hero && hero.querySelector('.mobile-home-title');
+      if (!hero || !title) return;
       var tabsHtml = '<div class="home-tabs premium-top-tabs" role="tablist" aria-label="Home sections">' +
         '<button type="button" class="home-tab tab-btn active" role="tab" aria-selected="true" onclick="switchMobileHomeTab(\'roadmap\', this)">Roadmap</button>' +
         '<button type="button" class="home-tab tab-btn" role="tab" aria-selected="false" onclick="showView(\'fm\')">Markets</button>' +
@@ -11531,7 +11532,7 @@
 
       var tabsDiv = document.createElement('div');
       tabsDiv.innerHTML = tabsHtml;
-      title.parentNode.insertBefore(tabsDiv.firstElementChild, title);
+      inner.insertBefore(tabsDiv.firstElementChild, hero);
 
       // Create container for roadmap content (existing stuff)
       var roadmapTab = document.createElement('div');
