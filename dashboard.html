@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-09-v146';
+    var APP_VERSION = '2026-04-09-v147';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -1923,6 +1923,11 @@
     }
     @media (hover: hover) {
       .home-tab.active:hover { filter: brightness(1.05); }
+    }
+    .tab-btn { transition: all 0.2s ease; }
+    .tab-btn.active {
+      background: #7132F5 !important;
+      color: #fff !important;
     }
     .home-tab-icon { display: none; }
     .home-tab-content { display: none; }
@@ -3866,9 +3871,9 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="22" height="22"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
           </button>
           <div class="home-tabs premium-top-tabs" role="tablist" aria-label="Home sections">
-            <button type="button" class="home-tab active" role="tab" aria-selected="true" onclick="switchHomeTab('roadmap', this)">Roadmap</button>
-            <button type="button" class="home-tab" role="tab" aria-selected="false" onclick="switchHomeTab('markets', this)">Markets</button>
-            <button type="button" class="home-tab" role="tab" aria-selected="false" onclick="switchHomeTab('portfolio', this)">Portfolio</button>
+            <button type="button" class="home-tab tab-btn active" role="tab" aria-selected="true" onclick="switchHomeTab('roadmap', this)">Roadmap</button>
+            <button type="button" class="home-tab tab-btn" role="tab" aria-selected="false" onclick="switchHomeTab('markets', this)">Markets</button>
+            <button type="button" class="home-tab tab-btn" role="tab" aria-selected="false" onclick="switchHomeTab('portfolio', this)">Portfolio</button>
           </div>
           <button class="home-header-icon" onclick="focusHomeSearch()" aria-label="Search">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -11478,9 +11483,9 @@
       var title = inner.querySelector('.mobile-home-title');
       if (!title) return;
       var tabsHtml = '<div class="home-tabs premium-top-tabs" role="tablist" aria-label="Home sections">' +
-        '<button type="button" class="home-tab active" role="tab" aria-selected="true" onclick="switchMobileHomeTab(\'roadmap\', this)">Roadmap</button>' +
-        '<button type="button" class="home-tab" role="tab" aria-selected="false" onclick="showView(\'fm\')">Markets</button>' +
-        '<button type="button" class="home-tab" role="tab" aria-selected="false" onclick="switchMobileHomeTab(\'portfolio\', this)">Portfolio</button>' +
+        '<button type="button" class="home-tab tab-btn active" role="tab" aria-selected="true" onclick="switchMobileHomeTab(\'roadmap\', this)">Roadmap</button>' +
+        '<button type="button" class="home-tab tab-btn" role="tab" aria-selected="false" onclick="showView(\'fm\')">Markets</button>' +
+        '<button type="button" class="home-tab tab-btn" role="tab" aria-selected="false" onclick="switchMobileHomeTab(\'portfolio\', this)">Portfolio</button>' +
       '</div>';
 
       var marketsContent = '<div id="mobileMarketsTab" style="display:none;">' +
