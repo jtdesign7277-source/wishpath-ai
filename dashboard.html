@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-09-v143';
+    var APP_VERSION = '2026-04-09-v144';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -1446,6 +1446,11 @@
       .ask-ai-send-btn:active { transform: scale(0.96); }
 
       /* ── Mobile home screen ── */
+      /* Tile home sits above <main>; when #mobileHome is transparent, hide main so #homeView doesn’t show through */
+      body.mobile-home-active main.main {
+        visibility: hidden;
+        pointer-events: none;
+      }
       .mobile-home.active {
         display: flex; flex-direction: column;
         position: fixed; top: 0; left: 0; right: 0;
@@ -7974,6 +7979,7 @@
       closeMobileAskAI();
       closeMobileFMMenu();
       document.getElementById('mobileHome').classList.add('active');
+      document.body.classList.add('mobile-home-active');
       document.body.setAttribute('data-active-view', 'home');
       hydrateNewsFromCacheForHome();
       renderMobileRecents();
@@ -7988,6 +7994,7 @@
     }
     function hideMobileHome() {
       document.getElementById('mobileHome').classList.remove('active');
+      document.body.classList.remove('mobile-home-active');
       updateMobileFMChrome();
     }
     function renderMobileRecents() {
@@ -8054,6 +8061,13 @@
     if (window.innerWidth <= 768) {
       showMobileHome();
     }
+    window.addEventListener('resize', function() {
+      if (window.innerWidth > 768) {
+        document.body.classList.remove('mobile-home-active');
+        var mh = document.getElementById('mobileHome');
+        if (mh) mh.classList.remove('active');
+      }
+    });
 
     // ── Mobile home input ──
     function sendMobileHomeInput() {
