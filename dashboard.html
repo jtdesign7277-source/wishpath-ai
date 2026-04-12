@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-12-v232';
+    var APP_VERSION = '2026-04-12-v233';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -1928,89 +1928,9 @@
       body[data-active-view="lifecoach"] .mobile-nav-bar { display: none !important; }
       body[data-active-view="notes"] .notes-editor.active ~ .mobile-nav-bar,
       body:has(.notes-editor.active) .mobile-nav-bar { display: none !important; }
-      /* Notes AI input dock — Claude iOS style */
-      .nai-input-dock {
-        flex-shrink: 0;
-        padding: 12px 12px calc(10px + env(safe-area-inset-bottom)) 12px;
-        background: rgba(30,30,30,0.85);
-        border-top-left-radius: 20px;
-        border-top-right-radius: 20px;
-        position: relative;
-        overflow: hidden;
-      }
-      /* Faded corner overlays — top-right and bottom-left like Claude iOS */
-      .nai-input-dock::before {
-        content: '';
-        position: absolute;
-        top: -1px; right: -1px;
-        width: 60px; height: 60px;
-        background: radial-gradient(ellipse at top right, rgba(11,6,17,0.6) 0%, transparent 70%);
-        pointer-events: none;
-        z-index: 1;
-      }
-      .nai-input-dock::after {
-        content: '';
-        position: absolute;
-        bottom: -1px; left: -1px;
-        width: 60px; height: 60px;
-        background: radial-gradient(ellipse at bottom left, rgba(11,6,17,0.6) 0%, transparent 70%);
-        pointer-events: none;
-        z-index: 1;
-      }
-      .nai-input-field-wrap {
-        background: rgba(255,255,255,0.06);
-        border: 1px solid rgba(255,255,255,0.1);
-        border-radius: 16px;
-        padding: 14px 16px;
-        min-height: 48px;
-        display: flex;
-        align-items: center;
-        transition: border-color 0.2s ease, box-shadow 0.2s ease;
-      }
-      .nai-input-field-wrap:focus-within {
-        border-color: rgba(255,255,255,0.18);
-        box-shadow: 0 0 0 1px rgba(255,255,255,0.06);
-      }
-      .nai-input-field {
-        flex: 1;
-        font-size: 16px;
-        line-height: 1.4;
-        color: rgba(255,255,255,0.9);
-        background: transparent;
-        border: none;
-        outline: none;
-        max-height: 120px;
-        overflow-y: auto;
-        -webkit-tap-highlight-color: transparent;
-      }
-      .nai-input-field:empty::before {
-        content: attr(data-placeholder);
-        color: rgba(255,255,255,0.3);
-        pointer-events: none;
-      }
-      .nai-input-actions {
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        margin-top: 8px;
-        padding: 0 2px;
-      }
-      .nai-send-btn {
-        width: 36px; height: 36px;
-        border-radius: 50%;
-        background: rgba(255,255,255,0.12);
-        border: none;
-        color: rgba(255,255,255,0.7);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        -webkit-tap-highlight-color: transparent;
-        transition: background 0.15s ease, color 0.15s ease;
-      }
-      .nai-send-btn:active {
-        background: rgba(120,80,220,0.4);
-        color: #fff;
+      /* Notes editor — compact AI bar at bottom */
+      .notes-editor.note-detail-view > .lc-input-bar {
+        border-top: 1px solid rgba(255,255,255,0.06);
       }
       /* Notes AI chat thread */
       .notes-ai-thread {
@@ -5412,13 +5332,11 @@
             <!-- Notes AI chat thread -->
             <div id="notesAIChatThread" class="notes-ai-thread"></div>
           </div>
-          <div class="nai-input-dock" id="notesAIBar">
-            <div class="nai-input-field-wrap">
-              <div class="nai-input-field" id="notesAIInput" contenteditable="true" role="textbox" data-placeholder="Chat with AI" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendNotesAIMsg();}"></div>
-            </div>
-            <div class="nai-input-actions">
-              <button class="nai-send-btn" id="notesAISendBtn" onclick="sendNotesAIMsg()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+          <div class="lc-input-bar" id="notesAIBar" style="padding:8px 12px calc(8px + env(safe-area-inset-bottom)) 12px;">
+            <div class="lc-input-wrap">
+              <div class="lc-input" id="notesAIInput" contenteditable="true" role="textbox" data-placeholder="Chat with AI" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendNotesAIMsg();}"></div>
+              <button class="lc-send-btn" onclick="sendNotesAIMsg()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
               </button>
             </div>
           </div>
