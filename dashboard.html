@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-09-v162';
+    var APP_VERSION = '2026-04-12-v193';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -110,10 +110,6 @@
           inset 0 1px 0 rgba(255,255,255,0.1);
         border-color: rgba(145,107,230,0.4);
       }
-    }
-    .glass-card:active {
-      transform: scale(0.98);
-      box-shadow: 0 4px 20px rgba(113,50,245,0.25), inset 0 1px 0 rgba(255,255,255,0.06);
     }
 
     .premium-heading {
@@ -443,6 +439,22 @@
     .you-inline-btn { border: none; background: rgba(113,50,245,0.14); border: 1px solid rgba(113,50,245,0.28); color: #F0EFF5; font-weight: 900; border-radius: 999px; padding: 8px 12px; cursor: pointer; }
     .you-inline-btn:active { transform: scale(0.98); }
 
+    .you-greeting-hint { font-size: 13px; color: #9497A9; line-height: 1.45; margin: 0 0 10px; }
+    .you-greeting-input {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(104,107,130,0.3);
+      background: #191919;
+      color: #F0EFF5;
+      font-size: 16px;
+      font-family: inherit;
+      outline: none;
+    }
+    .you-greeting-input:focus { border-color: #7132F5; box-shadow: 0 0 0 3px rgba(113,50,245,0.15); }
+    .you-greeting-input::placeholder { color: rgba(148,151,169,0.45); }
+    .you-greeting-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+
     .you-menu-item {
       width: 100%;
       display: flex;
@@ -669,7 +681,7 @@
       min-height: 100dvh;
       padding: 16px;
       padding-top: calc(16px + env(safe-area-inset-top));
-      padding-bottom: calc(16px + env(safe-area-inset-bottom));
+      padding-bottom: calc(16px + var(--nav-h) + env(safe-area-inset-bottom));
       display: none;
       flex-direction: column;
     }
@@ -801,6 +813,103 @@
 
     /* New Wish */
     .wish-form-card { background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 28px; box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.05); }
+    /* Wish Momentum — progress ring (Home → Roadmap) */
+    .momentum-widget {
+      margin: 16px 20px 24px;
+      padding: 20px;
+      background: #252525;
+      border-radius: 20px;
+      border: 1px solid rgba(104, 107, 130, 0.24);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05),
+                  0 8px 24px rgba(0, 0, 0, 0.4);
+      text-align: center;
+    }
+    .momentum-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .momentum-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: #F0EFF5;
+      text-align: left;
+      line-height: 1.25;
+      flex: 1;
+      min-width: 0;
+    }
+    .momentum-percent {
+      font-size: 28px;
+      font-weight: 700;
+      color: #7132F5;
+      font-variant-numeric: tabular-nums;
+      flex-shrink: 0;
+    }
+    .momentum-ring-container {
+      position: relative;
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 20px;
+    }
+    .momentum-ring {
+      display: block;
+      margin: 0 auto;
+    }
+    .momentum-ring-bg {
+      stroke: #252525;
+    }
+    .momentum-ring-progress {
+      stroke: #7132F5;
+      transition: stroke-dashoffset 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .momentum-icon {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 32px;
+      color: #7132F5;
+      text-shadow: 0 0 15px rgba(113, 50, 245, 0.6);
+      pointer-events: none;
+    }
+    .momentum-details {
+      display: flex;
+      justify-content: space-around;
+      gap: 20px;
+    }
+    .momentum-stat {
+      text-align: center;
+      flex: 1;
+      min-width: 0;
+    }
+    .momentum-widget .stat-label {
+      display: block;
+      font-size: 13px;
+      color: #9497A9;
+      margin-bottom: 4px;
+    }
+    .momentum-widget .stat-value {
+      font-size: 19px;
+      font-weight: 700;
+      color: #F0EFF5;
+      font-variant-numeric: tabular-nums;
+    }
+    .momentum-widget .stat-value.green {
+      color: #149E61;
+    }
+    .momentum-widget .stat-value.red {
+      color: #ef4444;
+    }
+    @media (max-width: 768px) {
+      .momentum-widget {
+        margin: 12px 14px 20px;
+        padding: 18px 16px;
+      }
+      .momentum-title { font-size: 15px; }
+      .momentum-percent { font-size: 24px; }
+    }
     .wish-label { font-size: 0.78rem; font-weight: 700; color: var(--purple); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 18px; display: flex; align-items: center; gap: 10px; }
     @keyframes wishBorderPulse {
       0%, 100% { border-color: rgba(140,100,240,0.45); box-shadow: 0 0 8px rgba(120,80,220,0.1); }
@@ -810,9 +919,44 @@
     .wish-textarea-wrap::before { content: ''; position: absolute; inset: -50%; background: conic-gradient(from 0deg, transparent 0%, rgba(140,100,240,0.7) 10%, transparent 20%, transparent 50%, rgba(120,80,220,0.6) 60%, transparent 70%, transparent 100%); animation: wishBorderSpin 3s linear infinite; z-index: 0; }
     @keyframes wishBorderSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     .wish-textarea-wrap-inner { position: relative; z-index: 1; background: rgba(10,10,15,0.95); border-radius: 12px; }
-    .wish-textarea { width: 100%; min-height: 140px; padding: 16px; background: transparent; border: none; border-radius: 12px; color: var(--text); font: inherit; font-size: 0.95rem; line-height: 1.6; outline: none; resize: none; transition: all 0.3s ease; }
+    .wish-textarea { width: 100%; min-height: 140px; padding: 16px; background: transparent; border: none; border-radius: 12px; color: var(--text); font: inherit; font-size: 0.95rem; line-height: 1.6; outline: none; resize: none; transition: all 0.3s ease; position: relative; z-index: 1; }
     .wish-textarea:focus { box-shadow: 0 0 20px rgba(120,80,220,0.25); }
     .wish-textarea::placeholder { color: rgba(255,255,255,0.25); font-style: italic; }
+    /* Home wish — rotating two-tone typewriter (heading-style: #F0EFF5 + #7132F5) */
+    .home-wish-typewriter {
+      position: absolute;
+      inset: 0;
+      padding: 16px;
+      min-height: 140px;
+      pointer-events: none;
+      z-index: 0;
+      font: inherit;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      text-align: left;
+      white-space: pre-wrap;
+      word-break: break-word;
+      border-radius: 12px;
+    }
+    .home-wish-typewriter.is-hidden { visibility: hidden; opacity: 0; }
+    .home-wish-tw-prefix {
+      color: #F0EFF5;
+      font-weight: 500;
+    }
+    .home-wish-tw-accent {
+      color: #7132F5;
+      font-weight: 600;
+    }
+    .home-wish-tw-caret {
+      display: inline-block;
+      color: #7132F5;
+      font-weight: 400;
+      margin-left: 1px;
+      animation: homeWishCaretBlink 1s step-end infinite;
+    }
+    @keyframes homeWishCaretBlink {
+      50% { opacity: 0; }
+    }
     .wish-char-count { text-align: right; font-size: 0.75rem; color: var(--text-dim); margin-top: 6px; }
     .wish-context-label { text-align: center; font-size: 0.85rem; color: var(--text-muted); margin: 20px 0 12px; }
     .wish-context-chips { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-bottom: 20px; }
@@ -1138,7 +1282,7 @@
       /* Mobile coach header — show back + compose buttons */
       .coach-mobile-header { display: flex !important; }
       /* Mobile coach input — show and pin to bottom of chat area */
-      .coach-input-row { display: flex !important; flex-shrink: 0 !important; padding: 8px 0 4px !important; background: #191919; }
+      .coach-input-row { display: flex !important; flex-shrink: 0 !important; padding: 8px 0 calc(4px + env(safe-area-inset-bottom)) !important; background: #191919; }
       .view[id="notesView"].active .coach-input-row,
       .view[id="todosView"].active .coach-input-row { display: none !important; }
       .coach-input-row > span { display: none !important; }
@@ -1507,6 +1651,109 @@
       }
       .mobile-chat-back:active { color: rgba(255,255,255,0.85); }
       .mobile-home-inner { padding: 0 20px 0; }
+      /* Personalized mobile home header */
+      .mobile-home-topbar {
+        padding: 0;
+        flex-shrink: 0;
+      }
+      /* Premium mobile header — sticky, gradient, scoped so .location-badge / .user-avatar don’t leak */
+      .premium-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: max(16px, env(safe-area-inset-top)) 20px 12px 20px;
+        background: linear-gradient(to bottom, #0B0611, #191919);
+        border-bottom: 1px solid rgba(104, 107, 130, 0.24);
+        position: sticky;
+        top: 0;
+        z-index: 900;
+        gap: 14px;
+      }
+      .premium-header .header-left {
+        flex: 1;
+        min-width: 0;
+      }
+      .premium-header .header-right {
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+      }
+      .premium-header .header-left .greeting {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        font-size: 22px;
+        font-weight: 600;
+        color: #F0EFF5;
+        line-height: 1.2;
+      }
+      .premium-header .header-left .greeting #greeting-text {
+        display: block;
+      }
+      .premium-header .location-badge {
+        display: none;
+        font-size: 13px;
+        color: #9497A9;
+        margin-top: 2px;
+        line-height: 1.3;
+      }
+      .premium-header .location-badge.is-visible {
+        display: block;
+      }
+      .premium-header .user-avatar {
+        flex-shrink: 0;
+        width: 48px;
+        height: 48px;
+        padding: 0;
+        margin: 0;
+        border: none;
+        border-radius: 50%;
+        background: transparent;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: visible;
+        -webkit-tap-highlight-color: transparent;
+        box-sizing: border-box;
+        transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .premium-header .user-avatar:active {
+        transform: scale(0.92);
+      }
+      .premium-header .premium-header-avatar-emoji {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        font-size: 1.28rem;
+        line-height: 44px;
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(145deg, rgba(113, 50, 245, 0.35) 0%, rgba(15, 20, 32, 0.95) 100%);
+        border: 2px solid #7132F5;
+        box-shadow: 0 0 0 3px rgba(113, 50, 245, 0.2);
+        color: #f0eff5;
+      }
+      .premium-header .premium-header-avatar-img {
+        display: none;
+        width: 44px;
+        height: 44px;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 2px solid #7132F5;
+        box-shadow: 0 0 0 3px rgba(113, 50, 245, 0.2);
+      }
+      .premium-header .user-avatar.has-photo .premium-header-avatar-img { display: block; }
+      .premium-header .user-avatar.has-photo .premium-header-avatar-emoji { display: none; }
+      .mobile-home-topbar-secondary {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 10px;
+        padding: 8px 20px 4px;
+      }
       .mobile-home-hero-card.glass-card { margin: 0 0 24px; padding: 22px 18px 20px; }
       .mobile-home-title { margin-bottom: 24px; text-align: center; }
       .mobile-home .premium-heading { font-size: clamp(22px, 5.5vw, 28px); }
@@ -2172,11 +2419,68 @@
     .add-holding-btn:hover { opacity: 0.92; }
     .add-holding-btn:active { transform: scale(0.97); opacity: 0.9; }
     .add-holding-btn-small { width: auto !important; padding: 8px 20px !important; font-size: 13px !important; border-radius: 10px; }
+    .portfolio-table-container {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
     .holdings-table { width: 100%; border-collapse: collapse; background: transparent; }
     .holdings-table th { text-align: left; font-size: 11px; font-weight: 500; color: var(--kraken-text-muted); text-transform: uppercase; letter-spacing: 0.06em; padding: 8px 12px; border-bottom: 1px solid var(--kraken-border); font-family: 'IBM Plex Sans', system-ui, sans-serif; }
     .holdings-table td { padding: 12px 12px; border-bottom: 1px solid var(--kraken-border); font-size: 13px; font-weight: 500; color: var(--kraken-text); vertical-align: middle; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
     .holdings-table tbody tr { transition: background 0.1s ease; }
     .holdings-table tbody tr:hover { background: rgba(148,151,169,0.06); }
+    /* Portfolio grid (home / FM / mobile) — overrides generic .holdings-table when .portfolio-table is present */
+    .holdings-table.portfolio-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 15px;
+    }
+    .holdings-table.portfolio-table th {
+      text-align: left;
+      padding: 12px 8px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #9497A9;
+      border-bottom: 1px solid rgba(104, 107, 130, 0.24);
+      text-transform: none;
+      letter-spacing: normal;
+    }
+    .holdings-table.portfolio-table td {
+      padding: 14px 8px;
+      vertical-align: middle;
+      font-size: 15px;
+    }
+    .holdings-table.portfolio-table .symbol-cell {
+      width: 48px;
+      text-align: center;
+      padding: 14px 6px;
+    }
+    .holdings-table.portfolio-table .company-icon {
+      width: 32px !important;
+      height: 32px !important;
+      border-radius: 6px !important;
+      object-fit: contain;
+      background: #1a1a1a !important;
+    }
+    .holdings-table.portfolio-table .symbol-cell .ticker-logo-fallback {
+      width: 32px !important;
+      height: 32px !important;
+      border-radius: 6px !important;
+      font-size: 12px !important;
+    }
+    .holdings-table.portfolio-table th.day-pl-header {
+      text-align: right;
+      width: 90px;
+    }
+    .holdings-table.portfolio-table .day-pl {
+      text-align: right;
+      font-weight: 600;
+      font-size: 15px;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    .holdings-table.portfolio-table .day-pl.green { color: #149E61; }
+    .holdings-table.portfolio-table .day-pl.red { color: #D11D45; }
+    .holdings-table.portfolio-table .day-pl.flat { color: #9497A9; font-weight: 500; }
     .holding-symbol-badge { background: none; border: none; color: #F0EFF5; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 12px; font-weight: 600; padding: 0; display: inline-block; }
     .holding-symbol-btn { background: none; border: none; color: #F0EFF5; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; padding: 0; display: inline-flex; align-items: center; gap: 4px; transition: color 0.15s ease; }
     .holding-symbol-btn:hover { color: #fff; }
@@ -2507,8 +2811,38 @@
     /* Message slide-up animation */
     @keyframes msgSlideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     .msg { animation: msgSlideIn 0.15s ease-out both; }
-    /* Press feedback — all interactive cards */
-    .wish-card:active, .cc-card:active, .stock-card:active, .news-feed-item:active { transform: scale(0.97); box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 1px 4px rgba(0,0,0,0.2); transition: transform 0.1s ease, box-shadow 0.1s ease; }
+    /* Micro-animations & premium lift — purple glow (:active); .stock-card = market tiles; add .coach-message on bubbles if you want chat press glow */
+    .card,
+    .glass-card,
+    .portfolio-table-container,
+    .note-card,
+    .wish-card,
+    .stock-card,
+    .market-card,
+    .coach-message {
+      transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+                  box-shadow 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+                  border-color 0.22s ease;
+      will-change: transform, box-shadow;
+    }
+    .portfolio-table-container { touch-action: pan-x pan-y; }
+    .card:active,
+    .glass-card:active,
+    .portfolio-table-container:active,
+    .note-card:active,
+    .wish-card:active,
+    .stock-card:active,
+    .market-card:active,
+    .coach-message:active {
+      transform: scale(1.02);
+      box-shadow: 0 12px 32px rgba(113, 50, 245, 0.35),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+    .purple-glow:active {
+      box-shadow: 0 0 0 6px rgba(113, 50, 245, 0.25) !important;
+    }
+    /* Press feedback — cards not using purple lift above */
+    .cc-card:active, .news-feed-item:active { transform: scale(0.97); box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 1px 4px rgba(0,0,0,0.2); transition: transform 0.1s ease, box-shadow 0.1s ease; }
     .wish-card-btn:active, .fm-ticker-btn:active, .watchlist-add-btn:active, .note-save-btn:active { transform: scale(0.95); transition: transform 0.1s ease; }
     .ask-ai-send-btn:active { transform: scale(0.92); transition: transform 0.1s ease; }
     #homePortfolioTab .coach-send:active, #fmPortfolioContent .coach-send:active { opacity: 0.85; transform: scale(0.96); transition: opacity 0.15s ease, transform 0.1s ease; }
@@ -2517,7 +2851,7 @@
     .nav-item { transition: all 0.15s cubic-bezier(0.32,0.72,0,1); }
     .nav-item:active { transform: scale(0.96); }
     /* Faster transitions for native feel */
-    .wish-card, .cc-card, .stock-card, .news-feed-item { transition: transform 0.1s ease, box-shadow 0.1s ease, border-color 0.15s ease; }
+    .cc-card, .news-feed-item { transition: transform 0.1s ease, box-shadow 0.1s ease, border-color 0.15s ease; }
     /* Input focus glow */
     .coach-input:focus, .wish-textarea:focus, .note-title-input:focus, .note-body-input:focus { border-color: rgba(120,80,220,0.4) !important; box-shadow: 0 0 0 3px rgba(120,80,220,0.08) !important; }
     /* Staggered thinking dots */
@@ -2657,19 +2991,25 @@
       /* Mobile holdings table — fit screen without horizontal scroll */
       .holdings-table { min-width: 0 !important; }
       .holdings-table th, .holdings-table td { padding: 10px 6px !important; font-size: 12px !important; }
-      .holdings-table th:nth-child(6), .holdings-table td:nth-child(6) { display: none; }
+      .holdings-table.portfolio-table th,
+      .holdings-table.portfolio-table td {
+        padding: 12px 8px !important;
+        font-size: 15px !important;
+      }
+      .holdings-table.portfolio-table th { font-size: 13px !important; }
+      .holdings-table.portfolio-table .day-pl { font-size: 15px !important; }
       #holdingsTableWrap, #mobileHoldingsTableWrap { overflow-x: hidden !important; }
       #fmPortfolioContent { overflow-x: hidden; }
       #holdingsTable, #fmHoldingsTable, #mobileHoldingsTable { min-width: 0 !important; }
       .holding-symbol-badge, .holding-symbol-btn { font-size: 11px !important; padding: 0 !important; background: none !important; border: none !important; }
-      #mobilePortfolioTab .holdings-table th,
-      #mobilePortfolioTab .holdings-table td {
+      #mobilePortfolioTab .holdings-table.portfolio-table th,
+      #mobilePortfolioTab .holdings-table.portfolio-table td {
         font-size: 15px !important;
         padding: 12px 8px !important;
       }
-      #mobilePortfolioTab .holdings-table th {
-        font-size: 12px !important;
-        font-weight: 700;
+      #mobilePortfolioTab .holdings-table.portfolio-table th {
+        font-size: 13px !important;
+        font-weight: 500;
       }
       #mobilePortfolioTab .holding-symbol-badge,
       #mobilePortfolioTab .holding-symbol-btn {
@@ -3502,61 +3842,140 @@
       color: rgba(255,255,255,0.4);
     }
 
-    /* ── Streak Celebration (pixel dust) ── */
-    .streak-celebration {
+    /* ── Refined Brawl-Stars streak splash — flame + twinkling stars (#streak-splash) ── */
+    .streak-splash {
       position: fixed;
       inset: 0;
-      background: #000;
+      background: linear-gradient(180deg, #FF9E00 0%, #FF2D95 40%, #9C27F5 100%);
       display: flex;
       align-items: center;
       justify-content: center;
-      flex-direction: column;
       z-index: 99999;
       overflow: hidden;
+      opacity: 1;
     }
-    .streak-celebration.dismissed {
-      display: none;
+    .streak-splash.dismissed {
+      display: none !important;
     }
-    .streak-celebration canvas {
+    .streak-splash.streak-splash-running {
+      animation: fadeOutSplash 1.65s ease-out 1.45s forwards;
+      pointer-events: none;
+    }
+    /* Immediate snappy dismiss (hideStreakSplash / skip) — no delay */
+    .streak-splash.streak-splash-exit-now {
+      animation: fadeOutSplash 0.4s ease-out 0s forwards !important;
+      pointer-events: none;
+    }
+    @keyframes fadeOutSplash {
+      to { opacity: 0; pointer-events: none; }
+    }
+    .streak-splash .streak-bg {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      background: radial-gradient(circle at 50% 35%, rgba(255, 140, 0, 0.75) 0%, transparent 65%);
+      animation: flameFlicker 0.9s ease-in-out infinite alternate;
+      opacity: 0.85;
+      pointer-events: none;
+    }
+    @keyframes flameFlicker {
+      0%   { opacity: 0.75; transform: scale(1); }
+      100% { opacity: 1; transform: scale(1.12); }
+    }
+    .streak-splash canvas {
       position: absolute !important;
       inset: 0 !important;
       width: 100% !important;
       height: 100% !important;
       z-index: 1;
+      pointer-events: none;
+      mix-blend-mode: screen;
+      opacity: 0.85;
     }
-    .streak-number {
+    .streak-splash .streak-content {
+      position: absolute;
+      inset: 0;
       z-index: 2;
-      font-size: 110px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: max(24px, env(safe-area-inset-top)) 24px 24px;
+      pointer-events: none;
+    }
+    .streak-splash .streak-content::before,
+    .streak-splash .streak-content::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      background-image: radial-gradient(circle, #fff 1.8px, transparent 0);
+      background-size: 50px 50px;
+      animation: twinkleStars 1.3s linear infinite;
+      opacity: 0.65;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .streak-splash .streak-content::after {
+      background-size: 78px 78px;
+      animation-delay: 0.45s;
+      opacity: 0.35;
+    }
+    @keyframes twinkleStars {
+      0%, 100% { opacity: 0.25; }
+      50%      { opacity: 0.95; }
+    }
+    .streak-splash .streak-number {
+      position: relative;
+      z-index: 1;
+      font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+      font-size: clamp(130px, 42vw, 225px);
       font-weight: 900;
-      color: #fff;
-      text-shadow: 0 0 30px rgba(100,80,240,0.9), 0 0 60px rgba(59,130,246,0.6), 0 0 120px rgba(0,255,120,0.2), 0 4px 20px rgba(0,0,0,0.5);
+      line-height: 1;
+      letter-spacing: -0.04em;
+      color: #FFF;
+      background: linear-gradient(145deg, #FFF 15%, #FFEB3B 45%, #FF5722 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow:
+        0 0 30px #FF9800,
+        0 0 65px #FF5722,
+        0 0 100px #FF2D95,
+        8px 10px 15px rgba(0, 0, 0, 0.6),
+        -4px -4px 12px rgba(255, 255, 255, 0.35);
       opacity: 0;
-      margin-top: -10px;
+      transform: scale(0.12) translateY(110px);
     }
-    .streak-number.animate {
-      animation: streak-num-in 1.6s 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    .streak-splash .streak-number.animate {
+      animation: numberPopBS 1.35s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+      animation-delay: 90ms;
     }
-    .streak-label {
-      z-index: 2;
-      font-size: 17px;
-      font-weight: 600;
-      color: rgba(255,255,255,0.85);
-      letter-spacing: 4px;
+    @keyframes numberPopBS {
+      0%   { transform: scale(0.12) translateY(110px); opacity: 0; }
+      52%  { transform: scale(1.32) translateY(-28px); }
+      76%  { transform: scale(0.91) translateY(12px); }
+      100% { transform: scale(1) translateY(0); opacity: 1; }
+    }
+    .streak-splash .streak-content .streak-label {
+      position: relative;
+      z-index: 1;
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: 8px;
       text-transform: uppercase;
+      color: #FFF;
+      text-shadow: 0 0 25px #FFEB3B;
+      margin-top: -42px;
       opacity: 0;
-      margin-top: 8px;
     }
-    .streak-label.animate {
-      animation: streak-label-in 1s 0.5s ease-out forwards;
+    .streak-splash .streak-content .streak-label.animate {
+      animation: labelFade 0.95s ease forwards 0.8s;
     }
-    @keyframes streak-num-in {
-      0%   { opacity: 0; transform: scale(0.3); }
-      50%  { opacity: 1; transform: scale(1.15); }
-      100% { opacity: 1; transform: scale(1); }
-    }
-    @keyframes streak-label-in {
-      0%   { opacity: 0; transform: translateY(10px); }
-      100% { opacity: 1; transform: translateY(0); }
+    @keyframes labelFade {
+      to { opacity: 1; }
     }
     /* ── Streak in sidebar ── */
     .sidebar-streak { display: inline-flex; align-items: center; gap: 3px; margin-left: 6px; }
@@ -3581,7 +4000,7 @@
       font-size: 16px; font-weight: 700; color: #F0EFF5;
       font-variant-numeric: tabular-nums; line-height: 1;
     }
-    .streak-label {
+    .streak-container .streak-label {
       font-size: 10px; color: rgba(148,151,169,0.5);
       text-transform: uppercase; letter-spacing: 0.5px; line-height: 1;
     }
@@ -3600,6 +4019,188 @@
     .streak-container.streak-zero .streak-flame { animation: none; }
     @media (max-width: 768px) {
       .main-header .streak-container { display: none; }
+    }
+
+    /* ── Wish Runner — top-down shooter (in-dashboard) ── */
+    body[data-active-view="wishrunner"] .main-content {
+      padding: 0 !important;
+    }
+    body[data-active-view="wishrunner"] #wishrunnerView.view {
+      padding: 0 !important;
+    }
+    @media (max-width: 768px) {
+      body[data-active-view="wishrunner"] .main-content {
+        padding-bottom: max(8px, env(safe-area-inset-bottom)) !important;
+      }
+    }
+    #wishrunnerView {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      min-height: calc(100vh - 88px);
+      box-sizing: border-box;
+    }
+    @media (max-width: 768px) {
+      #wishrunnerView {
+        min-height: calc(100dvh - 56px - env(safe-area-inset-top));
+      }
+    }
+    /* Wish Runner shooter — Last Z style (scoped) */
+    .wish-runner-container {
+      position: relative;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      width: 100%;
+      max-width: 390px;
+      margin: 20px auto;
+      min-height: 0;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+      touch-action: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    #wpWishRunnerCanvas {
+      display: block;
+      background: #0B0611;
+      touch-action: none;
+      max-width: 100%;
+      width: 100%;
+      height: auto;
+      border-radius: 0;
+      border: none;
+      box-shadow: none;
+    }
+    .wish-runner-container .game-controls {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 130px;
+      pointer-events: none;
+      z-index: 20;
+    }
+    .wish-runner-container .fire-button {
+      position: absolute;
+      right: max(30px, env(safe-area-inset-right));
+      bottom: max(30px, env(safe-area-inset-bottom));
+      width: 68px;
+      height: 68px;
+      min-width: 68px;
+      padding: 0;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      line-height: 1;
+      font-weight: 700;
+      letter-spacing: 0;
+      color: #FFF;
+      background: #D11D45;
+      border: none;
+      box-shadow: 0 0 20px #FF5722;
+      pointer-events: auto;
+      cursor: pointer;
+      touch-action: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .wish-runner-container .fire-button:active {
+      transform: scale(0.94);
+    }
+    .wish-runner-container .virtual-joystick {
+      position: absolute;
+      left: max(30px, env(safe-area-inset-left));
+      bottom: max(30px, env(safe-area-inset-bottom));
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.15);
+      border: 3px solid rgba(113, 50, 245, 0.6);
+      pointer-events: auto;
+      touch-action: none;
+    }
+    .wish-runner-container .joystick-knob {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 34px;
+      height: 34px;
+      margin: -17px 0 0 -17px;
+      border-radius: 50%;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(200, 200, 220, 0.85) 100%);
+      border: 2px solid rgba(113, 50, 245, 0.45);
+      box-shadow: 0 2px 10px rgba(113, 50, 245, 0.35);
+      transform: translate(0, 0);
+      pointer-events: none;
+    }
+    .wish-runner-container .game-ui {
+      position: absolute;
+      top: max(16px, calc(env(safe-area-inset-top) + 8px));
+      left: 16px;
+      right: 16px;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      color: #FFF;
+      text-shadow: 0 0 10px #7132F5;
+      pointer-events: none;
+      z-index: 10;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+    .wish-runner-container .game-ui-hi {
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.55);
+      text-shadow: none;
+    }
+    .wish-runner-gameover {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      background: rgba(11, 6, 17, 0.82);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 30;
+      border-radius: 20px;
+      padding: 24px;
+      text-align: center;
+    }
+    .wish-runner-gameover[hidden] {
+      display: none !important;
+    }
+    .wish-runner-gameover-title {
+      font-size: 22px;
+      font-weight: 900;
+      color: #FF5252;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+    .wish-runner-final-score {
+      font-size: 16px;
+      color: rgba(255, 255, 255, 0.85);
+    }
+    .wish-runner-restart-btn {
+      margin-top: 8px;
+      padding: 12px 24px;
+      border-radius: 14px;
+      font-weight: 800;
+      font-size: 14px;
+      border: none;
+      cursor: pointer;
+      color: #0B0611;
+      background: linear-gradient(180deg, #A78BFA 0%, #7132F5 100%);
+      box-shadow: 0 8px 24px rgba(113, 50, 245, 0.4);
     }
 
     /* ── Mobile: bottom tabs — same items & stroke icons as left sidebar (Home, Chats, News) ── */
@@ -3623,6 +4224,9 @@
       }
       .wp-bottom-tabs::before { content: none !important; display: none !important; }
       .wp-bottom-tabs.nav-hidden { transform: translateY(100%); }
+      /* Hide bottom tabs when full-screen AI coach or life coach is active */
+      body[data-active-view="lifecoach"] .wp-bottom-tabs { display: none !important; }
+      body[data-active-view="coach"] .wp-bottom-tabs { display: none !important; }
       .wp-bottom-tabs .mobile-nav-item {
         flex: 1;
         min-width: 0;
@@ -3771,10 +4375,13 @@
       <button class="mobile-fm-menu-item" data-fm-tab="fmTechAnalysis" onclick="selectMobileFMTab('fmTechAnalysis')"><span class="mobile-fm-menu-icon">&#x1F4CA;</span><span class="mobile-fm-menu-label">Technical Analysis</span></button>
     </div>
   </div>
-  <!-- Streak Celebration — visible by default, dismissed after animation or if no streak -->
-  <div id="streak-celebration" class="streak-celebration">
-    <div id="streak-number" class="streak-number"></div>
-    <div id="streak-label" class="streak-label"></div>
+  <!-- Refined Brawl-style streak splash — dismissed after animation or if no streak -->
+  <div id="streak-splash" class="streak-splash">
+    <div class="streak-bg" aria-hidden="true"></div>
+    <div class="streak-content">
+      <div id="streak-number" class="streak-number"></div>
+      <div class="streak-label">DAY STREAK</div>
+    </div>
   </div>
   <script>
     // Early check: if no streak, dismiss overlay immediately so user doesn't see black flash
@@ -3786,8 +4393,8 @@
         var _dt = new Date().toISOString().split('T')[0];
         if (Math.floor((new Date(_dt) - new Date(_sd)) / 86400000) > 1) _sc = 0;
       }
-      if (_sc <= 0) document.getElementById('streak-celebration').classList.add('dismissed');
-    } catch(e) { document.getElementById('streak-celebration').classList.add('dismissed'); }
+      if (_sc <= 0) document.getElementById('streak-splash').classList.add('dismissed');
+    } catch(e) { document.getElementById('streak-splash').classList.add('dismissed'); }
   </script>
   <div class="holding-action-overlay" id="holdingActionOverlay" onclick="if(event.target===this)closeHoldingActions()">
     <div class="holding-action-sheet">
@@ -3896,7 +4503,7 @@
         <span style="font-size:1.1rem;flex-shrink:0;">&#x1FA84;</span>
         <span style="margin-left:2px;">Your Wish</span>
       </a>
-      <a class="nav-item" href="game.html" style="margin-top: auto;">
+      <a class="nav-item" data-view="wishrunner" onclick="showView('wishrunner');if(window.innerWidth<=768)toggleMobileSidebar();" style="margin-top: auto;">
         <span style="font-size:1.1rem;flex-shrink:0;">&#x1F680;</span>
         <span style="margin-left:2px;">Wish Runner</span>
       </a>
@@ -3959,9 +4566,33 @@
 
         <!-- Roadmap Tab -->
         <div class="home-tab-content active" id="homeRoadmapTab">
+          <div class="momentum-widget card" aria-label="Wish momentum">
+            <div class="momentum-header">
+              <span class="momentum-title">Your Wish Momentum, <span id="momentum-widget-name">there</span></span>
+              <span id="momentum-percent" class="momentum-percent">0%</span>
+            </div>
+            <div class="momentum-ring-container">
+              <svg class="momentum-ring" width="120" height="120" viewBox="0 0 120 120" aria-hidden="true">
+                <circle class="momentum-ring-bg" cx="60" cy="60" r="54" fill="none" stroke-width="12"></circle>
+                <circle id="momentum-progress" class="momentum-ring-progress" cx="60" cy="60" r="54" fill="none"
+                  stroke-width="12" stroke-linecap="round" transform="rotate(-90 60 60)"></circle>
+              </svg>
+              <div class="momentum-icon" aria-hidden="true">&#x2726;</div>
+            </div>
+            <div class="momentum-details">
+              <div class="momentum-stat">
+                <span class="stat-label">Active Wishes</span>
+                <span id="active-wishes" class="stat-value">0</span>
+              </div>
+              <div class="momentum-stat">
+                <span class="stat-label">This Month</span>
+                <span id="month-progress" class="stat-value">—</span>
+              </div>
+            </div>
+          </div>
           <div class="wish-form-card">
             <div class="wish-label"><span style="font-size:1.3rem;">&#x1FA84;</span> Your Wish</div>
-            <div class="wish-textarea-wrap"><div class="wish-textarea-wrap-inner"><textarea class="wish-textarea" id="homeWishInput" placeholder="Describe your goal, dream, or problem... e.g. 'Build a $10k/mo portfolio with tech stocks' or 'Start a side hustle with $500'" maxlength="800" oninput="document.getElementById('homeWishCharCount').textContent=this.value.length+' / 800'"></textarea></div></div>
+            <div class="wish-textarea-wrap"><div class="wish-textarea-wrap-inner"><div class="home-wish-typewriter is-hidden" id="homeWishTypewriter" aria-hidden="true"><span class="home-wish-tw-prefix" id="homeWishTwPrefix"></span><span class="home-wish-tw-accent" id="homeWishTwAccent"></span><span class="home-wish-tw-caret" id="homeWishTwCaret">|</span></div><textarea class="wish-textarea" id="homeWishInput" placeholder="" maxlength="800" aria-label="Describe your goal, dream, or problem" autocomplete="off" oninput="document.getElementById('homeWishCharCount').textContent=this.value.length+' / 800';if(typeof syncHomeWishTypewriterVisibility==='function')syncHomeWishTypewriterVisibility();"></textarea></div></div>
             <div class="wish-char-count" id="homeWishCharCount">0 / 800</div>
             <div class="wish-context-label">Add optional context for a more personalized roadmap:</div>
             <div class="wish-context-chips">
@@ -4067,16 +4698,15 @@
             <button class="add-holding-btn add-holding-btn-small" onclick="openAddHoldingModal()">+ Add</button>
           </div>
 
-          <div id="holdingsTableWrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:16px;">
-            <table class="holdings-table" id="holdingsTable" style="display:none;">
+          <div id="holdingsTableWrap" class="portfolio-table-container" style="overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:16px;">
+            <table class="holdings-table portfolio-table" id="holdingsTable" style="display:none;">
               <thead>
                 <tr>
                   <th>Symbol</th>
                   <th>Qty</th>
                   <th>Price</th>
                   <th>Value</th>
-                  <th>Day P&L</th>
-                  <th>Total P&L</th>
+                  <th class="day-pl-header">Day P&L</th>
                 </tr>
               </thead>
               <tbody id="holdingsBody"></tbody>
@@ -4164,46 +4794,6 @@
           <div style="display:flex;align-items:center;justify-content:flex-end;padding:0 8px 6px;min-height:18px;"><span id="wpUpdatingFmMarkets" class="wp-updating-inline" style="display:none;" aria-live="polite"></span></div>
           <div id="fmStockList" style="display:flex;flex-direction:column;gap:0;"></div>
           <div id="fmMarketsChartContainer" class="chart-container" style="display:none;"></div>
-          <!-- Floating chat FAB -->
-          <style>
-            @keyframes fabFloat {
-              0%, 100% { transform: translateY(0); }
-              50% { transform: translateY(-4px); }
-            }
-            @keyframes fabGlow {
-              0%, 100% { box-shadow: 0 2px 4px rgba(113,50,245,0.3) inset, 0 4px 12px rgba(113,50,245,0.5), 0 8px 28px rgba(113,50,245,0.25), 0 0 0 0 rgba(113,50,245,0); }
-              50% { box-shadow: 0 2px 4px rgba(113,50,245,0.3) inset, 0 4px 12px rgba(113,50,245,0.5), 0 8px 28px rgba(113,50,245,0.25), 0 0 12px 2px rgba(113,50,245,0.15); }
-            }
-            #fmChatFab {
-              position: fixed;
-              bottom: calc(68px + env(safe-area-inset-bottom));
-              right: 20px;
-              width: 52px;
-              height: 52px;
-              border-radius: 50%;
-              background: linear-gradient(135deg, #9b6dff 0%, #7132F5 40%, #5a1ee0 100%);
-              border: none;
-              border-top: 1px solid rgba(255,255,255,0.2);
-              box-shadow:
-                0 2px 4px rgba(113,50,245,0.3) inset,
-                0 4px 12px rgba(113,50,245,0.5),
-                0 8px 28px rgba(113,50,245,0.25);
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              cursor: pointer;
-              z-index: 900;
-              animation: fabFloat 3s ease-in-out infinite, fabGlow 3s ease-in-out infinite;
-              transition: transform 0.2s ease, box-shadow 0.2s ease;
-            }
-            #fmChatFab:active {
-              transform: scale(0.92);
-              animation: none;
-            }
-          </style>
-          <button id="fmChatFab" onclick="handleMobileNavPill()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,0.2));"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-          </button>
         </div>
 
         <!-- FM: Portfolio -->
@@ -4224,10 +4814,12 @@
           <div style="text-align:left;margin:12px 0;">
             <button class="add-holding-btn add-holding-btn-small" onclick="openAddHoldingModal()">+ Add</button>
           </div>
-          <table class="holdings-table" id="fmHoldingsTable" style="display:none;">
-            <thead><tr><th>Symbol</th><th>Qty</th><th>Price</th><th>Value</th><th>Day P&L</th><th>Total P&L</th></tr></thead>
+          <div class="portfolio-table-container" style="overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:16px;">
+          <table class="holdings-table portfolio-table" id="fmHoldingsTable" style="display:none;">
+            <thead><tr><th>Symbol</th><th>Qty</th><th>Price</th><th>Value</th><th class="day-pl-header">Day P&L</th></tr></thead>
             <tbody id="fmHoldingsBody"></tbody>
           </table>
+          </div>
           <div id="fmHoldingsEmpty" style="text-align:center;padding:32px;color:var(--text-dim);font-size:0.88rem;">No holdings yet. Add a stock or crypto above.</div>
           <div id="fmPortfolioChartContainer" class="chart-container" style="display:none;"></div>
           <div class="portfolio-coach-section">
@@ -4898,6 +5490,28 @@
         </div>
       </div>
 
+      <!-- Wish Runner — top-down shooter (Last Z style) -->
+      <div class="view" id="wishrunnerView">
+        <div id="wish-runner-game" class="wish-runner-container">
+          <canvas id="wpWishRunnerCanvas" width="390" height="680" aria-label="Wish Runner game"></canvas>
+          <div class="game-controls">
+            <div id="wp-wish-runner-joystick" class="virtual-joystick" aria-hidden="true">
+              <div class="joystick-knob" id="wp-wish-runner-joystick-knob"></div>
+            </div>
+            <div id="wp-wish-runner-fire" class="fire-button" role="button" tabindex="0" aria-label="Fire">&#x1F525;</div>
+          </div>
+          <div id="score-display" class="game-ui">
+            SCORE <span id="wp-wish-runner-score">0</span>
+            <span class="game-ui-hi">HI <span id="wp-wish-runner-hi">0</span></span>
+          </div>
+          <div id="wp-wish-runner-gameover" class="wish-runner-gameover" hidden>
+            <div class="wish-runner-gameover-title">Wiped out</div>
+            <div class="wish-runner-final-score">Score <span id="wp-wish-runner-final">0</span></div>
+            <button type="button" class="wish-runner-restart-btn" onclick="restartWishRunnerGame()">Play again</button>
+          </div>
+        </div>
+      </div>
+
       <!-- You / Profile View -->
       <div class="view" id="youView">
         <div class="you-root">
@@ -4953,6 +5567,15 @@
               </div>
             </div>
             <div class="you-panel" id="youPanelAbout" role="tabpanel" aria-labelledby="youTabAbout">
+              <div class="you-section-card">
+                <div class="you-section-title">Home greeting</div>
+                <p class="you-greeting-hint">This name appears after “Good morning,” on your home screen. Leave blank to use your profile or email name.</p>
+                <input type="text" id="youGreetingNameInput" class="you-greeting-input" placeholder="e.g. Jeff, J.D., Captain" maxlength="40" autocomplete="nickname" />
+                <div class="you-greeting-actions">
+                  <button class="you-inline-btn" type="button" onclick="saveGreetingNameFromProfile()">Save</button>
+                  <button class="you-inline-btn" type="button" onclick="clearGreetingNameFromProfile()" style="background:rgba(0,0,0,0.2);border-color:rgba(104,107,130,0.35);">Use default</button>
+                </div>
+              </div>
               <div class="you-section-card">
                 <div class="you-section-title">About</div>
                 <div class="you-about-row">
@@ -5121,15 +5744,29 @@
   <!-- Mobile Home Screen -->
   <div class="mobile-home" id="mobileHome">
     <div id="mobileHomeContent">
-      <!-- Top bar: minimal, no wand — content starts immediately -->
-      <div class="mobile-home-topbar" style="height:auto;padding:8px 16px 4px;">
-        <div id="streak-counter-mobile" class="streak-container streak-mobile" onclick="claimDailyStreak()">
-          <div class="streak-flame">&#x1F525;</div>
-          <div class="streak-count streak-count-mobile" id="streak-count-mobile">0</div>
-          <div class="streak-label">day streak</div>
+      <!-- Top: Kraken-dark premium header — greeting, optional location, avatar -->
+      <div class="mobile-home-topbar">
+        <div class="premium-header">
+          <div class="header-left">
+            <div class="greeting">
+              <span id="greeting-text" class="greeting-line">Good morning</span>
+              <span id="greeting-location" class="location-badge" hidden></span>
+            </div>
+          </div>
+          <div class="header-right">
+            <button type="button" class="user-avatar" onclick="showProfileModal()" aria-label="Open profile">
+              <span id="premium-header-avatar-emoji" class="premium-header-avatar-emoji" aria-hidden="true">U</span>
+              <img id="user-avatar-img" class="premium-header-avatar-img" alt="" width="44" height="44" decoding="async" />
+            </button>
+          </div>
         </div>
-        <div style="flex:1;"></div>
-        <button class="mobile-info-btn" title="About WishPath">ⓘ</button>
+        <div class="mobile-home-topbar-secondary">
+          <div id="streak-counter-mobile" class="streak-container streak-mobile" onclick="claimDailyStreak()">
+            <div class="streak-flame">&#x1F525;</div>
+            <div class="streak-count streak-count-mobile" id="streak-count-mobile">0</div>
+            <div class="streak-label">day streak</div>
+          </div>
+        </div>
       </div>
       <div class="mobile-home-inner">
         <div class="mobile-home-hero-card glass-card">
@@ -5164,6 +5801,7 @@
           <div class="mobile-nav-tile" onclick="hideMobileHome();showView('todos')"><span class="mobile-nav-tile-icon">✅</span><span class="mobile-nav-tile-label">To-Dos</span></div>
           <div class="mobile-nav-tile" onclick="hideMobileHome();showView('notes')"><span class="mobile-nav-tile-icon">📝</span><span class="mobile-nav-tile-label">Notes</span></div>
           <div class="mobile-nav-tile" onclick="hideMobileHome();showView('library')"><span class="mobile-nav-tile-icon">📚</span><span class="mobile-nav-tile-label">Library</span></div>
+          <div class="mobile-nav-tile" onclick="hideMobileHome();showView('wishrunner')"><span class="mobile-nav-tile-icon">🎮</span><span class="mobile-nav-tile-label">Wish Runner</span></div>
         </div>
         <!-- Recents -->
         <div class="mobile-sec-label" style="margin-top:24px;">Recents</div>
@@ -5363,32 +6001,70 @@
       }
     }
 
-    /* ── Auto-hide nav bar on scroll (all views) ── */
-    var _navLastScrollY = 0;
+    /* ── Mobile bottom nav: X-style — hide on scroll down, show on scroll up (window + inner scrollers) ── */
+    var _navWindowLastY = 0;
+    var _navInnerScrollLast = {};
     var _navScrollTicking = false;
-    (function() {
+
+    function mobileNavShouldHandleScroll() {
+      if (window.innerWidth > 768) return false;
+      var v = document.body.getAttribute('data-active-view') || '';
+      if (v === 'coach' || v === 'lifecoach' || v === 'feedback' || v === 'wishrunner') return false;
+      var navBar = document.getElementById('mobileNavBar');
+      if (!navBar) return false;
+      try {
+        if (window.getComputedStyle(navBar).display === 'none') return false;
+      } catch (e) { if (navBar.style.display === 'none') return false; }
+      return true;
+    }
+
+    function applyMobileNavScrollDelta(deltaY, scrollTop) {
+      if (!mobileNavShouldHandleScroll()) return;
+      var navBar = document.getElementById('mobileNavBar');
+      if (!navBar) return;
+      if (scrollTop <= 8) {
+        navBar.classList.remove('nav-hidden');
+        return;
+      }
+      if (deltaY > 6) navBar.classList.add('nav-hidden');
+      else if (deltaY < -6) navBar.classList.remove('nav-hidden');
+    }
+
+    function isMobileNavInnerScrollTarget(el) {
+      if (!el || el.nodeType !== 1) return false;
+      if (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT') return false;
+      if (el.classList && el.classList.contains('coach-messages')) return true;
+      var id = el.id;
+      if (!id) return false;
+      return /^(notesContent|notesListScroll|mobileHomeContent|mobileChatMessages|portfolioCoachMessages|fmPortfolioCoachMessages|wishFormScroller|lcChatListScroll|lcMessages|chartStudioMessages|coachMessages|todoCoachMessages)$/.test(id);
+    }
+
+    (function initMobileNavScrollHide() {
       window.addEventListener('scroll', function() {
         if (_navScrollTicking) return;
         _navScrollTicking = true;
         requestAnimationFrame(function() {
-          var scrollY = window.pageYOffset || document.documentElement.scrollTop || 0;
-          var navBar = document.getElementById('mobileNavBar');
-          if (navBar && window.innerWidth <= 768) {
-            // Requested behavior:
-            // - scrolling DOWN (scrollY increases) => SHOW nav
-            // - scrolling UP (scrollY decreases)   => HIDE nav
-            if (scrollY <= 0) {
-              navBar.classList.remove('nav-hidden');
-            } else if (scrollY > _navLastScrollY) {
-              navBar.classList.remove('nav-hidden');
-            } else if (scrollY < _navLastScrollY) {
-              navBar.classList.add('nav-hidden');
-            }
-          }
-          _navLastScrollY = scrollY;
+          var y = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+          var delta = y - _navWindowLastY;
+          _navWindowLastY = y;
+          applyMobileNavScrollDelta(delta, y);
           _navScrollTicking = false;
         });
       }, { passive: true });
+
+      document.addEventListener('scroll', function(ev) {
+        var el = ev.target;
+        if (!isMobileNavInnerScrollTarget(el)) return;
+        requestAnimationFrame(function() {
+          var st = el.scrollTop;
+          var key = el.id || 'coach-msg';
+          var prev = _navInnerScrollLast[key];
+          if (prev === undefined) prev = st;
+          var delta = st - prev;
+          _navInnerScrollLast[key] = st;
+          applyMobileNavScrollDelta(delta, st);
+        });
+      }, true);
     })();
     function initFMScrollListener() { /* scroll handled by window listener above */ }
 
@@ -5614,6 +6290,7 @@
     var YOU_AVATAR_CHOICES = ['🦊','🐺','🦁','🐻','🦅','🐉','🦄','🐬','🦈','🔥','⚡','🚀'];
     var _youAvatarSelected = null;
     var _youAvatarNoteId = null;
+    var _greetingNameNoteId = null;
 
     function openAvatarPicker() {
       var overlay = document.getElementById('youAvatarOverlay');
@@ -5639,7 +6316,185 @@
       if (el) el.textContent = emoji;
       closeAvatarPicker();
       try { await saveUserAvatar(emoji); } catch(e) {}
+      refreshPremiumHeader();
     }
+
+    function showProfileModal() {
+      if (window.innerWidth <= 768) hideMobileHome();
+      showView('you');
+    }
+
+    function getGreetingTimeLabel() {
+      var hour = new Date().getHours();
+      if (hour < 12) return 'Good morning';
+      if (hour < 17) return 'Good afternoon';
+      return 'Good evening';
+    }
+
+    function firstNameFromDisplay(displayName, email) {
+      var s = (displayName || '').trim();
+      if (s) {
+        var parts = s.split(/\s+/);
+        var first = parts[0] || s;
+        if (first.length) return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
+      }
+      var local = (email || '').split('@')[0] || 'there';
+      local = local.replace(/[.+_-]+/g, ' ').trim().split(/\s+/)[0] || 'there';
+      return local.charAt(0).toUpperCase() + local.slice(1).toLowerCase();
+    }
+
+    async function refreshPremiumHeader() {
+      var greetEl = document.getElementById('greeting-text');
+      var locEl = document.getElementById('greeting-location');
+      var avBtn = document.querySelector('.premium-header .user-avatar');
+      var avEmoji = document.getElementById('premium-header-avatar-emoji');
+      var avImg = document.getElementById('user-avatar-img');
+      if (!greetEl) return;
+      try {
+        var session = await getSession();
+        var email = session && session.user ? (session.user.email || '') : '';
+        var profile = null;
+        try { profile = await getUserProfile(); } catch (e) {}
+        var displayName = (profile && (profile.display_name || profile.full_name || profile.name))
+          ? String(profile.display_name || profile.full_name || profile.name)
+          : '';
+        var fallbackFirst = firstNameFromDisplay(displayName, email);
+        var customGreet = '';
+        if (currentUserId) {
+          try { customGreet = await loadUserGreetingName(); } catch (e) {}
+        }
+        if (!customGreet) {
+          try { customGreet = sanitizeGreetingName(localStorage.getItem('wp_greeting_name') || ''); } catch (e) {}
+        }
+        var first = (customGreet && customGreet.length) ? customGreet : fallbackFirst;
+        greetEl.textContent = getGreetingTimeLabel() + ', ' + (first || 'there');
+        if (customGreet) {
+          try { localStorage.setItem('wp_greeting_name', customGreet); } catch (e) {}
+        } else {
+          try { localStorage.removeItem('wp_greeting_name'); } catch (e) {}
+        }
+
+        var loc = '';
+        try { loc = (localStorage.getItem('wp_user_location') || '').trim(); } catch (e) {}
+        if (locEl) {
+          if (loc) {
+            locEl.textContent = '\uD83D\uDCCD ' + loc;
+            locEl.classList.add('is-visible');
+            locEl.removeAttribute('hidden');
+          } else {
+            locEl.textContent = '';
+            locEl.classList.remove('is-visible');
+            locEl.setAttribute('hidden', '');
+          }
+        }
+
+        var initial = (displayName || email || 'U').trim().charAt(0).toUpperCase() || 'U';
+        var savedAvatar = null;
+        if (currentUserId) {
+          try { savedAvatar = await loadUserAvatar(); } catch (e) {}
+        }
+        var photoUrl = '';
+        try { photoUrl = (localStorage.getItem('wp_user_avatar_url') || '').trim(); } catch (e) {}
+
+        if (avBtn) avBtn.classList.toggle('has-photo', !!photoUrl);
+        if (avImg) {
+          if (photoUrl) {
+            avImg.src = photoUrl;
+            avImg.alt = first || 'Profile';
+          } else {
+            avImg.removeAttribute('src');
+            avImg.alt = '';
+          }
+        }
+        if (avEmoji) avEmoji.textContent = savedAvatar || initial;
+        updateWishMomentum();
+      } catch (e) {
+        greetEl.textContent = getGreetingTimeLabel();
+        try { updateWishMomentum(); } catch (e2) {}
+      }
+    }
+
+    /**
+     * Rebuild premium header greeting (time of day + first name / custom greeting name),
+     * location badge (e.g. Rockland, MA from wp_user_location), and avatar. Not hardcoded to one user.
+     */
+    function updatePersonalGreeting() {
+      refreshPremiumHeader();
+    }
+
+    window.addEventListener('load', updatePersonalGreeting);
+    document.addEventListener('visibilitychange', function() {
+      if (!document.hidden) updatePersonalGreeting();
+    });
+
+    function triggerHaptic(type) {
+      try {
+        if (!navigator.vibrate) return;
+        type = type || 'light';
+        if (type === 'success') navigator.vibrate([12, 8, 25]);
+        else if (type === 'medium') navigator.vibrate(18);
+        else navigator.vibrate(8);
+      } catch (e) {}
+    }
+
+    var _wpHapticLast = 0;
+    function _wpThrottleHaptic(ms) {
+      ms = ms || 110;
+      var now = Date.now();
+      if (now - _wpHapticLast < ms) return false;
+      _wpHapticLast = now;
+      return true;
+    }
+
+    function dispatchWishpathContentUpdated() {
+      try {
+        document.dispatchEvent(new CustomEvent('wishpath-content-updated', { bubbles: false }));
+      } catch (e) {
+        try {
+          var ev = document.createEvent('Event');
+          ev.initEvent('wishpath-content-updated', false, false);
+          document.dispatchEvent(ev);
+        } catch (e2) {}
+      }
+    }
+
+    function initWishpathHaptics() {
+      if (window._wpHapticsInited) return;
+      window._wpHapticsInited = true;
+      var cardLike = '.card, .glass-card, .portfolio-table-container, .note-card, .wish-card, .stock-card, .market-card, .coach-message, .notes-item, button, .nav-item';
+      document.addEventListener('touchstart', function(ev) {
+        if (!ev.touches || !ev.touches.length) return;
+        var t = ev.target;
+        if (!t || !t.closest) return;
+        if (t.closest('input, textarea, select, [contenteditable="true"]')) return;
+        var hit = t.closest(cardLike);
+        if (!hit) return;
+        if (hit.tagName === 'BUTTON' || hit.getAttribute('role') === 'button') {
+          var skipId = (hit.id || '').toLowerCase();
+          if (skipId.indexOf('save') >= 0 || skipId.indexOf('generate') >= 0 || skipId.indexOf('claim') >= 0) return;
+          if (hit.getAttribute('data-wp-haptic') === 'success') return;
+        }
+        if (!_wpThrottleHaptic(100)) return;
+        triggerHaptic('light');
+      }, { passive: true, capture: true });
+
+      document.addEventListener('click', function(ev) {
+        var t = ev.target;
+        if (!t || !t.closest) return;
+        var el = t.closest('[data-wp-haptic="success"]');
+        if (!el) {
+          el = t.closest('button');
+          if (!el) return;
+          var bid = (el.id || '').toLowerCase();
+          if (bid.indexOf('save') < 0 && bid.indexOf('generate') < 0 && bid.indexOf('claim') < 0) return;
+        }
+        if (!_wpThrottleHaptic(90)) return;
+        triggerHaptic('success');
+      }, true);
+    }
+
+    window.addEventListener('load', initWishpathHaptics);
+    document.addEventListener('wishpath-content-updated', initWishpathHaptics);
 
     async function loadUserAvatar() {
       try {
@@ -5666,6 +6521,79 @@
       } else {
         var { data } = await sb.from('user_notes').insert({ user_id: currentUserId, title: '__WP_AVATAR__', content: payload }).select('id').single();
         if (data && data.id) _youAvatarNoteId = data.id;
+      }
+    }
+
+    function sanitizeGreetingName(s) {
+      if (s == null || typeof s !== 'string') return '';
+      return s.replace(/[<>]/g, '').trim().slice(0, 40);
+    }
+
+    async function loadUserGreetingName() {
+      try {
+        if (!currentUserId) return '';
+        var sb = getSupabase();
+        var { data } = await sb.from('user_notes').select('id, content').eq('user_id', currentUserId).eq('title', '__WP_GREETING_NAME__').limit(1);
+        var row = (data && data[0]) ? data[0] : null;
+        if (row) {
+          _greetingNameNoteId = row.id;
+          return sanitizeGreetingName(row.content || '');
+        }
+        _greetingNameNoteId = null;
+      } catch (e) {}
+      return '';
+    }
+
+    async function saveUserGreetingName(raw) {
+      if (!currentUserId) return;
+      var trimmed = sanitizeGreetingName(raw);
+      var sb = getSupabase();
+      if (!trimmed) {
+        if (_greetingNameNoteId) {
+          try {
+            await sb.from('user_notes').delete().eq('id', _greetingNameNoteId).eq('user_id', currentUserId);
+          } catch (e) {}
+          _greetingNameNoteId = null;
+        }
+        try { localStorage.removeItem('wp_greeting_name'); } catch (e) {}
+        return;
+      }
+      try { localStorage.setItem('wp_greeting_name', trimmed); } catch (e) {}
+      if (_greetingNameNoteId) {
+        var up = await sb.from('user_notes').update({ content: trimmed, updated_at: new Date().toISOString() }).eq('id', _greetingNameNoteId).eq('user_id', currentUserId);
+        if (up.error) throw up.error;
+      } else {
+        var ins = await sb.from('user_notes').insert({ user_id: currentUserId, title: '__WP_GREETING_NAME__', content: trimmed }).select('id').single();
+        if (ins.error) throw ins.error;
+        if (ins.data && ins.data.id) _greetingNameNoteId = ins.data.id;
+      }
+    }
+
+    async function saveGreetingNameFromProfile() {
+      if (!currentUserId) {
+        showToast('Sign in to save your greeting name');
+        return;
+      }
+      var inp = document.getElementById('youGreetingNameInput');
+      if (!inp) return;
+      try {
+        await saveUserGreetingName(inp.value);
+        showToast('Greeting name saved');
+        refreshPremiumHeader();
+      } catch (e) {
+        showToast((e && e.message) ? e.message : 'Could not save greeting name');
+      }
+    }
+
+    async function clearGreetingNameFromProfile() {
+      var inp = document.getElementById('youGreetingNameInput');
+      if (inp) inp.value = '';
+      try {
+        await saveUserGreetingName('');
+        showToast('Using your default name');
+        refreshPremiumHeader();
+      } catch (e) {
+        showToast((e && e.message) ? e.message : 'Could not reset greeting name');
       }
     }
 
@@ -5706,6 +6634,12 @@
         var savedAvatar = await loadUserAvatar();
         _youAvatarSelected = savedAvatar;
         if (youAvatar) youAvatar.textContent = savedAvatar || initial;
+
+        var greetInp = document.getElementById('youGreetingNameInput');
+        if (greetInp) {
+          var savedGreet = await loadUserGreetingName();
+          greetInp.value = savedGreet || '';
+        }
 
         // Counts + activity
         var sb = getSupabase();
@@ -5978,19 +6912,84 @@
     }
 
     function dismissCelebration() {
-      var overlay = document.getElementById('streak-celebration');
+      var overlay = document.getElementById('streak-splash');
       if (!overlay) return;
+      if (overlay._streakFadeEnd) {
+        overlay.removeEventListener('animationend', overlay._streakFadeEnd);
+        overlay._streakFadeEnd = null;
+      }
+      if (overlay._streakFadeStart) {
+        overlay.removeEventListener('animationstart', overlay._streakFadeStart);
+        overlay._streakFadeStart = null;
+      }
+      if (overlay._streakSnappyEnd) {
+        overlay.removeEventListener('animationend', overlay._streakSnappyEnd);
+        overlay._streakSnappyEnd = null;
+      }
+      overlay.classList.remove('streak-splash-running', 'streak-splash-exit-now');
+      overlay.style.animation = '';
+      overlay.style.opacity = '';
       overlay.classList.add('dismissed');
+    }
+
+    /** Snappy dismiss + premium haptic pop — inline fadeOutSplash 0.45s; node stays in DOM (no remove) for repeat celebrations. */
+    function hideStreakSplash() {
+      var splash = document.getElementById('streak-splash');
+      if (!splash || splash.classList.contains('dismissed')) return;
+      try {
+        if (typeof navigator !== 'undefined' && navigator.vibrate) {
+          navigator.vibrate([15, 10, 30]);
+        }
+      } catch (vErr) {}
+      if (splash._streakFadeEnd) {
+        splash.removeEventListener('animationend', splash._streakFadeEnd);
+        splash._streakFadeEnd = null;
+      }
+      if (splash._streakFadeStart) {
+        splash.removeEventListener('animationstart', splash._streakFadeStart);
+        splash._streakFadeStart = null;
+      }
+      if (splash._streakSnappyEnd) {
+        splash.removeEventListener('animationend', splash._streakSnappyEnd);
+        splash._streakSnappyEnd = null;
+      }
+      splash.classList.remove('streak-splash-running', 'streak-splash-exit-now');
+      splash.style.opacity = '';
+      void splash.offsetHeight;
+      splash.style.animation = 'fadeOutSplash 0.45s ease-out forwards';
+      function finishSnappyHide() {
+        splash.style.animation = '';
+        splash.classList.add('dismissed');
+        splash.style.opacity = '';
+      }
+      function onSnappyEnd(e) {
+        if (!e || e.animationName !== 'fadeOutSplash' || e.target !== splash) return;
+        splash.removeEventListener('animationend', onSnappyEnd);
+        splash._streakSnappyEnd = null;
+        finishSnappyHide();
+      }
+      splash._streakSnappyEnd = onSnappyEnd;
+      splash.addEventListener('animationend', onSnappyEnd);
+      setTimeout(function() {
+        if (splash.classList.contains('dismissed')) return;
+        if (splash._streakSnappyEnd) {
+          splash.removeEventListener('animationend', splash._streakSnappyEnd);
+          splash._streakSnappyEnd = null;
+        }
+        finishSnappyHide();
+      }, 450);
     }
 
     // Magical pixel dust particle system — blue-purple with neon green sparks
     function fireConfettiBurst() {
-      var overlay = document.getElementById('streak-celebration');
+      var overlay = document.getElementById('streak-splash');
       if (!overlay) return;
       var canvas = overlay.querySelector('canvas');
       if (!canvas) {
         canvas = document.createElement('canvas');
-        overlay.insertBefore(canvas, overlay.firstChild);
+        var bg = overlay.querySelector('.streak-bg');
+        if (bg && bg.nextSibling) overlay.insertBefore(canvas, bg.nextSibling);
+        else overlay.insertBefore(canvas, overlay.firstChild);
       }
       var ctx = canvas.getContext('2d');
       var dpr = window.devicePixelRatio || 1;
@@ -6121,29 +7120,501 @@
     }
 
     function showStreakCelebration(streakCount) {
-      var overlay = document.getElementById('streak-celebration');
+      var overlay = document.getElementById('streak-splash');
       var numberEl = document.getElementById('streak-number');
-      var labelEl = document.getElementById('streak-label');
+      var labelEl = overlay ? overlay.querySelector('.streak-content .streak-label') : null;
       if (!overlay || !numberEl) return;
-      // Set the correct number and label
+
+      overlay.classList.remove('dismissed');
+      overlay.style.opacity = '';
+      overlay.style.animation = '';
+      overlay.classList.remove('streak-splash-running', 'streak-splash-exit-now');
+      if (overlay._streakFadeEnd) {
+        overlay.removeEventListener('animationend', overlay._streakFadeEnd);
+        overlay._streakFadeEnd = null;
+      }
+      if (overlay._streakFadeStart) {
+        overlay.removeEventListener('animationstart', overlay._streakFadeStart);
+        overlay._streakFadeStart = null;
+      }
+      if (overlay._streakSnappyEnd) {
+        overlay.removeEventListener('animationend', overlay._streakSnappyEnd);
+        overlay._streakSnappyEnd = null;
+      }
+
       numberEl.textContent = streakCount;
-      if (labelEl) labelEl.textContent = 'day streak';
-      // Trigger animations
-      numberEl.classList.remove('animate'); numberEl.offsetHeight; numberEl.classList.add('animate');
-      if (labelEl) { labelEl.classList.remove('animate'); labelEl.offsetHeight; labelEl.classList.add('animate'); }
-      // Fire pixel dust burst
-      setTimeout(function() { fireConfettiBurst(); }, 200);
-      // Fade out overlay to reveal app
+      if (labelEl) labelEl.textContent = 'DAY STREAK';
+
+      numberEl.classList.remove('animate');
+      numberEl.offsetHeight;
+      numberEl.classList.add('animate');
+      if (labelEl) {
+        labelEl.classList.remove('animate');
+        labelEl.offsetHeight;
+        labelEl.classList.add('animate');
+      }
+
+      setTimeout(function() { fireConfettiBurst(); }, 160);
+
+      try {
+        if (typeof navigator !== 'undefined' && navigator.vibrate) {
+          setTimeout(function() { navigator.vibrate([12, 8, 18]); }, 220);
+        }
+      } catch (vErr) {}
+
+      function onStreakFadeStart(e) {
+        if (!e || e.animationName !== 'fadeOutSplash') return;
+        if (e.target !== overlay) return;
+        try {
+          if (typeof navigator !== 'undefined' && navigator.vibrate) {
+            navigator.vibrate([15, 10, 25]);
+          }
+        } catch (vErr2) {}
+        overlay.removeEventListener('animationstart', onStreakFadeStart);
+        overlay._streakFadeStart = null;
+      }
+      overlay._streakFadeStart = onStreakFadeStart;
+      overlay.addEventListener('animationstart', onStreakFadeStart);
+
+      function onStreakAnimEnd(e) {
+        if (!e || e.animationName !== 'fadeOutSplash' || e.target !== overlay) return;
+        overlay.removeEventListener('animationend', onStreakAnimEnd);
+        overlay._streakFadeEnd = null;
+        if (overlay._streakFadeStart) {
+          overlay.removeEventListener('animationstart', overlay._streakFadeStart);
+          overlay._streakFadeStart = null;
+        }
+        overlay.classList.add('dismissed');
+        overlay.classList.remove('streak-splash-running');
+        overlay.style.animation = '';
+        overlay.style.opacity = '';
+      }
+      overlay._streakFadeEnd = onStreakAnimEnd;
+      overlay.addEventListener('animationend', onStreakAnimEnd);
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
+          overlay.classList.add('streak-splash-running');
+        });
+      });
       setTimeout(function() {
-        overlay.style.transition = 'opacity 1.2s ease-out';
-        overlay.style.opacity = '0';
-        setTimeout(function() {
-          overlay.classList.add('dismissed');
-          overlay.style.opacity = '1';
-          overlay.style.transition = '';
-        }, 1300);
-      }, 3000);
+        if (overlay.classList.contains('dismissed')) return;
+        if (overlay._streakFadeEnd) {
+          overlay.removeEventListener('animationend', overlay._streakFadeEnd);
+          overlay._streakFadeEnd = null;
+        }
+        if (overlay._streakFadeStart) {
+          overlay.removeEventListener('animationstart', overlay._streakFadeStart);
+          overlay._streakFadeStart = null;
+        }
+        overlay.classList.add('dismissed');
+        overlay.classList.remove('streak-splash-running');
+        overlay.style.animation = '';
+        overlay.style.opacity = '';
+      }, 3600);
     }
+
+    (function wishRunnerGameIIFE() {
+      /* Last Z style vertical shooter — logical canvas GW×GH, scaled to #wpWishRunnerCanvas */
+      var GW = 390;
+      var GH = 680;
+      var _wrRaf = null;
+      var _wrRunning = false;
+      var _wrLastTs = 0;
+      var canvas = null;
+      var ctx = null;
+      var dpr = 1;
+      var player = { x: 195, y: 520, size: 28, speed: 5 };
+      var moveDx = 0;
+      var moveDy = 0;
+      var bullets = [];
+      var targets = [];
+      var score = 0;
+      var highScore = 0;
+      var gameOver = false;
+      var spawnAcc = 0;
+      var spawnEvery = 0.8;
+      var fireCd = 0;
+      var keys = {};
+      var jStickBound = false;
+      var fireBound = false;
+      var canvasFireBound = false;
+
+      function loadHigh() {
+        try { highScore = parseInt(localStorage.getItem('wp_wish_runner_hi'), 10) || 0; } catch (e) { highScore = 0; }
+      }
+
+      function saveHigh(s) {
+        if (s > highScore) {
+          highScore = s;
+          try { localStorage.setItem('wp_wish_runner_hi', String(highScore)); } catch (e) {}
+        }
+      }
+
+      function updateScoreEl() {
+        var el = document.getElementById('wp-wish-runner-score');
+        if (el) el.textContent = String(score);
+        var hi = document.getElementById('wp-wish-runner-hi');
+        if (hi) hi.textContent = String(Math.max(highScore, score));
+      }
+
+      function resize() {
+        canvas = document.getElementById('wpWishRunnerCanvas');
+        if (!canvas || !canvas.parentElement) return;
+        var rect = canvas.parentElement.getBoundingClientRect();
+        var w = Math.min(rect.width || 390, 390);
+        var h = Math.min(w * (GH / GW), Math.max(280, rect.height - 8));
+        if (h < 240) h = Math.max(240, (window.innerHeight || 600) * 0.52);
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.floor(w * dpr);
+        canvas.height = Math.floor(h * dpr);
+        canvas.style.width = Math.floor(w) + 'px';
+        canvas.style.height = Math.floor(h) + 'px';
+        ctx = canvas.getContext('2d');
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        player.y = GH * 0.76;
+        player.x = Math.max(player.size * 0.5, Math.min(GW - player.size * 0.5, player.x));
+      }
+
+      function resetGame() {
+        player.x = GW * 0.5;
+        player.y = GH * 0.76;
+        moveDx = 0;
+        moveDy = 0;
+        bullets = [];
+        targets = [];
+        score = 0;
+        gameOver = false;
+        spawnAcc = 0;
+        spawnEvery = 0.8;
+        fireCd = 0;
+        loadHigh();
+        var go = document.getElementById('wp-wish-runner-gameover');
+        if (go) go.hidden = true;
+        updateScoreEl();
+      }
+
+      function spawnTarget() {
+        var margin = 34;
+        var sz = 50;
+        targets.push({
+          x: margin + Math.random() * (GW - margin * 2),
+          y: -sz * 0.5 - 8,
+          size: sz,
+          health: Math.floor(Math.random() * 8) + 3,
+          speed: 95 + Math.random() * 55 + Math.min(50, score * 0.12)
+        });
+      }
+
+      function shoot() {
+        if (gameOver) return;
+        bullets.push({
+          x: player.x,
+          y: player.y - player.size * 0.5 - 6,
+          vy: -560,
+          life: 2.2
+        });
+        try { if (navigator.vibrate) navigator.vibrate(5); } catch (e) {}
+      }
+
+      function hitTarget(t, bx, by) {
+        var h = t.size * 0.5;
+        return Math.abs(bx - t.x) < h + 3 && Math.abs(by - t.y) < h + 3;
+      }
+
+      function targetHitsPlayer(t) {
+        var pr = player.size * 0.5;
+        var tr = t.size * 0.5;
+        var dx = t.x - player.x;
+        var dy = t.y - player.y;
+        return Math.sqrt(dx * dx + dy * dy) < tr + pr * 0.92;
+      }
+
+      function update(dt) {
+        if (gameOver) return;
+        fireCd = Math.max(0, fireCd - dt);
+        var moveInput = 0;
+        if (Math.abs(moveDx) > 0.08) moveInput = moveDx;
+        else {
+          if (keys.ArrowLeft || keys.a || keys.A) moveInput -= 1;
+          if (keys.ArrowRight || keys.d || keys.D) moveInput += 1;
+        }
+        var pxPerSec = player.speed * 56;
+        player.x += moveInput * pxPerSec * dt;
+        var half = player.size * 0.5;
+        player.x = Math.max(half, Math.min(GW - half, player.x));
+
+        spawnAcc += dt;
+        var interval = Math.max(0.38, spawnEvery - score * 0.0012);
+        while (spawnAcc >= interval) {
+          spawnAcc -= interval;
+          spawnTarget();
+        }
+
+        var i;
+        for (i = bullets.length - 1; i >= 0; i--) {
+          var b = bullets[i];
+          b.y += b.vy * dt;
+          b.life -= dt;
+          if (b.life <= 0 || b.y < -20) bullets.splice(i, 1);
+        }
+
+        var j;
+        var k;
+        targetLoop: for (j = targets.length - 1; j >= 0; j--) {
+          var t = targets[j];
+          t.y += t.speed * dt;
+          if (targetHitsPlayer(t)) {
+            gameOver = true;
+            saveHigh(score);
+            var go = document.getElementById('wp-wish-runner-gameover');
+            var fs = document.getElementById('wp-wish-runner-final');
+            if (fs) fs.textContent = String(score);
+            if (go) go.hidden = false;
+            break targetLoop;
+          }
+          if (t.y - t.size * 0.5 > GH + 40) {
+            targets.splice(j, 1);
+            continue targetLoop;
+          }
+          for (k = bullets.length - 1; k >= 0; k--) {
+            var b2 = bullets[k];
+            if (hitTarget(t, b2.x, b2.y)) {
+              bullets.splice(k, 1);
+              t.health -= 1;
+              if (t.health <= 0) {
+                score += 15 + Math.floor((50 - t.size) * 0.2);
+                targets.splice(j, 1);
+                updateScoreEl();
+              }
+              continue targetLoop;
+            }
+          }
+        }
+      }
+
+      function draw() {
+        if (!ctx || !canvas) return;
+        var cw = canvas.width / dpr;
+        var ch = canvas.height / dpr;
+        var sx = cw / GW;
+        var sy = ch / GH;
+        ctx.save();
+        ctx.scale(sx, sy);
+        ctx.fillStyle = '#0B0611';
+        ctx.fillRect(0, 0, GW, GH);
+        ctx.fillStyle = 'rgba(113, 50, 245, 0.08)';
+        ctx.fillRect(0, 0, GW, GH);
+
+        ctx.strokeStyle = 'rgba(113, 50, 245, 0.12)';
+        ctx.lineWidth = 1 / Math.min(sx, sy);
+        var g;
+        for (g = 0; g < GW; g += 40) {
+          ctx.beginPath();
+          ctx.moveTo(g, 0);
+          ctx.lineTo(g, GH);
+          ctx.stroke();
+        }
+        for (g = 0; g < GH; g += 40) {
+          ctx.beginPath();
+          ctx.moveTo(0, g);
+          ctx.lineTo(GW, g);
+          ctx.stroke();
+        }
+
+        var ti;
+        for (ti = 0; ti < targets.length; ti++) {
+          var tg = targets[ti];
+          var hs = tg.size * 0.5;
+          ctx.save();
+          ctx.fillStyle = 'rgba(255, 87, 34, 0.25)';
+          ctx.strokeStyle = 'rgba(255, 152, 0, 0.85)';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          if (typeof ctx.roundRect === 'function') {
+            ctx.roundRect(tg.x - hs, tg.y - hs, tg.size, tg.size, 8);
+          } else {
+            ctx.rect(tg.x - hs, tg.y - hs, tg.size, tg.size);
+          }
+          ctx.fill();
+          ctx.stroke();
+          ctx.font = 'bold 22px ui-sans-serif, system-ui, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillStyle = '#FFF';
+          ctx.shadowColor = '#7132F5';
+          ctx.shadowBlur = 8;
+          ctx.fillText(String(tg.health), tg.x, tg.y);
+          ctx.shadowBlur = 0;
+          ctx.restore();
+        }
+
+        ctx.save();
+        ctx.translate(player.x, player.y);
+        ctx.fillStyle = '#7132F5';
+        ctx.shadowColor = '#7132F5';
+        ctx.shadowBlur = 12;
+        ctx.fillRect(-player.size * 0.5, -player.size * 0.5, player.size, player.size);
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = '#FFF';
+        ctx.fillRect(-8, -player.size * 0.5 - 10, 16, 12);
+        ctx.restore();
+
+        ctx.fillStyle = '#FDE047';
+        ctx.shadowColor = '#FF9800';
+        ctx.shadowBlur = 6;
+        var bi;
+        for (bi = 0; bi < bullets.length; bi++) {
+          var bu = bullets[bi];
+          ctx.fillRect(bu.x - 2, bu.y - 8, 4, 14);
+        }
+        ctx.shadowBlur = 0;
+        ctx.restore();
+      }
+
+      function loop(ts) {
+        if (!_wrRunning) return;
+        if (!_wrLastTs) _wrLastTs = ts;
+        var dt = Math.min(0.055, (ts - _wrLastTs) / 1000);
+        _wrLastTs = ts;
+        update(dt);
+        draw();
+        _wrRaf = requestAnimationFrame(loop);
+      }
+
+      function bindJoystick() {
+        if (jStickBound) return;
+        var base = document.getElementById('wp-wish-runner-joystick');
+        var knob = document.getElementById('wp-wish-runner-joystick-knob');
+        if (!base || !knob) return;
+        jStickBound = true;
+        var maxR = 30;
+        var cx = 0;
+        var cy = 0;
+        var active = false;
+        var pid = null;
+        function setKnob(px, py) {
+          var dx = px - cx;
+          var dy = py - cy;
+          var d = Math.sqrt(dx * dx + dy * dy) || 1;
+          var k = Math.min(maxR, d) / d;
+          knob.style.transform = 'translate(' + (dx * k) + 'px,' + (dy * k) + 'px)';
+          moveDx = (dx * k) / maxR;
+          moveDy = (dy * k) / maxR;
+        }
+        function handleDown(ev) {
+          var r = base.getBoundingClientRect();
+          cx = r.left + r.width * 0.5;
+          cy = r.top + r.height * 0.5;
+          active = true;
+          pid = ev.pointerId;
+          try { base.setPointerCapture(pid); } catch (e) {}
+          setKnob(ev.clientX, ev.clientY);
+        }
+        function handleMove(ev) {
+          if (!active || ev.pointerId !== pid) return;
+          setKnob(ev.clientX, ev.clientY);
+        }
+        function handleUp(ev) {
+          if (ev.pointerId !== pid) return;
+          active = false;
+          pid = null;
+          knob.style.transform = 'translate(0,0)';
+          moveDx = 0;
+          moveDy = 0;
+          try { base.releasePointerCapture(ev.pointerId); } catch (e) {}
+        }
+        base.addEventListener('pointerdown', handleDown);
+        base.addEventListener('pointermove', handleMove);
+        base.addEventListener('pointerup', handleUp);
+        base.addEventListener('pointercancel', handleUp);
+      }
+
+      function bindFire() {
+        if (fireBound) return;
+        var btn = document.getElementById('wp-wish-runner-fire');
+        if (!btn) return;
+        fireBound = true;
+        function fire(ev) {
+          if (ev) ev.preventDefault();
+          if (fireCd <= 0 && !gameOver) {
+            shoot();
+            fireCd = 0.12;
+          }
+        }
+        btn.addEventListener('touchstart', fire, { passive: false });
+        btn.addEventListener('click', fire);
+      }
+
+      function bindCanvasFire() {
+        if (canvasFireBound) return;
+        var c = document.getElementById('wpWishRunnerCanvas');
+        if (!c) return;
+        canvasFireBound = true;
+        c.addEventListener('pointerdown', function(ev) {
+          if (document.body.getAttribute('data-active-view') !== 'wishrunner') return;
+          if (ev.target !== c) return;
+          try { ev.preventDefault(); } catch (e) {}
+          if (fireCd <= 0 && !gameOver) {
+            shoot();
+            fireCd = 0.12;
+          }
+        }, { passive: false });
+      }
+
+      function onKeyDown(ev) {
+        if (document.body.getAttribute('data-active-view') !== 'wishrunner') return;
+        keys[ev.key] = true;
+        if (ev.code === 'Space') {
+          ev.preventDefault();
+          if (fireCd <= 0 && !gameOver) {
+            shoot();
+            fireCd = 0.14;
+          }
+        }
+      }
+
+      function onKeyUp(ev) {
+        if (document.body.getAttribute('data-active-view') !== 'wishrunner') return;
+        keys[ev.key] = false;
+      }
+
+      window.startWishRunnerGame = function() {
+        canvas = document.getElementById('wpWishRunnerCanvas');
+        if (!canvas) return;
+        stopWishRunnerGame();
+        keys = {};
+        resetGame();
+        resize();
+        bindJoystick();
+        bindFire();
+        bindCanvasFire();
+        window.addEventListener('keydown', onKeyDown);
+        window.addEventListener('keyup', onKeyUp);
+        window._wrResizeHandler = function() {
+          if (document.body.getAttribute('data-active-view') === 'wishrunner') resize();
+        };
+        window.addEventListener('resize', window._wrResizeHandler);
+        _wrRunning = true;
+        _wrLastTs = 0;
+        _wrRaf = requestAnimationFrame(loop);
+      };
+
+      window.stopWishRunnerGame = function() {
+        _wrRunning = false;
+        if (_wrRaf) cancelAnimationFrame(_wrRaf);
+        _wrRaf = null;
+        window.removeEventListener('keydown', onKeyDown);
+        window.removeEventListener('keyup', onKeyUp);
+        if (window._wrResizeHandler) {
+          window.removeEventListener('resize', window._wrResizeHandler);
+          window._wrResizeHandler = null;
+        }
+      };
+
+      window.restartWishRunnerGame = function() {
+        resetGame();
+      };
+    })();
 
     function claimDailyStreak() {
       // Keep for backward compat but auto-claim handles it now
@@ -6159,7 +7630,71 @@
       // Legacy elements
       var counts = document.querySelectorAll('.streak-count');
       counts.forEach(function(el) { el.textContent = _streakCount; });
+      updateWishMomentum();
     }
+
+    var _momentumRingCircumference = 2 * Math.PI * 54;
+
+    /** Wish Momentum widget — driven by global `wishes` (user_wishes + completed orders from loadWishes / Supabase). */
+    function updateWishMomentum() {
+      var pctEl = document.getElementById('momentum-percent');
+      var ring = document.getElementById('momentum-progress');
+      var activeEl = document.getElementById('active-wishes');
+      var monthEl = document.getElementById('month-progress');
+      var nameEl = document.getElementById('momentum-widget-name');
+      if (!pctEl || !ring || !activeEl || !monthEl) return;
+
+      var n = typeof wishes !== 'undefined' && wishes && Array.isArray(wishes) ? wishes.length : 0;
+      activeEl.textContent = String(n);
+
+      var displayName = 'there';
+      var gt = document.getElementById('greeting-text');
+      if (gt && gt.textContent) {
+        var nameMatch = gt.textContent.match(/,\s*(.+)$/);
+        if (nameMatch) displayName = nameMatch[1].trim();
+      }
+      if (nameEl) nameEl.textContent = displayName;
+
+      var streak = typeof _streakCount !== 'undefined' ? _streakCount : 0;
+      var pct = Math.min(100, Math.max(8, Math.round(20 + n * 12 + Math.min(32, streak * 4))));
+      if (n === 0 && streak === 0) pct = 12;
+      pctEl.textContent = pct + '%';
+
+      var C = _momentumRingCircumference;
+      ring.style.strokeDasharray = String(C);
+      ring.style.strokeDashoffset = String(C * (1 - pct / 100));
+
+      var now = new Date();
+      var y = now.getFullYear();
+      var mo = now.getMonth();
+      var thisMonth = 0;
+      var lastMonth = 0;
+      if (wishes && wishes.length) {
+        wishes.forEach(function(w) {
+          var d = w.generated_at ? new Date(w.generated_at) : null;
+          if (!d || isNaN(d.getTime())) return;
+          if (d.getFullYear() === y && d.getMonth() === mo) thisMonth++;
+          else {
+            var lm = mo === 0 ? 11 : mo - 1;
+            var ly = mo === 0 ? y - 1 : y;
+            if (d.getFullYear() === ly && d.getMonth() === lm) lastMonth++;
+          }
+        });
+      }
+      if (lastMonth === 0 && thisMonth === 0) {
+        monthEl.textContent = '—';
+        monthEl.className = 'stat-value';
+      } else if (lastMonth === 0) {
+        monthEl.textContent = '+' + thisMonth + (thisMonth === 1 ? ' wish' : ' wishes');
+        monthEl.className = 'stat-value green';
+      } else {
+        var delta = Math.round(((thisMonth - lastMonth) / lastMonth) * 100);
+        monthEl.textContent = (delta >= 0 ? '+' : '') + delta + '%';
+        monthEl.className = 'stat-value ' + (delta >= 0 ? 'green' : 'red');
+      }
+    }
+
+    window.addEventListener('load', updateWishMomentum);
 
     function checkAgentLimit() {
       if (userIsPro) return true;
@@ -6314,6 +7849,7 @@
       }
       loadStreak();
       loadWishes();
+      refreshPremiumHeader();
       // Auto-load markets data so it's ready when user taps Markets tab
       refreshMarkets();
       window._marketsLoaded = true;
@@ -6390,7 +7926,7 @@
     function renderWishes() {
       var grid = document.getElementById('wishGrid');
       var empty = document.getElementById('emptyState');
-      if (!wishes.length) { grid.style.display = 'none'; empty.style.display = 'block'; return; }
+      if (!wishes.length) { grid.style.display = 'none'; empty.style.display = 'block'; dispatchWishpathContentUpdated(); return; }
       grid.style.display = 'grid'; empty.style.display = 'none';
       grid.innerHTML = wishes.map(function(w, i) {
         var date = new Date(w.generated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -6406,6 +7942,7 @@
           '</div>' +
         '</div>';
       }).join('');
+      dispatchWishpathContentUpdated();
     }
 
     async function deleteWish(idx) {
@@ -6471,7 +8008,7 @@
     }
 
     // View switching
-    var viewTitles = { home: 'Home', inbox: 'Inbox', you: 'You', lifecoach: 'Life Coach', news: 'News', fm: 'Financial Markets', cc: 'Command Center', wishes: 'My Wishes', coach: 'AI Coach', library: 'Library', notes: 'Notes', todos: 'To-Dos', feedback: 'Feedback', newwish: 'Your Wish' };
+    var viewTitles = { home: 'Home', inbox: 'Inbox', you: 'You', lifecoach: 'Life Coach', news: 'News', fm: 'Financial Markets', cc: 'Command Center', wishes: 'My Wishes', coach: 'AI Coach', library: 'Library', notes: 'Notes', todos: 'To-Dos', feedback: 'Feedback', newwish: 'Your Wish', wishrunner: 'Wish Runner' };
     // ── iOS-style drag handle for chat/content split ──
     (function initDragHandles() {
       if (window.innerWidth > 768) return;
@@ -6578,6 +8115,7 @@
     })();
 
     function showView(view) {
+      try { if (typeof stopWishRunnerGame === 'function') stopWishRunnerGame(); } catch (e) {}
       closeMobileAskAI();
       closeMobileFMMenu();
       document.querySelectorAll('.view').forEach(function(v) { v.classList.remove('active'); });
@@ -6588,7 +8126,12 @@
       if (navItem) navItem.classList.add('active');
       document.getElementById('viewTitle').textContent = viewTitles[view] || view;
       if (view === 'wishes') closeViewer();
-      if (view === 'home') hydrateNewsFromCacheForHome();
+      if (view === 'home') {
+        hydrateNewsFromCacheForHome();
+        var _hrTab = document.getElementById('homeRoadmapTab');
+        if (_hrTab && _hrTab.classList.contains('active')) resumeHomeWishTypewriter();
+        else pauseHomeWishTypewriter();
+      }
       if (view === 'library') renderLibrary();
       if (view === 'notes') { renderNotesListPage(); document.getElementById('notesList').classList.remove('hidden'); document.getElementById('notesEditor').classList.remove('active'); }
       if (view === 'todos') renderTodoSelect();
@@ -6615,21 +8158,33 @@
         setMobileNavActive(view);
         // Show bottom bar on all views except coach/lifecoach/feedback (these have their own input/controls)
         var navBar = document.getElementById('mobileNavBar');
-        if (navBar) navBar.style.display = (view === 'coach' || view === 'lifecoach' || view === 'feedback') ? 'none' : 'flex';
+        if (navBar) {
+          navBar.style.display = (view === 'coach' || view === 'lifecoach' || view === 'feedback' || view === 'wishrunner') ? 'none' : 'flex';
+          navBar.classList.remove('nav-hidden');
+        }
+        try {
+          _navWindowLastY = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+        } catch (e) {}
         updateMobileNavLabel(view);
       }
       updateMobileFMChrome();
+      if (view === 'wishrunner') {
+        setTimeout(function() {
+          try { if (typeof startWishRunnerGame === 'function') startWishRunnerGame(); } catch (e) {}
+        }, 0);
+      }
       if (view === 'fm') {
         refreshActiveFMWidgetLayout(window.innerWidth <= 768);
         initFMScrollListener();
+        if (typeof window.speedUpTradingViewTicker === 'function') {
+          setTimeout(function() { window.speedUpTradingViewTicker(); }, 200);
+          setTimeout(function() { window.speedUpTradingViewTicker(); }, 1200);
+        }
       } else {
         // Reset nav bar visibility when leaving FM
         var nb = document.getElementById('mobileNavBar');
         if (nb) nb.classList.remove('nav-hidden');
       }
-      // Show/hide FM chat FAB
-      var fab = document.getElementById('fmChatFab');
-      if (fab) fab.style.display = (view === 'fm') ? 'flex' : 'none';
     }
 
     // Coach — persistent conversations
@@ -7204,7 +8759,10 @@
         initNoteSwipeHandlers();
         wpCache.set('wp_cache_notes', data || []);
       } catch(e) { console.error('Error rendering notes list:', e); }
-      finally { wpCache.showUpdating('wpUpdatingPill', false); }
+      finally {
+        wpCache.showUpdating('wpUpdatingPill', false);
+        dispatchWishpathContentUpdated();
+      }
     }
 
     function initNoteSwipeHandlers() {
@@ -7328,6 +8886,11 @@
         document.getElementById('notesList').classList.add('hidden');
         var editor = document.getElementById('notesEditor');
         editor.classList.add('active');
+        try {
+          delete _navInnerScrollLast['notesContent'];
+          var _nb = document.getElementById('mobileNavBar');
+          if (_nb && window.innerWidth <= 768) _nb.classList.remove('nav-hidden');
+        } catch (eNav) {}
 
         var titleEl = document.getElementById('notesTitle');
         var bodyEl = document.getElementById('notesContent');
@@ -7361,6 +8924,10 @@
       notesAIHistory = [];
       document.getElementById('notesEditor').classList.remove('active');
       document.getElementById('notesList').classList.remove('hidden');
+      try {
+        var _nb2 = document.getElementById('mobileNavBar');
+        if (_nb2 && window.innerWidth <= 768) _nb2.classList.remove('nav-hidden');
+      } catch (eNav2) {}
       renderNotesListPage();
     }
 
@@ -8189,6 +9756,7 @@
       renderMobileHomeNews();
       if (!window._marketNewsArticles || !window._marketNewsArticles.length) fetchMarketNews();
       setMobileNavActive('home');
+      refreshPremiumHeader();
       // Always show Ask AI bar on home too
       var navBar = document.getElementById('mobileNavBar');
       if (navBar) navBar.style.display = 'flex';
@@ -8256,6 +9824,7 @@
     var _origRenderWishes = renderWishes;
     renderWishes = function() {
       _origRenderWishes();
+      try { updateWishMomentum(); } catch (e) {}
       if (window.innerWidth <= 768) renderMobileRecents();
     };
 
@@ -9616,6 +11185,155 @@
     }
 
     // ════════════════════════════════════════════════════
+    // ── Home wish typewriter (Roadmap): #F0EFF5 + #7132F5 two-tone examples
+    // ════════════════════════════════════════════════════
+    var _homeWishTwTimers = [];
+    var _homeWishTwPaused = false;
+    var _homeWishTwExampleIdx = 0;
+    var HOME_WISH_TYPEWRITER_EXAMPLES = [
+      { p: 'I want to ', a: 'double my savings this year' },
+      { p: 'Help me ', a: 'run my first marathon by fall' },
+      { p: "I'm ready to ", a: 'start a side hustle after work' },
+      { p: 'Build a plan to ', a: 'get promoted to senior engineer' },
+      { p: 'I dream of ', a: 'buying my first home in two years' },
+      { p: 'Teach me how to ', a: 'invest $500 a month wisely' },
+      { p: 'I need a roadmap to ', a: 'leave my 9–5 for consulting' },
+      { p: 'Create steps to ', a: 'learn Spanish for a career move' },
+      { p: 'I want to ', a: 'launch a tiny SaaS on weekends' },
+      { p: 'Plan my path to ', a: 'pay off student loans early' }
+    ];
+
+    function clearHomeWishTwTimers() {
+      _homeWishTwTimers.forEach(function(t) { clearTimeout(t); });
+      _homeWishTwTimers = [];
+    }
+
+    function homeWishTwLater(fn, ms) {
+      var id = setTimeout(function() {
+        _homeWishTwTimers = _homeWishTwTimers.filter(function(x) { return x !== id; });
+        try { fn(); } catch (e) {}
+      }, ms);
+      _homeWishTwTimers.push(id);
+      return id;
+    }
+
+    function homeWishTypewriterShouldShowOverlay() {
+      var ta = document.getElementById('homeWishInput');
+      var roadmap = document.getElementById('homeRoadmapTab');
+      return !!(roadmap && roadmap.classList.contains('active') && ta && !ta.value.trim() && document.activeElement !== ta);
+    }
+
+    function syncHomeWishTypewriterVisibility() {
+      var ov = document.getElementById('homeWishTypewriter');
+      var ta = document.getElementById('homeWishInput');
+      if (!ov || !ta) return;
+      if (ta.value.trim() || document.activeElement === ta) ov.classList.add('is-hidden');
+      else if (homeWishTypewriterShouldShowOverlay()) ov.classList.remove('is-hidden');
+      else ov.classList.add('is-hidden');
+    }
+
+    function runHomeWishTypewriterCycle() {
+      clearHomeWishTwTimers();
+      if (_homeWishTwPaused) return;
+      if (!homeWishTypewriterShouldShowOverlay()) return;
+      var ov = document.getElementById('homeWishTypewriter');
+      var pEl = document.getElementById('homeWishTwPrefix');
+      var aEl = document.getElementById('homeWishTwAccent');
+      var caret = document.getElementById('homeWishTwCaret');
+      if (!ov || !pEl || !aEl) return;
+      ov.classList.remove('is-hidden');
+      var L = HOME_WISH_TYPEWRITER_EXAMPLES.length;
+      var ex = HOME_WISH_TYPEWRITER_EXAMPLES[_homeWishTwExampleIdx % L];
+      pEl.textContent = '';
+      aEl.textContent = '';
+      if (caret) caret.style.display = 'inline-block';
+
+      var pi = 0, ai = 0;
+      var TYPE_P = 30, TYPE_A = 26, HOLD_MS = 20000, ERASE_MS = 11, GAP_MS = 700;
+
+      function tick() {
+        if (_homeWishTwPaused || !homeWishTypewriterShouldShowOverlay()) {
+          clearHomeWishTwTimers();
+          return;
+        }
+        if (pi < ex.p.length) {
+          pi++;
+          pEl.textContent = ex.p.slice(0, pi);
+          homeWishTwLater(tick, TYPE_P);
+        } else if (ai < ex.a.length) {
+          ai++;
+          aEl.textContent = ex.a.slice(0, ai);
+          homeWishTwLater(tick, TYPE_A);
+        } else {
+          homeWishTwLater(erasePhase, HOLD_MS);
+        }
+      }
+
+      function erasePhase() {
+        if (_homeWishTwPaused) { clearHomeWishTwTimers(); return; }
+        function erTick() {
+          if (!homeWishTypewriterShouldShowOverlay()) {
+            clearHomeWishTwTimers();
+            return;
+          }
+          if (aEl.textContent.length > 0) {
+            aEl.textContent = aEl.textContent.slice(0, -1);
+            homeWishTwLater(erTick, ERASE_MS);
+          } else if (pEl.textContent.length > 0) {
+            pEl.textContent = pEl.textContent.slice(0, -1);
+            homeWishTwLater(erTick, ERASE_MS);
+          } else {
+            homeWishTwLater(function() {
+              if (_homeWishTwPaused) return;
+              _homeWishTwExampleIdx = (_homeWishTwExampleIdx + 1) % HOME_WISH_TYPEWRITER_EXAMPLES.length;
+              if (homeWishTypewriterShouldShowOverlay()) runHomeWishTypewriterCycle();
+            }, GAP_MS);
+          }
+        }
+        erTick();
+      }
+
+      tick();
+    }
+
+    function pauseHomeWishTypewriter() {
+      _homeWishTwPaused = true;
+      clearHomeWishTwTimers();
+      var ov = document.getElementById('homeWishTypewriter');
+      if (ov) ov.classList.add('is-hidden');
+    }
+
+    function resumeHomeWishTypewriter() {
+      _homeWishTwPaused = false;
+      homeWishTwLater(function() {
+        if (homeWishTypewriterShouldShowOverlay()) runHomeWishTypewriterCycle();
+      }, 450);
+    }
+
+    function initHomeWishTypewriter() {
+      var ta = document.getElementById('homeWishInput');
+      if (!ta || ta._homeWishTwBound) return;
+      ta._homeWishTwBound = true;
+      ta.addEventListener('focus', function() {
+        _homeWishTwPaused = true;
+        clearHomeWishTwTimers();
+        var ov = document.getElementById('homeWishTypewriter');
+        if (ov) ov.classList.add('is-hidden');
+      });
+      ta.addEventListener('blur', function() {
+        _homeWishTwPaused = false;
+        homeWishTwLater(function() {
+          var ipt = document.getElementById('homeWishInput');
+          var roadmap = document.getElementById('homeRoadmapTab');
+          if (ipt && !ipt.value.trim() && roadmap && roadmap.classList.contains('active')) resumeHomeWishTypewriter();
+        }, 280);
+      });
+      if (homeWishTypewriterShouldShowOverlay()) homeWishTwLater(runHomeWishTypewriterCycle, 700);
+    }
+
+    window.addEventListener('load', initHomeWishTypewriter);
+
+    // ════════════════════════════════════════════════════
     // ── HOME SCREEN TABS (Roadmap / Markets / Portfolio)
     // ════════════════════════════════════════════════════
 
@@ -9640,6 +11358,8 @@
           label.textContent = (tab === 'portfolio') ? 'Ask about your portfolio' : 'Ask AI';
         }
       }
+      if (tab === 'roadmap') resumeHomeWishTypewriter();
+      else pauseHomeWishTypewriter();
     }
 
     // FM Main Chart — TradingView advanced chart at top of Financial Markets
@@ -11340,6 +13060,7 @@
       _renderHoldingsInto('holdingsBody', 'holdingsTable', 'holdingsEmpty', 'portfolioTotalValue', 'portfolioDayPL', 'portfolioDayPLPct', 'portfolioTotalPL', 'portfolioTotalPLPct', 'portfolioPositionCount', 'portfolioChartContainer');
       _renderHoldingsInto('fmHoldingsBody', 'fmHoldingsTable', 'fmHoldingsEmpty', 'fmPortfolioTotalValue', 'fmPortfolioDayPL', 'fmPortfolioDayPLPct', 'fmPortfolioTotalPL', 'fmPortfolioTotalPLPct', 'fmPortfolioPositionCount', 'fmPortfolioChartContainer');
       _renderHoldingsInto('mobileHoldingsBody', 'mobileHoldingsTable', 'mobileHoldingsEmpty', 'mobilePortfolioValue', 'mobilePortfolioDayPL', 'mobilePortfolioDayPLPct', 'mobilePortfolioTotalPL', 'mobilePortfolioTotalPLPct', 'mobilePortfolioPositionCount', 'mobilePortfolioChartContainer');
+      dispatchWishpathContentUpdated();
     }
 
     function _renderHoldingsInto(bodyId, tableId, emptyId, totalValId, dayPLId, dayPLPctId, totalPLId, totalPLPctId, posCountId, chartId) {
@@ -11373,10 +13094,14 @@
         var totalItemPL = hasPrice && h.avgCost > 0 ? value - costBasis : 0;
         totalValue += value; totalDayPL += dayPLVal;
         if (hasPrice && h.avgCost > 0) { totalPL += totalItemPL; totalCostBasis += costBasis; }
-        var dayClass = dayPLVal > 0 ? 'up' : dayPLVal < 0 ? 'down' : 'flat';
-        var totalClass = totalItemPL > 0 ? 'up' : totalItemPL < 0 ? 'down' : 'flat';
-        var logo = buildTickerLogoHtml(h.symbol, 24);
-        return '<tr onclick="openHoldingActions(' + i + ')" style="cursor:pointer;"><td><div style="display:flex;align-items:center;gap:8px;">' + logo + '<button class="holding-symbol-btn" onclick="openHoldingActions(' + i + ')">' + h.symbol + '</button></div></td><td>' + h.qty + '<span class="qty-label"> shares</span></td><td>' + (hasPrice ? '$' + formatNum(price) : '--') + '</td><td style="font-weight:600;color:#fff;">' + (hasPrice ? '$' + formatNum(value) : '--') + '</td><td class="stock-change ' + dayClass + '">' + (hasPrice ? (dayPLVal>0?'+':'') + '$' + formatNum(dayPLVal) : '--') + '</td><td class="stock-change ' + totalClass + '">' + (hasPrice && h.avgCost>0 ? (totalItemPL>0?'+':'') + '$' + formatNum(totalItemPL) : '--') + '</td></tr>';
+        var dayPlClass = dayPLVal > 0 ? 'green' : dayPLVal < 0 ? 'red' : 'flat';
+        var dayPlCell = hasPrice ? ((dayPLVal > 0 ? '+' : '') + '$' + formatNum(dayPLVal)) : '--';
+        return '<tr onclick="openHoldingActions(' + i + ')" style="cursor:pointer;">' +
+          buildPortfolioSymbolCellHtml(h.symbol) +
+          '<td>' + h.qty + '<span class="qty-label"> shares</span></td>' +
+          '<td>' + (hasPrice ? '$' + formatNum(price) : '--') + '</td>' +
+          '<td style="font-weight:600;color:#fff;">' + (hasPrice ? '$' + formatNum(value) : '--') + '</td>' +
+          '<td class="day-pl ' + dayPlClass + '">' + dayPlCell + '</td></tr>';
       }).join('');
 
       var tvEl = document.getElementById(totalValId); if (tvEl) tvEl.textContent = '$' + formatNum(totalValue);
@@ -11659,9 +13384,9 @@
         '<div style="margin:12px 0;">' +
           '<button class="add-holding-btn add-holding-btn-small" onclick="openAddHoldingModal()">+ Add</button>' +
         '</div>' +
-        '<div id="mobileHoldingsTableWrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:16px;">' +
-          '<table class="holdings-table" id="mobileHoldingsTable" style="display:none;">' +
-            '<thead><tr><th>Symbol</th><th>Qty</th><th>Price</th><th>Value</th><th>Day P&L</th></tr></thead>' +
+        '<div id="mobileHoldingsTableWrap" class="portfolio-table-container" style="overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:16px;">' +
+          '<table class="holdings-table portfolio-table" id="mobileHoldingsTable" style="display:none;">' +
+            '<thead><tr><th>Symbol</th><th>Qty</th><th>Price</th><th>Value</th><th class="day-pl-header">Day P&L</th></tr></thead>' +
             '<tbody id="mobileHoldingsBody"></tbody>' +
           '</table>' +
           '<div id="mobileHoldingsEmpty" style="text-align:center;padding:32px 24px;color:var(--kraken-text-muted);font-size:14px;font-family:\'IBM Plex Sans\',system-ui,sans-serif;background:var(--kraken-card-bg);border-radius:16px;border:1px dashed var(--kraken-border);">No holdings yet. Add a stock or crypto above.</div>' +
@@ -12982,6 +14707,14 @@
       return html;
     }
 
+    /** Portfolio table: icon-only symbol cell (TV/FMP logo + fallback); ticker in title/aria for accessibility. */
+    function buildPortfolioSymbolCellHtml(symbol) {
+      var clean = (symbol || '').toUpperCase().trim();
+      var esc = clean.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+      var icon = buildTickerLogoHtml(clean, 32).replace('class="ticker-logo"', 'class="ticker-logo company-icon"');
+      return '<td class="symbol-cell" title="' + esc + '" aria-label="' + esc + '">' + icon + '</td>';
+    }
+
     // Watchlist logo builder (uses larger 40px size to match existing style)
     function buildWatchlistLogo(sym) {
       var clean = sym.replace('/USD','').toUpperCase();
@@ -13177,10 +14910,11 @@
       if (ts) ts.textContent = 'Last updated: ' + new Date().toLocaleTimeString();
     }
 
-    // === Faster ticker tape (FM custom marquee + any in-document TradingView ticker DOM) ===
+    // === Faster TradingView ticker tape on mobile (FM + in-document TV DOM; re-apply after TV re-renders) ===
     (function initFastTickerTape() {
-      var TICKER_DUR = '25s';
+      var TICKER_DUR = '22s';
       function speedUpTradingViewTicker() {
+        if (window.innerWidth > 768) return;
         var id = 'wp-ticker-tape-speed-fix';
         var style = document.getElementById(id);
         if (!style) {
@@ -13189,19 +14923,22 @@
           document.head.appendChild(style);
         }
         style.textContent =
-          '.ticker-tape-widget .tv-ticker-tape__scroll,' +
-          '.ticker-tape-widget .tv-tape-scroll-container,' +
+          '@media (max-width: 768px) {' +
+          '.tv-ticker-tape__scroll,' +
+          '.tv-tape-scroll-container,' +
           '[data-name="ticker-tape"] .scroll-container,' +
-          '.tv-ticker-tape__items {' +
+          '.ticker-tape-widget .tv-ticker-tape__items {' +
           '  animation-duration: ' + TICKER_DUR + ' !important;' +
           '  animation-timing-function: linear !important;' +
+          '  will-change: transform;' +
           '}' +
-          '.ticker-tape-widget .tv-ticker-tape__items {' +
-          '  transition: transform 0.05s linear !important;' +
+          '.tv-ticker-tape__items {' +
+          '  transition: transform 0.04s linear !important;' +
           '}' +
           '#fmMarketsContent #ticker-inner {' +
           '  animation-duration: ' + TICKER_DUR + ' !important;' +
           '  animation-timing-function: linear !important;' +
+          '}' +
           '}';
         var inner = document.querySelector('#fmMarketsContent #ticker-inner');
         if (inner) {
@@ -13209,15 +14946,16 @@
           inner.style.animationTimingFunction = 'linear';
         }
         document.querySelectorAll('.tv-ticker-tape__scroll, .tv-tape-scroll-container, [data-name="ticker-tape"] .scroll-container').forEach(function(el) {
-          if (el.style.animationDuration !== TICKER_DUR) el.style.animationDuration = TICKER_DUR;
+          el.style.animationDuration = TICKER_DUR;
+          el.style.animationTimingFunction = 'linear';
         });
       }
       window.speedUpTradingViewTicker = speedUpTradingViewTicker;
       if (!window._fastTickerTapeInterval) {
-        window._fastTickerTapeInterval = setInterval(speedUpTradingViewTicker, 3000);
+        window._fastTickerTapeInterval = setInterval(speedUpTradingViewTicker, 2500);
       }
       window.addEventListener('load', function() {
-        setTimeout(speedUpTradingViewTicker, 1500);
+        setTimeout(speedUpTradingViewTicker, 1200);
       });
       document.addEventListener('visibilitychange', function() {
         if (!document.hidden) speedUpTradingViewTicker();
@@ -13263,14 +15001,61 @@
       var script = document.createElement('script');
       script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
       script.async = true;
-      script.innerHTML = JSON.stringify({
-        autosize: true, symbol: ticker, interval: 'D', timezone: 'Etc/UTC',
-        theme: 'dark', style: '1', locale: 'en', backgroundColor: 'rgba(22,27,34,1)',
-        gridColor: 'rgba(48,54,61,0.5)', allow_symbol_change: true,
-        calendar: false, support_host: 'https://www.tradingview.com',
-        enable_publishing: false, hide_top_toolbar: false,
-        hide_side_toolbar: false, withdateranges: true
-      });
+      var isMobile = window.innerWidth <= 768;
+      /* Mobile: match TradingView app — full-bleed black, 5m candles, no desktop search/timeframe strip or left drawing rail */
+      var tvCfg = isMobile ? {
+        autosize: true,
+        symbol: ticker,
+        interval: '5',
+        timezone: 'America/New_York',
+        theme: 'dark',
+        style: '1',
+        locale: 'en',
+        backgroundColor: '#000000',
+        gridColor: '#1E222D',
+        colorTheme: 'dark',
+        allow_symbol_change: true,
+        calendar: false,
+        support_host: 'https://www.tradingview.com',
+        enable_publishing: false,
+        save_image: false,
+        hide_top_toolbar: true,
+        hide_side_toolbar: true,
+        hide_legend: false,
+        hide_volume: false,
+        withdateranges: false,
+        overrides: {
+          'paneProperties.background': '#000000',
+          'paneProperties.backgroundType': 'solid',
+          'paneProperties.vertGridProperties.color': '#1E222D',
+          'paneProperties.horzGridProperties.color': '#1E222D',
+          'scalesProperties.textColor': '#D1D4DC',
+          'mainSeriesProperties.candleStyle.upColor': '#089981',
+          'mainSeriesProperties.candleStyle.downColor': '#F23645',
+          'mainSeriesProperties.candleStyle.borderUpColor': '#089981',
+          'mainSeriesProperties.candleStyle.borderDownColor': '#F23645',
+          'mainSeriesProperties.candleStyle.wickUpColor': '#089981',
+          'mainSeriesProperties.candleStyle.wickDownColor': '#F23645'
+        }
+      } : {
+        autosize: true,
+        symbol: ticker,
+        interval: 'D',
+        timezone: 'Etc/UTC',
+        theme: 'dark',
+        style: '1',
+        locale: 'en',
+        backgroundColor: 'rgba(22,27,34,1)',
+        gridColor: 'rgba(48,54,61,0.5)',
+        allow_symbol_change: true,
+        calendar: false,
+        support_host: 'https://www.tradingview.com',
+        enable_publishing: false,
+        hide_top_toolbar: false,
+        hide_side_toolbar: false,
+        withdateranges: true
+      };
+      script.innerHTML = JSON.stringify(tvCfg);
       container.appendChild(script);
     }
 
