@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-12-v212';
+    var APP_VERSION = '2026-04-12-v213';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -8407,6 +8407,24 @@
       } catch (e) { console.error('Sidebar render error:', e); }
     }
 
+    function openLibraryChat(convoId, messages, wishId) {
+      if (!wishId) {
+        // Life Coach chat (no wish) — open in Life Coach view
+        openLifeCoachView();
+        openLCConversation(convoId, messages);
+        return;
+      }
+      // Wish-linked chat — try loadSavedChat, fall back to Life Coach display
+      var idx = wishes.findIndex(function(w) { return w.id === wishId; });
+      if (idx >= 0) {
+        loadSavedChat(wishId);
+      } else {
+        // Wish deleted but chat still exists — show in Life Coach view
+        openLifeCoachView();
+        openLCConversation(convoId, messages);
+      }
+    }
+
     async function loadSavedChat(wishId) {
       // Find the wish index and switch to it
       var idx = wishes.findIndex(function(w) { return w.id === wishId; });
@@ -8596,9 +8614,12 @@
           var { data } = await sb.from('coach_conversations').select('id, wish_id, updated_at, created_at, messages').eq('user_id', currentUserId).order('updated_at', { ascending: false });
           if (data) data.forEach(function(c) {
             if (!c.messages || c.messages.length === 0) return;
-            var wish = wishes.find(function(w) { return w.id === c.wish_id; });
-            var name = wish ? wish.wish_title : 'Chat';
-            items.push({ name: name + ' (Chat)', icon: '&#x1F4AC;', type: 'Chat', edited: c.updated_at, created: c.created_at, action: function() { loadSavedChat(c.wish_id); } });
+            var wish = c.wish_id ? wishes.find(function(w) { return w.id === c.wish_id; }) : null;
+            var name = c.title || (wish ? wish.wish_title : 'Chat');
+            var convoId = c.id;
+            var convoMessages = c.messages;
+            var convoWishId = c.wish_id;
+            items.push({ name: name + ' (Chat)', icon: '&#x1F4AC;', type: 'Chat', edited: c.updated_at, created: c.created_at, action: function() { openLibraryChat(convoId, convoMessages, convoWishId); } });
           });
         } catch(e) {}
       }
