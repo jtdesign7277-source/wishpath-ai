@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-12-v240';
+    var APP_VERSION = '2026-04-12-v241';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -667,70 +667,6 @@
       color: rgba(255,255,255,0.25);
       font-size: 1.2rem;
       flex-shrink: 0;
-    }
-
-    /* ── Preview Peek (Notes + Chat) ── */
-    .peek-preview {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
-      opacity: 0;
-      background: rgba(113,50,245,0.06);
-      border-left: 3px solid #7132F5;
-      margin: 0 16px;
-      border-radius: 0 0 10px 10px;
-    }
-    .peek-preview.open {
-      max-height: 220px;
-      opacity: 1;
-    }
-    .peek-inner {
-      padding: 10px 14px 12px;
-    }
-    .peek-summary {
-      font-size: 0.8rem;
-      line-height: 1.55;
-      color: rgba(255,255,255,0.6);
-      display: -webkit-box;
-      -webkit-line-clamp: 4;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      margin-bottom: 8px;
-    }
-    .peek-highlights {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-    .peek-tag {
-      display: inline-block;
-      padding: 3px 9px;
-      border-radius: 20px;
-      font-size: 0.68rem;
-      font-weight: 600;
-      letter-spacing: 0.02em;
-      background: rgba(113,50,245,0.18);
-      color: rgba(113,50,245,0.9);
-      border: 1px solid rgba(113,50,245,0.25);
-      white-space: nowrap;
-    }
-    .peek-msg-count {
-      font-size: 0.72rem;
-      color: rgba(255,255,255,0.3);
-      margin-bottom: 6px;
-    }
-    @keyframes peekShimmer {
-      0% { background-position: -200% 0; }
-      100% { background-position: 200% 0; }
-    }
-    .peek-loading {
-      height: 12px;
-      width: 70%;
-      border-radius: 6px;
-      background: linear-gradient(90deg, rgba(113,50,245,0.08) 25%, rgba(113,50,245,0.18) 50%, rgba(113,50,245,0.08) 75%);
-      background-size: 200% 100%;
-      animation: peekShimmer 1.5s infinite;
-      margin: 4px 0;
     }
 
     /* Notes editor — full-bleed #191919 + dim date + dark “paper” body */
@@ -3309,12 +3245,6 @@
         color: #7132F5;
         font-size: 1.2rem;
         flex-shrink: 0;
-      }
-      .lc-chat-peek-wrap {
-        border-bottom: 1px solid rgba(113,50,245,0.45);
-      }
-      .lc-chat-peek-wrap .lc-chat-item {
-        border-bottom: none;
       }
 
       /* ── Life Coach Chat View ── */
@@ -9949,86 +9879,6 @@
     var _currentNoteCreatedAt = null;
     var notesAIHistory = [];
 
-    /* ── Peek Preview: extract highlight tags from text ── */
-    function _extractPeekTags(text) {
-      if (!text || text.length < 20) return '';
-      // Extract capitalized phrases, numbers with units, URLs, dates, key words
-      var tags = [];
-      var seen = {};
-      // Capitalized multi-word phrases (2-3 words)
-      var caps = text.match(/[A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,2}/g) || [];
-      caps.forEach(function(c) {
-        var k = c.toLowerCase();
-        if (k.length > 3 && k.length < 40 && !seen[k] && !/^(the|this|that|with|from|have|been|will|just|also|here|there|then|when|what|your|more|some|they|their|about|would|could|should|which|these|those|after|before|other|every|still|being)$/i.test(c.trim())) {
-          seen[k] = 1;
-          tags.push(c.trim());
-        }
-      });
-      // Dollar amounts
-      var dollars = text.match(/\$[\d,]+\.?\d*/g) || [];
-      dollars.forEach(function(d) { if (!seen[d]) { seen[d] = 1; tags.push(d); } });
-      // Percentages
-      var pcts = text.match(/\d+\.?\d*%/g) || [];
-      pcts.forEach(function(p) { if (!seen[p]) { seen[p] = 1; tags.push(p); } });
-      // Dates
-      var dates = text.match(/(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\w*\s+\d{1,2}(?:,?\s*\d{4})?/gi) || [];
-      dates.forEach(function(d) { if (!seen[d.toLowerCase()]) { seen[d.toLowerCase()] = 1; tags.push(d); } });
-      return tags.slice(0, 5).map(function(t) { return '<span class="peek-tag">' + t.replace(/</g,'&lt;') + '</span>'; }).join('');
-    }
-
-    /* ── Peek Preview: hover (desktop) + long-press (mobile) for notes ── */
-    var _peekOpenId = null;
-    var _peekLongPressTimer = null;
-
-    function _openPeek(id) {
-      if (_peekOpenId === id) return;
-      _closePeek();
-      var el = document.querySelector('[data-peek-for="' + id + '"]');
-      if (el) { el.classList.add('open'); _peekOpenId = id; }
-    }
-
-    function _closePeek() {
-      if (!_peekOpenId) return;
-      var el = document.querySelector('.peek-preview.open');
-      if (el) el.classList.remove('open');
-      _peekOpenId = null;
-    }
-
-    function _initPeekHandlers() {
-      var items = document.querySelectorAll('.notes-item[data-note-id]');
-      items.forEach(function(item) {
-        var nid = item.getAttribute('data-note-id');
-        // Desktop: hover
-        item.addEventListener('mouseenter', function() { _openPeek(nid); });
-        item.addEventListener('mouseleave', function() { _closePeek(); });
-        // Mobile: long-press (350ms)
-        item.addEventListener('touchstart', function(e) {
-          _peekLongPressTimer = setTimeout(function() {
-            _openPeek(nid);
-          }, 350);
-        }, { passive: true });
-        item.addEventListener('touchend', function() { clearTimeout(_peekLongPressTimer); });
-        item.addEventListener('touchmove', function() { clearTimeout(_peekLongPressTimer); _closePeek(); });
-      });
-    }
-
-    /* ── Peek Preview: hover + long-press for chat list ── */
-    function _initChatPeekHandlers() {
-      var items = document.querySelectorAll('.lc-chat-item[data-chat-id]');
-      items.forEach(function(item) {
-        var cid = 'chat-' + item.getAttribute('data-chat-id');
-        item.addEventListener('mouseenter', function() { _openPeek(cid); });
-        item.addEventListener('mouseleave', function() { _closePeek(); });
-        item.addEventListener('touchstart', function(e) {
-          _peekLongPressTimer = setTimeout(function() {
-            _openPeek(cid);
-          }, 350);
-        }, { passive: true });
-        item.addEventListener('touchend', function() { clearTimeout(_peekLongPressTimer); });
-        item.addEventListener('touchmove', function() { clearTimeout(_peekLongPressTimer); _closePeek(); });
-      });
-    }
-
     async function renderNotesListPage() {
       var scrollEl = document.getElementById('notesListScroll');
       var nc = wpCache.get('wp_cache_notes', null);
@@ -10042,14 +9892,12 @@
         } else {
           scrollEl.innerHTML = vis0.map(function(n) {
             var preview = n.content ? n.content.substring(0, 50) : 'No content';
-            var longPreview = n.content ? n.content.substring(0, 280).replace(/</g,'&lt;') : '';
-            var tags = _extractPeekTags(n.content || '');
             var timeAgo = getTimeAgo(new Date(n.updated_at));
             return '<div class="notes-swipe-wrap">' +
               '<div class="notes-swipe-delete" onclick="deleteNoteById(\'' + n.id + '\', this.parentElement)">' +
                 '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>' +
               '</div>' +
-              '<div class="notes-item" onclick="openNotesEditor(\'' + n.id + '\')" data-note-id="' + n.id + '">' +
+              '<div class="notes-item" onclick="openNotesEditor(\'' + n.id + '\')">' +
                 '<div class="notes-item-info">' +
                   '<div class="notes-item-title">' + (n.title || 'Untitled').replace(/</g,'&lt;') + '</div>' +
                   '<div class="notes-item-preview">' + preview.replace(/</g,'&lt;') + '</div>' +
@@ -10059,14 +9907,9 @@
                   '<div class="notes-item-chevron">></div>' +
                 '</div>' +
               '</div>' +
-              '<div class="peek-preview" data-peek-for="' + n.id + '"><div class="peek-inner">' +
-                '<div class="peek-summary">' + (longPreview || 'Empty note') + '</div>' +
-                (tags ? '<div class="peek-highlights">' + tags + '</div>' : '') +
-              '</div></div>' +
             '</div>';
           }).join('');
           initNoteSwipeHandlers();
-          _initPeekHandlers();
         }
       }
       wpCache.showUpdating('wpUpdatingPill', true);
@@ -10085,14 +9928,12 @@
         }
         scrollEl.innerHTML = visible.map(function(n) {
           var preview = n.content ? n.content.substring(0, 50) : 'No content';
-          var longPreview = n.content ? n.content.substring(0, 280).replace(/</g,'&lt;') : '';
-          var tags = _extractPeekTags(n.content || '');
           var timeAgo = getTimeAgo(new Date(n.updated_at));
           return '<div class="notes-swipe-wrap">' +
             '<div class="notes-swipe-delete" onclick="deleteNoteById(\'' + n.id + '\', this.parentElement)">' +
               '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>' +
             '</div>' +
-            '<div class="notes-item" onclick="openNotesEditor(\'' + n.id + '\')" data-note-id="' + n.id + '">' +
+            '<div class="notes-item" onclick="openNotesEditor(\'' + n.id + '\')">' +
               '<div class="notes-item-info">' +
                 '<div class="notes-item-title">' + (n.title || 'Untitled').replace(/</g,'&lt;') + '</div>' +
                 '<div class="notes-item-preview">' + preview.replace(/</g,'&lt;') + '</div>' +
@@ -10102,14 +9943,9 @@
                 '<div class="notes-item-chevron">></div>' +
               '</div>' +
             '</div>' +
-            '<div class="peek-preview" data-peek-for="' + n.id + '"><div class="peek-inner">' +
-              '<div class="peek-summary">' + (longPreview || 'Empty note') + '</div>' +
-              (tags ? '<div class="peek-highlights">' + tags + '</div>' : '') +
-            '</div></div>' +
           '</div>';
         }).join('');
         initNoteSwipeHandlers();
-        _initPeekHandlers();
         wpCache.set('wp_cache_notes', data || []);
       } catch(e) { console.error('Error rendering notes list:', e); }
       finally {
@@ -12117,28 +11953,12 @@
         listScroll.innerHTML = '';
 
         data.forEach(function(convo) {
-          var wrap = document.createElement('div');
-          wrap.className = 'lc-chat-peek-wrap';
-
           var item = document.createElement('div');
           item.className = 'lc-chat-item';
-          item.setAttribute('data-chat-id', convo.id);
 
           var timeAgo = getTimeAgo(new Date(convo.updated_at));
           var title = convo.title || 'Untitled Chat';
           if (title.length > 40) title = title.substring(0, 37) + '...';
-
-          // Extract last user + AI message for peek preview
-          var msgs = convo.messages || [];
-          var msgCount = msgs.length;
-          var lastUser = '', lastAI = '';
-          for (var mi = msgs.length - 1; mi >= 0; mi--) {
-            if (!lastAI && msgs[mi].role === 'assistant') lastAI = (msgs[mi].content || '').substring(0, 200);
-            if (!lastUser && msgs[mi].role === 'user') lastUser = (msgs[mi].content || '').substring(0, 120);
-            if (lastUser && lastAI) break;
-          }
-          var chatPeekText = lastAI || lastUser || 'No messages yet';
-          var chatTags = _extractPeekTags(lastAI || lastUser || '');
 
           item.innerHTML =
             '<div class="lc-chat-item-info">' +
@@ -12148,21 +11968,8 @@
             '<div class="lc-chat-item-chevron">›</div>';
 
           item.onclick = function() { openLCConversation(convo.id, convo.messages); };
-
-          var peek = document.createElement('div');
-          peek.className = 'peek-preview';
-          peek.setAttribute('data-peek-for', 'chat-' + convo.id);
-          peek.innerHTML = '<div class="peek-inner">' +
-            '<div class="peek-msg-count">' + msgCount + ' message' + (msgCount !== 1 ? 's' : '') + '</div>' +
-            '<div class="peek-summary">' + chatPeekText.replace(/</g, '&lt;') + '</div>' +
-            (chatTags ? '<div class="peek-highlights">' + chatTags + '</div>' : '') +
-          '</div>';
-
-          wrap.appendChild(item);
-          wrap.appendChild(peek);
-          listScroll.appendChild(wrap);
+          listScroll.appendChild(item);
         });
-        _initChatPeekHandlers();
       } catch(e) {
         console.error('LC list load error:', e);
       }
