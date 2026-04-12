@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-12-v219';
+    var APP_VERSION = '2026-04-12-v220';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -5499,7 +5499,7 @@
             <div id="wp-wish-runner-joystick" class="virtual-joystick" aria-hidden="true">
               <div class="joystick-knob" id="wp-wish-runner-joystick-knob"></div>
             </div>
-            <div id="wp-wish-runner-fire" class="fire-button" role="button" tabindex="0" aria-label="Fire">&#x1F525;</div>
+            <div id="wp-wish-runner-fire" class="fire-button" role="button" tabindex="0" aria-label="Fire" style="display:none;">&#x1F525;</div>
           </div>
           <div id="score-display" class="game-ui">
             SCORE <span id="wp-wish-runner-score">0</span>
@@ -7207,6 +7207,9 @@
       var spawnAcc = 0;
       var spawnEvery = 0.8;
       var fireCd = 0;
+      var autoFireRate = 0.18;
+      var stars = [];
+      var starsInit = false;
       var keys = {};
       var jStickBound = false;
       var fireBound = false;
@@ -7260,6 +7263,7 @@
         spawnAcc = 0;
         spawnEvery = 0.8;
         fireCd = 0;
+        starsInit = false;
         loadHigh();
         var go = document.getElementById('wp-wish-runner-gameover');
         if (go) go.hidden = true;
@@ -7279,14 +7283,8 @@
       }
 
       function shoot() {
+        // Auto-fire handles shooting now — kept for backward compat
         if (gameOver) return;
-        bullets.push({
-          x: player.x,
-          y: player.y - player.size * 0.5 - 6,
-          vy: -560,
-          life: 2.2
-        });
-        try { if (navigator.vibrate) navigator.vibrate(5); } catch (e) {}
       }
 
       function hitTarget(t, bx, by) {
@@ -7303,8 +7301,27 @@
       }
 
       function update(dt) {
+        updateStars(dt);
         if (gameOver) return;
         fireCd = Math.max(0, fireCd - dt);
+        // Auto-fire: dual guns shoot continuously
+        if (fireCd <= 0) {
+          // Dual bullets from left and right of ship
+          bullets.push({
+            x: player.x - 10,
+            y: player.y - player.size * 0.5 - 6,
+            vy: -560,
+            life: 2.2
+          });
+          bullets.push({
+            x: player.x + 10,
+            y: player.y - player.size * 0.5 - 6,
+            vy: -560,
+            life: 2.2
+          });
+          try { if (navigator.vibrate) navigator.vibrate(3); } catch (e) {}
+          fireCd = autoFireRate;
+        }
         var moveInput = 0;
         if (Math.abs(moveDx) > 0.08) moveInput = moveDx;
         else {
@@ -7365,33 +7382,51 @@
         }
       }
 
+      function initStars() {
+        if (starsInit) return;
+        starsInit = true;
+        stars = [];
+        for (var i = 0; i < 120; i++) {
+          stars.push({
+            x: Math.random() * GW,
+            y: Math.random() * GH,
+            size: Math.random() * 2 + 0.5,
+            speed: Math.random() * 80 + 30,
+            alpha: Math.random() * 0.6 + 0.2
+          });
+        }
+      }
+
+      function updateStars(dt) {
+        for (var i = 0; i < stars.length; i++) {
+          stars[i].y += stars[i].speed * dt;
+          if (stars[i].y > GH) {
+            stars[i].y = -2;
+            stars[i].x = Math.random() * GW;
+          }
+        }
+      }
+
       function draw() {
         if (!ctx || !canvas) return;
+        initStars();
         var cw = canvas.width / dpr;
         var ch = canvas.height / dpr;
         var sx = cw / GW;
         var sy = ch / GH;
         ctx.save();
         ctx.scale(sx, sy);
+        // Dark space background
         ctx.fillStyle = '#0B0611';
         ctx.fillRect(0, 0, GW, GH);
-        ctx.fillStyle = 'rgba(113, 50, 245, 0.08)';
-        ctx.fillRect(0, 0, GW, GH);
 
-        ctx.strokeStyle = 'rgba(113, 50, 245, 0.12)';
-        ctx.lineWidth = 1 / Math.min(sx, sy);
-        var g;
-        for (g = 0; g < GW; g += 40) {
+        // Scrolling starfield
+        for (var si = 0; si < stars.length; si++) {
+          var s = stars[si];
+          ctx.fillStyle = 'rgba(255,255,255,' + s.alpha + ')';
           ctx.beginPath();
-          ctx.moveTo(g, 0);
-          ctx.lineTo(g, GH);
-          ctx.stroke();
-        }
-        for (g = 0; g < GH; g += 40) {
-          ctx.beginPath();
-          ctx.moveTo(0, g);
-          ctx.lineTo(GW, g);
-          ctx.stroke();
+          ctx.arc(s.x, s.y, s.size, 0, 6.2832);
+          ctx.fill();
         }
 
         var ti;
@@ -7518,20 +7553,29 @@
         btn.addEventListener('click', fire);
       }
 
-      function bindCanvasFire() {
+      function bindCanvasTouch() {
         if (canvasFireBound) return;
         var c = document.getElementById('wpWishRunnerCanvas');
         if (!c) return;
         canvasFireBound = true;
-        c.addEventListener('pointerdown', function(ev) {
+        // Touch-drag on canvas moves player directly
+        var touchActive = false;
+        c.addEventListener('touchstart', function(ev) {
           if (document.body.getAttribute('data-active-view') !== 'wishrunner') return;
-          if (ev.target !== c) return;
-          try { ev.preventDefault(); } catch (e) {}
-          if (fireCd <= 0 && !gameOver) {
-            shoot();
-            fireCd = 0.12;
-          }
-        }, { passive: false });
+          touchActive = true;
+          var touch = ev.touches[0];
+          var rect = c.getBoundingClientRect();
+          var sx = GW / rect.width;
+          player.x = Math.max(player.size * 0.5, Math.min(GW - player.size * 0.5, (touch.clientX - rect.left) * sx));
+        }, { passive: true });
+        c.addEventListener('touchmove', function(ev) {
+          if (!touchActive) return;
+          var touch = ev.touches[0];
+          var rect = c.getBoundingClientRect();
+          var sx = GW / rect.width;
+          player.x = Math.max(player.size * 0.5, Math.min(GW - player.size * 0.5, (touch.clientX - rect.left) * sx));
+        }, { passive: true });
+        c.addEventListener('touchend', function() { touchActive = false; }, { passive: true });
       }
 
       function onKeyDown(ev) {
@@ -7560,7 +7604,7 @@
         resize();
         bindJoystick();
         bindFire();
-        bindCanvasFire();
+        bindCanvasTouch();
         window.addEventListener('keydown', onKeyDown);
         window.addEventListener('keyup', onKeyUp);
         window._wrResizeHandler = function() {
