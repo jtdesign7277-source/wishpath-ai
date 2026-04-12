@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-12-v198';
+    var APP_VERSION = '2026-04-12-v199';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -1661,9 +1661,9 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: env(safe-area-inset-top) 16px 8px 16px;
+        padding: env(safe-area-inset-top) 16px 4px 16px;
         background: linear-gradient(to bottom, #0B0611, #191919);
-        border-bottom: 1px solid rgba(104, 107, 130, 0.24);
+        border-bottom: none;
         position: sticky;
         top: 0;
         z-index: 900;
@@ -2114,7 +2114,7 @@
       flex: 1;
       display: flex;
       gap: 0;
-      margin: 8px 16px 20px 16px;
+      margin: 16px 16px 20px 16px;
       background: rgba(37, 37, 37, 0.85);
       border-radius: 12px;
       padding: 4px;
@@ -4179,10 +4179,11 @@
         align-items: stretch;
         justify-content: space-around;
         gap: 4px;
-        transition: transform 0.3s ease;
-        transform: translateY(0);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transform: translateY(100%);
       }
       .wp-bottom-tabs::before { content: none !important; display: none !important; }
+      .wp-bottom-tabs.nav-visible { transform: translateY(0); }
       .wp-bottom-tabs.nav-hidden { transform: translateY(100%); }
       /* Hide bottom tabs when full-screen AI coach or life coach is active */
       body[data-active-view="lifecoach"] .wp-bottom-tabs { display: none !important; }
@@ -7715,6 +7716,45 @@
       if (ov) ov.addEventListener('click', function(e) {
         if (e.target === ov) dismissPaywall();
       });
+    })();
+
+    /* ── Bottom nav: auto-hide on scroll-down, show on scroll-up ── */
+    (function() {
+      var nav = document.getElementById('mobileNavBar');
+      if (!nav) return;
+      var lastY = 0;
+      var scrollThreshold = 8;
+      var hideTimer = null;
+
+      function showNav() { nav.classList.add('nav-visible'); nav.classList.remove('nav-hidden'); }
+      function hideNav() { nav.classList.remove('nav-visible'); nav.classList.add('nav-hidden'); }
+
+      // Auto-hide after 2s of no scrolling
+      function scheduleHide() {
+        clearTimeout(hideTimer);
+        hideTimer = setTimeout(hideNav, 2000);
+      }
+
+      function onScroll(e) {
+        var el = e.target;
+        var y = (el === document || el === document.documentElement) ? window.scrollY : (el.scrollTop || 0);
+        var dy = y - (el._wpLastY || 0);
+        el._wpLastY = y;
+        if (dy < -scrollThreshold) {
+          showNav();
+          scheduleHide();
+        } else if (dy > scrollThreshold) {
+          hideNav();
+          clearTimeout(hideTimer);
+        }
+      }
+
+      // Listen on main scrollable containers
+      window.addEventListener('scroll', onScroll, { passive: true });
+      document.addEventListener('scroll', onScroll, { passive: true, capture: true });
+
+      // Start hidden
+      hideNav();
     })();
 
     // ── localStorage cache-first (instant paint + background refresh) ──
