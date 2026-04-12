@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-12-v213';
+    var APP_VERSION = '2026-04-12-v214';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -13077,14 +13077,15 @@
         var hasPrice = price > 0;
         var value = hasPrice ? price * h.qty : 0;
         var dayPLVal = hasPrice ? dayChange * h.qty : 0;
-        var costBasis = h.avgCost * h.qty;
-        var totalItemPL = hasPrice && h.avgCost > 0 ? value - costBasis : 0;
+        var avgCost = h.avgCost || 0;
+        var costBasis = avgCost * h.qty;
+        var totalItemPL = hasPrice ? value - costBasis : 0;
         totalValue += value; totalDayPL += dayPLVal;
-        if (hasPrice && h.avgCost > 0) { totalPL += totalItemPL; totalCostBasis += costBasis; }
+        if (hasPrice) { totalPL += totalItemPL; totalCostBasis += costBasis; }
         var dayPlClass = dayPLVal > 0 ? 'green' : dayPLVal < 0 ? 'red' : 'flat';
         var dayPlCell = hasPrice ? ((dayPLVal > 0 ? '+' : '') + '$' + formatNum(dayPLVal)) : '--';
         var totalPlClass = totalItemPL > 0 ? 'green' : totalItemPL < 0 ? 'red' : 'flat';
-        var totalPlCell = (hasPrice && h.avgCost > 0) ? ((totalItemPL > 0 ? '+' : '') + '$' + formatNum(totalItemPL)) : '--';
+        var totalPlCell = hasPrice ? ((totalItemPL > 0 ? '+' : '') + '$' + formatNum(totalItemPL)) : '--';
         return '<tr onclick="openHoldingActions(' + i + ')" style="cursor:pointer;">' +
           buildPortfolioSymbolCellHtml(h.symbol) +
           '<td>' + h.qty + '<span class="qty-label"> shares</span></td>' +
