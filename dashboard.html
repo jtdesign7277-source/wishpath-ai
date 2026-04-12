@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-12-v214';
+    var APP_VERSION = '2026-04-12-v215';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -8408,21 +8408,25 @@
     }
 
     function openLibraryChat(convoId, messages, wishId) {
-      if (!wishId) {
-        // Life Coach chat (no wish) — open in Life Coach view
-        openLifeCoachView();
-        openLCConversation(convoId, messages);
-        return;
+      if (wishId) {
+        // Wish-linked chat — try loadSavedChat
+        var idx = wishes.findIndex(function(w) { return w.id === wishId; });
+        if (idx >= 0) {
+          loadSavedChat(wishId);
+          return;
+        }
       }
-      // Wish-linked chat — try loadSavedChat, fall back to Life Coach display
-      var idx = wishes.findIndex(function(w) { return w.id === wishId; });
-      if (idx >= 0) {
-        loadSavedChat(wishId);
-      } else {
-        // Wish deleted but chat still exists — show in Life Coach view
-        openLifeCoachView();
-        openLCConversation(convoId, messages);
-      }
+      // Life Coach chat or wish deleted — open directly in Life Coach view
+      hideMobileHome();
+      document.getElementById('lifecoachView').style.display = '';
+      showView('lifecoach');
+      var navBar = document.getElementById('mobileNavBar');
+      if (navBar) navBar.style.display = 'none';
+      // Go straight to the conversation (skip chat list)
+      _lcConvoId = convoId;
+      _lcHistory = messages || [];
+      renderLCHistory();
+      hideLCChatList();
     }
 
     async function loadSavedChat(wishId) {
@@ -8611,7 +8615,7 @@
       if (libraryFilter === 'all' || libraryFilter === 'chats') {
         try {
           var sb = getSupabase();
-          var { data } = await sb.from('coach_conversations').select('id, wish_id, updated_at, created_at, messages').eq('user_id', currentUserId).order('updated_at', { ascending: false });
+          var { data } = await sb.from('coach_conversations').select('id, wish_id, updated_at, created_at, messages, title').eq('user_id', currentUserId).order('updated_at', { ascending: false });
           if (data) data.forEach(function(c) {
             if (!c.messages || c.messages.length === 0) return;
             var wish = c.wish_id ? wishes.find(function(w) { return w.id === c.wish_id; }) : null;
