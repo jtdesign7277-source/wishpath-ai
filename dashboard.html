@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-12-v202';
+    var APP_VERSION = '2026-04-12-v203';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -4176,11 +4176,9 @@
         justify-content: space-around;
         gap: 4px;
         transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        transform: translateY(100%);
+        transform: translateY(0);
       }
       .wp-bottom-tabs::before { content: none !important; display: none !important; }
-      .wp-bottom-tabs.nav-visible { transform: translateY(0); }
-      .wp-bottom-tabs.nav-hidden { transform: translateY(100%); }
       /* Hide bottom tabs when full-screen AI coach or life coach is active */
       body[data-active-view="lifecoach"] .wp-bottom-tabs { display: none !important; }
       body[data-active-view="coach"] .wp-bottom-tabs { display: none !important; }
@@ -7697,44 +7695,7 @@
       });
     })();
 
-    /* ── Bottom nav: auto-hide on scroll-down, show on scroll-up ── */
-    (function() {
-      var nav = document.getElementById('mobileNavBar');
-      if (!nav) return;
-      var lastY = 0;
-      var scrollThreshold = 8;
-      var hideTimer = null;
-
-      function showNav() { nav.classList.add('nav-visible'); nav.classList.remove('nav-hidden'); }
-      function hideNav() { nav.classList.remove('nav-visible'); nav.classList.add('nav-hidden'); }
-
-      // Auto-hide after 2s of no scrolling
-      function scheduleHide() {
-        clearTimeout(hideTimer);
-        hideTimer = setTimeout(hideNav, 2000);
-      }
-
-      function onScroll(e) {
-        var el = e.target;
-        var y = (el === document || el === document.documentElement) ? window.scrollY : (el.scrollTop || 0);
-        var dy = y - (el._wpLastY || 0);
-        el._wpLastY = y;
-        if (dy < -scrollThreshold) {
-          showNav();
-          scheduleHide();
-        } else if (dy > scrollThreshold) {
-          hideNav();
-          clearTimeout(hideTimer);
-        }
-      }
-
-      // Listen on main scrollable containers
-      window.addEventListener('scroll', onScroll, { passive: true });
-      document.addEventListener('scroll', onScroll, { passive: true, capture: true });
-
-      // Start hidden
-      hideNav();
-    })();
+    /* Bottom nav is always visible — hidden only in coach/lifecoach views via CSS */
 
     // ── localStorage cache-first (instant paint + background refresh) ──
     var WP_CACHE_TTL_MARKET_MS = 60 * 1000;
