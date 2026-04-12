@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-12-v222';
+    var APP_VERSION = '2026-04-12-v223';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -2973,7 +2973,7 @@
       .holdings-table.portfolio-table .day-pl, .holdings-table.portfolio-table .total-pl { font-size: 14px !important; }
       #holdingsTableWrap, #mobileHoldingsTableWrap { overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
       #fmPortfolioContent { overflow-x: hidden; }
-      #holdingsTable, #fmHoldingsTable, #mobileHoldingsTable { min-width: 0 !important; }
+      #holdingsTable, #fmHoldingsTable, #mobileHoldingsTable { min-width: 520px !important; }
       .holding-symbol-badge, .holding-symbol-btn { font-size: 11px !important; padding: 0 !important; background: none !important; border: none !important; }
       #mobilePortfolioTab .holdings-table.portfolio-table th,
       #mobilePortfolioTab .holdings-table.portfolio-table td {
@@ -14431,10 +14431,13 @@
         var hasPrice = (p.price || 0) > 0;
         var val = hasPrice ? (p.price || 0) * h.qty : 0;
         var dayPL = hasPrice ? (p.change || 0) * h.qty : 0;
-        var totalItemPL = hasPrice && h.avgCost > 0 ? val - (h.avgCost * h.qty) : 0;
+        var avgCost = h.avgCost || 0;
+        var costBasis = avgCost * h.qty;
+        var totalItemPL = hasPrice ? val - costBasis : 0;
         totalVal += val; totalDayPL += dayPL;
-        if (hasPrice && h.avgCost > 0) { totalPL += totalItemPL; totalCostBasis += h.avgCost * h.qty; }
+        if (hasPrice) { totalPL += totalItemPL; totalCostBasis += costBasis; }
         var dayClass = dayPL > 0 ? 'color:#22c55e' : dayPL < 0 ? 'color:#ef4444' : 'color:var(--kraken-text-dim)';
+        var totalPlClass = totalItemPL > 0 ? 'color:#22c55e' : totalItemPL < 0 ? 'color:#ef4444' : 'color:var(--kraken-text-dim)';
         var logo = buildTickerLogoHtml(h.symbol, 28);
         return '<tr onclick="openHoldingActions(' + i + ')" style="cursor:pointer;">' +
           '<td class="symbol-cell" title="' + h.symbol + '">' + logo + '</td>' +
@@ -14442,8 +14445,17 @@
           '<td>' + (hasPrice ? '$' + formatNum(p.price) : '--') + '</td>' +
           '<td>' + (hasPrice ? '$' + formatNum(val) : '--') + '</td>' +
           '<td style="' + dayClass + '">' + (hasPrice ? (dayPL >= 0 ? '+' : '') + '$' + formatNum(dayPL) : '--') + '</td>' +
+          '<td style="' + totalPlClass + ';font-weight:600;">' + (hasPrice ? (totalItemPL >= 0 ? '+' : '') + '$' + formatNum(totalItemPL) : '--') + '</td>' +
         '</tr>';
       });
+      // Totals footer row
+      var totDayStyle = totalDayPL >= 0 ? 'color:#22c55e' : 'color:#ef4444';
+      var totPlStyle = totalPL >= 0 ? 'color:#22c55e' : 'color:#ef4444';
+      rows.push('<tr class="totals-row">' +
+        '<td colspan="3" style="color:#9497A9;font-weight:600;">Total</td>' +
+        '<td style="font-weight:700;color:#fff;">$' + formatNum(totalVal) + '</td>' +
+        '<td style="' + totDayStyle + ';font-weight:600;">' + (totalDayPL >= 0 ? '+' : '') + '$' + formatNum(totalDayPL) + '</td>' +
+        '<td style="' + totPlStyle + ';font-weight:600;">' + (totalPL >= 0 ? '+' : '') + '$' + formatNum(totalPL) + '</td></tr>');
       bodyEl.innerHTML = rows.join('');
       if (tableEl) tableEl.style.display = 'table';
       if (emptyEl) emptyEl.style.display = 'none';
