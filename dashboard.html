@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-12-v204';
+    var APP_VERSION = '2026-04-12-v205';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -6936,8 +6936,8 @@
         if (bg && bg.nextSibling) overlay.insertBefore(canvas, bg.nextSibling);
         else overlay.insertBefore(canvas, overlay.firstChild);
       }
-      var ctx = canvas.getContext('2d');
-      var dpr = window.devicePixelRatio || 1;
+      var ctx = canvas.getContext('2d', { alpha: true });
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
       var W = window.innerWidth;
       var H = window.innerHeight;
       canvas.width = W * dpr;
@@ -6946,145 +6946,98 @@
       canvas.style.height = H + 'px';
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
+      var MAX_PARTICLES = 600;
       var orbs = [];
-      var palette = [
-        { r: 168, g: 85, b: 247 },   // vivid purple
-        { r: 139, g: 92, b: 246 },    // violet
-        { r: 192, g: 132, b: 252 },   // light purple
-        { r: 113, g: 50, b: 245 },    // deep purple
-        { r: 34, g: 197, b: 94 },     // emerald green
-        { r: 74, g: 222, b: 128 },    // light green
-        { r: 0, g: 255, b: 140 },     // neon green
-        { r: 250, g: 204, b: 21 },    // gold/yellow
-        { r: 253, g: 224, b: 71 },    // soft yellow
-        { r: 251, g: 146, b: 60 },    // warm orange
-        { r: 255, g: 255, b: 255 },   // white
-        { r: 220, g: 220, b: 255 },   // ice white
+      var alive = 0;
+      var colors = [
+        'rgb(168,85,247)', 'rgb(139,92,246)', 'rgb(192,132,252)', 'rgb(113,50,245)',
+        'rgb(34,197,94)', 'rgb(74,222,128)', 'rgb(0,255,140)',
+        'rgb(250,204,21)', 'rgb(253,224,71)',
+        'rgb(251,146,60)',
+        'rgb(255,255,255)', 'rgb(220,220,255)'
       ];
 
       function pickColor() {
-        // Weighted: 40% purple, 20% green, 15% yellow, 10% orange, 15% white
         var r = Math.random();
-        if (r < 0.4) return palette[Math.floor(Math.random() * 4)];
-        if (r < 0.6) return palette[4 + Math.floor(Math.random() * 3)];
-        if (r < 0.75) return palette[7 + Math.floor(Math.random() * 2)];
-        if (r < 0.85) return palette[9];
-        return palette[10 + Math.floor(Math.random() * 2)];
+        if (r < 0.4) return colors[Math.floor(Math.random() * 4)];
+        if (r < 0.6) return colors[4 + Math.floor(Math.random() * 3)];
+        if (r < 0.75) return colors[7 + Math.floor(Math.random() * 2)];
+        if (r < 0.85) return colors[9];
+        return colors[10 + Math.floor(Math.random() * 2)];
       }
 
-      function spawnOrb(cx, cy, count, vScale, sizeRange, canBurst) {
-        for (var i = 0; i < count; i++) {
+      function spawn(cx, cy, count, vScale) {
+        var vs = vScale || 1;
+        for (var i = 0; i < count && alive < MAX_PARTICLES; i++) {
           var angle = Math.random() * Math.PI * 2;
-          var speed = (Math.random() * 18 + 14) * (vScale || 1);
-          var c = pickColor();
-          var sz = sizeRange ? (Math.random() * (sizeRange[1] - sizeRange[0]) + sizeRange[0]) : (Math.random() * 4 + 2);
-          var life = Math.random() * 40 + 25;
-          orbs.push({
-            x: cx + (Math.random() - 0.5) * 8,
-            y: cy + (Math.random() - 0.5) * 8,
-            vx: Math.cos(angle) * speed + (Math.random() - 0.5) * 4,
-            vy: Math.sin(angle) * speed - (Math.random() * 6),
-            size: sz, maxSize: sz,
-            r: c.r, g: c.g, b: c.b,
-            life: life, maxLife: life,
-            glow: sz * 2.5 + Math.random() * 6,
-            drift: (Math.random() - 0.5) * 0.01,
-            wobble: Math.random() * Math.PI * 2,
-            wobbleSpeed: Math.random() * 0.08 + 0.02,
-            canBurst: canBurst && sz > 3 && Math.random() < 0.5,
-            hasBurst: false
-          });
+          var speed = (Math.random() * 16 + 12) * vs;
+          var sz = Math.random() * 4 + 1.5;
+          var life = Math.random() * 30 + 20;
+          orbs[alive++] = {
+            x: cx + (Math.random() - 0.5) * 6,
+            y: cy + (Math.random() - 0.5) * 6,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            sz: sz,
+            color: pickColor(),
+            life: life,
+            maxLife: life,
+            active: true
+          };
         }
       }
 
-      // CANNON BLAST — everything explodes outward instantly
-      spawnOrb(W * 0.5, H * 0.42, 200, 1.2, [2, 7], true);
-      spawnOrb(W * 0.15, H * 0.55, 80, 1, [1.5, 5], true);
-      spawnOrb(W * 0.85, H * 0.55, 80, 1, [1.5, 5], true);
-      spawnOrb(W * 0.5, H * 0.15, 60, 1, [1, 4], true);
-      spawnOrb(W * 0.3, H * 0.75, 50, 1.2, [2, 6], true);
-      spawnOrb(W * 0.7, H * 0.75, 50, 1.2, [2, 6], true);
-      // Staggered cannon volleys
+      // Three rapid cannon volleys from multiple points
+      spawn(W * 0.5, H * 0.42, 150, 1.2);
+      spawn(W * 0.2, H * 0.55, 50, 1);
+      spawn(W * 0.8, H * 0.55, 50, 1);
+      spawn(W * 0.5, H * 0.2, 40, 1);
+      spawn(W * 0.35, H * 0.7, 35, 1.1);
+      spawn(W * 0.65, H * 0.7, 35, 1.1);
       setTimeout(function() {
-        spawnOrb(W * 0.5, H * 0.42, 180, 1.3, [2, 8], true);
-        spawnOrb(W * 0.2, H * 0.3, 70, 1.1, [1.5, 6], true);
-        spawnOrb(W * 0.8, H * 0.3, 70, 1.1, [1.5, 6], true);
-      }, 150);
+        spawn(W * 0.5, H * 0.42, 100, 1.3);
+        spawn(W * 0.15, H * 0.35, 40, 1.1);
+        spawn(W * 0.85, H * 0.35, 40, 1.1);
+      }, 120);
       setTimeout(function() {
-        spawnOrb(W * 0.5, H * 0.5, 150, 1.4, [2, 7], true);
-        spawnOrb(W * 0.1, H * 0.7, 60, 1.2, [1.5, 5], true);
-        spawnOrb(W * 0.9, H * 0.7, 60, 1.2, [1.5, 5], true);
-      }, 350);
+        spawn(W * 0.5, H * 0.5, 80, 1.4);
+        spawn(W * 0.1, H * 0.65, 30, 1.2);
+        spawn(W * 0.9, H * 0.65, 30, 1.2);
+      }, 280);
 
       var running = true;
       function tick() {
         if (!running) return;
         ctx.clearRect(0, 0, W, H);
-        var len = orbs.length;
-        for (var i = len - 1; i >= 0; i--) {
+        var anyAlive = false;
+        for (var i = 0; i < alive; i++) {
           var p = orbs[i];
+          if (!p.active) continue;
           p.life--;
-          if (p.life <= 0) { orbs.splice(i, 1); continue; }
-          var t = p.life / p.maxLife;
-          // Orbeez burst: when big orb reaches ~40% life, explode into tiny orbs
-          if (p.canBurst && !p.hasBurst && t < 0.4) {
-            p.hasBurst = true;
-            var burstCount = Math.floor(p.maxSize * 4) + 10;
-            for (var b = 0; b < burstCount; b++) {
-              var ba = Math.random() * Math.PI * 2;
-              var bs = Math.random() * 12 + 6;
-              var bc = pickColor();
-              var bsz = Math.random() * 2 + 0.5;
-              orbs.push({
-                x: p.x, y: p.y,
-                vx: Math.cos(ba) * bs, vy: Math.sin(ba) * bs - 3,
-                size: bsz, maxSize: bsz,
-                r: bc.r, g: bc.g, b: bc.b,
-                life: 18 + Math.random() * 15, maxLife: 18 + Math.random() * 15,
-                glow: bsz * 2,
-                drift: (Math.random() - 0.5) * 0.01,
-                wobble: Math.random() * 6.28,
-                wobbleSpeed: Math.random() * 0.1 + 0.03,
-                canBurst: false, hasBurst: true
-              });
-            }
-          }
-          // Physics — CANNON SHOT speed
-          p.wobble += p.wobbleSpeed;
-          p.vx += p.drift + Math.sin(p.wobble) * 0.005;
-          p.vy += 0.35;
+          if (p.life <= 0) { p.active = false; continue; }
+          anyAlive = true;
+          // Physics — fast ballistic arcs, no wobble overhead
+          p.vy += 0.4;
           p.x += p.vx;
           p.y += p.vy;
-          p.vx *= 0.985;
-          p.vy *= 0.985;
-          // Fade + shrink
-          var alpha = t > 0.7 ? 1 : t / 0.7;
-          var size = p.maxSize * (0.25 + t * 0.75);
-          // Outer glow — soft orbeez look
-          var glowR = p.glow * (0.4 + t * 0.6);
-          if (glowR > 2) {
-            var grad = ctx.createRadialGradient(p.x, p.y, size * 0.3, p.x, p.y, glowR);
-            grad.addColorStop(0, 'rgba(' + p.r + ',' + p.g + ',' + p.b + ',' + (alpha * 0.5) + ')');
-            grad.addColorStop(0.5, 'rgba(' + p.r + ',' + p.g + ',' + p.b + ',' + (alpha * 0.15) + ')');
-            grad.addColorStop(1, 'rgba(' + p.r + ',' + p.g + ',' + p.b + ',0)');
-            ctx.fillStyle = grad;
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, glowR, 0, Math.PI * 2);
-            ctx.fill();
-          }
-          // Core orb — always round
+          p.vx *= 0.988;
+          p.vy *= 0.988;
+          // Alpha fade
+          var t = p.life / p.maxLife;
+          var alpha = t > 0.6 ? 1 : t / 0.6;
+          var size = p.sz * (0.3 + t * 0.7);
+          // Simple filled circle + shadowBlur for glow (GPU-composited, way faster than radialGradient)
           ctx.globalAlpha = alpha;
-          var coreGrad = ctx.createRadialGradient(p.x - size * 0.2, p.y - size * 0.2, 0, p.x, p.y, size);
-          coreGrad.addColorStop(0, 'rgba(255,255,255,' + (alpha * 0.8) + ')');
-          coreGrad.addColorStop(0.35, 'rgb(' + p.r + ',' + p.g + ',' + p.b + ')');
-          coreGrad.addColorStop(1, 'rgba(' + Math.floor(p.r * 0.5) + ',' + Math.floor(p.g * 0.5) + ',' + Math.floor(p.b * 0.5) + ',' + alpha + ')');
-          ctx.fillStyle = coreGrad;
+          ctx.shadowColor = p.color;
+          ctx.shadowBlur = size * 3;
+          ctx.fillStyle = p.color;
           ctx.beginPath();
-          ctx.arc(p.x, p.y, size, 0, Math.PI * 2);
+          ctx.arc(p.x, p.y, size, 0, 6.2832);
           ctx.fill();
-          ctx.globalAlpha = 1;
         }
-        if (orbs.length > 0) {
+        ctx.shadowBlur = 0;
+        ctx.globalAlpha = 1;
+        if (anyAlive) {
           requestAnimationFrame(tick);
         } else {
           running = false;
