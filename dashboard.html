@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-12-v209';
+    var APP_VERSION = '2026-04-12-v210';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -2698,6 +2698,10 @@
     .fm-ticker-input::placeholder { color: var(--text-dim); text-transform: none; }
     .fm-ticker-btn { padding: 12px 20px; background: var(--accent); color: var(--bg); border: none; border-radius: 12px; font: inherit; font-size: 0.88rem; font-weight: 700; cursor: pointer; box-shadow: 0 4px 16px rgba(120,80,220,0.3), 0 0 20px rgba(120,80,220,0.15); transition: all 0.3s ease; }
     .fm-ticker-btn:hover { box-shadow: 0 6px 24px rgba(120,80,220,0.4), 0 0 28px rgba(120,80,220,0.2); transform: translateY(-1px); }
+    .tv-timeframe-bar { display: flex; gap: 4px; padding: 6px 0 10px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .tv-tf-btn { flex-shrink: 0; padding: 6px 12px; background: rgba(255,255,255,0.06); color: #9497A9; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; transition: all 0.15s ease; }
+    .tv-tf-btn:hover { background: rgba(255,255,255,0.1); color: #d1d1db; }
+    .tv-tf-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: 0 2px 8px rgba(120,80,220,0.3); }
     body.fm-mobile-fullscreen .fm-ticker-btn {
       background:
         linear-gradient(rgba(35,35,39,0.06), rgba(24,24,28,0.1)) padding-box,
@@ -4983,6 +4987,16 @@
           <div class="fm-ticker-input-row" id="fmTVChartsTickerRow">
             <input class="fm-ticker-input" id="tvChartTicker" placeholder="Enter ticker (e.g. AAPL, BTCUSD)" value="AAPL" />
             <button class="fm-ticker-btn" onclick="loadTVChart()">Load Chart</button>
+          </div>
+          <div class="tv-timeframe-bar" id="tvTimeframeBar">
+            <button class="tv-tf-btn" data-tf="1" onclick="setTVTimeframe('1',this)">1m</button>
+            <button class="tv-tf-btn active" data-tf="5" onclick="setTVTimeframe('5',this)">5m</button>
+            <button class="tv-tf-btn" data-tf="15" onclick="setTVTimeframe('15',this)">15m</button>
+            <button class="tv-tf-btn" data-tf="60" onclick="setTVTimeframe('60',this)">1H</button>
+            <button class="tv-tf-btn" data-tf="240" onclick="setTVTimeframe('240',this)">4H</button>
+            <button class="tv-tf-btn" data-tf="D" onclick="setTVTimeframe('D',this)">1D</button>
+            <button class="tv-tf-btn" data-tf="W" onclick="setTVTimeframe('W',this)">1W</button>
+            <button class="tv-tf-btn" data-tf="M" onclick="setTVTimeframe('M',this)">1M</button>
           </div>
           <div class="fm-widget-container" id="tvChartWidget" style="height:600px;"></div>
         </div>
@@ -14936,6 +14950,14 @@
       openTickerChart(symbol);
     }
 
+    var _tvCurrentInterval = '5';
+    function setTVTimeframe(tf, btn) {
+      _tvCurrentInterval = tf;
+      document.querySelectorAll('.tv-tf-btn').forEach(function(b) { b.classList.remove('active'); });
+      if (btn) btn.classList.add('active');
+      loadTVChart();
+    }
+
     function loadTVChart() {
       var ticker = (document.getElementById('tvChartTicker').value || 'AAPL').toUpperCase();
       var container = document.getElementById('tvChartWidget');
@@ -14945,11 +14967,11 @@
       script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
       script.async = true;
       var isMobile = window.innerWidth <= 768;
-      /* Mobile: match TradingView app — full-bleed black, 5m candles, no desktop search/timeframe strip or left drawing rail */
+      /* Mobile: match TradingView app — full-bleed black, candles, no desktop search/timeframe strip or left drawing rail */
       var tvCfg = isMobile ? {
         autosize: true,
         symbol: ticker,
-        interval: '5',
+        interval: _tvCurrentInterval,
         timezone: 'America/New_York',
         theme: 'dark',
         style: '1',
