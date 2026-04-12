@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-12-v210';
+    var APP_VERSION = '2026-04-12-v211';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -2039,7 +2039,7 @@
       .fm-widget-nav { display: none !important; }
       /* Fixed back button — bottom-left on fullscreen widget tabs, away from TradingView search bar */
       .fm-fs-back-btn {
-        display: none; position: fixed; bottom: calc(16px + env(safe-area-inset-bottom)); left: 14px; z-index: 10003;
+        display: none; position: fixed; bottom: calc(6px + env(safe-area-inset-bottom)); left: 4px; z-index: 10003;
         width: 40px; height: 40px; border-radius: 12px;
         background: rgba(0,0,0,0.6); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
         border: 1px solid rgba(255,255,255,0.12);
@@ -10502,20 +10502,22 @@
         var summary = _lcHistory.slice(-6).map(function(m) { return m.role + ': ' + m.content.substring(0, 100); }).join('\n');
 
         if (_lcConvoId) {
-          await sb.from('coach_conversations').update({
+          var { error: updateErr } = await sb.from('coach_conversations').update({
             messages: _lcHistory,
             summary: summary,
             title: title,
             updated_at: new Date().toISOString(),
           }).eq('id', _lcConvoId);
+          if (updateErr) console.error('LC update error:', updateErr);
         } else {
-          var { data } = await sb.from('coach_conversations').insert({
+          var { data, error: insertErr } = await sb.from('coach_conversations').insert({
             user_id: currentUserId,
             wish_id: null,
             messages: _lcHistory,
             summary: summary,
             title: title,
           }).select('id').single();
+          if (insertErr) console.error('LC insert error:', insertErr);
           if (data) _lcConvoId = data.id;
         }
       } catch(e) { console.error('LC save error:', e); }
