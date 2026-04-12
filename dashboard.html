@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-12-v236';
+    var APP_VERSION = '2026-04-12-v237';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -14462,6 +14462,12 @@
       if (fmView && fmView.style.display !== 'none' && document.getElementById('fmPortfolioCoachInput')) {
         return { input: document.getElementById('fmPortfolioCoachInput'), msgs: document.getElementById('fmPortfolioCoachMessages'), typingId: 'fmPortfolioCoachTyping', msgsId: 'fmPortfolioCoachMessages' };
       }
+      // Check mobile portfolio coach
+      var mobileInput = document.getElementById('mobilePortfolioCoachInput');
+      var mobileMsgs = document.getElementById('mobilePortfolioCoachMessages');
+      if (mobileInput && mobileMsgs && window.innerWidth <= 768) {
+        return { input: mobileInput, msgs: mobileMsgs, typingId: 'mobilePortfolioCoachTyping', msgsId: 'mobilePortfolioCoachMessages' };
+      }
       return { input: document.getElementById('portfolioCoachInput'), msgs: document.getElementById('portfolioCoachMessages'), typingId: 'portfolioCoachTyping', msgsId: 'portfolioCoachMessages' };
     }
     function askPortfolioCoach(question) {
@@ -14675,12 +14681,22 @@
           '</table>' +
           '<div id="mobileHoldingsEmpty" style="text-align:center;padding:32px 24px;color:var(--kraken-text-muted);font-size:14px;font-family:\'IBM Plex Sans\',system-ui,sans-serif;background:var(--kraken-card-bg);border-radius:16px;border:1px dashed var(--kraken-border);">No holdings yet. Add a stock or crypto above.</div>' +
         '</div>' +
+        '<div id="mobilePortfolioChartContainer" class="chart-container" style="display:none;margin:12px 0;"></div>' +
         '<div class="portfolio-coach-section" style="border-top:1px solid rgba(255,255,255,0.08);padding-top:16px;">' +
           '<div class="portfolio-coach-header">&#x1F916; Portfolio Coach</div>' +
           '<div class="portfolio-coach-suggestions" style="margin:10px 0;">' +
             '<button class="portfolio-coach-chip" onclick="askPortfolioCoach(\'What is my sector breakdown?\')">Sectors</button>' +
             '<button class="portfolio-coach-chip" onclick="askPortfolioCoach(\'Should I rebalance?\')">Rebalance</button>' +
             '<button class="portfolio-coach-chip" onclick="askPortfolioCoach(\'What is my risk profile?\')">Risk</button>' +
+          '</div>' +
+          '<div class="portfolio-coach-messages" id="mobilePortfolioCoachMessages">' +
+            '<div class="msg ai">I\'m your Portfolio Coach. Ask about sectors, risk, rebalancing — anything about your holdings.</div>' +
+          '</div>' +
+          '<div class="lc-input-bar">' +
+            '<div class="lc-input-wrap">' +
+              '<div class="lc-input" id="mobilePortfolioCoachInput" contenteditable="true" role="textbox" data-placeholder="Portfolio coach" onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();sendPortfolioCoachMsg();}"></div>' +
+              '<button class="lc-send-btn" onclick="sendPortfolioCoachMsg()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>' +
+            '</div>' +
           '</div>' +
         '</div>' +
         '</div>';
