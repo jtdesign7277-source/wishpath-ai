@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-12-v194';
+    var APP_VERSION = '2026-04-12-v195';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -3817,11 +3817,11 @@
       color: rgba(255,255,255,0.4);
     }
 
-    /* ── Refined Brawl-Stars streak splash — flame + twinkling stars (#streak-splash) ── */
+    /* ── Orbeez-burst streak splash (#streak-splash) ── */
     .streak-splash {
       position: fixed;
       inset: 0;
-      background: linear-gradient(180deg, #FF9E00 0%, #FF2D95 40%, #9C27F5 100%);
+      background: radial-gradient(ellipse at 50% 40%, #1a0a2e 0%, #0a0612 60%, #050308 100%);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -3833,10 +3833,9 @@
       display: none !important;
     }
     .streak-splash.streak-splash-running {
-      animation: fadeOutSplash 1.65s ease-out 1.45s forwards;
+      animation: fadeOutSplash 1.2s ease-out 2.6s forwards;
       pointer-events: none;
     }
-    /* Immediate snappy dismiss (hideStreakSplash / skip) — no delay */
     .streak-splash.streak-splash-exit-now {
       animation: fadeOutSplash 0.4s ease-out 0s forwards !important;
       pointer-events: none;
@@ -3848,14 +3847,15 @@
       position: absolute;
       inset: 0;
       z-index: 0;
-      background: radial-gradient(circle at 50% 35%, rgba(255, 140, 0, 0.75) 0%, transparent 65%);
-      animation: flameFlicker 0.9s ease-in-out infinite alternate;
-      opacity: 0.85;
+      background: radial-gradient(circle at 50% 38%, rgba(113, 50, 245, 0.4) 0%, transparent 55%),
+                  radial-gradient(circle at 30% 70%, rgba(0, 220, 120, 0.15) 0%, transparent 40%),
+                  radial-gradient(circle at 70% 25%, rgba(168, 85, 247, 0.2) 0%, transparent 45%);
+      animation: bgPulse 1.8s ease-in-out infinite alternate;
       pointer-events: none;
     }
-    @keyframes flameFlicker {
-      0%   { opacity: 0.75; transform: scale(1); }
-      100% { opacity: 1; transform: scale(1.12); }
+    @keyframes bgPulse {
+      0%   { opacity: 0.6; transform: scale(1); }
+      100% { opacity: 1; transform: scale(1.08); }
     }
     .streak-splash canvas {
       position: absolute !important;
@@ -3864,8 +3864,6 @@
       height: 100% !important;
       z-index: 1;
       pointer-events: none;
-      mix-blend-mode: screen;
-      opacity: 0.85;
     }
     .streak-splash .streak-content {
       position: absolute;
@@ -3886,21 +3884,22 @@
       inset: 0;
       width: 100%;
       height: 100%;
-      background-image: radial-gradient(circle, #fff 1.8px, transparent 0);
-      background-size: 50px 50px;
-      animation: twinkleStars 1.3s linear infinite;
-      opacity: 0.65;
+      background-image: radial-gradient(circle, rgba(168,85,247,0.6) 1.2px, transparent 0);
+      background-size: 55px 55px;
+      animation: twinkleStars 1.6s linear infinite;
+      opacity: 0.4;
       pointer-events: none;
       z-index: 0;
     }
     .streak-splash .streak-content::after {
-      background-size: 78px 78px;
-      animation-delay: 0.45s;
-      opacity: 0.35;
+      background-image: radial-gradient(circle, rgba(0,220,120,0.5) 1px, transparent 0);
+      background-size: 72px 72px;
+      animation-delay: 0.5s;
+      opacity: 0.3;
     }
     @keyframes twinkleStars {
-      0%, 100% { opacity: 0.25; }
-      50%      { opacity: 0.95; }
+      0%, 100% { opacity: 0.15; }
+      50%      { opacity: 0.7; }
     }
     .streak-splash .streak-number {
       position: relative;
@@ -3911,16 +3910,11 @@
       line-height: 1;
       letter-spacing: -0.04em;
       color: #FFF;
-      background: linear-gradient(145deg, #FFF 15%, #FFEB3B 45%, #FF5722 100%);
+      background: linear-gradient(145deg, #FFFFFF 10%, #c4b5fd 35%, #a855f7 55%, #22c55e 85%);
       -webkit-background-clip: text;
       background-clip: text;
       -webkit-text-fill-color: transparent;
-      text-shadow:
-        0 0 30px #FF9800,
-        0 0 65px #FF5722,
-        0 0 100px #FF2D95,
-        8px 10px 15px rgba(0, 0, 0, 0.6),
-        -4px -4px 12px rgba(255, 255, 255, 0.35);
+      filter: drop-shadow(0 0 30px rgba(113,50,245,0.6)) drop-shadow(0 0 60px rgba(34,197,94,0.3)) drop-shadow(0 8px 15px rgba(0,0,0,0.5));
       opacity: 0;
       transform: scale(0.12) translateY(110px);
     }
@@ -3937,12 +3931,12 @@
     .streak-splash .streak-content .streak-label {
       position: relative;
       z-index: 1;
-      font-size: 26px;
+      font-size: 24px;
       font-weight: 800;
       letter-spacing: 8px;
       text-transform: uppercase;
-      color: #FFF;
-      text-shadow: 0 0 25px #FFEB3B;
+      color: rgba(255,255,255,0.95);
+      text-shadow: 0 0 20px rgba(168,85,247,0.7), 0 0 40px rgba(34,197,94,0.3);
       margin-top: -42px;
       opacity: 0;
     }
@@ -6974,116 +6968,162 @@
       canvas.style.height = H + 'px';
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-      var particles = [];
-      var pool = [
-        // Blue-purple core palette
-        { r: 100, g: 60, b: 240 },   // deep violet
-        { r: 59, g: 130, b: 246 },    // bright blue
-        { r: 113, g: 50, b: 245 },    // purple
-        { r: 30, g: 80, b: 220 },     // royal blue
-        { r: 140, g: 90, b: 255 },    // soft lavender
-        { r: 70, g: 40, b: 200 },     // dark indigo
-        // Neon green sparks (rarer, brighter)
-        { r: 0, g: 255, b: 120 },     // neon green
-        { r: 80, g: 255, b: 160 },    // mint spark
-        { r: 0, g: 220, b: 90 },      // emerald flash
+      var orbs = [];
+      var palette = [
+        { r: 168, g: 85, b: 247 },   // vivid purple
+        { r: 139, g: 92, b: 246 },    // violet
+        { r: 192, g: 132, b: 252 },   // light purple
+        { r: 113, g: 50, b: 245 },    // deep purple
+        { r: 34, g: 197, b: 94 },     // emerald green
+        { r: 74, g: 222, b: 128 },    // light green
+        { r: 0, g: 255, b: 140 },     // neon green
+        { r: 250, g: 204, b: 21 },    // gold/yellow
+        { r: 253, g: 224, b: 71 },    // soft yellow
+        { r: 251, g: 146, b: 60 },    // warm orange
+        { r: 255, g: 255, b: 255 },   // white
+        { r: 220, g: 220, b: 255 },   // ice white
       ];
 
-      function spawn(cx, cy, count, vScale, sizeRange, isBurst) {
+      function pickColor() {
+        // Weighted: 40% purple, 20% green, 15% yellow, 10% orange, 15% white
+        var r = Math.random();
+        if (r < 0.4) return palette[Math.floor(Math.random() * 4)];
+        if (r < 0.6) return palette[4 + Math.floor(Math.random() * 3)];
+        if (r < 0.75) return palette[7 + Math.floor(Math.random() * 2)];
+        if (r < 0.85) return palette[9];
+        return palette[10 + Math.floor(Math.random() * 2)];
+      }
+
+      function spawnOrb(cx, cy, count, vScale, sizeRange, canBurst) {
         for (var i = 0; i < count; i++) {
           var angle = Math.random() * Math.PI * 2;
-          var speed = (Math.random() * 2.5 + 0.8) * (vScale || 1);
-          // 20% chance of neon green spark
-          var isGreen = Math.random() < 0.2;
-          var c = isGreen ? pool[6 + Math.floor(Math.random() * 3)] : pool[Math.floor(Math.random() * 6)];
-          var size = sizeRange ? (Math.random() * (sizeRange[1] - sizeRange[0]) + sizeRange[0]) : (Math.random() * 3 + 1);
-          var life = Math.random() * 80 + 60;
-          particles.push({
-            x: cx + (Math.random() - 0.5) * 20,
-            y: cy + (Math.random() - 0.5) * 20,
-            vx: Math.cos(angle) * speed + (Math.random() - 0.5) * 0.5,
-            vy: Math.sin(angle) * speed + (Math.random() - 0.5) * 0.5 - (isBurst ? 1.5 : 0),
-            size: size,
-            maxSize: size,
+          var speed = (Math.random() * 3 + 1) * (vScale || 1);
+          var c = pickColor();
+          var sz = sizeRange ? (Math.random() * (sizeRange[1] - sizeRange[0]) + sizeRange[0]) : (Math.random() * 4 + 2);
+          var life = Math.random() * 90 + 70;
+          orbs.push({
+            x: cx + (Math.random() - 0.5) * 30,
+            y: cy + (Math.random() - 0.5) * 30,
+            vx: Math.cos(angle) * speed + (Math.random() - 0.5) * 0.8,
+            vy: Math.sin(angle) * speed - (Math.random() * 1.5),
+            size: sz, maxSize: sz,
             r: c.r, g: c.g, b: c.b,
-            life: life,
-            maxLife: life,
-            isGreen: isGreen,
-            glow: isGreen ? 18 : (Math.random() < 0.3 ? 12 : 6),
-            drift: (Math.random() - 0.5) * 0.03,
+            life: life, maxLife: life,
+            glow: sz * 3 + Math.random() * 8,
+            drift: (Math.random() - 0.5) * 0.04,
             wobble: Math.random() * Math.PI * 2,
-            wobbleSpeed: Math.random() * 0.06 + 0.02
+            wobbleSpeed: Math.random() * 0.08 + 0.02,
+            canBurst: canBurst && sz > 3 && Math.random() < 0.4,
+            hasBurst: false
           });
         }
       }
 
-      // Wave 1: Center burst — the potion splash
-      spawn(W * 0.5, H * 0.45, 120, 2.8, [1, 4.5], true);
-      // Wave 2: Floating dust from edges
+      // Wave 1: Big center eruption
+      spawnOrb(W * 0.5, H * 0.42, 180, 3.2, [2, 7], true);
+      // Wave 2: Side geysers
       setTimeout(function() {
-        spawn(W * 0.1, H * 0.6, 50, 1.8, [0.8, 3], false);
-        spawn(W * 0.9, H * 0.6, 50, 1.8, [0.8, 3], false);
-      }, 250);
-      // Wave 3: Top cascade — falling pixel rain
+        spawnOrb(W * 0.08, H * 0.7, 80, 2.5, [1.5, 5], true);
+        spawnOrb(W * 0.92, H * 0.7, 80, 2.5, [1.5, 5], true);
+        spawnOrb(W * 0.5, H * 0.3, 60, 2, [1, 4], false);
+      }, 200);
+      // Wave 3: Rain from top + bottom eruptions
       setTimeout(function() {
-        for (var i = 0; i < 60; i++) {
-          spawn(Math.random() * W, -10, 1, 0.8, [0.5, 2.5], false);
-          particles[particles.length - 1].vy = Math.random() * 1.5 + 0.5;
-          particles[particles.length - 1].vx = (Math.random() - 0.5) * 0.8;
+        for (var i = 0; i < 100; i++) {
+          spawnOrb(Math.random() * W, -10, 1, 0.6, [1, 3.5], false);
+          orbs[orbs.length - 1].vy = Math.random() * 2 + 0.8;
+          orbs[orbs.length - 1].vx = (Math.random() - 0.5) * 1.5;
         }
-      }, 500);
-      // Wave 4: Second center pulse
-      setTimeout(function() { spawn(W * 0.5, H * 0.45, 80, 3.2, [1.5, 5], true); }, 800);
-      // Wave 5: Bottom corners eruption
+        spawnOrb(W * 0.2, H + 10, 50, 2, [2, 5], true);
+        spawnOrb(W * 0.8, H + 10, 50, 2, [2, 5], true);
+      }, 450);
+      // Wave 4: Massive second center pulse
+      setTimeout(function() { spawnOrb(W * 0.5, H * 0.42, 200, 4, [2.5, 8], true); }, 750);
+      // Wave 5: Corner fountains
       setTimeout(function() {
-        spawn(W * 0.15, H * 0.95, 40, 2.2, [1, 3.5], true);
-        spawn(W * 0.85, H * 0.95, 40, 2.2, [1, 3.5], true);
-      }, 1100);
-      // Wave 6: Final power burst — big glow particles
-      setTimeout(function() { spawn(W * 0.5, H * 0.42, 100, 3.5, [2, 6], true); }, 1500);
+        spawnOrb(0, H, 70, 3, [1.5, 5], true);
+        spawnOrb(W, H, 70, 3, [1.5, 5], true);
+        spawnOrb(0, 0, 50, 2.5, [1, 4], false);
+        spawnOrb(W, 0, 50, 2.5, [1, 4], false);
+      }, 1000);
+      // Wave 6: Third mega burst
+      setTimeout(function() { spawnOrb(W * 0.5, H * 0.45, 250, 4.5, [3, 9], true); }, 1400);
+      // Wave 7: Scattered pops everywhere
+      setTimeout(function() {
+        for (var i = 0; i < 8; i++) {
+          spawnOrb(Math.random() * W, Math.random() * H, 30, 2, [1.5, 5], true);
+        }
+      }, 1800);
 
       var running = true;
       function tick() {
         if (!running) return;
         ctx.clearRect(0, 0, W, H);
-        for (var i = particles.length - 1; i >= 0; i--) {
-          var p = particles[i];
+        var len = orbs.length;
+        for (var i = len - 1; i >= 0; i--) {
+          var p = orbs[i];
           p.life--;
-          if (p.life <= 0) { particles.splice(i, 1); continue; }
+          if (p.life <= 0) { orbs.splice(i, 1); continue; }
           var t = p.life / p.maxLife;
+          // Orbeez burst: when big orb reaches ~40% life, explode into tiny orbs
+          if (p.canBurst && !p.hasBurst && t < 0.4) {
+            p.hasBurst = true;
+            var burstCount = Math.floor(p.maxSize * 2.5) + 4;
+            for (var b = 0; b < burstCount; b++) {
+              var ba = Math.random() * Math.PI * 2;
+              var bs = Math.random() * 2.5 + 0.5;
+              var bc = pickColor();
+              var bsz = Math.random() * 2 + 0.5;
+              orbs.push({
+                x: p.x, y: p.y,
+                vx: Math.cos(ba) * bs, vy: Math.sin(ba) * bs - 0.5,
+                size: bsz, maxSize: bsz,
+                r: bc.r, g: bc.g, b: bc.b,
+                life: 40 + Math.random() * 30, maxLife: 40 + Math.random() * 30,
+                glow: bsz * 2.5,
+                drift: (Math.random() - 0.5) * 0.05,
+                wobble: Math.random() * 6.28,
+                wobbleSpeed: Math.random() * 0.1 + 0.03,
+                canBurst: false, hasBurst: true
+              });
+            }
+          }
           // Physics
           p.wobble += p.wobbleSpeed;
-          p.vx += p.drift + Math.sin(p.wobble) * 0.015;
-          p.vy += 0.008; // very gentle gravity — floaty feel
+          p.vx += p.drift + Math.sin(p.wobble) * 0.02;
+          p.vy += 0.012;
           p.x += p.vx;
           p.y += p.vy;
-          p.vx *= 0.995;
-          p.vy *= 0.995;
+          p.vx *= 0.993;
+          p.vy *= 0.993;
           // Fade + shrink
-          var alpha = t < 0.3 ? t / 0.3 : t;
-          var size = p.maxSize * (0.3 + t * 0.7);
-          // Glow layer
-          if (p.glow > 4) {
-            var grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.glow * (0.5 + t * 0.5));
-            grad.addColorStop(0, 'rgba(' + p.r + ',' + p.g + ',' + p.b + ',' + (alpha * 0.35) + ')');
+          var alpha = t < 0.2 ? t / 0.2 : (t > 0.85 ? 1 : t);
+          var size = p.maxSize * (0.25 + t * 0.75);
+          // Outer glow — soft orbeez look
+          var glowR = p.glow * (0.4 + t * 0.6);
+          if (glowR > 2) {
+            var grad = ctx.createRadialGradient(p.x, p.y, size * 0.3, p.x, p.y, glowR);
+            grad.addColorStop(0, 'rgba(' + p.r + ',' + p.g + ',' + p.b + ',' + (alpha * 0.5) + ')');
+            grad.addColorStop(0.5, 'rgba(' + p.r + ',' + p.g + ',' + p.b + ',' + (alpha * 0.15) + ')');
             grad.addColorStop(1, 'rgba(' + p.r + ',' + p.g + ',' + p.b + ',0)');
             ctx.fillStyle = grad;
-            ctx.fillRect(p.x - p.glow, p.y - p.glow, p.glow * 2, p.glow * 2);
-          }
-          // Core pixel
-          ctx.globalAlpha = alpha;
-          ctx.fillStyle = 'rgb(' + p.r + ',' + p.g + ',' + p.b + ')';
-          // Pixel shape: small square (pixel dust) with slight rounding for larger particles
-          if (size > 2.5) {
             ctx.beginPath();
-            ctx.arc(p.x, p.y, size * 0.5, 0, Math.PI * 2);
+            ctx.arc(p.x, p.y, glowR, 0, Math.PI * 2);
             ctx.fill();
-          } else {
-            ctx.fillRect(p.x - size * 0.5, p.y - size * 0.5, size, size);
           }
+          // Core orb — always round
+          ctx.globalAlpha = alpha;
+          var coreGrad = ctx.createRadialGradient(p.x - size * 0.2, p.y - size * 0.2, 0, p.x, p.y, size);
+          coreGrad.addColorStop(0, 'rgba(255,255,255,' + (alpha * 0.8) + ')');
+          coreGrad.addColorStop(0.35, 'rgb(' + p.r + ',' + p.g + ',' + p.b + ')');
+          coreGrad.addColorStop(1, 'rgba(' + Math.floor(p.r * 0.5) + ',' + Math.floor(p.g * 0.5) + ',' + Math.floor(p.b * 0.5) + ',' + alpha + ')');
+          ctx.fillStyle = coreGrad;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, size, 0, Math.PI * 2);
+          ctx.fill();
           ctx.globalAlpha = 1;
         }
-        if (particles.length > 0) {
+        if (orbs.length > 0) {
           requestAnimationFrame(tick);
         } else {
           running = false;
@@ -7183,7 +7223,7 @@
         overlay.classList.remove('streak-splash-running');
         overlay.style.animation = '';
         overlay.style.opacity = '';
-      }, 3600);
+      }, 4800);
     }
 
     (function wishRunnerGameIIFE() {
