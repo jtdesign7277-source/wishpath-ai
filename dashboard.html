@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-09-v159';
+    var APP_VERSION = '2026-04-09-v162';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -658,28 +658,49 @@
       flex-shrink: 0;
     }
 
-    /* Notes editor fullscreen */
-    .notes-editor {
+    /* Notes editor — full-bleed #191919 + dim date + dark “paper” body */
+    .notes-editor.note-detail-view {
       position: fixed;
       inset: 0;
       z-index: 601;
-      background: var(--bg, #0a0a0a);
+      box-sizing: border-box;
+      background: #191919;
+      min-height: 100vh;
+      min-height: 100dvh;
+      padding: 16px;
+      padding-top: calc(16px + env(safe-area-inset-top));
+      padding-bottom: calc(16px + env(safe-area-inset-bottom));
       display: none;
       flex-direction: column;
     }
-    .notes-editor.active { display: flex; }
-    .notes-editor-topbar {
+    .notes-editor.note-detail-view.active { display: flex; }
+    .note-detail-toolbar {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: calc(max(12px, env(safe-area-inset-top)) + 4px) 16px 10px;
       flex-shrink: 0;
-      border-bottom: 1px solid rgba(255,255,255,0.06);
+      margin: -4px 0 4px 0;
+      padding: 0 0 4px 0;
+      background: transparent;
     }
-    .notes-editor-back-btn {
+    .note-detail-toolbar .back-btn {
       background: none;
       border: none;
-      color: rgba(255,255,255,0.6);
+      color: #0a84ff;
+      cursor: pointer;
+      font-size: 1.25rem;
+      line-height: 1;
+      padding: 8px 12px 8px 0;
+      margin: 0;
+      -webkit-tap-highlight-color: transparent;
+      border-radius: 8px;
+      font-weight: 400;
+    }
+    .note-detail-toolbar .back-btn:active { opacity: 0.6; }
+    .notes-editor.note-detail-view .notes-editor-more-btn {
+      background: none;
+      border: none;
+      color: rgba(240, 239, 245, 0.45);
       cursor: pointer;
       padding: 8px;
       display: flex;
@@ -687,79 +708,86 @@
       justify-content: center;
       -webkit-tap-highlight-color: transparent;
       border-radius: 10px;
-      transition: all 0.15s ease;
+      transition: background 0.15s ease;
     }
-    .notes-editor-back-btn:active { background: rgba(255,255,255,0.06); color: #fff; }
-    .notes-editor-topbar-title {
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: rgba(255,255,255,0.85);
-    }
-    .notes-editor-more-btn {
-      background: none;
-      border: none;
-      color: rgba(255,255,255,0.6);
-      cursor: pointer;
-      padding: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      -webkit-tap-highlight-color: transparent;
-      border-radius: 10px;
-      transition: all 0.15s ease;
-    }
-    .notes-editor-more-btn:active { background: rgba(255,255,255,0.06); color: #fff; }
-    .notes-editor-body {
+    .notes-editor.note-detail-view .notes-editor-more-btn:active { background: rgba(255,255,255,0.08); color: #F0EFF5; }
+    .note-detail-scroll {
       flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: transparent;
+    }
+    .notes-editor.note-detail-view .note-header {
+      margin-bottom: 12px;
+      flex-shrink: 0;
+    }
+    .notes-editor.note-detail-view .note-header h1,
+    .notes-editor.note-detail-view #notesTitle.note-detail-title {
+      font-size: 28px;
+      font-weight: 600;
+      color: #F0EFF5;
+      margin: 0 0 8px 0;
+      padding: 0;
+      background: transparent;
+      border: none;
+      outline: none;
+      width: 100%;
+      line-height: 1.2;
+      font-family: inherit;
+    }
+    .notes-editor.note-detail-view .note-header h1:focus,
+    .notes-editor.note-detail-view #notesTitle.note-detail-title:focus { outline: none; }
+    .notes-editor.note-detail-view .note-date {
+      color: #9497A9;
+      font-size: 15px;
+      margin: 0 0 20px 0;
+      line-height: 1.35;
+    }
+    #notesTitle.note-detail-title:empty::before,
+    #notesContent.note-body:empty::before {
+      content: attr(data-placeholder);
+      color: rgba(148, 151, 169, 0.45);
+      pointer-events: none;
+    }
+    .notes-editor.note-detail-view #notesContent.note-body {
+      flex: 1;
+      min-height: 200px;
+      background: #252525;
+      border-radius: 12px;
+      padding: 20px;
+      font-size: 17px;
+      line-height: 1.5;
+      color: #F0EFF5;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.05),
+                  0 4px 12px rgba(0,0,0,0.4);
+      border: 1px solid rgba(104,107,130,0.24);
+      outline: none;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
-      padding: 0 16px;
+      -webkit-tap-highlight-color: transparent;
     }
-    .notes-editor-title {
-      font-size: 1.3rem;
-      font-weight: 700;
-      color: var(--text);
-      background: transparent;
-      border: none;
-      outline: none;
-      padding: 20px 0 8px 0;
-      font-family: inherit;
-      width: 100%;
-      margin-bottom: 12px;
-      transition: all 0.3s ease;
+    @media (min-height: 640px) {
+      .notes-editor.note-detail-view #notesContent.note-body { min-height: 400px; }
     }
-    .notes-editor-title:focus { color: rgba(120,80,220,0.9); }
-    .notes-editor-title::placeholder { color: rgba(255,255,255,0.25); }
-    .notes-editor-content {
-      font-size: 0.95rem;
-      line-height: 1.7;
-      color: rgba(255,255,255,0.8);
-      background: transparent;
-      border: none;
-      outline: none;
-      padding: 0;
-      font-family: inherit;
-      width: 100%;
-      resize: none;
-      min-height: 200px;
-      transition: all 0.3s ease;
-    }
-    .notes-editor-content:focus { color: rgba(255,255,255,0.95); }
-    .notes-editor-content::placeholder { color: rgba(255,255,255,0.2); }
-    .notes-editor-meta {
-      font-size: 0.7rem;
-      color: rgba(255,255,255,0.25);
-      margin-top: 24px;
-      padding-bottom: 12px;
+    .notes-editor.note-detail-view #notesContent.note-body:focus { outline: none; }
+    .notes-editor.note-detail-view .note-actions {
+      margin-top: 16px;
+      display: flex;
+      justify-content: flex-end;
+      flex-shrink: 0;
     }
     .notes-ai-bar {
       display: flex;
       align-items: flex-end;
       gap: 8px;
-      padding: 12px 12px calc(12px + env(safe-area-inset-bottom)) 12px;
-      border-top: 1px solid rgba(255,255,255,0.06);
+      margin-top: 12px;
+      padding-top: 12px;
+      padding-bottom: 0;
+      border-top: 1px solid rgba(104,107,130,0.24);
       flex-shrink: 0;
-      background: var(--bg, #0a0a0a);
+      background: transparent;
     }
     .notes-ai-wrap {
       /* Use shared chat-input-wrap styles */
@@ -3574,22 +3602,22 @@
       .main-header .streak-container { display: none; }
     }
 
-    /* ── Mobile: bottom tabs (icon-only, sidebar-matching SVGs, compact 56px row) ── */
+    /* ── Mobile: bottom tabs — same items & stroke icons as left sidebar (Home, Chats, News) ── */
     @media (max-width: 768px) {
       .wp-bottom-tabs {
         display: flex !important;
         position: fixed;
         left: 0; right: 0; bottom: 0;
         box-sizing: border-box;
-        height: calc(56px + env(safe-area-inset-bottom));
-        padding: 0 20px env(safe-area-inset-bottom);
+        min-height: calc(52px + env(safe-area-inset-bottom));
+        padding: 6px 10px calc(6px + env(safe-area-inset-bottom));
         background: #191919;
         border-top: 1px solid rgba(104,107,130,0.24);
         box-shadow: 0 -2px 8px rgba(0,0,0,0.3);
         z-index: 9999;
-        align-items: center;
+        align-items: stretch;
         justify-content: space-around;
-        gap: 0;
+        gap: 4px;
         transition: transform 0.3s ease;
         transform: translateY(0);
       }
@@ -3597,53 +3625,51 @@
       .wp-bottom-tabs.nav-hidden { transform: translateY(100%); }
       .wp-bottom-tabs .mobile-nav-item {
         flex: 1;
-        min-width: 44px;
+        min-width: 0;
+        max-width: 120px;
         display: flex;
-        flex-direction: row;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
-        color: #F0EFF5;
-        border-radius: 12px;
-        padding: 12px 20px;
+        gap: 3px;
+        color: rgba(148, 151, 169, 0.95);
+        border-radius: 10px;
+        padding: 4px 4px 5px;
         cursor: pointer;
         position: relative;
         box-sizing: border-box;
+        text-decoration: none;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+        font-weight: 500;
+        border: 1px solid transparent;
+        transition: color 0.15s, background 0.15s, border-color 0.15s, box-shadow 0.15s;
       }
-      .wp-bottom-tabs .mobile-nav-item:active { transform: scale(0.96); opacity: 0.92; }
+      .wp-bottom-tabs .mobile-nav-item:active { transform: scale(0.97); opacity: 0.92; }
       .wp-bottom-tabs .mobile-nav-item.active {
-        color: #B794F6;
-        background: transparent;
-        box-shadow: none;
+        color: rgb(145, 107, 230);
+        background: linear-gradient(135deg, rgba(120,80,220,0.12) 0%, rgba(255,255,255,0.03) 100%);
+        border-color: rgba(120,80,220,0.22);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.22), 0 0 12px rgba(120,80,220,0.08);
       }
-      .wp-bottom-tabs .mobile-nav-emoji {
-        font-size: 22px;
-        line-height: 1;
-        display: block;
+      .wp-bottom-tabs .mobile-nav-item svg {
+        width: 22px;
+        height: 22px;
+        flex-shrink: 0;
       }
-      #inbox-badge {
-        position: absolute;
-        top: 6px;
-        right: 8px;
-        min-width: 14px;
-        height: 14px;
-        padding: 0 3px;
-        border-radius: 50%;
-        background: #D11D45;
-        color: #fff;
+      .wp-bottom-tabs .mobile-nav-item .mobile-nav-label {
         font-size: 10px;
-        font-weight: 600;
-        line-height: 1;
-        align-items: center;
-        justify-content: center;
-        border: 1px solid #191919;
-        box-sizing: border-box;
-        display: none;
+        line-height: 1.15;
+        letter-spacing: 0.01em;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
-      #inbox-badge.is-visible { display: flex; }
 
-      /* 56px bar + safe area + buffer */
-      .main-content { padding-bottom: calc(12px + 56px + env(safe-area-inset-bottom)) !important; }
-      .you-page, .you-root { padding-bottom: calc(24px + 56px + env(safe-area-inset-bottom)) !important; }
+      /* ~52px content row + safe area + buffer */
+      .main-content { padding-bottom: calc(12px + 58px + env(safe-area-inset-bottom)) !important; }
+      .you-page, .you-root { padding-bottom: calc(24px + 58px + env(safe-area-inset-bottom)) !important; }
     }
 
     /* ── Desktop containment + layout fixes (do not affect mobile) ── */
@@ -4624,21 +4650,21 @@
           </div>
         </div>
 
-        <!-- Notes Editor View -->
-        <div class="notes-editor" id="notesEditor">
-          <div class="notes-editor-topbar">
-            <button class="notes-editor-back-btn" onclick="closeNotesEditor()">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        <!-- Notes Editor — Apple Notes–style detail (date → title → body, flat dark) -->
+        <div class="notes-editor note-detail-view" id="notesEditor">
+          <header class="note-detail-toolbar">
+            <button type="button" class="back-btn" onclick="closeNoteDetail()" aria-label="Back">←</button>
+            <button type="button" class="notes-editor-more-btn" id="notesEditorMoreBtn" onclick="toggleNoteMenu(event)" aria-label="More">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
             </button>
-            <span class="notes-editor-topbar-title" id="notesEditorTitle">Note</span>
-            <button class="notes-editor-more-btn" id="notesEditorMoreBtn" onclick="toggleNoteMenu(event)">
-              <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
-            </button>
-          </div>
-          <div class="notes-editor-body">
-            <input class="notes-editor-title" id="notesTitle" placeholder="Untitled note..." />
-            <textarea class="notes-editor-content" id="notesContent" placeholder="Start writing..."></textarea>
-            <div class="notes-editor-meta" id="notesMeta"></div>
+          </header>
+          <div class="note-detail-scroll">
+            <div class="note-header">
+              <div id="note-date" class="note-date"></div>
+              <h1 class="note-detail-title" id="notesTitle" contenteditable="true" spellcheck="true" data-placeholder="Untitled note" onkeydown="if(event.key==='Enter'){event.preventDefault();var b=document.getElementById('notesContent');if(b)b.focus();}"></h1>
+            </div>
+            <div id="notesContent" class="note-body" contenteditable="true" spellcheck="true" data-placeholder="Start writing..."></div>
+            <div id="note-actions" class="note-actions"></div>
           </div>
           <div class="notes-ai-bar">
             <div class="chat-input-wrap notes-ai-wrap">
@@ -4953,17 +4979,19 @@
     </div>
   </main>
 
-  <!-- Mobile bottom tabs: reliable Home (closes reader) + inbox + you -->
+  <!-- Mobile bottom tabs — same primary destinations as sidebar: Home, Chats (Life Coach), News (FM feed) -->
   <nav class="bottom-nav mobile-nav-bar wp-bottom-tabs" id="mobileNavBar" aria-label="Primary">
-    <a href="javascript:void(0)" class="mobile-nav-item" data-nav="home" onclick="return showMainDashboard();" aria-label="Home">
-      <span class="mobile-nav-emoji" aria-hidden="true">🏠</span>
+    <a href="javascript:void(0)" class="mobile-nav-item active" data-nav="home" onclick="return showMainDashboard();" aria-label="Home">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span class="mobile-nav-label">Home</span>
     </a>
-    <a href="javascript:void(0)" class="mobile-nav-item" data-nav="inbox" onclick="return showInboxView();" aria-label="Inbox">
-      <span class="mobile-nav-emoji" aria-hidden="true">📥</span>
-      <span id="inbox-badge" aria-hidden="true">1</span>
+    <a href="javascript:void(0)" class="mobile-nav-item" data-nav="lifecoach" onclick="return showMobileChatsTab();" aria-label="Chats">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span class="mobile-nav-label">Chats</span>
     </a>
-    <a href="javascript:void(0)" class="mobile-nav-item" data-nav="you" onclick="return showYouView();" aria-label="You">
-      <span class="mobile-nav-emoji" aria-hidden="true">👨</span>
+    <a href="javascript:void(0)" class="mobile-nav-item" data-nav="fm" onclick="return showMobileNewsTab();" aria-label="News">
+      <svg width="22" height="22" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h12a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><path d="M6 7h3"/><path d="M6 10h8"/><path d="M6 13h8"/><path d="M12 7h2v2h-2z"/></svg>
+      <span class="mobile-nav-label">News</span>
     </a>
   </nav>
 
@@ -5503,9 +5531,8 @@
     }
 
     /**
-     * Bottom nav — same idea as “hide sections, show one main pane”, but this app uses:
-     *   • `.view` blocks: `#homeView`, `#inboxView`, `#youView` (activated via showView)
-     *   • Mobile dashboard tiles: `#mobileHome` (showMobileHome), not a separate `main-dashboard-view` id
+     * Bottom nav (mobile): Home → `showMobileHome`, Chats → Life Coach, News → FM news feed.
+     * Other views use `showView` / sidebar; `#inboxView` and `#youView` remain reachable from in-app links.
      */
     function showMainDashboard() {
       try { if (typeof closeArticleReader === 'function') closeArticleReader(); } catch (e) {}
@@ -5532,6 +5559,23 @@
     function showYouView() {
       try { if (typeof closeArticleReader === 'function') closeArticleReader(); } catch (e) {}
       mobileNavTo('you');
+      try { window.scrollTo(0, 0); } catch (e) {}
+      var mc = document.querySelector('.main-content');
+      if (mc) try { mc.scrollTop = 0; } catch (e) {}
+      return false;
+    }
+
+    /** Bottom bar “Chats” — Life Coach (matches sidebar `lifecoach`). */
+    function showMobileChatsTab() {
+      try { if (typeof closeArticleReader === 'function') closeArticleReader(); } catch (e) {}
+      openLifeCoachView();
+      return false;
+    }
+
+    /** Bottom bar “News” — Financial Markets news feed (matches sidebar News shortcut). */
+    function showMobileNewsTab() {
+      try { if (typeof closeArticleReader === 'function') closeArticleReader(); } catch (e) {}
+      openNewsView();
       try { window.scrollTo(0, 0); } catch (e) {}
       var mc = document.querySelector('.main-content');
       if (mc) try { mc.scrollTop = 0; } catch (e) {}
@@ -7088,6 +7132,7 @@
 
     // ── Notes (full-screen) ──
     var currentNoteId = null;
+    var _currentNoteCreatedAt = null;
     var notesAIHistory = [];
 
     async function renderNotesListPage() {
@@ -7242,6 +7287,35 @@
       } catch(e) { console.error('Error creating note:', e); alert('Failed to create note'); }
     }
 
+    function formatNoteDetailDate(iso) {
+      if (!iso) return '';
+      try {
+        var d = new Date(iso);
+        if (isNaN(d.getTime())) return '';
+        return d.toLocaleString('en-US', {
+          month: 'long',
+          day: 'numeric',
+          year: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit'
+        });
+      } catch (e) { return ''; }
+    }
+
+    function getNotesEditorTitleText() {
+      var el = document.getElementById('notesTitle');
+      if (!el) return '';
+      var t = (el.innerText !== undefined ? el.innerText : el.textContent) || '';
+      return t.replace(/\n/g, ' ').trim();
+    }
+
+    function getNotesEditorBodyText() {
+      var el = document.getElementById('notesContent');
+      if (!el) return '';
+      var t = (el.innerText !== undefined ? el.innerText : el.textContent) || '';
+      return t.replace(/\u00a0/g, ' ');
+    }
+
     async function openNotesEditor(noteId) {
       currentNoteId = noteId;
       var sb = getSupabase();
@@ -7249,28 +7323,41 @@
         var { data } = await sb.from('user_notes').select('*').eq('id', noteId).single();
         if (!data) return;
 
+        _currentNoteCreatedAt = data.created_at || null;
+
         document.getElementById('notesList').classList.add('hidden');
         var editor = document.getElementById('notesEditor');
         editor.classList.add('active');
 
-        // Load note content
-        document.getElementById('notesTitle').value = data.title || '';
-        document.getElementById('notesContent').value = data.content || '';
-        document.getElementById('notesEditorTitle').textContent = data.title || 'Note';
+        var titleEl = document.getElementById('notesTitle');
+        var bodyEl = document.getElementById('notesContent');
+        if (titleEl) titleEl.textContent = data.title || '';
+        if (bodyEl) bodyEl.textContent = data.content || '';
 
-        // Show metadata
-        var created = new Date(data.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-        var updated = new Date(data.updated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-        document.getElementById('notesMeta').textContent = 'Created: ' + created + ' · Updated: ' + updated;
+        var dateEl = document.getElementById('note-date');
+        if (dateEl) {
+          var edited = formatNoteDetailDate(data.updated_at);
+          var created = formatNoteDetailDate(data.created_at);
+          if (created && edited && created !== edited) {
+            dateEl.textContent = created + ' · Edited ' + edited;
+          } else {
+            dateEl.textContent = edited || created || '';
+          }
+        }
 
         notesAIHistory = [];
       } catch(e) { console.error('Error opening note:', e); }
+    }
+
+    function closeNoteDetail() {
+      closeNotesEditor();
     }
 
     function closeNotesEditor() {
       // Auto-save first
       if (currentNoteId) saveCurrentNote();
       currentNoteId = null;
+      _currentNoteCreatedAt = null;
       notesAIHistory = [];
       document.getElementById('notesEditor').classList.remove('active');
       document.getElementById('notesList').classList.remove('hidden');
@@ -7279,12 +7366,21 @@
 
     async function saveCurrentNote() {
       if (!currentNoteId) return;
-      var title = document.getElementById('notesTitle').value.trim() || 'Untitled';
-      var content = document.getElementById('notesContent').value;
+      var title = getNotesEditorTitleText() || 'Untitled';
+      var content = getNotesEditorBodyText();
       var sb = getSupabase();
       try {
         await sb.from('user_notes').update({ title: title, content: content, updated_at: new Date().toISOString() }).eq('id', currentNoteId);
-        document.getElementById('notesEditorTitle').textContent = title;
+        var dateEl = document.getElementById('note-date');
+        if (dateEl) {
+          var edited = formatNoteDetailDate(new Date().toISOString());
+          var created = formatNoteDetailDate(_currentNoteCreatedAt);
+          if (created && edited && created !== edited) {
+            dateEl.textContent = created + ' · Edited ' + edited;
+          } else {
+            dateEl.textContent = edited || created || '';
+          }
+        }
       } catch(e) { console.error('Error saving note:', e); }
     }
 
@@ -7316,7 +7412,7 @@
 
       notesAIHistory.push({ role: 'user', content: msg });
 
-      var noteCtx = '\n\nCurrent note title: "' + document.getElementById('notesTitle').value + '"\nCurrent note content: "' + document.getElementById('notesContent').value.substring(0, 2000) + '"';
+      var noteCtx = '\n\nCurrent note title: "' + getNotesEditorTitleText() + '"\nCurrent note content: "' + getNotesEditorBodyText().substring(0, 2000) + '"';
 
       try {
         var systemPrompt = 'You are a helpful notes assistant for WishPath.ai. Help the user write, brainstorm, organize, or improve their notes. Be concise and practical. If they ask you to write something, provide it in a format they can easily copy and paste.' + noteCtx;
