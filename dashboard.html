@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-12-v200';
+    var APP_VERSION = '2026-04-12-v201';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -1205,7 +1205,7 @@
       .main-header h1, .main-header h2 { font-size: 1.02rem; margin-bottom: 0 !important; width: auto !important; flex: 1 !important; text-align: center; pointer-events: none; }
       body[data-active-view="fm"] .fm-widget-menu-btn { display: flex; flex-shrink: 0; z-index: 10; pointer-events: auto; }
       body[data-active-view="fm"] .header-search-icon { display: none !important; }
-      .mobile-home.active { padding-top: max(0px, env(safe-area-inset-top)) !important; }
+      .mobile-home.active { padding-top: 0 !important; }
       .main-content { padding: 6px 12px 12px; }
       .tab-bar { margin-top: 0 !important; padding-top: 0 !important; padding: 4px 8px !important; margin-left: -12px !important; margin-right: -12px !important; overflow-x: auto !important; }
       .coach-select { margin-bottom: 12px !important; margin-top: 4px !important; }
