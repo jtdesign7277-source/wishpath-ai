@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-12-v195';
+    var APP_VERSION = '2026-04-12-v196';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -1661,7 +1661,7 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: max(12px, env(safe-area-inset-top)) 20px 10px 20px;
+        padding: env(safe-area-inset-top) 16px 8px 16px;
         background: linear-gradient(to bottom, #0B0611, #191919);
         border-bottom: 1px solid rgba(104, 107, 130, 0.24);
         position: sticky;
@@ -1682,7 +1682,7 @@
         display: flex;
         flex-direction: column;
         min-width: 0;
-        font-size: 15px;
+        font-size: 13px;
         font-weight: 500;
         color: #F0EFF5;
         line-height: 1.2;
@@ -1703,24 +1703,15 @@
       .header-clock {
         flex-shrink: 0;
         display: flex;
-        flex-direction: column;
-        align-items: flex-end;
+        align-items: center;
         cursor: pointer;
         -webkit-tap-highlight-color: transparent;
       }
-      .header-clock-time {
-        font-size: 14px;
-        font-weight: 600;
-        color: #F0EFF5;
-        font-variant-numeric: tabular-nums;
-        letter-spacing: 0.02em;
-        line-height: 1.2;
-      }
       .header-clock-date {
-        font-size: 11px;
-        font-weight: 400;
+        font-size: 12px;
+        font-weight: 500;
         color: #9497A9;
-        line-height: 1.3;
+        line-height: 1;
       }
       .mobile-home-topbar-secondary {
         display: flex;
@@ -5724,7 +5715,6 @@
           </div>
           <div class="header-right">
             <div class="header-clock" id="headerClock" onclick="showProfileModal()">
-              <span class="header-clock-time" id="headerClockTime">9:39 AM</span>
               <span class="header-clock-date" id="headerClockDate">Sun, Apr 12</span>
             </div>
           </div>
@@ -6372,16 +6362,10 @@
 
     window.addEventListener('load', updatePersonalGreeting);
 
-    /* ── Header digital clock ── */
+    /* ── Header date display ── */
     function updateHeaderClock() {
       var now = new Date();
-      var h = now.getHours(), m = now.getMinutes();
-      var ampm = h >= 12 ? 'PM' : 'AM';
-      var h12 = h % 12 || 12;
-      var mStr = m < 10 ? '0' + m : '' + m;
-      var timeEl = document.getElementById('headerClockTime');
       var dateEl = document.getElementById('headerClockDate');
-      if (timeEl) timeEl.textContent = h12 + ':' + mStr + ' ' + ampm;
       if (dateEl) {
         var days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
         var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -6389,7 +6373,6 @@
       }
     }
     updateHeaderClock();
-    setInterval(updateHeaderClock, 15000);
     document.addEventListener('visibilitychange', function() {
       if (!document.hidden) updatePersonalGreeting();
     });
