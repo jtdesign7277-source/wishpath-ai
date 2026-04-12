@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-12-v241';
+    var APP_VERSION = '2026-04-12-v243';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -3038,7 +3038,8 @@
       .home-header-row { margin-bottom: 0; gap: 8px; }
       .home-tabs { overflow: visible; }
       .home-tab { padding: 14px 8px; margin: 0; font-size: 15px; }
-      .stock-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+      .stock-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 0 16px; margin-bottom: 20px; }
+      #mobileStockGrid, #mobileWatchlistGrid, #mobileCryptoGrid { display: grid; grid-template-columns: 1fr; gap: 12px; padding: 0 16px; margin-bottom: 20px; }
       .stock-card { padding: 12px; }
       .stock-price { font-size: 1rem; }
       .portfolio-summary { grid-template-columns: repeat(2, 1fr); gap: 10px; }
@@ -3478,10 +3479,29 @@
         border-radius: 24px;
         animation: inputPulse 2s ease-in-out infinite;
         transition: all 0.3s ease;
+        overflow: hidden;
+      }
+      .lc-input-wrap::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        border: 1px solid transparent;
+        border-radius: 24px;
+        background: linear-gradient(90deg, transparent 0%, rgba(113,50,245,0.4) 45%, rgba(255,255,255,0.3) 50%, rgba(113,50,245,0.4) 55%, transparent 100%);
+        background-size: 200% 100%;
+        animation: laserSweep 3s ease-in-out infinite;
+        pointer-events: none;
+        z-index: 1;
       }
       .lc-input-wrap:focus-within {
         border-color: rgba(113,50,245,0.5);
         box-shadow: 0 0 12px rgba(113,50,245,0.15);
+        animation: none;
+      }
+      .lc-input-wrap:focus-within::before {
         animation: none;
       }
       .lc-input {
@@ -3499,6 +3519,8 @@
         max-height: 120px;
         overflow-y: auto;
         line-height: 1.4;
+        position: relative;
+        z-index: 2;
       }
       .lc-input::placeholder { color: rgba(255,255,255,0.35); }
       .lc-input:empty::before { content: attr(data-placeholder); color: rgba(255,255,255,0.35); pointer-events: none; }
@@ -3506,6 +3528,10 @@
       @keyframes inputPulse {
         0%, 100% { box-shadow: 0 0 0 0 rgba(113,50,245,0.3); }
         50% { box-shadow: 0 0 0 2px rgba(113,50,245,0.2); }
+      }
+      @keyframes laserSweep {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
       }
 
       /* ── Shared chat input standardization ── */
@@ -3579,6 +3605,8 @@
         -webkit-tap-highlight-color: transparent;
         box-shadow: none;
         transition: opacity 0.15s ease, transform 0.1s ease;
+        position: relative;
+        z-index: 2;
         margin: 4px 4px 4px 0;
       }
       .lc-send-btn:active { opacity: 0.6; transform: scale(0.9); }
@@ -6196,6 +6224,42 @@
       }
     }
 
+    // ── Web Audio API: Synthesized Streak Chime ──
+    function playStreakChime() {
+      try {
+        var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        // Arpeggio notes: C4 (major), E4, G4, C5 — ascending major chord
+        var notes = [
+          { freq: 261.63, start: 0, duration: 0.12 },      // C4
+          { freq: 329.63, start: 0.08, duration: 0.12 },   // E4
+          { freq: 392.00, start: 0.16, duration: 0.12 },   // G4
+          { freq: 523.25, start: 0.24, duration: 0.18 }    // C5 (higher, longer)
+        ];
+
+        notes.forEach(function(note) {
+          var osc = audioCtx.createOscillator();
+          var gain = audioCtx.createGain();
+
+          osc.type = 'sine';
+          osc.frequency.value = note.freq;
+
+          // Smooth gain envelope: fade in quick, decay smooth
+          gain.gain.setValueAtTime(0, audioCtx.currentTime + note.start);
+          gain.gain.linearRampToValueAtTime(0.25, audioCtx.currentTime + note.start + 0.01);
+          gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + note.start + note.duration);
+
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+
+          osc.start(audioCtx.currentTime + note.start);
+          osc.stop(audioCtx.currentTime + note.start + note.duration);
+        });
+      } catch (e) {
+        // Silently fail if Web Audio API unavailable
+      }
+    }
+
     // ── anime.js premium micro-animations ──
     var wpAnime = (function() {
       var _a = typeof anime !== 'undefined' ? anime : null;
@@ -7779,7 +7843,7 @@
         labelEl.classList.add('animate');
       }
 
-      setTimeout(function() { fireConfettiBurst(); wpConfetti('streak'); wpTsConfetti('fireworks'); }, 160);
+      setTimeout(function() { fireConfettiBurst(); wpConfetti('streak'); wpTsConfetti('fireworks'); playStreakChime(); }, 160);
 
       try {
         if (typeof navigator !== 'undefined' && navigator.vibrate) {
@@ -7872,9 +7936,9 @@
       var powerups = [];
       var activePowerup = null; // { type, timer }
       var POWERUP_TYPES = [
-        { type: 'spread', label: 'SPREAD', color: '#00E5FF', icon: '🔱', duration: 8 },
-        { type: 'rapid', label: 'RAPID', color: '#FDE047', icon: '⚡', duration: 7 },
-        { type: 'cannon', label: 'CANNON', color: '#FF5252', icon: '💥', duration: 6 }
+        { type: 'spread', label: 'SPREAD', color: '#00E5FF', duration: 8 },
+        { type: 'rapid', label: 'RAPID', color: '#FDE047', duration: 7 },
+        { type: 'cannon', label: 'CANNON', color: '#FF5252', duration: 6 }
       ];
       var powerupSpawnAcc = 0;
       var powerupSpawnEvery = 12; // seconds between power-up drops
@@ -8104,10 +8168,10 @@
             speed: 80 + Math.random() * 40,
             type: pType.type,
             color: pType.color,
-            icon: pType.icon,
             duration: pType.duration,
-            size: 18,
-            pulse: 0
+            size: 26,
+            pulse: 0,
+            rotation: 0
           });
         }
 
@@ -8116,6 +8180,7 @@
           var pw = powerups[pu];
           pw.y += pw.speed * dt;
           pw.pulse += dt * 3;
+          pw.rotation += dt * 3;
           if (pw.y > GH + 30) { powerups.splice(pu, 1); continue; }
           // Pickup check
           var pdx = pw.x - player.x;
@@ -8503,32 +8568,120 @@
           ctx.restore();
         }
 
-        // Draw power-ups
+        // Draw power-ups - canvas-drawn weapons
         for (var pui = 0; pui < powerups.length; pui++) {
           var pw = powerups[pui];
           var puPulse = 1 + Math.sin(pw.pulse) * 0.15;
-          var puR = pw.size * puPulse;
+          var puR = pw.size * puPulse * 0.5; // Base weapon size
           ctx.save();
-          // Outer glow
+          ctx.translate(pw.x, pw.y);
+          ctx.rotate(pw.rotation);
+
+          // Pulsing aura glow
           ctx.shadowColor = pw.color;
-          ctx.shadowBlur = 20;
-          ctx.globalAlpha = 0.7 + Math.sin(pw.pulse) * 0.3;
+          ctx.shadowBlur = 24;
+          ctx.globalAlpha = 0.6 + Math.sin(pw.pulse) * 0.2;
           ctx.fillStyle = pw.color;
           ctx.beginPath();
-          ctx.arc(pw.x, pw.y, puR, 0, Math.PI * 2);
+          ctx.arc(0, 0, puR * 2.2, 0, Math.PI * 2);
           ctx.fill();
-          // Inner bright core
-          ctx.shadowBlur = 0;
+
+          // Draw specific weapon based on type
           ctx.globalAlpha = 1;
-          ctx.fillStyle = '#fff';
-          ctx.beginPath();
-          ctx.arc(pw.x, pw.y, puR * 0.45, 0, Math.PI * 2);
-          ctx.fill();
-          // Icon
-          ctx.font = Math.round(puR * 0.9) + 'px sans-serif';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(pw.icon, pw.x, pw.y + 1);
+          ctx.strokeStyle = pw.color;
+          ctx.lineWidth = 2;
+          ctx.shadowBlur = 0;
+
+          if (pw.type === 'spread') {
+            // Shotgun/Trident - three barrels fanning out
+            ctx.fillStyle = pw.color;
+            // Base
+            ctx.beginPath();
+            ctx.arc(0, 0, puR * 0.5, 0, Math.PI * 2);
+            ctx.fill();
+            // Left barrel
+            ctx.beginPath();
+            ctx.moveTo(-puR * 0.3, 0);
+            ctx.lineTo(-puR * 1.1, -puR * 1.2);
+            ctx.lineTo(-puR * 0.9, -puR * 1.4);
+            ctx.lineTo(-puR * 0.1, -puR * 0.2);
+            ctx.fill();
+            // Center barrel
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(0, -puR * 1.5);
+            ctx.lineTo(puR * 0.25, -puR * 1.5);
+            ctx.lineTo(puR * 0.15, 0);
+            ctx.fill();
+            // Right barrel
+            ctx.beginPath();
+            ctx.moveTo(puR * 0.3, 0);
+            ctx.lineTo(puR * 1.1, -puR * 1.2);
+            ctx.lineTo(puR * 0.9, -puR * 1.4);
+            ctx.lineTo(puR * 0.1, -puR * 0.2);
+            ctx.fill();
+            // Label
+            ctx.font = 'bold 9px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            ctx.fillStyle = pw.color;
+            ctx.fillText('SPREAD', 0, puR * 1.3);
+          } else if (pw.type === 'rapid') {
+            // Machine gun - rectangular body with multiple barrel lines
+            ctx.fillStyle = pw.color;
+            // Main body
+            ctx.fillRect(-puR * 0.4, -puR * 0.6, puR * 0.8, puR * 0.5);
+            // Barrel section
+            ctx.fillRect(-puR * 0.35, -puR * 1.2, puR * 0.7, puR * 0.7);
+            // Multiple barrel openings
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(-puR * 0.15, -puR * 1.2);
+            ctx.lineTo(-puR * 0.15, -puR * 1.6);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(0, -puR * 1.2);
+            ctx.lineTo(0, -puR * 1.8);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(puR * 0.15, -puR * 1.2);
+            ctx.lineTo(puR * 0.15, -puR * 1.6);
+            ctx.stroke();
+            // Label
+            ctx.font = 'bold 9px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            ctx.fillStyle = pw.color;
+            ctx.fillText('RAPID', 0, puR * 1.3);
+          } else {
+            // Cannon - thick barrel with large round end
+            ctx.fillStyle = pw.color;
+            // Large barrel
+            ctx.beginPath();
+            ctx.ellipse(0, -puR * 0.5, puR * 0.6, puR * 1.0, 0, 0, Math.PI * 2);
+            ctx.fill();
+            // Muzzle (large round end)
+            ctx.beginPath();
+            ctx.arc(0, -puR * 1.6, puR * 0.8, 0, Math.PI * 2);
+            ctx.fill();
+            // Breach (cylindrical base)
+            ctx.fillRect(-puR * 0.5, puR * 0.1, puR, puR * 0.4);
+            // Muzzle highlight
+            ctx.fillStyle = '#fff';
+            ctx.globalAlpha = 0.4;
+            ctx.beginPath();
+            ctx.arc(-puR * 0.2, -puR * 1.7, puR * 0.4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+            // Label
+            ctx.font = 'bold 9px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            ctx.fillStyle = pw.color;
+            ctx.fillText('CANNON', 0, puR * 1.3);
+          }
+
           ctx.restore();
         }
 
@@ -8542,7 +8695,7 @@
             ctx.fillStyle = puInfo.color;
             ctx.shadowColor = puInfo.color;
             ctx.shadowBlur = 6;
-            ctx.fillText(puInfo.icon + ' ' + puInfo.label + ' ' + Math.ceil(activePowerup.timer) + 's', GW - 12, 28);
+            ctx.fillText(puInfo.label + ' ' + Math.ceil(activePowerup.timer) + 's', GW - 12, 28);
             ctx.shadowBlur = 0;
             ctx.restore();
           }
@@ -14669,10 +14822,17 @@
         '</div>';
 
       var marketsContent = '<div id="mobileMarketsTab" style="display:none;">' +
+        '<div style="padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.06);">' +
+          '<input type="text" id="mobileMarketSearch" placeholder="Search stock ticker..." style="width:100%;padding:10px 12px;border:1px solid rgba(255,255,255,0.1);border-radius:8px;background:rgba(255,255,255,0.04);color:#fff;font-size:14px;font-family:inherit;" onkeydown="if(event.key===\'Enter\'){addToMobileWatchlist();}">' +
+        '</div>' +
         '<div class="markets-section-label"><span>&#x1F7E2; Magnificent 7</span><button class="markets-refresh-btn" onclick="refreshMarkets();renderMobileMarkets()"><span class="refresh-icon" style="display:inline-block;">&#x21BB;</span> Refresh</button></div>' +
-        '<div class="stock-grid" id="mobileStockGrid" style="margin-bottom:20px;"></div>' +
+        '<div id="mobileStockGrid" style="margin-bottom:20px;"></div>' +
+        '<div id="mobileWatchlistSection" style="display:none;">' +
+          '<div class="markets-section-label"><span>&#x2605; My Watchlist</span></div>' +
+          '<div id="mobileWatchlistGrid" style="margin-bottom:20px;"></div>' +
+        '</div>' +
         '<div class="markets-section-label"><span>&#x1FA99; Crypto</span></div>' +
-        '<div class="stock-grid" id="mobileCryptoGrid" style="margin-bottom:20px;"></div>' +
+        '<div id="mobileCryptoGrid" style="margin-bottom:20px;"></div>' +
         '</div>';
 
       var portfolioContent = '<div id="mobilePortfolioTab" style="display:none;">' +
@@ -14698,18 +14858,18 @@
         '</div>' +
         '<div id="mobilePortfolioChartContainer" class="chart-container" style="display:none;margin:12px 0;"></div>' +
         '<div class="portfolio-coach-section" style="border-top:1px solid rgba(255,255,255,0.08);padding-top:16px;">' +
-          '<div class="portfolio-coach-header">&#x1F916; Portfolio Coach</div>' +
+          '<div style="font-size:0.85rem;color:rgba(255,255,255,0.5);line-height:1.5;padding:0 16px;margin-bottom:12px;font-family:\'IBM Plex Sans\',system-ui,sans-serif;">I\'m your Portfolio Coach. Ask about sectors, risk, rebalancing — anything about your holdings.</div>' +
           '<div class="portfolio-coach-suggestions" style="margin:10px 0;">' +
             '<button class="portfolio-coach-chip" onclick="askPortfolioCoach(\'What is my sector breakdown?\')">Sectors</button>' +
             '<button class="portfolio-coach-chip" onclick="askPortfolioCoach(\'Should I rebalance?\')">Rebalance</button>' +
             '<button class="portfolio-coach-chip" onclick="askPortfolioCoach(\'What is my risk profile?\')">Risk</button>' +
           '</div>' +
           '<div class="portfolio-coach-messages" id="mobilePortfolioCoachMessages">' +
-            '<div class="msg ai">I\'m your Portfolio Coach. Ask about sectors, risk, rebalancing — anything about your holdings.</div>' +
           '</div>' +
           '<div class="lc-input-bar">' +
             '<div class="lc-input-wrap">' +
-              '<div class="lc-input" id="mobilePortfolioCoachInput" contenteditable="true" role="textbox" data-placeholder="Portfolio coach" onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();sendPortfolioCoachMsg();}"></div>' +
+              '<div style="position:absolute;top:6px;left:16px;font-size:0.72rem;font-weight:600;color:#7132F5;letter-spacing:0.04em;z-index:3;pointer-events:none;font-family:\'IBM Plex Sans\',system-ui,sans-serif;">Portfolio Coach</div>' +
+              '<div class="lc-input" id="mobilePortfolioCoachInput" contenteditable="true" role="textbox" data-placeholder="Ask anything..." onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();sendPortfolioCoachMsg();}" style="padding-top:28px;"></div>' +
               '<button class="lc-send-btn" onclick="sendPortfolioCoachMsg()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>' +
             '</div>' +
           '</div>' +
@@ -15603,26 +15763,127 @@
       if (tab === 'roadmap') wpAnime.staggerIn('.mobile-home-inner', '.glass-card, .wish-form-card, .momentum-widget');
     }
 
+    // ── Mobile Markets: TradingView Mini Symbol Overview Widgets ──
+    var mobileWatchlistSymbols = [];
+
+    function buildTradingViewWidget(symbol, exchange) {
+      var fullSymbol = (exchange ? exchange + ':' : 'NASDAQ:') + symbol;
+      var config = {
+        symbol: fullSymbol,
+        width: '100%',
+        height: '100%',
+        dateRange: '1D',
+        colorTheme: 'dark',
+        isTransparent: true,
+        autosize: true,
+        largeChartUrl: ''
+      };
+      var encoded = encodeURIComponent(JSON.stringify(config));
+      return '<div style="border:1px solid rgba(255,255,255,0.08);border-radius:12px;overflow:hidden;height:178px;background:rgba(255,255,255,0.04);">' +
+        '<iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=en#' + encoded + '" style="width:100%;height:100%;border:none;' +
+        (Math.random() > 0.5 ? 'box-shadow:0 0 1px rgba(113,50,245,0.1);' : '') + '" sandbox="allow-scripts allow-same-origin"></iframe>' +
+        '</div>';
+    }
+
     function renderMobileMarkets() {
       var grid = document.getElementById('mobileStockGrid');
+      var watchlistGrid = document.getElementById('mobileWatchlistGrid');
+      var watchlistSection = document.getElementById('mobileWatchlistSection');
       var crypto = document.getElementById('mobileCryptoGrid');
       if (!grid) return;
+
+      // Mag 7: render TradingView widgets
       grid.innerHTML = MAG7.map(function(s) {
-        var logo = buildTickerLogoHtml(s.symbol, 28);
-        var q = marketsCache[s.symbol];
-        if (!q) return '<div class="stock-card" onclick="openTickerChartFromHome(\'' + s.symbol + '\')" style="cursor:pointer;">' + logo + '<div class="stock-symbol">' + s.symbol + '</div><div class="stock-price" style="color:var(--text-dim);">--</div></div>';
-        var cls = q.change > 0 ? 'up' : q.change < 0 ? 'down' : 'flat';
-        var sign = q.change > 0 ? '+' : '';
-        return '<div class="stock-card" onclick="openTickerChartFromHome(\'' + s.symbol + '\')" style="cursor:pointer;">' + logo + '<div class="stock-symbol">' + s.symbol + '</div><div class="stock-price">$' + formatNum(q.price) + '</div><div class="stock-change ' + cls + '">' + sign + formatNum(q.changePercent) + '%</div></div>';
+        return buildTradingViewWidget(s.symbol, 'NASDAQ');
       }).join('');
+
+      // Watchlist: render user-added tickers
+      if (mobileWatchlistSymbols.length > 0) {
+        watchlistSection.style.display = '';
+        watchlistGrid.innerHTML = mobileWatchlistSymbols.map(function(sym) {
+          return '<div style="position:relative;">' +
+            buildTradingViewWidget(sym, 'NASDAQ') +
+            '<button onclick="removeFromMobileWatchlist(\'' + sym + '\')" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.7);border:1px solid rgba(255,255,255,0.2);color:#fff;width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:16px;padding:0;display:flex;align-items:center;justify-content:center;">&#xd7;</button>' +
+            '</div>';
+        }).join('');
+      } else {
+        watchlistSection.style.display = 'none';
+      }
+
+      // Crypto: render TradingView widgets
       crypto.innerHTML = CRYPTO.map(function(c) {
-        var logo = buildTickerLogoHtml(c.display, 28);
-        var q = marketsCache[c.symbol];
-        if (!q) return '<div class="stock-card" onclick="openTickerChartFromHome(\'' + c.display + '\')" style="cursor:pointer;">' + logo + '<div class="stock-symbol">' + c.display + '</div><div class="stock-price" style="color:var(--text-dim);">--</div></div>';
-        var cls = q.change > 0 ? 'up' : q.change < 0 ? 'down' : 'flat';
-        var sign = q.change > 0 ? '+' : '';
-        return '<div class="stock-card" onclick="openTickerChartFromHome(\'' + c.display + '\')" style="cursor:pointer;">' + logo + '<div class="stock-symbol">' + c.display + '</div><div class="stock-price">$' + formatNum(q.price) + '</div><div class="stock-change ' + cls + '">' + sign + formatNum(q.changePercent) + '%</div></div>';
+        var ex = c.symbol.includes('BTC') ? 'CRYPTOCAP' : c.symbol.includes('ETH') ? 'CRYPTOCAP' : 'CRYPTOCAP';
+        var sym = c.symbol.replace('/USD', '');
+        return buildTradingViewWidget(sym, ex);
       }).join('');
+
+      // Load watchlist from Supabase
+      loadMobileWatchlist();
+    }
+
+    async function loadMobileWatchlist() {
+      if (!currentUserId) return;
+      try {
+        var sb = getSupabase();
+        var { data } = await sb.from('user_notes').select('content').eq('user_id', currentUserId).eq('title', '__WP_WATCHLIST__markets').limit(1);
+        if (data && data.length > 0) {
+          try {
+            var watchlist = JSON.parse(data[0].content || '[]');
+            mobileWatchlistSymbols = watchlist.symbols || [];
+          } catch(e) { }
+        }
+      } catch(e) { console.error('Load mobile watchlist error:', e); }
+      var watchlistSection = document.getElementById('mobileWatchlistSection');
+      if (watchlistSection) {
+        if (mobileWatchlistSymbols.length > 0) {
+          watchlistSection.style.display = '';
+          var watchlistGrid = document.getElementById('mobileWatchlistGrid');
+          if (watchlistGrid) {
+            watchlistGrid.innerHTML = mobileWatchlistSymbols.map(function(sym) {
+              return '<div style="position:relative;">' +
+                buildTradingViewWidget(sym, 'NASDAQ') +
+                '<button onclick="removeFromMobileWatchlist(\'' + sym + '\')" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.7);border:1px solid rgba(255,255,255,0.2);color:#fff;width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:16px;padding:0;display:flex;align-items:center;justify-content:center;">&#xd7;</button>' +
+                '</div>';
+            }).join('');
+          }
+        } else {
+          watchlistSection.style.display = 'none';
+        }
+      }
+    }
+
+    async function addToMobileWatchlist() {
+      var input = document.getElementById('mobileMarketSearch');
+      if (!input || !input.value.trim()) return;
+      var sym = input.value.toUpperCase().trim();
+      if (mobileWatchlistSymbols.includes(sym)) {
+        input.value = '';
+        return;
+      }
+      mobileWatchlistSymbols.push(sym);
+      input.value = '';
+      await saveMobileWatchlist();
+      renderMobileMarkets();
+    }
+
+    async function removeFromMobileWatchlist(sym) {
+      mobileWatchlistSymbols = mobileWatchlistSymbols.filter(function(s) { return s !== sym; });
+      await saveMobileWatchlist();
+      renderMobileMarkets();
+    }
+
+    async function saveMobileWatchlist() {
+      if (!currentUserId) return;
+      try {
+        var sb = getSupabase();
+        var payload = JSON.stringify({ symbols: mobileWatchlistSymbols });
+        var { data } = await sb.from('user_notes').select('id').eq('user_id', currentUserId).eq('title', '__WP_WATCHLIST__markets').limit(1);
+        if (data && data.length > 0) {
+          await sb.from('user_notes').update({ content: payload, updated_at: new Date().toISOString() }).eq('id', data[0].id);
+        } else {
+          await sb.from('user_notes').insert({ user_id: currentUserId, title: '__WP_WATCHLIST__markets', content: payload });
+        }
+      } catch(e) { console.error('Save mobile watchlist error:', e); }
     }
 
     function renderMobilePortfolio() {
