@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-12-v221';
+    var APP_VERSION = '2026-04-12-v222';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -477,27 +477,26 @@
     /* Avatar picker */
     .you-avatar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); z-index: 10050; align-items: flex-end; justify-content: center; padding: 10px; }
     .you-avatar-overlay.active { display: flex; }
-    .you-avatar-modal { width: 100%; max-width: 520px; background: #252525; border: 1px solid rgba(104,107,130,0.24); border-radius: 20px; padding: 14px; box-shadow: 0 -16px 50px rgba(0,0,0,0.55); animation: slideUpSheet 0.22s ease; }
+    .you-avatar-modal { width: 100%; max-width: 520px; max-height: 80vh; overflow-y: auto; background: #252525; border: 1px solid rgba(104,107,130,0.24); border-radius: 20px; padding: 14px; box-shadow: 0 -16px 50px rgba(0,0,0,0.55); animation: slideUpSheet 0.22s ease; -webkit-overflow-scrolling: touch; }
     .you-avatar-modal-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
     .you-avatar-modal-title { font-weight: 900; color: #d1d1db; }
     .you-avatar-close { width: 36px; height: 36px; border-radius: 12px; border: 1px solid rgba(104,107,130,0.24); background: rgba(0,0,0,0.18); color: #d1d1db; cursor: pointer; }
     .you-avatar-close:active { transform: scale(0.98); }
-    .you-avatar-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; }
+    .you-avatar-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; justify-items: center; }
     .you-avatar-choice {
-      width: 100%;
-      aspect-ratio: 1 / 1;
-      border-radius: 999px;
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
       background: rgba(0,0,0,0.22);
-      border: 1px solid rgba(104,107,130,0.24);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 26px;
+      border: 3px solid transparent;
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
+      transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+      overflow: hidden;
     }
-    .you-avatar-choice.active { border-color: rgba(113,50,245,0.6); box-shadow: 0 0 0 2px rgba(113,50,245,0.22) inset; }
-    .you-avatar-choice:active { transform: scale(0.96); }
+    .you-avatar-choice img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+    .you-avatar-choice.active { border-color: #7132F5; box-shadow: 0 0 0 4px rgba(113,50,245,0.3); transform: scale(1.1); }
+    .you-avatar-choice:active { transform: scale(1.15); }
 
     /* Library view */
     .library-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
@@ -1700,6 +1699,14 @@
       .premium-header .location-badge.is-visible {
         display: block;
       }
+      .header-avatar {
+        flex-shrink: 0;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        margin-left: 10px;
+        transition: transform 0.15s ease;
+      }
+      .header-avatar:active { transform: scale(0.92); }
       .header-clock {
         flex-shrink: 0;
         display: flex;
@@ -5758,6 +5765,9 @@
             <div class="header-clock" id="headerClock" onclick="showProfileModal()">
               <span class="header-clock-date" id="headerClockDate">Sun, Apr 12</span>
             </div>
+            <div class="header-avatar" onclick="openAvatarPicker()">
+              <img id="headerAvatarImg" src="https://api.dicebear.com/9.x/notionists/svg?seed=User" alt="Avatar" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:2px solid rgba(113,50,245,0.5);">
+            </div>
           </div>
         </div>
         <div class="mobile-home-topbar-secondary">
@@ -6287,8 +6297,28 @@
       if (aboutPanel) aboutPanel.classList.toggle('active', isAbout);
     }
 
-    var YOU_AVATAR_CHOICES = ['🦊','🐺','🦁','🐻','🦅','🐉','🦄','🐬','🦈','🔥','⚡','🚀'];
+    var DICEBEAR_STYLES = [
+      'notionists', 'rings', 'lorelei', 'dylan', 'big-smile', 'croodles', 'miniavs', 'avataaars',
+      'bottts', 'fun-emoji', 'icons', 'identicon', 'initials', 'lorelei-neutral',
+      'notionists-neutral', 'open-peeps', 'personas', 'pixel-art', 'pixel-art-neutral',
+      'shapes', 'thumbs', 'adventurer', 'adventurer-neutral', 'big-ears', 'big-ears-neutral',
+      'micah', 'glass'
+    ];
     var _youAvatarSelected = null;
+    var _youAvatarSeed = 'User';
+
+    function getDiceBearUrl(style, seed) {
+      return 'https://api.dicebear.com/9.x/' + (style || 'notionists') + '/svg?seed=' + encodeURIComponent(seed || _youAvatarSeed);
+    }
+
+    function updateAllAvatarImages(style) {
+      var url = getDiceBearUrl(style, _youAvatarSeed);
+      var headerImg = document.getElementById('headerAvatarImg');
+      if (headerImg) headerImg.src = url;
+      // Profile page — replace emoji with image
+      var youAvatar = document.getElementById('youAvatar');
+      if (youAvatar) youAvatar.innerHTML = '<img src="' + url + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">';
+    }
     var _youAvatarNoteId = null;
     var _greetingNameNoteId = null;
 
@@ -6296,9 +6326,12 @@
       var overlay = document.getElementById('youAvatarOverlay');
       var grid = document.getElementById('youAvatarGrid');
       if (!overlay || !grid) return;
-      grid.innerHTML = YOU_AVATAR_CHOICES.map(function(e) {
-        var active = (_youAvatarSelected === e) ? ' active' : '';
-        return '<button class="you-avatar-choice' + active + '" type="button" onclick="selectAvatarChoice(\'' + e + '\')">' + e + '</button>';
+      grid.innerHTML = DICEBEAR_STYLES.map(function(style) {
+        var active = (_youAvatarSelected === style) ? ' active' : '';
+        var url = getDiceBearUrl(style, _youAvatarSeed);
+        return '<button class="you-avatar-choice' + active + '" type="button" onclick="selectAvatarChoice(\'' + style + '\')">' +
+          '<img src="' + url + '" alt="' + style + '">' +
+        '</button>';
       }).join('');
       overlay.classList.add('active');
       document.body.classList.add('mobile-ai-open');
@@ -6310,13 +6343,11 @@
       document.body.classList.remove('mobile-ai-open');
     }
 
-    async function selectAvatarChoice(emoji) {
-      _youAvatarSelected = emoji;
-      var el = document.getElementById('youAvatar');
-      if (el) el.textContent = emoji;
+    async function selectAvatarChoice(style) {
+      _youAvatarSelected = style;
+      updateAllAvatarImages(style);
       closeAvatarPicker();
-      try { await saveUserAvatar(emoji); } catch(e) {}
-      refreshPremiumHeader();
+      try { await saveUserAvatar('dicebear:' + style); } catch(e) {}
     }
 
     function showProfileModal() {
@@ -6356,6 +6387,12 @@
           ? String(profile.display_name || profile.full_name || profile.name)
           : '';
         var fallbackFirst = firstNameFromDisplay(displayName, email);
+        // Update avatar seed with user identity
+        _youAvatarSeed = displayName || email || 'User';
+        var headerImg = document.getElementById('headerAvatarImg');
+        if (headerImg && _youAvatarSelected) {
+          headerImg.src = getDiceBearUrl(_youAvatarSelected, _youAvatarSeed);
+        }
         var customGreet = '';
         if (currentUserId) {
           try { customGreet = await loadUserGreetingName(); } catch (e) {}
@@ -6621,10 +6658,19 @@
         if (youTier) youTier.textContent = isPro ? 'Pro' : 'Free';
         if (statAge) statAge.textContent = _formatAccountAge(createdAt);
 
-        // Avatar: prefer saved emoji (via __WP_AVATAR__), else initial
+        // Avatar: prefer saved DiceBear style (via __WP_AVATAR__), else default
         var savedAvatar = await loadUserAvatar();
-        _youAvatarSelected = savedAvatar;
-        if (youAvatar) youAvatar.textContent = savedAvatar || initial;
+        // Set seed from user's name/email for unique avatar
+        _youAvatarSeed = displayName || email || 'User';
+        if (savedAvatar && savedAvatar.startsWith('dicebear:')) {
+          var style = savedAvatar.replace('dicebear:', '');
+          _youAvatarSelected = style;
+          updateAllAvatarImages(style);
+        } else {
+          // Default or legacy emoji — show default DiceBear
+          _youAvatarSelected = 'notionists';
+          updateAllAvatarImages('notionists');
+        }
 
         var greetInp = document.getElementById('youGreetingNameInput');
         if (greetInp) {
