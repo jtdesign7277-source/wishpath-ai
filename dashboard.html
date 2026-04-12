@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-09-v158';
+    var APP_VERSION = '2026-04-09-v159';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -2319,7 +2319,7 @@
     #fmMarketsContent #ticker-inner {
       display: inline-flex;
       align-items: center;
-      animation: ticker-scroll 40s linear infinite;
+      animation: ticker-scroll 25s linear infinite;
       will-change: transform;
     }
     @media (prefers-reduced-motion: reduce) {
@@ -13042,7 +13042,12 @@
       /* Fullscreen is now user-controlled via toggle button */
       syncFMShortcutState(tabId);
       // Lazy-load widgets on first visit
-      if (tabId === 'fmMarkets' && !window._fmMarketsLoaded) { refreshFMMarkets().then(function() { window._fmMarketsLoaded = true; }).catch(function() {}); }
+      if (tabId === 'fmMarkets') {
+        if (typeof window.speedUpTradingViewTicker === 'function') {
+          setTimeout(function() { window.speedUpTradingViewTicker(); }, 200);
+        }
+        if (!window._fmMarketsLoaded) { refreshFMMarkets().then(function() { window._fmMarketsLoaded = true; }).catch(function() {}); }
+      }
       if (tabId === 'fmPortfolio') { if (!_portfolioLoaded) loadPortfolioFromDB().then(function() { renderHoldings(); refreshPortfolioPrices(); }); }
       if (tabId === 'fmWatchlists') renderWatchlistSelector();
       if (tabId === 'fmNewsFeed' && !window._newsFeedLoaded) { refreshNewsFeed().then(function() { window._newsFeedLoaded = true; }).catch(function() { window._newsFeedLoaded = false; }); }
@@ -13075,6 +13080,53 @@
       var ts = document.getElementById('fmMarketsUpdatedTime');
       if (ts) ts.textContent = 'Last updated: ' + new Date().toLocaleTimeString();
     }
+
+    // === Faster ticker tape (FM custom marquee + any in-document TradingView ticker DOM) ===
+    (function initFastTickerTape() {
+      var TICKER_DUR = '25s';
+      function speedUpTradingViewTicker() {
+        var id = 'wp-ticker-tape-speed-fix';
+        var style = document.getElementById(id);
+        if (!style) {
+          style = document.createElement('style');
+          style.id = id;
+          document.head.appendChild(style);
+        }
+        style.textContent =
+          '.ticker-tape-widget .tv-ticker-tape__scroll,' +
+          '.ticker-tape-widget .tv-tape-scroll-container,' +
+          '[data-name="ticker-tape"] .scroll-container,' +
+          '.tv-ticker-tape__items {' +
+          '  animation-duration: ' + TICKER_DUR + ' !important;' +
+          '  animation-timing-function: linear !important;' +
+          '}' +
+          '.ticker-tape-widget .tv-ticker-tape__items {' +
+          '  transition: transform 0.05s linear !important;' +
+          '}' +
+          '#fmMarketsContent #ticker-inner {' +
+          '  animation-duration: ' + TICKER_DUR + ' !important;' +
+          '  animation-timing-function: linear !important;' +
+          '}';
+        var inner = document.querySelector('#fmMarketsContent #ticker-inner');
+        if (inner) {
+          inner.style.animationDuration = TICKER_DUR;
+          inner.style.animationTimingFunction = 'linear';
+        }
+        document.querySelectorAll('.tv-ticker-tape__scroll, .tv-tape-scroll-container, [data-name="ticker-tape"] .scroll-container').forEach(function(el) {
+          if (el.style.animationDuration !== TICKER_DUR) el.style.animationDuration = TICKER_DUR;
+        });
+      }
+      window.speedUpTradingViewTicker = speedUpTradingViewTicker;
+      if (!window._fastTickerTapeInterval) {
+        window._fastTickerTapeInterval = setInterval(speedUpTradingViewTicker, 3000);
+      }
+      window.addEventListener('load', function() {
+        setTimeout(speedUpTradingViewTicker, 1500);
+      });
+      document.addEventListener('visibilitychange', function() {
+        if (!document.hidden) speedUpTradingViewTicker();
+      });
+    })();
 
     // ════════════════════════════════
     // ── TRADINGVIEW WIDGETS
