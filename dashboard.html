@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-12-v208';
+    var APP_VERSION = '2026-04-12-v209';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -3989,7 +3989,8 @@
         padding-bottom: max(8px, env(safe-area-inset-bottom)) !important;
       }
     }
-    #wishrunnerView {
+    #wishrunnerView.view { display: none; }
+    #wishrunnerView.view.active {
       display: flex;
       flex-direction: column;
       align-items: stretch;
@@ -3997,7 +3998,7 @@
       box-sizing: border-box;
     }
     @media (max-width: 768px) {
-      #wishrunnerView {
+      #wishrunnerView.view.active {
         min-height: calc(100dvh - 56px - env(safe-area-inset-top));
       }
     }
