@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-12-v228';
+    var APP_VERSION = '2026-04-12-v229';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -1058,6 +1058,7 @@
     .chart-fs-btn:hover { background: linear-gradient(135deg, rgba(120,80,220,0.15) 0%, rgba(255,255,255,0.04) 100%); color: rgb(145,107,230); border-color: rgba(120,80,220,0.2); box-shadow: 0 4px 16px rgba(0,0,0,0.3), 0 0 12px rgba(120,80,220,0.15); }
     .chart-fs-overlay { display: none; position: fixed; inset: 0; background: rgba(10,10,15,0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); z-index: 99999; flex-direction: column; }
     .chart-fs-overlay.active { display: flex !important; }
+    .chart-fs-overlay.active ~ #wpAmbientCanvas, body:has(.chart-fs-overlay.active) #wpAmbientCanvas { display: none !important; }
     .chart-fs-overlay .chart-fs-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
     .chart-fs-overlay .chart-fs-close { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: var(--text-muted); padding: 6px 14px; cursor: pointer; font: inherit; font-size: 0.82rem; }
     .chart-fs-overlay .chart-fs-close:hover { color: var(--text); }
@@ -1127,6 +1128,7 @@
       }
       .mobile-fm-tabs-toggle:active { background: linear-gradient(180deg, rgba(120,80,220,0.4) 0%, rgba(80,50,180,0.5) 100%); }
       .mobile-fm-tabs-toggle svg { width: 10px; height: 10px; }
+      body[data-active-view="fm"] #wpAmbientCanvas { display: none !important; }
       body[data-active-view="fm"] .mobile-fm-tabs-toggle { display: none !important; }
       body[data-active-view="fm"] .fm-sub-tabs { display: none !important; }
       .mobile-fm-menu-backdrop {
@@ -4322,7 +4324,7 @@
 </head>
 <body>
   <!-- Ambient particle background -->
-  <canvas id="wpAmbientCanvas" style="position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:0.6;"></canvas>
+  <canvas id="wpAmbientCanvas" style="position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:0.45;"></canvas>
   <!-- Paywall Modal -->
   <div class="paywall-overlay" id="paywallOverlay">
     <div class="paywall-modal">
@@ -7687,7 +7689,7 @@
         labelEl.classList.add('animate');
       }
 
-      setTimeout(function() { wpConfetti('streak'); wpTsConfetti('fireworks'); }, 160);
+      setTimeout(function() { fireConfettiBurst(); wpConfetti('streak'); wpTsConfetti('fireworks'); }, 160);
 
       try {
         if (typeof navigator !== 'undefined' && navigator.vibrate) {
