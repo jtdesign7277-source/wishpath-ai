@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-12-v220';
+    var APP_VERSION = '2026-04-12-v221';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -10534,9 +10534,7 @@
             // After streaming completes, add action buttons
             var actionsDiv = document.createElement('div');
             actionsDiv.className = 'lc-msg-actions';
-            actionsDiv.innerHTML = '<button class="lc-msg-action-btn" onclick="lcCopyMsg(this)" title="Copy" aria-label="Copy message">📋</button>' +
-              '<button class="lc-msg-action-btn" onclick="lcLikeMsg(this)" title="Good response" aria-label="Good response">👍</button>' +
-              '<button class="lc-msg-action-btn" onclick="lcDislikeMsg(this)" title="Not helpful" aria-label="Not helpful">👎</button>';
+            actionsDiv.innerHTML = '<button class="lc-msg-action-btn" onclick="lcCopyMsg(this)" title="Copy" aria-label="Copy message">📋</button>';
             aiDiv.appendChild(actionsDiv);
 
             // Re-enable input
@@ -10589,8 +10587,6 @@
         });
       }
     }
-    function lcLikeMsg(btn) { btn.style.color = 'rgb(120,80,220)'; }
-    function lcDislikeMsg(btn) { btn.style.color = 'rgb(248,81,73)'; }
 
     async function saveLCConversation() {
       if (!currentUserId || _lcHistory.length === 0) return;
@@ -10654,8 +10650,6 @@
           div.innerHTML = '<div class="lc-bubble">' + htmlReply + '</div>' +
             '<div class="lc-msg-actions">' +
             '<button class="lc-msg-action-btn" onclick="lcCopyMsg(this)" title="Copy" aria-label="Copy message">📋</button>' +
-            '<button class="lc-msg-action-btn" onclick="lcLikeMsg(this)" title="Good response" aria-label="Good response">👍</button>' +
-            '<button class="lc-msg-action-btn" onclick="lcDislikeMsg(this)" title="Not helpful" aria-label="Not helpful">👎</button>' +
             '</div>';
         }
         msgs.appendChild(div);
