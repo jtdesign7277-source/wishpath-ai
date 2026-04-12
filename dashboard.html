@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-12-v230';
+    var APP_VERSION = '2026-04-12-v231';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -1928,12 +1928,154 @@
       body[data-active-view="lifecoach"] .mobile-nav-bar { display: none !important; }
       body[data-active-view="notes"] .notes-editor.active ~ .mobile-nav-bar,
       body:has(.notes-editor.active) .mobile-nav-bar { display: none !important; }
-      /* Notes editor — chat-style AI bar pinned to bottom */
-      .notes-editor.note-detail-view .lc-input-bar {
-        padding: 10px 16px calc(10px + env(safe-area-inset-bottom)) 16px;
-        border-top: 1px solid rgba(255,255,255,0.06);
+      /* Notes AI input dock — Claude iOS style */
+      .nai-input-dock {
         flex-shrink: 0;
+        padding: 12px 12px calc(10px + env(safe-area-inset-bottom)) 12px;
+        background: rgba(30,30,30,0.85);
+        border-top-left-radius: 20px;
+        border-top-right-radius: 20px;
+        position: relative;
+        overflow: hidden;
       }
+      /* Faded corner overlays — top-right and bottom-left like Claude iOS */
+      .nai-input-dock::before {
+        content: '';
+        position: absolute;
+        top: -1px; right: -1px;
+        width: 60px; height: 60px;
+        background: radial-gradient(ellipse at top right, rgba(11,6,17,0.6) 0%, transparent 70%);
+        pointer-events: none;
+        z-index: 1;
+      }
+      .nai-input-dock::after {
+        content: '';
+        position: absolute;
+        bottom: -1px; left: -1px;
+        width: 60px; height: 60px;
+        background: radial-gradient(ellipse at bottom left, rgba(11,6,17,0.6) 0%, transparent 70%);
+        pointer-events: none;
+        z-index: 1;
+      }
+      .nai-input-field-wrap {
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 16px;
+        padding: 14px 16px;
+        min-height: 48px;
+        display: flex;
+        align-items: center;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      }
+      .nai-input-field-wrap:focus-within {
+        border-color: rgba(255,255,255,0.18);
+        box-shadow: 0 0 0 1px rgba(255,255,255,0.06);
+      }
+      .nai-input-field {
+        flex: 1;
+        font-size: 16px;
+        line-height: 1.4;
+        color: rgba(255,255,255,0.9);
+        background: transparent;
+        border: none;
+        outline: none;
+        max-height: 120px;
+        overflow-y: auto;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .nai-input-field:empty::before {
+        content: attr(data-placeholder);
+        color: rgba(255,255,255,0.3);
+        pointer-events: none;
+      }
+      .nai-input-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        margin-top: 8px;
+        padding: 0 2px;
+      }
+      .nai-send-btn {
+        width: 36px; height: 36px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.12);
+        border: none;
+        color: rgba(255,255,255,0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        transition: background 0.15s ease, color 0.15s ease;
+      }
+      .nai-send-btn:active {
+        background: rgba(120,80,220,0.4);
+        color: #fff;
+      }
+      /* Notes AI chat thread */
+      .notes-ai-thread {
+        margin-top: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .notes-ai-thread:empty { display: none; }
+      .notes-ai-thread .nai-msg {
+        max-width: 85%;
+        padding: 10px 14px;
+        border-radius: 18px;
+        font-size: 14px;
+        line-height: 1.5;
+        word-wrap: break-word;
+        white-space: pre-wrap;
+        animation: naiFadeIn 0.25s ease;
+      }
+      @keyframes naiFadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+      .notes-ai-thread .nai-msg.nai-user {
+        align-self: flex-end;
+        background: rgba(120,80,220,0.25);
+        color: rgba(255,255,255,0.9);
+        border-bottom-right-radius: 6px;
+      }
+      .notes-ai-thread .nai-msg.nai-ai {
+        align-self: flex-start;
+        background: rgba(255,255,255,0.08);
+        color: rgba(255,255,255,0.85);
+        border-bottom-left-radius: 6px;
+      }
+      .notes-ai-thread .nai-typing {
+        align-self: flex-start;
+        padding: 10px 18px;
+        background: rgba(255,255,255,0.06);
+        border-radius: 18px;
+        border-bottom-left-radius: 6px;
+        display: flex;
+        gap: 5px;
+        align-items: center;
+      }
+      .notes-ai-thread .nai-typing span {
+        width: 6px; height: 6px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.35);
+        animation: naiDot 1.2s ease-in-out infinite;
+      }
+      .notes-ai-thread .nai-typing span:nth-child(2) { animation-delay: 0.15s; }
+      .notes-ai-thread .nai-typing span:nth-child(3) { animation-delay: 0.3s; }
+      @keyframes naiDot { 0%,60%,100% { opacity: 0.3; transform: scale(0.8); } 30% { opacity: 1; transform: scale(1.1); } }
+      .nai-apply-btn {
+        display: inline-block;
+        margin-top: 8px;
+        padding: 6px 14px;
+        background: rgba(120,80,220,0.3);
+        border: 1px solid rgba(120,80,220,0.4);
+        border-radius: 12px;
+        color: rgba(255,255,255,0.85);
+        font-size: 13px;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        transition: background 0.15s ease;
+      }
+      .nai-apply-btn:active { background: rgba(120,80,220,0.5); }
       /* Hide bottom ask bar on TradingView widget tabs */
       body.fm-widget-active .mobile-nav-bar { display: none !important; }
       .coach-input { background: transparent !important; border: none !important; border-radius: 20px !important; padding: 8px 16px !important; font-size: 14px !important; color: rgba(255,255,255,0.9) !important; flex: 1 !important; min-height: 36px !important; }
@@ -5269,12 +5411,16 @@
             </div>
             <div id="notesContent" class="note-body" contenteditable="true" spellcheck="true" data-placeholder="Start writing..."></div>
             <div id="note-actions" class="note-actions"></div>
+            <!-- Notes AI chat thread -->
+            <div id="notesAIChatThread" class="notes-ai-thread"></div>
           </div>
-          <div class="lc-input-bar" id="notesAIBar">
-            <div class="lc-input-wrap">
-              <div class="lc-input" id="notesAIInput" contenteditable="true" role="textbox" data-placeholder="Ask your notes AI anything" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendNotesAIMsg();}"></div>
-              <button class="lc-send-btn" onclick="sendNotesAIMsg()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+          <div class="nai-input-dock" id="notesAIBar">
+            <div class="nai-input-field-wrap">
+              <div class="nai-input-field" id="notesAIInput" contenteditable="true" role="textbox" data-placeholder="Chat with AI" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendNotesAIMsg();}"></div>
+            </div>
+            <div class="nai-input-actions">
+              <button class="nai-send-btn" id="notesAISendBtn" onclick="sendNotesAIMsg()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
               </button>
             </div>
           </div>
@@ -9846,6 +9992,8 @@
         }
 
         notesAIHistory = [];
+        var _naiThread = document.getElementById('notesAIChatThread');
+        if (_naiThread) _naiThread.innerHTML = '';
       } catch(e) { console.error('Error opening note:', e); }
     }
 
@@ -9904,6 +10052,53 @@
       } catch(e) { console.error('Error deleting note:', e); alert('Failed to delete note'); }
     }
 
+    function _naiAppendMsg(role, text) {
+      var thread = document.getElementById('notesAIChatThread');
+      if (!thread) return;
+      var el = document.createElement('div');
+      el.className = 'nai-msg ' + (role === 'user' ? 'nai-user' : 'nai-ai');
+      el.textContent = text;
+      thread.appendChild(el);
+      // Scroll the note-detail-scroll container so the new message is visible
+      var scroller = thread.closest('.note-detail-scroll');
+      if (scroller) setTimeout(function() { scroller.scrollTop = scroller.scrollHeight; }, 60);
+      return el;
+    }
+
+    function _naiShowTyping() {
+      var thread = document.getElementById('notesAIChatThread');
+      if (!thread) return null;
+      var el = document.createElement('div');
+      el.className = 'nai-typing';
+      el.id = 'naiTypingIndicator';
+      el.innerHTML = '<span></span><span></span><span></span>';
+      thread.appendChild(el);
+      var scroller = thread.closest('.note-detail-scroll');
+      if (scroller) setTimeout(function() { scroller.scrollTop = scroller.scrollHeight; }, 60);
+      return el;
+    }
+
+    function _naiRemoveTyping() {
+      var el = document.getElementById('naiTypingIndicator');
+      if (el) el.remove();
+    }
+
+    function _naiApplyToNote(content, title) {
+      var bodyEl = document.getElementById('notesContent');
+      var titleEl = document.getElementById('notesTitle');
+      if (title && titleEl) titleEl.textContent = title;
+      if (content && bodyEl) {
+        // Append if note already has content, otherwise replace
+        var existing = (bodyEl.innerText || bodyEl.textContent || '').trim();
+        if (existing) {
+          bodyEl.textContent = existing + '\n\n' + content;
+        } else {
+          bodyEl.textContent = content;
+        }
+      }
+      if (currentNoteId) saveCurrentNote();
+    }
+
     async function sendNotesAIMsg() {
       if (!checkAgentLimit()) return;
       var input = document.getElementById('notesAIInput');
@@ -9914,12 +10109,21 @@
       // Save note before querying AI
       if (currentNoteId) saveCurrentNote();
 
+      // Show user message as chat bubble
+      _naiAppendMsg('user', msg);
+
       notesAIHistory.push({ role: 'user', content: msg });
 
-      var noteCtx = '\n\nCurrent note title: "' + getNotesEditorTitleText() + '"\nCurrent note content: "' + getNotesEditorBodyText().substring(0, 2000) + '"';
+      var noteTitle = getNotesEditorTitleText();
+      var noteBody = getNotesEditorBodyText().substring(0, 2000);
+      var noteCtx = '\n\nCurrent note title: "' + noteTitle + '"\nCurrent note content: "' + noteBody + '"';
+
+      // Show typing indicator
+      _naiShowTyping();
 
       try {
-        var systemPrompt = 'You are a helpful notes assistant for WishPath.ai. Help the user write, brainstorm, organize, or improve their notes. Be concise and practical. If they ask you to write something, provide it in a format they can easily copy and paste.' + noteCtx;
+        var systemPrompt = 'You are a notes assistant for WishPath.ai. You help users create, write, edit, brainstorm, and organize notes.\n\nIMPORTANT: When the user asks you to write, create, draft, or generate content for their note, you MUST respond with a JSON block so the content is applied directly to their note. Use this exact format:\n```json\n{"action":"write","title":"Note Title Here","content":"The full note content here"}\n```\n\nRules for the JSON action:\n- "title" is optional. Only include it if the user wants to change the title or the current title is empty/generic.\n- "content" is the text to write into the note body.\n- Use \\n for line breaks within the content.\n- After the JSON block, you can add a brief conversational message.\n\nIf the user is asking a question, chatting, or requesting advice (NOT asking you to write/create/edit content), just respond normally in plain text without JSON.\n\nExamples of when to use JSON action: "write me a note about X", "create a summary of Y", "draft notes on Z", "fill this in", "write something about the title"\nExamples of when NOT to use JSON: "what should I write about?", "give me ideas", "how do I organize this?", "what do you think?"' + noteCtx;
+
         var res = await fetch(EDGE_FN, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -9927,14 +10131,52 @@
         });
         var data = await res.json();
         var reply = data.reply || 'I couldn\'t process that. Try again.';
+
+        _naiRemoveTyping();
+
         notesAIHistory.push({ role: 'assistant', content: reply });
 
-        // Show reply in a toast or inline
-        showToast('AI: ' + reply.substring(0, 100));
+        // Check if reply contains a JSON action block
+        var jsonMatch = reply.match(/```json\s*\n?([\s\S]*?)\n?```/);
+        var applied = false;
+        if (jsonMatch) {
+          try {
+            var action = JSON.parse(jsonMatch[1]);
+            if (action.action === 'write' && action.content) {
+              _naiApplyToNote(action.content, action.title || null);
+              applied = true;
+              // Show the conversational part (after the JSON block) or a confirmation
+              var afterJson = reply.replace(/```json[\s\S]*?```/, '').trim();
+              var displayMsg = afterJson || 'Done — I\'ve written that into your note.';
+              var aiEl = _naiAppendMsg('ai', displayMsg);
+            }
+          } catch(je) { /* JSON parse failed, show raw reply */ }
+        }
+
+        if (!applied) {
+          // Plain text response — show as chat bubble with optional "Apply to note" button
+          var aiEl = _naiAppendMsg('ai', reply);
+          // If the reply is long enough to be useful content, offer to apply it
+          if (reply.length > 80) {
+            var applyBtn = document.createElement('button');
+            applyBtn.className = 'nai-apply-btn';
+            applyBtn.textContent = 'Apply to note';
+            applyBtn.onclick = function() {
+              _naiApplyToNote(reply, null);
+              applyBtn.textContent = 'Applied ✓';
+              applyBtn.disabled = true;
+              applyBtn.style.opacity = '0.5';
+            };
+            aiEl.appendChild(document.createElement('br'));
+            aiEl.appendChild(applyBtn);
+          }
+        }
+
         incrementAgentUsage();
       } catch(e) {
         console.error('Notes AI error:', e);
-        showToast('Connection error. Try again.');
+        _naiRemoveTyping();
+        _naiAppendMsg('ai', 'Connection error. Try again.');
       }
     }
 
