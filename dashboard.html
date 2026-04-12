@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-12-v243';
+    var APP_VERSION = '2026-04-12-v244';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -6960,11 +6960,16 @@
     }
 
     var DICEBEAR_STYLES = [
-      'notionists', 'rings', 'lorelei', 'dylan', 'big-smile', 'croodles', 'miniavs', 'avataaars',
-      'bottts', 'fun-emoji', 'icons', 'identicon', 'initials', 'lorelei-neutral',
-      'notionists-neutral', 'open-peeps', 'personas', 'pixel-art', 'pixel-art-neutral',
-      'shapes', 'thumbs', 'adventurer', 'adventurer-neutral', 'big-ears', 'big-ears-neutral',
-      'micah', 'glass'
+      'notionists',
+      'rings',
+      'pixel-art',
+      'identicon',
+      'micah',
+      'bottts',
+      'avataaars-neutral',
+      'lorelei',
+      'dylan',
+      'big-smile'
     ];
     var _youAvatarSelected = null;
     var _youAvatarSeed = 'User';
@@ -6989,11 +6994,14 @@
       var grid = document.getElementById('youAvatarGrid');
       if (!overlay || !grid) return;
       grid.innerHTML = DICEBEAR_STYLES.map(function(style) {
-        var active = (_youAvatarSelected === style) ? ' active' : '';
-        var url = getDiceBearUrl(style, _youAvatarSeed);
-        return '<button class="you-avatar-choice' + active + '" type="button" onclick="selectAvatarChoice(\'' + style + '\')">' +
-          '<img src="' + url + '" alt="' + style + '">' +
-        '</button>';
+        var url = 'https://api.dicebear.com/9.x/' + style + '/svg?seed=Jeff&backgroundColor=1a1a2e';
+        var container = '<div style="text-align:center;">' +
+          '<button class="you-avatar-choice" type="button" onclick="selectAvatarChoice(\'' + style + '\')" style="width:68px;height:68px;padding:0;border:none;background:none;cursor:pointer;position:relative;">' +
+            '<img src="' + url + '" alt="' + style + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">' +
+          '</button>' +
+          '<div style="font-size:10px;color:#9497A9;margin-top:6px;">' + style + '</div>' +
+        '</div>';
+        return container;
       }).join('');
       overlay.classList.add('active');
       document.body.classList.add('mobile-ai-open');
