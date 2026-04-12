@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-12-v237';
+    var APP_VERSION = '2026-04-12-v238';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -4381,12 +4381,27 @@
   </script>
   <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=2302108240316680&ev=PageView&noscript=1"/></noscript>
   <!-- End Meta Pixel Code -->
-  <!-- Highcharts -->
+  <!-- Highcharts (licensed) -->
   <script src="https://code.highcharts.com/highcharts.js"></script>
+  <script src="https://code.highcharts.com/highcharts-3d.js"></script>
+  <script src="https://code.highcharts.com/highcharts-more.js"></script>
+  <script src="https://code.highcharts.com/modules/funnel3d.js"></script>
+  <script src="https://code.highcharts.com/modules/cylinder.js"></script>
+  <script src="https://code.highcharts.com/modules/pyramid3d.js"></script>
+  <script src="https://code.highcharts.com/modules/solid-gauge.js"></script>
+  <script src="https://code.highcharts.com/modules/heatmap.js"></script>
+  <script src="https://code.highcharts.com/modules/treemap.js"></script>
+  <script src="https://code.highcharts.com/modules/sankey.js"></script>
+  <script src="https://code.highcharts.com/modules/dependency-wheel.js"></script>
+  <script src="https://code.highcharts.com/modules/networkgraph.js"></script>
+  <script src="https://code.highcharts.com/modules/sunburst.js"></script>
+  <script src="https://code.highcharts.com/modules/wordcloud.js"></script>
   <script src="https://code.highcharts.com/modules/exporting.js"></script>
   <script src="https://code.highcharts.com/modules/full-screen.js"></script>
   <script src="https://code.highcharts.com/modules/export-data.js"></script>
   <script src="https://code.highcharts.com/modules/accessibility.js"></script>
+  <!-- Highcharts Gantt -->
+  <script src="https://code.highcharts.com/gantt/modules/gantt.js"></script>
 </head>
 <body>
   <!-- Ambient particle background -->
@@ -14732,7 +14747,19 @@
       { name: 'Savings Goal Progress', cat: 'Goals', icon: '🎯', rating: '4.8', helpText: 'Share your target amount, what you have saved, and your remaining gap.', prompt: 'Help me fill out the Savings Goal Progress template. Ask me for my savings goal, current savings, and any milestones, then rebuild the chart with my real numbers.', inputPlaceholder: 'Tell AI your goal amount and current savings...' },
       { name: 'Debt Payoff Plan', cat: 'Goals', icon: '🏁', rating: '4.6', helpText: 'Use this for a payoff timeline with balances dropping over time.', prompt: 'Help me fill out the Debt Payoff Plan template. Ask me for my current debt balance and the projected balances over time, then rebuild the chart with my real numbers.', inputPlaceholder: 'Tell AI your debt balances and payoff timeline...' },
       { name: 'Revenue Dashboard', cat: 'Business', icon: '🚀', rating: '4.8', helpText: 'Add the periods, revenue, and profit or expense numbers you want to track.', prompt: 'Help me fill out the Revenue Dashboard template. Ask me for my reporting periods, revenue, and profit or expense values, then rebuild the chart with my real numbers.', inputPlaceholder: 'Tell AI your revenue periods and values...' },
-      { name: 'P&L Statement', cat: 'Business', icon: '📋', rating: '4.7', helpText: 'Map out revenue, cost of goods, operating expenses, and net income.', prompt: 'Help me fill out the P&L Statement template. Ask me for my revenue, COGS, operating expenses, and net income values, then rebuild the chart with my real numbers.', inputPlaceholder: 'Tell AI your P&L line items and values...' }
+      { name: 'P&L Statement', cat: 'Business', icon: '📋', rating: '4.7', helpText: 'Map out revenue, cost of goods, operating expenses, and net income.', prompt: 'Help me fill out the P&L Statement template. Ask me for my revenue, COGS, operating expenses, and net income values, then rebuild the chart with my real numbers.', inputPlaceholder: 'Tell AI your P&L line items and values...' },
+      { name: '3D Column Chart', cat: '3D Charts', icon: '📊', rating: '4.9', helpText: 'Provide categories and values — rendered as dramatic 3D columns.', prompt: 'Help me fill out the 3D Column Chart template. Ask me for my categories and values, then build a stunning 3D column chart. Use chart.options3d with alpha:15, beta:15, depth:50. Use Highcharts 3D module.', inputPlaceholder: 'Tell AI your categories and values...' },
+      { name: '3D Pie Chart', cat: '3D Charts', icon: '🥧', rating: '4.8', helpText: 'A premium 3D perspective pie chart for portfolio or budget breakdowns.', prompt: 'Help me fill out the 3D Pie Chart template. Ask me for my slices and values, then build a 3D pie chart. Use chart.options3d with alpha:45, beta:0. Set plotOptions.pie.depth:35. Use Highcharts 3D module.', inputPlaceholder: 'Tell AI your pie slices and values...' },
+      { name: '3D Donut', cat: '3D Charts', icon: '🍩', rating: '4.7', helpText: 'Donut chart with 3D depth — great for allocation views.', prompt: 'Help me fill out the 3D Donut template. Ask me for my categories and values, then build a 3D donut chart with innerSize:60%. Use chart.options3d with alpha:45. Use Highcharts 3D module.', inputPlaceholder: 'Tell AI your donut segments and values...' },
+      { name: '3D Funnel', cat: '3D Charts', icon: '🔻', rating: '4.6', helpText: 'Visualize a conversion or sales funnel in 3D.', prompt: 'Help me fill out the 3D Funnel template. Ask me for my funnel stages and values. Use chart type funnel3d from Highcharts funnel3d module. Render with dramatic colors.', inputPlaceholder: 'Tell AI your funnel stages and values...' },
+      { name: '3D Pyramid', cat: '3D Charts', icon: '🔺', rating: '4.5', helpText: 'Show hierarchical data in a 3D pyramid.', prompt: 'Help me fill out the 3D Pyramid template. Ask me for my pyramid layers and values. Use chart type pyramid3d from Highcharts pyramid3d module.', inputPlaceholder: 'Tell AI your pyramid layers and values...' },
+      { name: 'Project Gantt', cat: 'Gantt', icon: '📅', rating: '4.9', helpText: 'Plan tasks with start/end dates, milestones, and dependencies.', prompt: 'Help me fill out the Project Gantt template. Ask me for my tasks, their start and end dates, and any dependencies. Build a Highcharts Gantt chart with Gantt module. Use series type gantt.', inputPlaceholder: 'Tell AI your tasks, dates, and dependencies...' },
+      { name: 'Goal Timeline', cat: 'Gantt', icon: '🎯', rating: '4.8', helpText: 'Map your goals on a timeline with milestones.', prompt: 'Help me fill out the Goal Timeline template. Ask me for my goals, target dates, and milestones. Build a Highcharts Gantt chart showing the timeline. Use Gantt module.', inputPlaceholder: 'Tell AI your goals and target dates...' },
+      { name: 'Heat Map', cat: 'Advanced', icon: '🔥', rating: '4.7', helpText: 'Visualize data intensity across two dimensions — perfect for correlations.', prompt: 'Help me fill out the Heat Map template. Ask me for my X categories, Y categories, and values. Build a Highcharts heatmap with the heatmap module. Use a hot colorAxis.', inputPlaceholder: 'Tell AI your categories and intensity values...' },
+      { name: 'Treemap', cat: 'Advanced', icon: '🌳', rating: '4.6', helpText: 'Show hierarchical data as nested rectangles — great for market cap or budget views.', prompt: 'Help me fill out the Treemap template. Ask me for my groups and their values. Build a Highcharts treemap with the treemap module. Use colorful tiles.', inputPlaceholder: 'Tell AI your groups and their values...' },
+      { name: 'Solid Gauge', cat: 'Advanced', icon: '⏱️', rating: '4.8', helpText: 'A premium radial gauge — perfect for progress, scores, or KPIs.', prompt: 'Help me fill out the Solid Gauge template. Ask me for the metric name, current value, and max value. Build a Highcharts solidgauge using the solid-gauge module. Style with gradient stops.', inputPlaceholder: 'Tell AI your metric, value, and max...' },
+      { name: 'Sunburst', cat: 'Advanced', icon: '☀️', rating: '4.5', helpText: 'Multi-level ring chart for hierarchical breakdowns.', prompt: 'Help me fill out the Sunburst template. Ask me for my hierarchical data (parent-child categories and values). Build a Highcharts sunburst with the sunburst module.', inputPlaceholder: 'Tell AI your hierarchical categories and values...' },
+      { name: 'Dependency Wheel', cat: 'Advanced', icon: '🔗', rating: '4.6', helpText: 'Show flows and connections between items — like a chord diagram.', prompt: 'Help me fill out the Dependency Wheel template. Ask me for my items and the connections/flows between them. Build a Highcharts dependencywheel with the dependency-wheel module.', inputPlaceholder: 'Tell AI your items and their connections...' }
     ];
 
     function getTemplateByName(name) {
