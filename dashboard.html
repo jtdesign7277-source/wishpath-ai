@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-12-v193';
+    var APP_VERSION = '2026-04-12-v194';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -1661,7 +1661,7 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: max(16px, env(safe-area-inset-top)) 20px 12px 20px;
+        padding: max(12px, env(safe-area-inset-top)) 20px 10px 20px;
         background: linear-gradient(to bottom, #0B0611, #191919);
         border-bottom: 1px solid rgba(104, 107, 130, 0.24);
         position: sticky;
@@ -1682,8 +1682,8 @@
         display: flex;
         flex-direction: column;
         min-width: 0;
-        font-size: 22px;
-        font-weight: 600;
+        font-size: 15px;
+        font-weight: 500;
         color: #F0EFF5;
         line-height: 1.2;
       }
@@ -1700,53 +1700,28 @@
       .premium-header .location-badge.is-visible {
         display: block;
       }
-      .premium-header .user-avatar {
+      .header-clock {
         flex-shrink: 0;
-        width: 48px;
-        height: 48px;
-        padding: 0;
-        margin: 0;
-        border: none;
-        border-radius: 50%;
-        background: transparent;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
         cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: visible;
         -webkit-tap-highlight-color: transparent;
-        box-sizing: border-box;
-        transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
       }
-      .premium-header .user-avatar:active {
-        transform: scale(0.92);
+      .header-clock-time {
+        font-size: 14px;
+        font-weight: 600;
+        color: #F0EFF5;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: 0.02em;
+        line-height: 1.2;
       }
-      .premium-header .premium-header-avatar-emoji {
-        width: 44px;
-        height: 44px;
-        border-radius: 50%;
-        font-size: 1.28rem;
-        line-height: 44px;
-        text-align: center;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: linear-gradient(145deg, rgba(113, 50, 245, 0.35) 0%, rgba(15, 20, 32, 0.95) 100%);
-        border: 2px solid #7132F5;
-        box-shadow: 0 0 0 3px rgba(113, 50, 245, 0.2);
-        color: #f0eff5;
+      .header-clock-date {
+        font-size: 11px;
+        font-weight: 400;
+        color: #9497A9;
+        line-height: 1.3;
       }
-      .premium-header .premium-header-avatar-img {
-        display: none;
-        width: 44px;
-        height: 44px;
-        object-fit: cover;
-        border-radius: 50%;
-        border: 2px solid #7132F5;
-        box-shadow: 0 0 0 3px rgba(113, 50, 245, 0.2);
-      }
-      .premium-header .user-avatar.has-photo .premium-header-avatar-img { display: block; }
-      .premium-header .user-avatar.has-photo .premium-header-avatar-emoji { display: none; }
       .mobile-home-topbar-secondary {
         display: flex;
         align-items: center;
@@ -5754,10 +5729,10 @@
             </div>
           </div>
           <div class="header-right">
-            <button type="button" class="user-avatar" onclick="showProfileModal()" aria-label="Open profile">
-              <span id="premium-header-avatar-emoji" class="premium-header-avatar-emoji" aria-hidden="true">U</span>
-              <img id="user-avatar-img" class="premium-header-avatar-img" alt="" width="44" height="44" decoding="async" />
-            </button>
+            <div class="header-clock" id="headerClock" onclick="showProfileModal()">
+              <span class="header-clock-time" id="headerClockTime">9:39 AM</span>
+              <span class="header-clock-date" id="headerClockDate">Sun, Apr 12</span>
+            </div>
           </div>
         </div>
         <div class="mobile-home-topbar-secondary">
@@ -6346,9 +6321,6 @@
     async function refreshPremiumHeader() {
       var greetEl = document.getElementById('greeting-text');
       var locEl = document.getElementById('greeting-location');
-      var avBtn = document.querySelector('.premium-header .user-avatar');
-      var avEmoji = document.getElementById('premium-header-avatar-emoji');
-      var avImg = document.getElementById('user-avatar-img');
       if (!greetEl) return;
       try {
         var session = await getSession();
@@ -6388,25 +6360,7 @@
           }
         }
 
-        var initial = (displayName || email || 'U').trim().charAt(0).toUpperCase() || 'U';
-        var savedAvatar = null;
-        if (currentUserId) {
-          try { savedAvatar = await loadUserAvatar(); } catch (e) {}
-        }
-        var photoUrl = '';
-        try { photoUrl = (localStorage.getItem('wp_user_avatar_url') || '').trim(); } catch (e) {}
-
-        if (avBtn) avBtn.classList.toggle('has-photo', !!photoUrl);
-        if (avImg) {
-          if (photoUrl) {
-            avImg.src = photoUrl;
-            avImg.alt = first || 'Profile';
-          } else {
-            avImg.removeAttribute('src');
-            avImg.alt = '';
-          }
-        }
-        if (avEmoji) avEmoji.textContent = savedAvatar || initial;
+        updateHeaderClock();
         updateWishMomentum();
       } catch (e) {
         greetEl.textContent = getGreetingTimeLabel();
@@ -6423,6 +6377,25 @@
     }
 
     window.addEventListener('load', updatePersonalGreeting);
+
+    /* ── Header digital clock ── */
+    function updateHeaderClock() {
+      var now = new Date();
+      var h = now.getHours(), m = now.getMinutes();
+      var ampm = h >= 12 ? 'PM' : 'AM';
+      var h12 = h % 12 || 12;
+      var mStr = m < 10 ? '0' + m : '' + m;
+      var timeEl = document.getElementById('headerClockTime');
+      var dateEl = document.getElementById('headerClockDate');
+      if (timeEl) timeEl.textContent = h12 + ':' + mStr + ' ' + ampm;
+      if (dateEl) {
+        var days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+        var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        dateEl.textContent = days[now.getDay()] + ', ' + months[now.getMonth()] + ' ' + now.getDate();
+      }
+    }
+    updateHeaderClock();
+    setInterval(updateHeaderClock, 15000);
     document.addEventListener('visibilitychange', function() {
       if (!document.hidden) updatePersonalGreeting();
     });
