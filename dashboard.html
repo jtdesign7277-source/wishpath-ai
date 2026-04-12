@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-12-v207';
+    var APP_VERSION = '2026-04-12-v208';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -14269,7 +14269,7 @@
         var dayClass = dayPL > 0 ? 'color:#22c55e' : dayPL < 0 ? 'color:#ef4444' : 'color:var(--kraken-text-dim)';
         var logo = buildTickerLogoHtml(h.symbol, 28);
         return '<tr onclick="openHoldingActions(' + i + ')" style="cursor:pointer;">' +
-          '<td><div style="display:flex;align-items:center;gap:8px;">' + logo + '<span class="holding-symbol-badge">' + h.symbol + '</span></div></td>' +
+          '<td class="symbol-cell" title="' + h.symbol + '">' + logo + '</td>' +
           '<td>' + h.qty + '</td>' +
           '<td>' + (hasPrice ? '$' + formatNum(p.price) : '--') + '</td>' +
           '<td>' + (hasPrice ? '$' + formatNum(val) : '--') + '</td>' +
