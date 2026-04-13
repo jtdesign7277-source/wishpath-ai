@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-12-v248';
+    var APP_VERSION = '2026-04-13-v249';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -8079,6 +8079,24 @@
       ];
       var ASTEROID_COLORS = ['#8D6E63', '#A1887F', '#78909C', '#90A4AE', '#616161', '#9E9E9E'];
 
+      // === SPRITE SYSTEM ===
+      var _wrSprites = {};
+      (function() {
+        var defs = {
+          ship: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-16 -20 32 38"><defs><linearGradient id="wrb1" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#3D2080"/><stop offset="50%" stop-color="#9B59FF"/><stop offset="100%" stop-color="#3D2080"/></linearGradient><linearGradient id="wrw1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#7A40D0"/><stop offset="100%" stop-color="#4020A0"/></linearGradient><radialGradient id="wrc1" cx="40%" cy="35%" r="60%"><stop offset="0%" stop-color="white"/><stop offset="40%" stop-color="#80EEFF"/><stop offset="100%" stop-color="#0099CC"/></radialGradient></defs><polygon points="0,-18 11,7 4,9 -4,9 -11,7" fill="url(#wrb1)" stroke="#6A35C8" stroke-width="0.6"/><polygon points="-10,5 -16,10 -5,8" fill="url(#wrw1)"/><polygon points="10,5 16,10 5,8" fill="url(#wrw1)"/><line x1="-10" y1="5" x2="-16" y2="10" stroke="#B080FF" stroke-width="0.8" opacity="0.7"/><line x1="10" y1="5" x2="16" y2="10" stroke="#B080FF" stroke-width="0.8" opacity="0.7"/><ellipse cx="0" cy="-8" rx="3" ry="4" fill="url(#wrc1)"/><ellipse cx="-0.8" cy="-9" rx="1.2" ry="1.8" fill="white" opacity="0.45"/><line x1="0" y1="-17" x2="0" y2="7" stroke="#B080FF" stroke-width="0.7" opacity="0.4"/><rect x="-4" y="7" width="8" height="3" rx="1" fill="#1A1040"/><rect x="-3" y="7.5" width="6" height="1.8" rx="0.8" fill="#00AACC" opacity="0.6"/><line x1="0" y1="-18" x2="6" y2="-4" stroke="#D0A0FF" stroke-width="0.6" opacity="0.4"/><line x1="-4" y1="-8" x2="-9" y2="3" stroke="#8060C0" stroke-width="0.6" opacity="0.4"/><line x1="4" y1="-8" x2="9" y2="3" stroke="#8060C0" stroke-width="0.6" opacity="0.4"/></svg>',
+          asteroid: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64"><defs><radialGradient id="wrag1" cx="30%" cy="25%" r="70%"><stop offset="0%" stop-color="#B09070"/><stop offset="55%" stop-color="#7A5C4A"/><stop offset="100%" stop-color="#3E2C20"/></radialGradient></defs><polygon points="0,-30 14,-24 26,-10 28,6 20,22 8,30 -8,28 -22,18 -28,-4 -20,-20 -8,-28" fill="url(#wrag1)" stroke="#5A3C2C" stroke-width="0.5"/><line x1="-6" y1="-24" x2="10" y2="-6" stroke="#3E2C20" stroke-width="1.5" opacity="0.5"/><line x1="16" y1="-8" x2="22" y2="8" stroke="#3E2C20" stroke-width="1.2" opacity="0.4"/><line x1="-18" y1="6" x2="-6" y2="18" stroke="#3E2C20" stroke-width="1.2" opacity="0.4"/><ellipse cx="6" cy="-4" rx="9" ry="8" fill="#3E2C20" opacity="0.65"/><ellipse cx="6" cy="-4" rx="7" ry="6" fill="#5A3C2C" opacity="0.5"/><ellipse cx="4" cy="-6" rx="2.5" ry="2" fill="#8A6050" opacity="0.4"/><ellipse cx="-14" cy="10" rx="6" ry="5" fill="#3E2C20" opacity="0.55"/><ellipse cx="-14" cy="10" rx="4.5" ry="3.5" fill="#5A3C2C" opacity="0.45"/><ellipse cx="18" cy="14" rx="4" ry="3.5" fill="#3E2C20" opacity="0.5"/><path d="M-8,-28 Q-20,-20 -28,-4" stroke="#C8A880" stroke-width="2" fill="none" opacity="0.55" stroke-linecap="round"/><path d="M0,-30 Q14,-24 26,-10" stroke="#C8A880" stroke-width="1.5" fill="none" opacity="0.4" stroke-linecap="round"/></svg>',
+          debris: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-28 -28 56 56"><defs><linearGradient id="wrdg1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#E0E8F0"/><stop offset="35%" stop-color="#90A8B8"/><stop offset="70%" stop-color="#607080"/><stop offset="100%" stop-color="#3A4A55"/></linearGradient></defs><polygon points="2,-26 18,-10 22,8 14,22 -2,26 -18,14 -22,-4 -12,-22" fill="url(#wrdg1)" stroke="#506070" stroke-width="0.8"/><polygon points="2,-26 18,-10 22,8 -2,26 -18,14" fill="#A0B8C8" opacity="0.3"/><polygon points="-12,-22 -22,-4 -18,14 -2,26 2,-26" fill="#3A4A55" opacity="0.35"/><line x1="2" y1="-26" x2="18" y2="-10" stroke="white" stroke-width="2" opacity="0.7"/><line x1="18" y1="-10" x2="22" y2="8" stroke="white" stroke-width="1.2" opacity="0.4"/><line x1="-4" y1="-18" x2="8" y2="-2" stroke="#3A4A55" stroke-width="1.2" opacity="0.5"/><line x1="4" y1="6" x2="16" y2="16" stroke="#3A4A55" stroke-width="1" opacity="0.4"/><circle cx="6" cy="-10" r="2.5" fill="#3A4A55" opacity="0.7"/><circle cx="-8" cy="8" r="2" fill="#3A4A55" opacity="0.6"/><circle cx="12" cy="6" r="1.8" fill="#3A4A55" opacity="0.6"/></svg>',
+          comet: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-22 -22 44 66"><defs><radialGradient id="wrcc1" cx="45%" cy="40%" r="55%"><stop offset="0%" stop-color="white"/><stop offset="30%" stop-color="#B8E8FF"/><stop offset="70%" stop-color="#29A8E0"/><stop offset="100%" stop-color="#0060A0"/></radialGradient><linearGradient id="wrct1" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#60C8FF" stop-opacity="0.9"/><stop offset="55%" stop-color="#29A8E0" stop-opacity="0.4"/><stop offset="100%" stop-color="#0060A0" stop-opacity="0"/></linearGradient><radialGradient id="wrca1" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#80DCFF" stop-opacity="0.5"/><stop offset="100%" stop-color="#0060A0" stop-opacity="0"/></radialGradient></defs><circle cx="0" cy="0" r="20" fill="url(#wrca1)"/><path d="M-8,14 L8,14 L5,52 L-5,52 Z" fill="url(#wrct1)"/><path d="M-4,14 L4,14 L2.5,44 L-2.5,44 Z" fill="white" opacity="0.18"/><path d="M-7,12 L-12,40 L-7,40 L-5,14" fill="url(#wrct1)" opacity="0.45"/><path d="M7,12 L12,40 L7,40 L5,14" fill="url(#wrct1)" opacity="0.45"/><circle cx="0" cy="0" r="16" fill="url(#wrcc1)"/><circle cx="-5" cy="-5" r="7" fill="white" opacity="0.5"/><circle cx="-5" cy="-5" r="3.5" fill="white" opacity="0.65"/></svg>'
+        };
+        Object.keys(defs).forEach(function(key) {
+          try {
+            var img = new Image();
+            img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(defs[key]);
+            _wrSprites[key] = img;
+          } catch(e) {}
+        });
+      })();
+
       function spawnTarget() {
         var margin = 34;
         var typeRoll = Math.random();
@@ -8415,25 +8433,27 @@
         ctx.save();
         ctx.translate(tg.x, tg.y);
         ctx.rotate(tg.rotation);
-        // Irregular shape using 8-sided polygon
-        ctx.fillStyle = tg.asteroidColor;
-        ctx.shadowColor = 'rgba(255,255,255,0.15)'; ctx.shadowBlur = 6;
-        ctx.beginPath();
-        for (var i = 0; i < 8; i++) {
-          var angle = (i / 8) * Math.PI * 2;
-          var wobble = 0.7 + Math.sin(i * 3.7 + tg.wobble) * 0.3;
-          var px = Math.cos(angle) * r * wobble;
-          var py = Math.sin(angle) * r * wobble;
-          if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        var sp = _wrSprites.asteroid;
+        if (sp && sp.complete && sp.naturalWidth > 0) {
+          // viewBox -32,-32 64×64; SVG body radius ~30 units → scale to r
+          var sc = r / 30;
+          ctx.drawImage(sp, -32 * sc, -32 * sc, 64 * sc, 64 * sc);
+        } else {
+          ctx.fillStyle = tg.asteroidColor;
+          ctx.shadowColor = 'rgba(255,255,255,0.15)'; ctx.shadowBlur = 6;
+          ctx.beginPath();
+          for (var i = 0; i < 8; i++) {
+            var angle = (i / 8) * Math.PI * 2;
+            var wobble = 0.7 + Math.sin(i * 3.7 + tg.wobble) * 0.3;
+            var px = Math.cos(angle) * r * wobble;
+            var py = Math.sin(angle) * r * wobble;
+            if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+          }
+          ctx.closePath(); ctx.fill(); ctx.shadowBlur = 0;
+          ctx.fillStyle = 'rgba(0,0,0,0.25)';
+          ctx.beginPath(); ctx.arc(r * 0.2, -r * 0.15, r * 0.2, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(-r * 0.25, r * 0.2, r * 0.14, 0, Math.PI * 2); ctx.fill();
         }
-        ctx.closePath();
-        ctx.fill();
-        ctx.shadowBlur = 0;
-        // Craters
-        ctx.fillStyle = 'rgba(0,0,0,0.25)';
-        ctx.beginPath(); ctx.arc(r * 0.2, -r * 0.15, r * 0.2, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.arc(-r * 0.25, r * 0.2, r * 0.14, 0, Math.PI * 2); ctx.fill();
-        // Health
         ctx.font = 'bold ' + Math.max(11, Math.floor(r * 0.65)) + 'px ui-sans-serif, system-ui, sans-serif';
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillStyle = '#FFF';
@@ -8448,23 +8468,21 @@
         ctx.save();
         ctx.translate(tg.x, tg.y);
         ctx.rotate(tg.rotation);
-        // Metallic shard — triangle-ish
-        var grad = ctx.createLinearGradient(-r, -r, r, r);
-        grad.addColorStop(0, '#90A4AE');
-        grad.addColorStop(0.5, '#CFD8DC');
-        grad.addColorStop(1, '#607D8B');
-        ctx.fillStyle = grad;
-        ctx.shadowColor = 'rgba(176,190,197,0.4)'; ctx.shadowBlur = 8;
-        ctx.beginPath();
-        ctx.moveTo(0, -r);
-        ctx.lineTo(r * 0.8, r * 0.4);
-        ctx.lineTo(r * 0.1, r);
-        ctx.lineTo(-r * 0.7, r * 0.5);
-        ctx.lineTo(-r * 0.3, -r * 0.3);
-        ctx.closePath();
-        ctx.fill();
-        ctx.shadowBlur = 0;
-        // Health
+        var sp = _wrSprites.debris;
+        if (sp && sp.complete && sp.naturalWidth > 0) {
+          // viewBox -28,-28 56×56; SVG body radius ~24 units → scale to r
+          var sc = r / 24;
+          ctx.drawImage(sp, -28 * sc, -28 * sc, 56 * sc, 56 * sc);
+        } else {
+          var grad = ctx.createLinearGradient(-r, -r, r, r);
+          grad.addColorStop(0, '#90A4AE'); grad.addColorStop(0.5, '#CFD8DC'); grad.addColorStop(1, '#607D8B');
+          ctx.fillStyle = grad;
+          ctx.shadowColor = 'rgba(176,190,197,0.4)'; ctx.shadowBlur = 8;
+          ctx.beginPath();
+          ctx.moveTo(0, -r); ctx.lineTo(r * 0.8, r * 0.4); ctx.lineTo(r * 0.1, r);
+          ctx.lineTo(-r * 0.7, r * 0.5); ctx.lineTo(-r * 0.3, -r * 0.3);
+          ctx.closePath(); ctx.fill(); ctx.shadowBlur = 0;
+        }
         ctx.font = 'bold ' + Math.max(10, Math.floor(r * 0.6)) + 'px ui-sans-serif, system-ui, sans-serif';
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillStyle = '#FFF'; ctx.fillText(String(tg.health), 0, r * 0.15);
@@ -8476,28 +8494,26 @@
         var pc = PLANET_COLORS[tg.colorIdx];
         ctx.save();
         ctx.translate(tg.x, tg.y);
-        // Tail
-        var tailGrad = ctx.createLinearGradient(0, 0, 0, r * 3);
-        tailGrad.addColorStop(0, pc.glow);
-        tailGrad.addColorStop(1, 'transparent');
-        ctx.fillStyle = tailGrad;
-        ctx.beginPath();
-        ctx.moveTo(-r * 0.4, 0);
-        ctx.lineTo(r * 0.4, 0);
-        ctx.lineTo(r * 0.15, r * 3);
-        ctx.lineTo(-r * 0.15, r * 3);
-        ctx.closePath();
-        ctx.fill();
-        // Core
-        ctx.shadowColor = pc.base; ctx.shadowBlur = 14;
-        var cGrad = ctx.createRadialGradient(0, 0, r * 0.1, 0, 0, r);
-        cGrad.addColorStop(0, '#FFF');
-        cGrad.addColorStop(0.4, pc.ring);
-        cGrad.addColorStop(1, pc.base);
-        ctx.fillStyle = cGrad;
-        ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
-        ctx.shadowBlur = 0;
-        // Health
+        var sp = _wrSprites.comet;
+        if (sp && sp.complete && sp.naturalWidth > 0) {
+          // viewBox -22,-22 44×66; core at SVG (0,0) r=16 → scale to r
+          var sc = r / 16;
+          ctx.drawImage(sp, -22 * sc, -22 * sc, 44 * sc, 66 * sc);
+        } else {
+          var tailGrad = ctx.createLinearGradient(0, 0, 0, r * 3);
+          tailGrad.addColorStop(0, pc.glow); tailGrad.addColorStop(1, 'transparent');
+          ctx.fillStyle = tailGrad;
+          ctx.beginPath();
+          ctx.moveTo(-r * 0.4, 0); ctx.lineTo(r * 0.4, 0);
+          ctx.lineTo(r * 0.15, r * 3); ctx.lineTo(-r * 0.15, r * 3);
+          ctx.closePath(); ctx.fill();
+          ctx.shadowColor = pc.base; ctx.shadowBlur = 14;
+          var cGrad = ctx.createRadialGradient(0, 0, r * 0.1, 0, 0, r);
+          cGrad.addColorStop(0, '#FFF'); cGrad.addColorStop(0.4, pc.ring); cGrad.addColorStop(1, pc.base);
+          ctx.fillStyle = cGrad;
+          ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
+          ctx.shadowBlur = 0;
+        }
         ctx.font = 'bold ' + Math.max(10, Math.floor(r * 0.65)) + 'px ui-sans-serif, system-ui, sans-serif';
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillStyle = '#FFF'; ctx.fillText(String(tg.health), 0, 0);
@@ -8508,14 +8524,13 @@
         ctx.save();
         ctx.translate(player.x, player.y);
         var sz = player.size;
-        // Engine glow
+        // Animated engine glow (canvas — always rendered for live flame effect)
         ctx.shadowColor = '#00E5FF'; ctx.shadowBlur = 20;
         ctx.fillStyle = 'rgba(0,229,255,0.35)';
         ctx.beginPath();
         ctx.ellipse(0, sz * 0.45, sz * 0.25, sz * 0.55, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.shadowBlur = 0;
-        // Engine flames
         var flicker = 0.8 + Math.random() * 0.4;
         var fGrad = ctx.createLinearGradient(0, sz * 0.15, 0, sz * 0.7 * flicker);
         fGrad.addColorStop(0, '#00E5FF');
@@ -8523,50 +8538,32 @@
         fGrad.addColorStop(1, 'transparent');
         ctx.fillStyle = fGrad;
         ctx.beginPath();
-        ctx.moveTo(-sz * 0.15, sz * 0.2);
-        ctx.lineTo(sz * 0.15, sz * 0.2);
-        ctx.lineTo(sz * 0.05, sz * 0.7 * flicker);
-        ctx.lineTo(-sz * 0.05, sz * 0.7 * flicker);
-        ctx.closePath();
-        ctx.fill();
-        // Ship body — sleek triangle
-        var bodyGrad = ctx.createLinearGradient(-sz * 0.5, 0, sz * 0.5, 0);
-        bodyGrad.addColorStop(0, '#5C35B4');
-        bodyGrad.addColorStop(0.5, '#9B59FF');
-        bodyGrad.addColorStop(1, '#5C35B4');
-        ctx.fillStyle = bodyGrad;
-        ctx.shadowColor = '#7132F5'; ctx.shadowBlur = 12;
-        ctx.beginPath();
-        ctx.moveTo(0, -sz * 0.65);
-        ctx.lineTo(sz * 0.4, sz * 0.25);
-        ctx.lineTo(sz * 0.15, sz * 0.3);
-        ctx.lineTo(-sz * 0.15, sz * 0.3);
-        ctx.lineTo(-sz * 0.4, sz * 0.25);
-        ctx.closePath();
-        ctx.fill();
-        ctx.shadowBlur = 0;
-        // Wings
-        ctx.fillStyle = '#7132F5';
-        ctx.beginPath();
-        ctx.moveTo(-sz * 0.35, sz * 0.15);
-        ctx.lineTo(-sz * 0.58, sz * 0.35);
-        ctx.lineTo(-sz * 0.2, sz * 0.22);
-        ctx.closePath();
-        ctx.fill();
-        ctx.beginPath();
-        ctx.moveTo(sz * 0.35, sz * 0.15);
-        ctx.lineTo(sz * 0.58, sz * 0.35);
-        ctx.lineTo(sz * 0.2, sz * 0.22);
-        ctx.closePath();
-        ctx.fill();
-        // Cockpit
-        var cockGrad = ctx.createRadialGradient(0, -sz * 0.2, 1, 0, -sz * 0.2, sz * 0.14);
-        cockGrad.addColorStop(0, '#00E5FF');
-        cockGrad.addColorStop(1, 'rgba(0,229,255,0.2)');
-        ctx.fillStyle = cockGrad;
-        ctx.beginPath();
-        ctx.ellipse(0, -sz * 0.2, sz * 0.1, sz * 0.14, 0, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.moveTo(-sz * 0.15, sz * 0.2); ctx.lineTo(sz * 0.15, sz * 0.2);
+        ctx.lineTo(sz * 0.05, sz * 0.7 * flicker); ctx.lineTo(-sz * 0.05, sz * 0.7 * flicker);
+        ctx.closePath(); ctx.fill();
+        // Ship sprite (body, wings, cockpit)
+        var sp = _wrSprites.ship;
+        if (sp && sp.complete && sp.naturalWidth > 0) {
+          // viewBox -16,-20 32×38; designed at sz=28 → scale proportionally
+          var sc = sz / 28;
+          ctx.drawImage(sp, -16 * sc, -20 * sc, 32 * sc, 38 * sc);
+        } else {
+          var bodyGrad = ctx.createLinearGradient(-sz * 0.5, 0, sz * 0.5, 0);
+          bodyGrad.addColorStop(0, '#5C35B4'); bodyGrad.addColorStop(0.5, '#9B59FF'); bodyGrad.addColorStop(1, '#5C35B4');
+          ctx.fillStyle = bodyGrad;
+          ctx.shadowColor = '#7132F5'; ctx.shadowBlur = 12;
+          ctx.beginPath();
+          ctx.moveTo(0, -sz * 0.65); ctx.lineTo(sz * 0.4, sz * 0.25);
+          ctx.lineTo(sz * 0.15, sz * 0.3); ctx.lineTo(-sz * 0.15, sz * 0.3); ctx.lineTo(-sz * 0.4, sz * 0.25);
+          ctx.closePath(); ctx.fill(); ctx.shadowBlur = 0;
+          ctx.fillStyle = '#7132F5';
+          ctx.beginPath(); ctx.moveTo(-sz*0.35,sz*0.15); ctx.lineTo(-sz*0.58,sz*0.35); ctx.lineTo(-sz*0.2,sz*0.22); ctx.closePath(); ctx.fill();
+          ctx.beginPath(); ctx.moveTo(sz*0.35,sz*0.15); ctx.lineTo(sz*0.58,sz*0.35); ctx.lineTo(sz*0.2,sz*0.22); ctx.closePath(); ctx.fill();
+          var cockGrad = ctx.createRadialGradient(0,-sz*0.2,1,0,-sz*0.2,sz*0.14);
+          cockGrad.addColorStop(0,'#00E5FF'); cockGrad.addColorStop(1,'rgba(0,229,255,0.2)');
+          ctx.fillStyle = cockGrad;
+          ctx.beginPath(); ctx.ellipse(0,-sz*0.2,sz*0.1,sz*0.14,0,0,Math.PI*2); ctx.fill();
+        }
         ctx.restore();
       }
 
