@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-12-v252';
+    var APP_VERSION = '2026-04-12-v253';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -4252,17 +4252,17 @@
       animation: scorePulse 1.2s ease-out;
     }
     .wish-runner-gameover {
-      position: absolute;
+      position: fixed;
       inset: 0;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       gap: 16px;
-      background: rgba(11, 6, 17, 0.92);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      z-index: 30;
+      background: rgba(11, 6, 17, 0.95);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      z-index: 999;
       border-radius: 0;
       padding: 24px;
       text-align: center;
@@ -8134,7 +8134,7 @@
         starsInit = false;
         loadHigh();
         var go = document.getElementById('wp-wish-runner-gameover');
-        if (go) go.hidden = true;
+        if (go) { go.hidden = true; go.setAttribute('hidden', ''); go.style.display = ''; }
         updateScoreEl();
       }
 
@@ -8366,15 +8366,17 @@
             bullets = [];
             powerups = [];
             saveHigh(score);
+            var _deathScore = score;
+            var _deathHi = Math.max(highScore, score);
             // Delay gameover overlay so explosion plays out
             setTimeout(function() {
               var go = document.getElementById('wp-wish-runner-gameover');
               var fs = document.getElementById('wp-wish-runner-final');
               var goHi = document.getElementById('wp-wish-runner-gameover-hi');
-              if (fs) fs.textContent = String(score);
-              if (goHi) goHi.textContent = String(hi);
-              if (go) go.hidden = false;
-            }, 1200);
+              if (fs) fs.textContent = String(_deathScore);
+              if (goHi) goHi.textContent = String(_deathHi);
+              if (go) { go.hidden = false; go.removeAttribute('hidden'); go.style.display = 'flex'; }
+            }, 800);
             break targetLoop;
           }
           if (t.y - t.size * 0.5 > GH + 40) { targets.splice(j, 1); continue targetLoop; }
