@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-13-v278';
+    var APP_VERSION = '2026-04-13-v279';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -12007,7 +12007,7 @@
           scrollEl.innerHTML = '<div class="notes-list-empty"><div class="notes-list-empty-icon">📝</div><div class="notes-list-empty-text">No notes yet</div></div>';
         } else {
           scrollEl.innerHTML = vis0.map(function(n) {
-            var preview = n.content ? n.content.substring(0, 50) : 'No content';
+            var preview = n.content ? _cleanNoteContent(n.content).substring(0, 50) : 'No content';
             var timeAgo = getTimeAgo(new Date(n.updated_at));
             return '<div class="notes-swipe-wrap">' +
               '<div class="notes-swipe-delete" onclick="deleteNoteById(\'' + n.id + '\', this.parentElement)">' +
@@ -12043,7 +12043,7 @@
           return;
         }
         scrollEl.innerHTML = visible.map(function(n) {
-          var preview = n.content ? n.content.substring(0, 50) : 'No content';
+          var preview = n.content ? _cleanNoteContent(n.content).substring(0, 50) : 'No content';
           var timeAgo = getTimeAgo(new Date(n.updated_at));
           return '<div class="notes-swipe-wrap">' +
             '<div class="notes-swipe-delete" onclick="deleteNoteById(\'' + n.id + '\', this.parentElement)">' +
@@ -12203,7 +12203,7 @@
         var titleEl = document.getElementById('notesTitle');
         var bodyEl = document.getElementById('notesContent');
         if (titleEl) titleEl.textContent = data.title || '';
-        if (bodyEl) bodyEl.textContent = data.content || '';
+        if (bodyEl) bodyEl.textContent = _cleanNoteContent(data.content || '');
 
         var dateEl = document.getElementById('note-date');
         if (dateEl) {
@@ -12308,17 +12308,31 @@
       if (el) el.remove();
     }
 
+    // Clean AI output for note storage — strip citations, raw HTML tags, clean markdown
+    function _cleanNoteContent(text) {
+      return text
+        .replace(/<cite[^>]*>/gi, '')
+        .replace(/<\/cite>/gi, '')
+        .replace(/<[^>]+>/g, '')         // strip any remaining HTML tags
+        .replace(/\*\*(.+?)\*\*/g, '$1') // bold → plain
+        .replace(/^#{1,3}\s*/gm, '')     // headers → plain
+        .replace(/^\s*[-•]\s*/gm, '- ')  // normalize bullets
+        .replace(/\n{3,}/g, '\n\n')      // collapse excessive newlines
+        .trim();
+    }
+
     function _naiApplyToNote(content, title) {
       var bodyEl = document.getElementById('notesContent');
       var titleEl = document.getElementById('notesTitle');
       if (title && titleEl) titleEl.textContent = title;
       if (content && bodyEl) {
+        var cleaned = _cleanNoteContent(content);
         // Append if note already has content, otherwise replace
         var existing = (bodyEl.innerText || bodyEl.textContent || '').trim();
         if (existing) {
-          bodyEl.textContent = existing + '\n\n' + content;
+          bodyEl.textContent = existing + '\n\n' + cleaned;
         } else {
-          bodyEl.textContent = content;
+          bodyEl.textContent = cleaned;
         }
       }
       if (currentNoteId) saveCurrentNote();
@@ -12347,7 +12361,7 @@
       _naiShowTyping();
 
       try {
-        var systemPrompt = 'You are a notes assistant for WishPath.ai. You help users create, write, edit, brainstorm, and organize notes.\n\nIMPORTANT: When the user asks you to write, create, draft, or generate content for their note, you MUST respond with a JSON block so the content is applied directly to their note. Use this exact format:\n```json\n{"action":"write","title":"Note Title Here","content":"The full note content here"}\n```\n\nRules for the JSON action:\n- "title" is optional. Only include it if the user wants to change the title or the current title is empty/generic.\n- "content" is the text to write into the note body.\n- Use \\n for line breaks within the content.\n- After the JSON block, you can add a brief conversational message.\n\nIf the user is asking a question, chatting, or requesting advice (NOT asking you to write/create/edit content), just respond normally in plain text without JSON.\n\nExamples of when to use JSON action: "write me a note about X", "create a summary of Y", "draft notes on Z", "fill this in", "write something about the title"\nExamples of when NOT to use JSON: "what should I write about?", "give me ideas", "how do I organize this?", "what do you think?"' + noteCtx;
+        var systemPrompt = 'You are a notes assistant for WishPath.ai. You help users create, write, edit, brainstorm, and organize notes.\n\nCRITICAL: NEVER use <cite> tags, HTML tags, or any markup in your responses. Write in plain text only. Use dashes for bullets, plain text for emphasis — no ** or ## markdown.\n\nIMPORTANT: When the user asks you to write, create, draft, or generate content for their note, you MUST respond with a JSON block so the content is applied directly to their note. Use this exact format:\n```json\n{"action":"write","title":"Note Title Here","content":"The full note content here"}\n```\n\nRules for the JSON action:\n- "title" is optional. Only include it if the user wants to change the title or the current title is empty/generic.\n- "content" is the text to write into the note body. Use PLAIN TEXT only — no markdown, no HTML, no <cite> tags.\n- Use \\n for line breaks within the content.\n- After the JSON block, you can add a brief conversational message.\n\nIf the user is asking a question, chatting, or requesting advice (NOT asking you to write/create/edit content), just respond normally in plain text without JSON.\n\nExamples of when to use JSON action: "write me a note about X", "create a summary of Y", "draft notes on Z", "fill this in", "write something about the title"\nExamples of when NOT to use JSON: "what should I write about?", "give me ideas", "how do I organize this?", "what do you think?"' + noteCtx;
 
         var res = await fetch(EDGE_FN, {
           method: 'POST',
@@ -16750,7 +16764,7 @@
       try {
         var sb = getSupabase(); var user = await getUser();
         if (!user) { alert('Log in first.'); btn.disabled = false; btn.textContent = '\uD83D\uDCBE Save to Notes'; return; }
-        var content = msgDiv.innerText.substring(0, 10000);
+        var content = _cleanNoteContent(msgDiv.innerText.substring(0, 10000));
         await sb.from('user_notes').insert({ user_id: user.id, title: 'AI Coach: ' + content.substring(0, 60), content: content });
         btn.textContent = 'Saved!';
         setTimeout(function() { btn.disabled = false; btn.textContent = '\uD83D\uDCBE Save to Notes'; }, 2000);
