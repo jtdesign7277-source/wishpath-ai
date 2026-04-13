@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-13-v266';
+    var APP_VERSION = '2026-04-13-v267';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -8319,52 +8319,147 @@
         } catch(e) {}
       }
 
-      // Background ambient space drone — soft evolving pad
-      function startBgMusic() {
+      // ── Level-based techno music system ──
+      // Each level gets a unique synthesized track with increasing energy
+      var _bgMusicLevel = 0;
+      var _bgMusicNodes = [];
+
+      function _stopAllBgNodes() {
+        for (var i = 0; i < _bgMusicNodes.length; i++) {
+          try { _bgMusicNodes[i].stop(); } catch(e) {}
+        }
+        _bgMusicNodes = [];
+        _bgMusicSource = null;
+      }
+
+      // Helper: create a looping sequencer from note pattern
+      function _schedSeq(ctx, dest, notes, bpm, wave, vol, startTime) {
+        var stepDur = 60 / bpm / 4; // 16th notes
+        var loopLen = notes.length * stepDur;
+        var osc, gain;
+        function schedLoop(base) {
+          for (var i = 0; i < notes.length; i++) {
+            if (notes[i] === 0) continue;
+            osc = ctx.createOscillator();
+            gain = ctx.createGain();
+            osc.type = wave;
+            osc.frequency.value = notes[i];
+            gain.gain.setValueAtTime(0, base + i * stepDur);
+            gain.gain.linearRampToValueAtTime(vol, base + i * stepDur + 0.005);
+            gain.gain.exponentialRampToValueAtTime(0.001, base + i * stepDur + stepDur * 0.8);
+            osc.connect(gain);
+            gain.connect(dest);
+            osc.start(base + i * stepDur);
+            osc.stop(base + i * stepDur + stepDur);
+            _bgMusicNodes.push(osc);
+          }
+        }
+        // Schedule 8 loops ahead (enough for ~10-20s depending on BPM)
+        for (var r = 0; r < 8; r++) schedLoop(startTime + r * loopLen);
+        // Re-schedule periodically
+        var ivl = setInterval(function() {
+          if (!_bgMusicPlaying) { clearInterval(ivl); return; }
+          try {
+            var ct = ctx.currentTime;
+            for (var r = 0; r < 4; r++) schedLoop(ct + r * loopLen);
+          } catch(e) { clearInterval(ivl); }
+        }, loopLen * 6 * 1000);
+        _bgMusicNodes.push({ stop: function() { clearInterval(ivl); } });
+      }
+
+      function startBgMusic(level) {
         try {
-          if (_bgMusicPlaying) return;
+          var lvl = level || currentLevel || 1;
+          if (_bgMusicPlaying && _bgMusicLevel === lvl) return;
+          _stopAllBgNodes();
           var ctx = _gameCtx();
           if (!ctx || ctx.state === 'suspended') return;
           _bgMusicGain = ctx.createGain();
-          _bgMusicGain.gain.value = 0.04; // very soft
+          _bgMusicGain.gain.value = 0.06;
           _bgMusicGain.connect(ctx.destination);
-          // Low drone pad — two detuned oscillators
-          var osc1 = ctx.createOscillator();
-          osc1.type = 'sine';
-          osc1.frequency.value = 55; // A1
-          osc1.connect(_bgMusicGain);
-          osc1.start();
-          var osc2 = ctx.createOscillator();
-          osc2.type = 'sine';
-          osc2.frequency.value = 82.5; // E2 (fifth)
-          var g2 = ctx.createGain();
-          g2.gain.value = 0.6;
-          osc2.connect(g2);
-          g2.connect(_bgMusicGain);
-          osc2.start();
-          // Slow LFO on volume for breathing effect
-          var lfo = ctx.createOscillator();
-          var lfoGain = ctx.createGain();
-          lfo.type = 'sine';
-          lfo.frequency.value = 0.08; // very slow
-          lfoGain.gain.value = 0.015;
-          lfo.connect(lfoGain);
-          lfoGain.connect(_bgMusicGain.gain);
-          lfo.start();
-          _bgMusicSource = { osc1: osc1, osc2: osc2, lfo: lfo };
+          var t = ctx.currentTime + 0.05;
+
+          if (lvl === 1) {
+            // Level 1: Dark ambient — slow deep pulse, A minor
+            // Bass drone
+            var d1 = ctx.createOscillator(); d1.type = 'sine'; d1.frequency.value = 55;
+            var d1g = ctx.createGain(); d1g.gain.value = 0.7;
+            d1.connect(d1g); d1g.connect(_bgMusicGain); d1.start(t);
+            _bgMusicNodes.push(d1);
+            // Slow arp: Am pentatonic
+            var arp1 = [220, 0, 261, 0, 330, 0, 392, 0, 330, 0, 261, 0, 220, 0, 0, 0];
+            _schedSeq(ctx, _bgMusicGain, arp1, 110, 'triangle', 0.12, t);
+            // LFO breathing
+            var lfo = ctx.createOscillator(); lfo.type = 'sine'; lfo.frequency.value = 0.12;
+            var lg = ctx.createGain(); lg.gain.value = 0.02;
+            lfo.connect(lg); lg.connect(_bgMusicGain.gain); lfo.start(t);
+            _bgMusicNodes.push(lfo);
+
+          } else if (lvl === 2) {
+            // Level 2: Techno kick + bass — 128 BPM, driving
+            _bgMusicGain.gain.value = 0.07;
+            // Kick pattern (low sine burst)
+            var kickPat = [110, 0, 0, 0, 110, 0, 0, 0, 110, 0, 0, 110, 0, 0, 110, 0];
+            _schedSeq(ctx, _bgMusicGain, kickPat, 128, 'sine', 0.35, t);
+            // Synth bass line: Em groove
+            var bass2 = [82.4, 0, 82.4, 0, 0, 98, 0, 0, 110, 0, 82.4, 0, 0, 0, 73.4, 0];
+            _schedSeq(ctx, _bgMusicGain, bass2, 128, 'sawtooth', 0.08, t);
+            // Hi-hat (noise-ish high freq)
+            var hat2 = [0, 8000, 0, 8000, 0, 8000, 0, 8000, 0, 8000, 0, 8000, 0, 8000, 0, 8000];
+            _schedSeq(ctx, _bgMusicGain, hat2, 128, 'square', 0.015, t);
+            // Acid lead
+            var lead2 = [330, 0, 392, 0, 440, 0, 392, 330, 0, 0, 494, 0, 440, 0, 0, 0];
+            _schedSeq(ctx, _bgMusicGain, lead2, 128, 'square', 0.04, t);
+
+          } else if (lvl === 3) {
+            // Level 3: Heavy club — 138 BPM, aggressive
+            _bgMusicGain.gain.value = 0.075;
+            // Fast kick
+            var kick3 = [110, 0, 0, 110, 0, 0, 110, 0, 110, 0, 0, 110, 110, 0, 0, 110];
+            _schedSeq(ctx, _bgMusicGain, kick3, 138, 'sine', 0.35, t);
+            // Distorted bass
+            var bass3 = [55, 55, 0, 73.4, 0, 82.4, 0, 0, 55, 0, 73.4, 82.4, 0, 0, 55, 0];
+            _schedSeq(ctx, _bgMusicGain, bass3, 138, 'sawtooth', 0.1, t);
+            // Synth stab
+            var stab3 = [0, 0, 660, 0, 0, 0, 784, 0, 0, 0, 660, 0, 880, 0, 0, 0];
+            _schedSeq(ctx, _bgMusicGain, stab3, 138, 'square', 0.05, t);
+            // Snare/clap on 2&4
+            var snr3 = [0, 0, 0, 0, 6000, 0, 0, 0, 0, 0, 0, 0, 6000, 0, 0, 0];
+            _schedSeq(ctx, _bgMusicGain, snr3, 138, 'triangle', 0.03, t);
+            // Rapid hi-hats
+            var hat3 = [9000, 9000, 9000, 9000, 9000, 9000, 9000, 9000, 9000, 9000, 9000, 9000, 9000, 9000, 9000, 9000];
+            _schedSeq(ctx, _bgMusicGain, hat3, 138, 'square', 0.012, t);
+
+          } else {
+            // Level 4+: Maximum energy — 145 BPM, rave
+            _bgMusicGain.gain.value = 0.08;
+            // Pounding kick
+            var kick4 = [110, 0, 110, 0, 110, 0, 110, 0, 110, 0, 110, 0, 110, 0, 110, 0];
+            _schedSeq(ctx, _bgMusicGain, kick4, 145, 'sine', 0.35, t);
+            // Rave bass
+            var bass4 = [55, 0, 73.4, 0, 55, 82.4, 0, 55, 0, 98, 0, 55, 73.4, 0, 82.4, 0];
+            _schedSeq(ctx, _bgMusicGain, bass4, 145, 'sawtooth', 0.1, t);
+            // Rave lead — high energy arps
+            var rave = [880, 0, 1047, 0, 880, 0, 784, 0, 660, 0, 784, 0, 880, 0, 1047, 0];
+            _schedSeq(ctx, _bgMusicGain, rave, 145, 'sawtooth', 0.04, t);
+            // Offbeat hi-hats
+            var hat4 = [0, 10000, 0, 10000, 0, 10000, 0, 10000, 0, 10000, 0, 10000, 0, 10000, 0, 10000];
+            _schedSeq(ctx, _bgMusicGain, hat4, 145, 'square', 0.015, t);
+            // Snare rolls
+            var snr4 = [0, 0, 0, 0, 7000, 0, 0, 7000, 0, 0, 0, 0, 7000, 0, 7000, 0];
+            _schedSeq(ctx, _bgMusicGain, snr4, 145, 'triangle', 0.03, t);
+          }
+
+          _bgMusicLevel = lvl;
           _bgMusicPlaying = true;
         } catch(e) {}
       }
 
       function stopBgMusic() {
         try {
-          if (_bgMusicSource) {
-            _bgMusicSource.osc1.stop();
-            _bgMusicSource.osc2.stop();
-            _bgMusicSource.lfo.stop();
-            _bgMusicSource = null;
-          }
+          _stopAllBgNodes();
           _bgMusicPlaying = false;
+          _bgMusicLevel = 0;
         } catch(e) {}
       }
 
@@ -8961,6 +9056,8 @@
             levelEnemiesTotal = 0;
             levelEnemiesKilled = 0;
             spawnAcc = 0; // Reset spawn accumulator for new level
+            // Switch music to match new level energy
+            try { startBgMusic(currentLevel); } catch(e) {}
           }
         }
 
