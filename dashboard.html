@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-13-v263';
+    var APP_VERSION = '2026-04-13-v264';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -4585,6 +4585,9 @@
       <div id="streak-number" class="streak-number"></div>
       <div class="streak-label">DAY STREAK</div>
     </div>
+    <audio id="streak-chime" preload="auto">
+      <source src="https://orangefreesounds.com/wp-content/uploads/2025/08/Success-chime-sound-effect.mp3" type="audio/mpeg">
+    </audio>
   </div>
   <script>
     // Early check: if no streak, dismiss overlay immediately so user doesn't see black flash
@@ -6464,9 +6467,18 @@
       } catch (e) {}
     }
 
-    // Ensure audio context is unlocked on first user tap (iOS requirement)
+    // Ensure audio context + HTML5 Audio are unlocked on first user tap (iOS/Safari requirement)
     document.addEventListener('touchstart', function _unlockAudio() {
       _getAudioCtx();
+      // Also unlock HTML5 Audio element for iOS
+      try {
+        var testAudio = new Audio();
+        testAudio.volume = 0;
+        testAudio.play().then(function() {}).catch(function() {});
+        // Pre-warm the streak chime element
+        var ch = document.getElementById('streak-chime');
+        if (ch) { ch.volume = 0; ch.play().then(function() { ch.pause(); ch.currentTime = 0; ch.volume = 0.7; }).catch(function() {}); }
+      } catch(e) {}
       document.removeEventListener('touchstart', _unlockAudio);
     }, { once: true });
 
@@ -7878,10 +7890,17 @@
       overlay.classList.add('dismissed');
     }
 
-    /** Snappy dismiss + premium haptic pop — inline fadeOutSplash 0.45s; node stays in DOM (no remove) for repeat celebrations. */
+    /** Snappy dismiss + premium haptic pop + dopamine chime */
     function hideStreakSplash() {
       var splash = document.getElementById('streak-splash');
       if (!splash || splash.classList.contains('dismissed')) return;
+      // Play MP3 chime (real audio file — works better than Web Audio on iOS)
+      try {
+        var chime = document.getElementById('streak-chime');
+        if (chime) { chime.volume = 0.7; chime.currentTime = 0; chime.play().catch(function(){}); }
+      } catch(ce) {}
+      // Also fire the synth chime as backup
+      try { playStreakChime(); } catch(sc) {}
       try {
         if (typeof navigator !== 'undefined' && navigator.vibrate) {
           navigator.vibrate([15, 10, 30]);
@@ -8083,14 +8102,20 @@
         labelEl.classList.add('animate');
       }
 
-      setTimeout(function() { fireConfettiBurst(); wpConfetti('streak'); wpTsConfetti('fireworks'); playStreakChime(); }, 160);
+      setTimeout(function() {
+        fireConfettiBurst(); wpConfetti('streak'); wpTsConfetti('fireworks');
+        playStreakChime();
+        // Also play MP3 chime
+        try { var ch = document.getElementById('streak-chime'); if (ch) { ch.volume = 0.7; ch.currentTime = 0; ch.play().catch(function(){}); } } catch(e) {}
+      }, 160);
 
-      // iOS: AudioContext needs a user gesture. Play chime on first tap of streak overlay.
+      // iOS: AudioContext + Audio element need a user gesture. Play on first tap.
       var _streakChimePlayed = false;
       function _streakTapChime() {
         if (!_streakChimePlayed) {
           _streakChimePlayed = true;
           playStreakChime();
+          try { var ch = document.getElementById('streak-chime'); if (ch) { ch.volume = 0.7; ch.currentTime = 0; ch.play().catch(function(){}); } } catch(e) {}
         }
         overlay.removeEventListener('touchstart', _streakTapChime);
         overlay.removeEventListener('click', _streakTapChime);
