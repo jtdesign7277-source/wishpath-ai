@@ -8830,6 +8830,24 @@
       ];
       var ASTEROID_COLORS = ['#8D6E63', '#A1887F', '#78909C', '#90A4AE', '#616161', '#9E9E9E'];
 
+      // === SPRITE SYSTEM ===
+      var _wrSprites = {};
+      (function() {
+        var defs = {
+          ship: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-16 -20 32 38"><defs><linearGradient id="wrb1" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#3D2080"/><stop offset="50%" stop-color="#9B59FF"/><stop offset="100%" stop-color="#3D2080"/></linearGradient><linearGradient id="wrw1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#7A40D0"/><stop offset="100%" stop-color="#4020A0"/></linearGradient><radialGradient id="wrc1" cx="40%" cy="35%" r="60%"><stop offset="0%" stop-color="white"/><stop offset="40%" stop-color="#80EEFF"/><stop offset="100%" stop-color="#0099CC"/></radialGradient></defs><polygon points="0,-18 11,7 4,9 -4,9 -11,7" fill="url(#wrb1)" stroke="#6A35C8" stroke-width="0.6"/><polygon points="-10,5 -16,10 -5,8" fill="url(#wrw1)"/><polygon points="10,5 16,10 5,8" fill="url(#wrw1)"/><line x1="-10" y1="5" x2="-16" y2="10" stroke="#B080FF" stroke-width="0.8" opacity="0.7"/><line x1="10" y1="5" x2="16" y2="10" stroke="#B080FF" stroke-width="0.8" opacity="0.7"/><ellipse cx="0" cy="-8" rx="3" ry="4" fill="url(#wrc1)"/><ellipse cx="-0.8" cy="-9" rx="1.2" ry="1.8" fill="white" opacity="0.45"/><line x1="0" y1="-17" x2="0" y2="7" stroke="#B080FF" stroke-width="0.7" opacity="0.4"/><rect x="-4" y="7" width="8" height="3" rx="1" fill="#1A1040"/><rect x="-3" y="7.5" width="6" height="1.8" rx="0.8" fill="#00AACC" opacity="0.6"/><line x1="0" y1="-18" x2="6" y2="-4" stroke="#D0A0FF" stroke-width="0.6" opacity="0.4"/><line x1="-4" y1="-8" x2="-9" y2="3" stroke="#8060C0" stroke-width="0.6" opacity="0.4"/><line x1="4" y1="-8" x2="9" y2="3" stroke="#8060C0" stroke-width="0.6" opacity="0.4"/></svg>',
+          asteroid: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64"><defs><radialGradient id="wrag1" cx="30%" cy="25%" r="70%"><stop offset="0%" stop-color="#B09070"/><stop offset="55%" stop-color="#7A5C4A"/><stop offset="100%" stop-color="#3E2C20"/></radialGradient></defs><polygon points="0,-30 14,-24 26,-10 28,6 20,22 8,30 -8,28 -22,18 -28,-4 -20,-20 -8,-28" fill="url(#wrag1)" stroke="#5A3C2C" stroke-width="0.5"/><line x1="-6" y1="-24" x2="10" y2="-6" stroke="#3E2C20" stroke-width="1.5" opacity="0.5"/><line x1="16" y1="-8" x2="22" y2="8" stroke="#3E2C20" stroke-width="1.2" opacity="0.4"/><line x1="-18" y1="6" x2="-6" y2="18" stroke="#3E2C20" stroke-width="1.2" opacity="0.4"/><ellipse cx="6" cy="-4" rx="9" ry="8" fill="#3E2C20" opacity="0.65"/><ellipse cx="6" cy="-4" rx="7" ry="6" fill="#5A3C2C" opacity="0.5"/><ellipse cx="4" cy="-6" rx="2.5" ry="2" fill="#8A6050" opacity="0.4"/><ellipse cx="-14" cy="10" rx="6" ry="5" fill="#3E2C20" opacity="0.55"/><ellipse cx="-14" cy="10" rx="4.5" ry="3.5" fill="#5A3C2C" opacity="0.45"/><ellipse cx="18" cy="14" rx="4" ry="3.5" fill="#3E2C20" opacity="0.5"/><path d="M-8,-28 Q-20,-20 -28,-4" stroke="#C8A880" stroke-width="2" fill="none" opacity="0.55" stroke-linecap="round"/><path d="M0,-30 Q14,-24 26,-10" stroke="#C8A880" stroke-width="1.5" fill="none" opacity="0.4" stroke-linecap="round"/></svg>',
+          debris: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-28 -28 56 56"><defs><linearGradient id="wrdg1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#E0E8F0"/><stop offset="35%" stop-color="#90A8B8"/><stop offset="70%" stop-color="#607080"/><stop offset="100%" stop-color="#3A4A55"/></linearGradient></defs><polygon points="2,-26 18,-10 22,8 14,22 -2,26 -18,14 -22,-4 -12,-22" fill="url(#wrdg1)" stroke="#506070" stroke-width="0.8"/><polygon points="2,-26 18,-10 22,8 -2,26 -18,14" fill="#A0B8C8" opacity="0.3"/><polygon points="-12,-22 -22,-4 -18,14 -2,26 2,-26" fill="#3A4A55" opacity="0.35"/><line x1="2" y1="-26" x2="18" y2="-10" stroke="white" stroke-width="2" opacity="0.7"/><line x1="18" y1="-10" x2="22" y2="8" stroke="white" stroke-width="1.2" opacity="0.4"/><line x1="-4" y1="-18" x2="8" y2="-2" stroke="#3A4A55" stroke-width="1.2" opacity="0.5"/><line x1="4" y1="6" x2="16" y2="16" stroke="#3A4A55" stroke-width="1" opacity="0.4"/><circle cx="6" cy="-10" r="2.5" fill="#3A4A55" opacity="0.7"/><circle cx="-8" cy="8" r="2" fill="#3A4A55" opacity="0.6"/><circle cx="12" cy="6" r="1.8" fill="#3A4A55" opacity="0.6"/></svg>',
+          comet: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-22 -22 44 66"><defs><radialGradient id="wrcc1" cx="45%" cy="40%" r="55%"><stop offset="0%" stop-color="white"/><stop offset="30%" stop-color="#B8E8FF"/><stop offset="70%" stop-color="#29A8E0"/><stop offset="100%" stop-color="#0060A0"/></radialGradient><linearGradient id="wrct1" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#60C8FF" stop-opacity="0.9"/><stop offset="55%" stop-color="#29A8E0" stop-opacity="0.4"/><stop offset="100%" stop-color="#0060A0" stop-opacity="0"/></linearGradient><radialGradient id="wrca1" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#80DCFF" stop-opacity="0.5"/><stop offset="100%" stop-color="#0060A0" stop-opacity="0"/></radialGradient></defs><circle cx="0" cy="0" r="20" fill="url(#wrca1)"/><path d="M-8,14 L8,14 L5,52 L-5,52 Z" fill="url(#wrct1)"/><path d="M-4,14 L4,14 L2.5,44 L-2.5,44 Z" fill="white" opacity="0.18"/><path d="M-7,12 L-12,40 L-7,40 L-5,14" fill="url(#wrct1)" opacity="0.45"/><path d="M7,12 L12,40 L7,40 L5,14" fill="url(#wrct1)" opacity="0.45"/><circle cx="0" cy="0" r="16" fill="url(#wrcc1)"/><circle cx="-5" cy="-5" r="7" fill="white" opacity="0.5"/><circle cx="-5" cy="-5" r="3.5" fill="white" opacity="0.65"/></svg>'
+        };
+        Object.keys(defs).forEach(function(key) {
+          try {
+            var img = new Image();
+            img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(defs[key]);
+            _wrSprites[key] = img;
+          } catch(e) {}
+        });
+      })();
+
       function spawnBackgroundPlanets() {
         backgroundPlanets = [];
         for (var i = 0; i < 5; i++) {
@@ -9811,97 +9829,103 @@
         ctx.save();
         ctx.translate(tg.x, tg.y);
         ctx.rotate(tg.rotation);
+        var sp = _wrSprites.asteroid;
+        if (sp && sp.complete && sp.naturalWidth > 0) {
+          // viewBox -32,-32 64×64; SVG body radius ~30 units → scale to r
+          var sc = r / 30;
+          ctx.drawImage(sp, -32 * sc, -32 * sc, 64 * sc, 64 * sc);
+        } else {
+          // Outer glow aura
+          var glowR = r * 1.5;
+          var aura = ctx.createRadialGradient(0, 0, r * 0.6, 0, 0, glowR);
+          aura.addColorStop(0, pal.glow);
+          aura.addColorStop(1, 'rgba(0,0,0,0)');
+          ctx.fillStyle = aura;
+          ctx.fillRect(-glowR, -glowR, glowR * 2, glowR * 2);
 
-        // Outer glow aura
-        var glowR = r * 1.5;
-        var aura = ctx.createRadialGradient(0, 0, r * 0.6, 0, 0, glowR);
-        aura.addColorStop(0, pal.glow);
-        aura.addColorStop(1, 'rgba(0,0,0,0)');
-        ctx.fillStyle = aura;
-        ctx.fillRect(-glowR, -glowR, glowR * 2, glowR * 2);
+          // Irregular rocky silhouette — 12 vertices with seeded wobble
+          var verts = [];
+          for (var i = 0; i < 12; i++) {
+            var angle = (i / 12) * Math.PI * 2;
+            var seed = tg.health * 7 + i * 13;
+            var wobble = 0.7 + Math.sin(seed * 0.73) * 0.15 + Math.cos(seed * 1.1 + tg.wobble * 0.3) * 0.1;
+            verts.push({ x: Math.cos(angle) * r * wobble, y: Math.sin(angle) * r * wobble });
+          }
+          ctx.beginPath();
+          ctx.moveTo(verts[0].x, verts[0].y);
+          for (var i = 1; i < verts.length; i++) {
+            var prev = verts[i - 1], cur = verts[i];
+            var cpx = (prev.x + cur.x) * 0.5 + (Math.sin(i * 5.7) * r * 0.08);
+            var cpy = (prev.y + cur.y) * 0.5 + (Math.cos(i * 3.3) * r * 0.08);
+            ctx.quadraticCurveTo(cpx, cpy, cur.x, cur.y);
+          }
+          ctx.closePath();
+          ctx.clip();
 
-        // Irregular rocky silhouette — 12 vertices with seeded wobble
-        var verts = [];
-        for (var i = 0; i < 12; i++) {
-          var angle = (i / 12) * Math.PI * 2;
-          var seed = tg.health * 7 + i * 13;
-          var wobble = 0.7 + Math.sin(seed * 0.73) * 0.15 + Math.cos(seed * 1.1 + tg.wobble * 0.3) * 0.1;
-          verts.push({ x: Math.cos(angle) * r * wobble, y: Math.sin(angle) * r * wobble });
+          // Base body — rich radial gradient with color
+          var bodyGrad = ctx.createRadialGradient(-r * 0.25, -r * 0.25, r * 0.05, 0, 0, r);
+          bodyGrad.addColorStop(0, 'rgb(' + pal.core.join(',') + ')');
+          bodyGrad.addColorStop(0.3, 'rgb(' + pal.mid.join(',') + ')');
+          bodyGrad.addColorStop(0.65, 'rgb(' + pal.dark.join(',') + ')');
+          bodyGrad.addColorStop(1, 'rgb(' + Math.floor(pal.dark[0]*0.3) + ',' + Math.floor(pal.dark[1]*0.3) + ',' + Math.floor(pal.dark[2]*0.3) + ')');
+          ctx.fillStyle = bodyGrad;
+          ctx.fillRect(-r, -r, r * 2, r * 2);
+
+          // Surface detail — craters with depth
+          var craters = [
+            { x: 0.2, y: -0.22, r: 0.18 }, { x: -0.25, y: 0.2, r: 0.14 },
+            { x: 0.35, y: 0.25, r: 0.1 }, { x: -0.1, y: -0.35, r: 0.08 },
+            { x: 0.05, y: 0.4, r: 0.12 }
+          ];
+          for (var ci = 0; ci < craters.length; ci++) {
+            var cr = craters[ci];
+            // Crater shadow (sunken)
+            ctx.fillStyle = 'rgba(0,0,0,0.35)';
+            ctx.beginPath(); ctx.arc(cr.x * r, cr.y * r, cr.r * r, 0, Math.PI * 2); ctx.fill();
+            // Inner darker pit
+            ctx.fillStyle = 'rgba(0,0,0,0.25)';
+            ctx.beginPath(); ctx.arc(cr.x * r + 1, cr.y * r + 1, cr.r * r * 0.6, 0, Math.PI * 2); ctx.fill();
+            // Crater rim highlight (top-left lit)
+            ctx.strokeStyle = 'rgba(' + pal.vein.join(',') + ',0.3)';
+            ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.arc(cr.x * r, cr.y * r, cr.r * r, -2.2, -0.3); ctx.stroke();
+          }
+
+          // Glowing veins / mineral seams
+          ctx.strokeStyle = 'rgba(' + pal.vein.join(',') + ',0.25)';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(-r * 0.4, -r * 0.1);
+          ctx.quadraticCurveTo(-r * 0.1, r * 0.15, r * 0.3, -r * 0.05);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(r * 0.1, r * 0.3);
+          ctx.quadraticCurveTo(r * 0.25, r * 0.1, r * 0.4, r * 0.35);
+          ctx.stroke();
+
+          // Specular highlight — top-left wet shine
+          var specGrad = ctx.createRadialGradient(-r * 0.3, -r * 0.3, 0, -r * 0.3, -r * 0.3, r * 0.35);
+          specGrad.addColorStop(0, 'rgba(255,255,255,0.35)');
+          specGrad.addColorStop(0.5, 'rgba(255,255,255,0.1)');
+          specGrad.addColorStop(1, 'rgba(255,255,255,0)');
+          ctx.fillStyle = specGrad;
+          ctx.fillRect(-r, -r, r * 2, r * 2);
+
+          // Rim light — backlit edge glow
+          ctx.restore();
+          ctx.save();
+          ctx.translate(tg.x, tg.y);
+          ctx.rotate(tg.rotation);
+          ctx.strokeStyle = 'rgba(' + pal.vein.join(',') + ',0.2)';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          for (var i = 0; i < verts.length; i++) {
+            if (i === 0) ctx.moveTo(verts[i].x, verts[i].y);
+            else ctx.lineTo(verts[i].x, verts[i].y);
+          }
+          ctx.closePath();
+          ctx.stroke();
         }
-        ctx.beginPath();
-        ctx.moveTo(verts[0].x, verts[0].y);
-        for (var i = 1; i < verts.length; i++) {
-          var prev = verts[i - 1], cur = verts[i];
-          var cpx = (prev.x + cur.x) * 0.5 + (Math.sin(i * 5.7) * r * 0.08);
-          var cpy = (prev.y + cur.y) * 0.5 + (Math.cos(i * 3.3) * r * 0.08);
-          ctx.quadraticCurveTo(cpx, cpy, cur.x, cur.y);
-        }
-        ctx.closePath();
-        ctx.clip();
-
-        // Base body — rich radial gradient with color
-        var bodyGrad = ctx.createRadialGradient(-r * 0.25, -r * 0.25, r * 0.05, 0, 0, r);
-        bodyGrad.addColorStop(0, 'rgb(' + pal.core.join(',') + ')');
-        bodyGrad.addColorStop(0.3, 'rgb(' + pal.mid.join(',') + ')');
-        bodyGrad.addColorStop(0.65, 'rgb(' + pal.dark.join(',') + ')');
-        bodyGrad.addColorStop(1, 'rgb(' + Math.floor(pal.dark[0]*0.3) + ',' + Math.floor(pal.dark[1]*0.3) + ',' + Math.floor(pal.dark[2]*0.3) + ')');
-        ctx.fillStyle = bodyGrad;
-        ctx.fillRect(-r, -r, r * 2, r * 2);
-
-        // Surface detail — craters with depth
-        var craters = [
-          { x: 0.2, y: -0.22, r: 0.18 }, { x: -0.25, y: 0.2, r: 0.14 },
-          { x: 0.35, y: 0.25, r: 0.1 }, { x: -0.1, y: -0.35, r: 0.08 },
-          { x: 0.05, y: 0.4, r: 0.12 }
-        ];
-        for (var ci = 0; ci < craters.length; ci++) {
-          var cr = craters[ci];
-          // Crater shadow (sunken)
-          ctx.fillStyle = 'rgba(0,0,0,0.35)';
-          ctx.beginPath(); ctx.arc(cr.x * r, cr.y * r, cr.r * r, 0, Math.PI * 2); ctx.fill();
-          // Inner darker pit
-          ctx.fillStyle = 'rgba(0,0,0,0.25)';
-          ctx.beginPath(); ctx.arc(cr.x * r + 1, cr.y * r + 1, cr.r * r * 0.6, 0, Math.PI * 2); ctx.fill();
-          // Crater rim highlight (top-left lit)
-          ctx.strokeStyle = 'rgba(' + pal.vein.join(',') + ',0.3)';
-          ctx.lineWidth = 1;
-          ctx.beginPath(); ctx.arc(cr.x * r, cr.y * r, cr.r * r, -2.2, -0.3); ctx.stroke();
-        }
-
-        // Glowing veins / mineral seams
-        ctx.strokeStyle = 'rgba(' + pal.vein.join(',') + ',0.25)';
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.moveTo(-r * 0.4, -r * 0.1);
-        ctx.quadraticCurveTo(-r * 0.1, r * 0.15, r * 0.3, -r * 0.05);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(r * 0.1, r * 0.3);
-        ctx.quadraticCurveTo(r * 0.25, r * 0.1, r * 0.4, r * 0.35);
-        ctx.stroke();
-
-        // Specular highlight — top-left wet shine
-        var specGrad = ctx.createRadialGradient(-r * 0.3, -r * 0.3, 0, -r * 0.3, -r * 0.3, r * 0.35);
-        specGrad.addColorStop(0, 'rgba(255,255,255,0.35)');
-        specGrad.addColorStop(0.5, 'rgba(255,255,255,0.1)');
-        specGrad.addColorStop(1, 'rgba(255,255,255,0)');
-        ctx.fillStyle = specGrad;
-        ctx.fillRect(-r, -r, r * 2, r * 2);
-
-        // Rim light — backlit edge glow
-        ctx.restore();
-        ctx.save();
-        ctx.translate(tg.x, tg.y);
-        ctx.rotate(tg.rotation);
-        ctx.strokeStyle = 'rgba(' + pal.vein.join(',') + ',0.2)';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        for (var i = 0; i < verts.length; i++) {
-          if (i === 0) ctx.moveTo(verts[i].x, verts[i].y);
-          else ctx.lineTo(verts[i].x, verts[i].y);
-        }
-        ctx.closePath();
-        ctx.stroke();
 
         // Health number
         ctx.font = 'bold ' + Math.max(12, Math.floor(r * 0.5)) + 'px ui-sans-serif, system-ui, sans-serif';
@@ -9918,34 +9942,41 @@
         ctx.save();
         ctx.translate(tg.x, tg.y);
         ctx.rotate(tg.rotation);
-        // 3D metallic shard with lighting
-        var grad = ctx.createLinearGradient(-r * 0.5, -r, r * 0.5, r);
-        grad.addColorStop(0, '#c0c8d0');   // bright edge
-        grad.addColorStop(0.3, '#8090a0'); // mid
-        grad.addColorStop(0.6, '#506070'); // shadow
-        grad.addColorStop(1, '#2a3540');   // dark edge
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.moveTo(0, -r);
-        ctx.lineTo(r * 0.85, r * 0.35);
-        ctx.lineTo(r * 0.15, r);
-        ctx.lineTo(-r * 0.75, r * 0.45);
-        ctx.lineTo(-r * 0.35, -r * 0.35);
-        ctx.closePath();
-        ctx.fill();
-        // Specular edge highlight
-        ctx.strokeStyle = 'rgba(200,220,240,0.3)';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(0, -r);
-        ctx.lineTo(r * 0.85, r * 0.35);
-        ctx.stroke();
-        // Dark facet line (surface detail)
-        ctx.strokeStyle = 'rgba(0,0,0,0.3)';
-        ctx.beginPath();
-        ctx.moveTo(-r * 0.1, -r * 0.4);
-        ctx.lineTo(r * 0.15, r);
-        ctx.stroke();
+        var sp = _wrSprites.debris;
+        if (sp && sp.complete && sp.naturalWidth > 0) {
+          // viewBox -28,-28 56×56; SVG body radius ~24 units → scale to r
+          var sc = r / 24;
+          ctx.drawImage(sp, -28 * sc, -28 * sc, 56 * sc, 56 * sc);
+        } else {
+          // 3D metallic shard with lighting
+          var grad = ctx.createLinearGradient(-r * 0.5, -r, r * 0.5, r);
+          grad.addColorStop(0, '#c0c8d0');   // bright edge
+          grad.addColorStop(0.3, '#8090a0'); // mid
+          grad.addColorStop(0.6, '#506070'); // shadow
+          grad.addColorStop(1, '#2a3540');   // dark edge
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.moveTo(0, -r);
+          ctx.lineTo(r * 0.85, r * 0.35);
+          ctx.lineTo(r * 0.15, r);
+          ctx.lineTo(-r * 0.75, r * 0.45);
+          ctx.lineTo(-r * 0.35, -r * 0.35);
+          ctx.closePath();
+          ctx.fill();
+          // Specular edge highlight
+          ctx.strokeStyle = 'rgba(200,220,240,0.3)';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(0, -r);
+          ctx.lineTo(r * 0.85, r * 0.35);
+          ctx.stroke();
+          // Dark facet line (surface detail)
+          ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+          ctx.beginPath();
+          ctx.moveTo(-r * 0.1, -r * 0.4);
+          ctx.lineTo(r * 0.15, r);
+          ctx.stroke();
+        }
         // Health
         ctx.font = 'bold ' + Math.max(10, Math.floor(r * 0.55)) + 'px ui-sans-serif, system-ui, sans-serif';
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
@@ -9961,28 +9992,26 @@
         var pc = PLANET_COLORS[tg.colorIdx];
         ctx.save();
         ctx.translate(tg.x, tg.y);
-        // Tail
-        var tailGrad = ctx.createLinearGradient(0, 0, 0, r * 3);
-        tailGrad.addColorStop(0, pc.glow);
-        tailGrad.addColorStop(1, 'transparent');
-        ctx.fillStyle = tailGrad;
-        ctx.beginPath();
-        ctx.moveTo(-r * 0.4, 0);
-        ctx.lineTo(r * 0.4, 0);
-        ctx.lineTo(r * 0.15, r * 3);
-        ctx.lineTo(-r * 0.15, r * 3);
-        ctx.closePath();
-        ctx.fill();
-        // Core
-        ctx.shadowColor = pc.base; ctx.shadowBlur = 14;
-        var cGrad = ctx.createRadialGradient(0, 0, r * 0.1, 0, 0, r);
-        cGrad.addColorStop(0, '#FFF');
-        cGrad.addColorStop(0.4, pc.ring);
-        cGrad.addColorStop(1, pc.base);
-        ctx.fillStyle = cGrad;
-        ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
-        ctx.shadowBlur = 0;
-        // Health
+        var sp = _wrSprites.comet;
+        if (sp && sp.complete && sp.naturalWidth > 0) {
+          // viewBox -22,-22 44×66; core at SVG (0,0) r=16 → scale to r
+          var sc = r / 16;
+          ctx.drawImage(sp, -22 * sc, -22 * sc, 44 * sc, 66 * sc);
+        } else {
+          var tailGrad = ctx.createLinearGradient(0, 0, 0, r * 3);
+          tailGrad.addColorStop(0, pc.glow); tailGrad.addColorStop(1, 'transparent');
+          ctx.fillStyle = tailGrad;
+          ctx.beginPath();
+          ctx.moveTo(-r * 0.4, 0); ctx.lineTo(r * 0.4, 0);
+          ctx.lineTo(r * 0.15, r * 3); ctx.lineTo(-r * 0.15, r * 3);
+          ctx.closePath(); ctx.fill();
+          ctx.shadowColor = pc.base; ctx.shadowBlur = 14;
+          var cGrad = ctx.createRadialGradient(0, 0, r * 0.1, 0, 0, r);
+          cGrad.addColorStop(0, '#FFF'); cGrad.addColorStop(0.4, pc.ring); cGrad.addColorStop(1, pc.base);
+          ctx.fillStyle = cGrad;
+          ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
+          ctx.shadowBlur = 0;
+        }
         ctx.font = 'bold ' + Math.max(10, Math.floor(r * 0.65)) + 'px ui-sans-serif, system-ui, sans-serif';
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillStyle = '#FFF'; ctx.fillText(String(tg.health), 0, 0);
