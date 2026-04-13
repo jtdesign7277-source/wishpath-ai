@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-13-v260';
+    var APP_VERSION = '2026-04-13-v261';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -4214,24 +4214,56 @@
     .wish-runner-container .game-ui {
       position: absolute;
       top: max(16px, calc(env(safe-area-inset-top) + 8px));
-      left: 0;
-      right: 0;
-      font-size: 22px;
-      font-weight: 900;
-      letter-spacing: 0.06em;
-      color: #FFD700;
-      text-shadow: 0 0 12px rgba(255,215,0,0.6), 0 2px 6px rgba(0,0,0,0.8);
+      left: 12px;
+      right: 12px;
       pointer-events: none;
       z-index: 10;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
+      gap: 10px;
       background: none;
       padding: 0;
-      border-radius: 0;
-      backdrop-filter: none;
-      border: none;
+    }
+    .wr-hud-pill {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      background: linear-gradient(180deg, #2a5a9a 0%, #1a3a6a 50%, #0d2040 100%);
+      border-radius: 20px;
+      border: 1.5px solid rgba(100,180,255,0.35);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+      padding: 3px 12px 3px 3px;
+      min-width: 90px;
+      height: 32px;
+    }
+    .wr-hud-icon {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 15px;
+      line-height: 1;
+    }
+    .wr-hud-icon-gem {
+      background: radial-gradient(circle at 40% 35%, #ff4444, #cc0000, #880000);
+      box-shadow: 0 0 6px rgba(255,50,50,0.5), inset 0 -2px 3px rgba(0,0,0,0.3);
+    }
+    .wr-hud-icon-coin {
+      background: radial-gradient(circle at 40% 35%, #ffdd44, #ffaa00, #cc8800);
+      box-shadow: 0 0 6px rgba(255,200,0,0.5), inset 0 -2px 3px rgba(0,0,0,0.3);
+    }
+    .wr-hud-value {
+      font-family: 'Courier New', monospace;
+      font-size: 15px;
+      font-weight: 900;
+      color: #fff;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+      margin-left: 6px;
+      letter-spacing: 0.5px;
     }
     .wish-runner-container .game-ui-hi {
       display: none;
@@ -5744,7 +5776,14 @@
             <div id="wp-wish-runner-fire" class="fire-button" role="button" tabindex="0" aria-label="Fire" style="display:none;">&#x1F525;</div>
           </div>
           <div id="score-display" class="game-ui">
-            <span id="wp-wish-runner-score">0</span>
+            <div class="wr-hud-pill">
+              <div class="wr-hud-icon wr-hud-icon-gem"><span style="font-size:13px;">💎</span></div>
+              <span class="wr-hud-value" id="wp-wish-runner-gems">0</span>
+            </div>
+            <div class="wr-hud-pill">
+              <div class="wr-hud-icon wr-hud-icon-coin"><span style="font-size:13px;">🪙</span></div>
+              <span class="wr-hud-value" id="wp-wish-runner-score">0</span>
+            </div>
           </div>
           <div id="wp-wish-runner-gameover" class="wish-runner-gameover" hidden>
             <div class="wish-runner-gameover-title">GAME OVER</div>
@@ -8132,6 +8171,7 @@
       var bullets = [];
       var targets = [];
       var score = 0;
+      var gems = 0;
       var highScore = 0;
       var gameOver = false;
       var _deathTime = 0;
@@ -8183,8 +8223,11 @@
           var curM = Math.floor(score / 100);
           if (curM > _lastScoreMilestone && score > 0) {
             _lastScoreMilestone = curM;
+            gems += 1; // earn a gem every 100 points
+            var gemEl = document.getElementById('wp-wish-runner-gems');
+            if (gemEl) gemEl.textContent = String(gems);
             el.classList.remove('score-milestone-pulse');
-            void el.offsetWidth; // force reflow to restart animation
+            void el.offsetWidth;
             el.classList.add('score-milestone-pulse');
           }
         }
@@ -8228,6 +8271,7 @@
         _invincibleFlashCycle = 0;
         powerupSpawnAcc = 0;
         score = 0;
+        gems = 0;
         gameOver = false;
         _deathTime = 0;
         _lastScoreMilestone = 0;
@@ -8995,7 +9039,12 @@
           ctx.lineWidth = 2;
           ctx.globalAlpha = 0.6;
           ctx.beginPath();
-          ctx.ellipse(0, 0, r * 1.4, r * 0.35, 0.3, 0, Math.PI * 2);
+          // Draw ring as scaled arc (ellipse crashes some browsers)
+          ctx.save();
+          ctx.rotate(0.3);
+          ctx.scale(1, 0.25);
+          ctx.arc(0, 0, r * 1.4, 0, Math.PI * 2);
+          ctx.restore();
           ctx.stroke();
           ctx.globalAlpha = 1;
         }
@@ -9019,29 +9068,67 @@
         ctx.save();
         ctx.translate(tg.x, tg.y);
         ctx.rotate(tg.rotation);
-        // Irregular shape using 8-sided polygon
-        ctx.fillStyle = tg.asteroidColor;
-        ctx.shadowColor = 'rgba(255,255,255,0.15)'; ctx.shadowBlur = 6;
+
+        // 3D irregular rocky shape with 10 vertices
         ctx.beginPath();
-        for (var i = 0; i < 8; i++) {
-          var angle = (i / 8) * Math.PI * 2;
-          var wobble = 0.7 + Math.sin(i * 3.7 + tg.wobble) * 0.3;
+        for (var i = 0; i < 10; i++) {
+          var angle = (i / 10) * Math.PI * 2;
+          var wobble = 0.65 + Math.sin(i * 4.3 + tg.wobble * 0.5) * 0.2 + Math.cos(i * 2.1) * 0.15;
           var px = Math.cos(angle) * r * wobble;
           var py = Math.sin(angle) * r * wobble;
           if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
         }
         ctx.closePath();
+
+        // 3D sphere gradient — light source from top-left
+        var bodyGrad = ctx.createRadialGradient(-r * 0.3, -r * 0.3, r * 0.05, 0, 0, r);
+        bodyGrad.addColorStop(0, '#b8a090');    // bright lit face
+        bodyGrad.addColorStop(0.25, '#8a7060'); // mid tone
+        bodyGrad.addColorStop(0.55, '#5a4535'); // shadow start
+        bodyGrad.addColorStop(0.85, '#2a1a10'); // deep shadow
+        bodyGrad.addColorStop(1, '#0a0505');    // terminator edge
+        ctx.fillStyle = bodyGrad;
         ctx.fill();
-        ctx.shadowBlur = 0;
-        // Craters
-        ctx.fillStyle = 'rgba(0,0,0,0.25)';
-        ctx.beginPath(); ctx.arc(r * 0.2, -r * 0.15, r * 0.2, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.arc(-r * 0.25, r * 0.2, r * 0.14, 0, Math.PI * 2); ctx.fill();
-        // Health
-        ctx.font = 'bold ' + Math.max(11, Math.floor(r * 0.65)) + 'px ui-sans-serif, system-ui, sans-serif';
+
+        // Rocky surface texture — darker patches
+        ctx.fillStyle = 'rgba(0,0,0,0.2)';
+        ctx.beginPath(); ctx.arc(r * 0.15, -r * 0.1, r * 0.25, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(-r * 0.3, r * 0.25, r * 0.18, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(r * 0.35, r * 0.3, r * 0.12, 0, Math.PI * 2); ctx.fill();
+
+        // Deep craters with shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.35)';
+        ctx.beginPath(); ctx.arc(r * 0.2, -r * 0.2, r * 0.15, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(-r * 0.15, r * 0.15, r * 0.1, 0, Math.PI * 2); ctx.fill();
+        // Crater rims (light edge)
+        ctx.strokeStyle = 'rgba(180,160,140,0.3)';
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.arc(r * 0.2, -r * 0.2, r * 0.15, -1.5, 0.8); ctx.stroke();
+        ctx.beginPath(); ctx.arc(-r * 0.15, r * 0.15, r * 0.1, -1.2, 0.5); ctx.stroke();
+
+        // Specular highlight — top-left shine
+        ctx.fillStyle = 'rgba(255,255,255,0.2)';
+        ctx.beginPath();
+        ctx.arc(-r * 0.25, -r * 0.3, r * 0.2, 0, Math.PI * 2);
+        ctx.fill();
+        // Small hot specular
+        ctx.fillStyle = 'rgba(255,255,255,0.35)';
+        ctx.beginPath();
+        ctx.arc(-r * 0.3, -r * 0.35, r * 0.08, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Subtle edge rim light (backlit from space)
+        ctx.strokeStyle = 'rgba(100,140,180,0.15)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(0, 0, r * 0.85, 0.5, 2.5);
+        ctx.stroke();
+
+        // Health text
+        ctx.font = 'bold ' + Math.max(11, Math.floor(r * 0.55)) + 'px ui-sans-serif, system-ui, sans-serif';
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillStyle = '#FFF';
-        ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 3;
+        ctx.shadowColor = 'rgba(0,0,0,0.9)'; ctx.shadowBlur = 4;
         ctx.fillText(String(tg.health), 0, 0);
         ctx.shadowBlur = 0;
         ctx.restore();
@@ -9052,26 +9139,41 @@
         ctx.save();
         ctx.translate(tg.x, tg.y);
         ctx.rotate(tg.rotation);
-        // Metallic shard — triangle-ish
-        var grad = ctx.createLinearGradient(-r, -r, r, r);
-        grad.addColorStop(0, '#90A4AE');
-        grad.addColorStop(0.5, '#CFD8DC');
-        grad.addColorStop(1, '#607D8B');
+        // 3D metallic shard with lighting
+        var grad = ctx.createLinearGradient(-r * 0.5, -r, r * 0.5, r);
+        grad.addColorStop(0, '#c0c8d0');   // bright edge
+        grad.addColorStop(0.3, '#8090a0'); // mid
+        grad.addColorStop(0.6, '#506070'); // shadow
+        grad.addColorStop(1, '#2a3540');   // dark edge
         ctx.fillStyle = grad;
-        ctx.shadowColor = 'rgba(176,190,197,0.4)'; ctx.shadowBlur = 8;
         ctx.beginPath();
         ctx.moveTo(0, -r);
-        ctx.lineTo(r * 0.8, r * 0.4);
-        ctx.lineTo(r * 0.1, r);
-        ctx.lineTo(-r * 0.7, r * 0.5);
-        ctx.lineTo(-r * 0.3, -r * 0.3);
+        ctx.lineTo(r * 0.85, r * 0.35);
+        ctx.lineTo(r * 0.15, r);
+        ctx.lineTo(-r * 0.75, r * 0.45);
+        ctx.lineTo(-r * 0.35, -r * 0.35);
         ctx.closePath();
         ctx.fill();
-        ctx.shadowBlur = 0;
+        // Specular edge highlight
+        ctx.strokeStyle = 'rgba(200,220,240,0.3)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(0, -r);
+        ctx.lineTo(r * 0.85, r * 0.35);
+        ctx.stroke();
+        // Dark facet line (surface detail)
+        ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+        ctx.beginPath();
+        ctx.moveTo(-r * 0.1, -r * 0.4);
+        ctx.lineTo(r * 0.15, r);
+        ctx.stroke();
         // Health
-        ctx.font = 'bold ' + Math.max(10, Math.floor(r * 0.6)) + 'px ui-sans-serif, system-ui, sans-serif';
+        ctx.font = 'bold ' + Math.max(10, Math.floor(r * 0.55)) + 'px ui-sans-serif, system-ui, sans-serif';
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillStyle = '#FFF'; ctx.fillText(String(tg.health), 0, r * 0.15);
+        ctx.fillStyle = '#FFF';
+        ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 3;
+        ctx.fillText(String(tg.health), 0, r * 0.1);
+        ctx.shadowBlur = 0;
         ctx.restore();
       }
 
