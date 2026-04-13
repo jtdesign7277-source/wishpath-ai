@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-12-v244';
+    var APP_VERSION = '2026-04-12-v246';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -6960,19 +6960,13 @@
     }
 
     var DICEBEAR_STYLES = [
-      'notionists',
-      'rings',
-      'pixel-art',
-      'identicon',
-      'micah',
-      'bottts',
-      'avataaars-neutral',
-      'lorelei',
-      'dylan',
-      'big-smile'
+      // Original styles
+      'notionists', 'rings', 'lorelei', 'dylan', 'big-smile', 'croodles', 'miniavs', 'avataaars',
+      // NFT/crypto styles
+      'pixel-art', 'identicon', 'micah', 'bottts', 'avataaars-neutral'
     ];
     var _youAvatarSelected = null;
-    var _youAvatarSeed = 'User';
+    var _youAvatarSeed = 'Jeff';
 
     function getDiceBearUrl(style, seed) {
       return 'https://api.dicebear.com/9.x/' + (style || 'notionists') + '/svg?seed=' + encodeURIComponent(seed || _youAvatarSeed);
@@ -7938,7 +7932,7 @@
       var jStickBound = false;
       var fireBound = false;
       var canvasFireBound = false;
-      var MAX_PARTICLES = 200;
+      var MAX_PARTICLES = 80;
 
       // Power-ups
       var powerups = [];
@@ -8231,9 +8225,9 @@
           t.wobble += dt * 1.5;
           if (targetHitsPlayer(t)) {
             gameOver = true;
-            spawnExplosion(player.x, player.y, '#FF5252', 60);
-            spawnExplosion(player.x - 15, player.y + 10, '#FF9800', 30);
-            spawnExplosion(player.x + 15, player.y - 10, '#FDE047', 30);
+            spawnExplosion(player.x, player.y, '#FF5252', 18);
+            spawnExplosion(player.x - 15, player.y + 10, '#FF9800', 10);
+            spawnExplosion(player.x + 15, player.y - 10, '#FDE047', 10);
             saveHigh(score);
             var go = document.getElementById('wp-wish-runner-gameover');
             var fs = document.getElementById('wp-wish-runner-final');
@@ -8253,8 +8247,8 @@
               if (t.health <= 0) {
                 var pts = 15 + Math.floor((60 - t.size) * 0.3);
                 score += pts;
-                spawnExplosion(t.x, t.y, PLANET_COLORS[t.colorIdx].ring, 28);
-                spawnExplosion(t.x, t.y, PLANET_COLORS[t.colorIdx].base, 12);
+                spawnExplosion(t.x, t.y, PLANET_COLORS[t.colorIdx].ring, 10);
+                spawnExplosion(t.x, t.y, PLANET_COLORS[t.colorIdx].base, 6);
                 targets.splice(j, 1);
                 // Milestone check
                 var curMile = Math.floor(score / 100);
@@ -8663,23 +8657,25 @@
             ctx.fillStyle = pw.color;
             ctx.fillText('RAPID', 0, puR * 1.3);
           } else {
-            // Cannon - thick barrel with large round end
+            // Cannon - thick barrel with large round end (no ellipse — safer)
             ctx.fillStyle = pw.color;
-            // Large barrel
+            // Large barrel body (rounded rect via arcs)
             ctx.beginPath();
-            ctx.ellipse(0, -puR * 0.5, puR * 0.6, puR * 1.0, 0, 0, Math.PI * 2);
+            ctx.arc(0, -puR * 0.5, puR * 0.7, 0, Math.PI * 2);
             ctx.fill();
+            // Barrel tube
+            ctx.fillRect(-puR * 0.3, -puR * 1.6, puR * 0.6, puR * 1.2);
             // Muzzle (large round end)
             ctx.beginPath();
-            ctx.arc(0, -puR * 1.6, puR * 0.8, 0, Math.PI * 2);
+            ctx.arc(0, -puR * 1.6, puR * 0.5, 0, Math.PI * 2);
             ctx.fill();
-            // Breach (cylindrical base)
-            ctx.fillRect(-puR * 0.5, puR * 0.1, puR, puR * 0.4);
+            // Breach base
+            ctx.fillRect(-puR * 0.5, puR * 0.1, puR, puR * 0.35);
             // Muzzle highlight
             ctx.fillStyle = '#fff';
             ctx.globalAlpha = 0.4;
             ctx.beginPath();
-            ctx.arc(-puR * 0.2, -puR * 1.7, puR * 0.4, 0, Math.PI * 2);
+            ctx.arc(0, -puR * 1.6, puR * 0.25, 0, Math.PI * 2);
             ctx.fill();
             ctx.globalAlpha = 1;
             // Label
@@ -8709,31 +8705,33 @@
           }
         }
 
-        // Draw particles (explosions) — dramatic glow
-        for (var pi = 0; pi < particles.length; pi++) {
+        // Draw particles (explosions) — lightweight for mobile perf
+        var pLen = particles.length;
+        var heavyGlow = pLen < 40; // only use shadowBlur when few particles
+        for (var pi = 0; pi < pLen; pi++) {
           var p = particles[pi];
           var pAlpha = Math.max(0, p.life / p.maxLife);
           var pSize = p.size * (0.4 + pAlpha * 0.6);
-          ctx.save();
           ctx.globalAlpha = pAlpha;
           ctx.fillStyle = p.color;
-          ctx.shadowColor = p.color;
-          ctx.shadowBlur = 16 + pSize * 2;
+          if (heavyGlow) {
+            ctx.shadowColor = p.color;
+            ctx.shadowBlur = 10;
+          }
           ctx.beginPath();
           ctx.arc(p.x, p.y, pSize, 0, Math.PI * 2);
           ctx.fill();
-          // Inner bright core
-          if (pSize > 2) {
-            ctx.globalAlpha = pAlpha * 0.7;
+          if (heavyGlow) ctx.shadowBlur = 0;
+          // Inner bright core (skip when many particles)
+          if (pSize > 3 && pLen < 80) {
+            ctx.globalAlpha = pAlpha * 0.6;
             ctx.fillStyle = '#fff';
-            ctx.shadowBlur = 0;
             ctx.beginPath();
-            ctx.arc(p.x, p.y, pSize * 0.35, 0, Math.PI * 2);
+            ctx.arc(p.x, p.y, pSize * 0.3, 0, Math.PI * 2);
             ctx.fill();
           }
-          ctx.shadowBlur = 0;
-          ctx.restore();
         }
+        ctx.globalAlpha = 1;
 
         // Milestone flash overlay
         if (milestoneFlash > 0) {
@@ -8764,8 +8762,10 @@
         if (!_wrLastTs) _wrLastTs = ts;
         var dt = Math.min(0.055, (ts - _wrLastTs) / 1000);
         _wrLastTs = ts;
-        update(dt);
-        draw();
+        try {
+          update(dt);
+          draw();
+        } catch(e) { console.error('WR loop error:', e); }
         _wrRaf = requestAnimationFrame(loop);
       }
 
