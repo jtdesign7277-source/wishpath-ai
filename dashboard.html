@@ -11963,7 +11963,7 @@
 
         var res = await fetch(EDGE_FN, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: await getAuthHeaders(),
           body: JSON.stringify({ coachMode: true, model: 'claude-sonnet-4-20250514', systemPrompt: systemPrompt, messages: coachHistory.slice(-10) }),
         });
 
@@ -12561,7 +12561,7 @@
 
         var res = await fetch(EDGE_FN, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: await getAuthHeaders(),
           body: JSON.stringify({ coachMode: true, model: 'claude-sonnet-4-20250514', systemPrompt: systemPrompt, messages: notesAIHistory.slice(-10) }),
         });
         var data = await res.json();
@@ -13079,7 +13079,7 @@
 
         var res = await fetch(EDGE_FN, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: await getAuthHeaders(),
           body: JSON.stringify({ coachMode: true, model: 'claude-sonnet-4-20250514', systemPrompt: systemPrompt, messages: todoCoachHistory.slice(-10) }),
         });
         var data = await res.json();
@@ -13161,7 +13161,7 @@
       try {
         var res = await fetch(EDGE_FN, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: await getAuthHeaders(),
           body: JSON.stringify({ emailOnly: true, email: email, roadmap: roadmap, wish: wish }),
         });
         var data = await res.json();
@@ -13298,7 +13298,7 @@
       try {
         var res = await fetch(EDGE_FN, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: await getAuthHeaders(),
           body: JSON.stringify({ wish: wish, age: age || null, location: location || null, budget: budget || null, time: time || null, email: email }),
         });
         var data = await res.json();
@@ -13491,7 +13491,7 @@
         var systemPrompt = 'You are WishPath Coach, an encouraging, strategic executive coach. Help the user with their goal or question. Be practical, actionable, and motivating. Use clear formatting with headers and bullet points where helpful. Current date is ' + new Date().toLocaleDateString() + '. Keep your responses concise and actionable. Use 2-3 short paragraphs maximum. Only provide longer responses when the user explicitly asks for more detail or a comprehensive analysis.';
         var res = await fetch(EDGE_FN, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: await getAuthHeaders(),
           body: JSON.stringify({ coachMode: true, model: 'claude-sonnet-4-20250514', systemPrompt: systemPrompt, messages: mobileHomeChatHistory.slice(-10) }),
         });
         var data = await res.json();
@@ -13713,7 +13713,7 @@
       try {
         await fetch('https://mszilrexlupzthauoaxb.supabase.co/functions/v1/feedback-notify', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: await getAuthHeaders(),
           body: JSON.stringify({ category: category, rating: rating, message: message, userEmail: userEmail })
         });
       } catch (e) {
@@ -14050,7 +14050,7 @@
         var systemPrompt = 'You are WishPath Life Coach — a warm, wise, and practical life coach. You help with anything: career, relationships, health, finances, goals, mindset, habits, or just venting. Be genuinely caring, insightful, and actionable. Speak like a trusted mentor, not a corporate chatbot. Use natural conversational tone. Keep responses to 2-3 short paragraphs unless they ask for more detail. Current date: ' + new Date().toLocaleDateString() + '.';
         var res = await fetch(EDGE_FN, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: await getAuthHeaders(),
           body: JSON.stringify({ coachMode: true, model: 'claude-sonnet-4-20250514', systemPrompt: systemPrompt, messages: _lcHistory.slice(-12) }),
         });
         var data = await res.json();
@@ -15139,7 +15139,7 @@
       var email = session ? session.user.email : '';
       try {
         var res = await fetch(EDGE_FN, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          method: 'POST', headers: await getAuthHeaders(),
           body: JSON.stringify({ wish: wish, age: age||null, location: location||null, budget: budget||null, time: time||null, email: email }),
         });
         var data = await res.json();
@@ -15297,7 +15297,7 @@
           });
           csvData += '\n';
         });
-        await fetch(EDGE_FN, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        await fetch(EDGE_FN, { method: 'POST', headers: await getAuthHeaders(),
           body: JSON.stringify({ emailOnly: true, email: email, wish: title, roadmap: { title: 'Chart Studio: ' + title, summary: csvData } }) });
         alert('Email sent to ' + email + '!');
       } catch(e) { alert('Email failed.'); }
@@ -15929,7 +15929,7 @@
           try {
             var res = await fetch(SUPABASE_FN + '/article-reader', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: await getAuthHeaders(),
               body: JSON.stringify({
                 url: articleData.url,
                 title: articleData.title || '',
@@ -15951,7 +15951,7 @@
             try {
               var aiRes = await fetch(EDGE_FN, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: await getAuthHeaders(),
                 body: JSON.stringify({
                   coachMode: true,
                   model: 'claude-sonnet-4-20250514',
@@ -16873,7 +16873,7 @@
         var systemPrompt = 'You are the WishPath Portfolio AI Coach — an expert investment advisor. The user\'s current portfolio:\n\n' + (holdingsCtx || 'No holdings yet.') + portfolioSummary + '\n\nIMPORTANT: Always use the exact portfolio totals provided above. Never estimate or recalculate them — the numbers above are computed in real time from market data.\n\nProvide insightful, data-driven advice. Be specific with numbers. When showing allocation breakdowns, sector analysis, or performance data, include percentage figures so charts can be auto-generated. For visual data, you can use these markers to render Highcharts:\n- [CHARTDATA]{ ...highcharts config JSON... }[/CHARTDATA] for custom charts\n- Or just list items with percentages and a pie chart will auto-render\nKeep advice actionable. Current date: ' + new Date().toLocaleDateString() + '. Keep your responses concise and actionable. Use 2-3 short paragraphs maximum. Only provide longer responses when the user explicitly asks for more detail or a comprehensive analysis.';
 
         var res = await fetch(EDGE_FN, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          method: 'POST', headers: await getAuthHeaders(),
           body: JSON.stringify({ coachMode: true, model: 'claude-sonnet-4-20250514', systemPrompt: systemPrompt, messages: portfolioCoachHistory.slice(-10) })
         });
         var data = await res.json();
@@ -16956,7 +16956,7 @@
         var session = await getSession(); var email = session ? session.user.email : '';
         if (!email) { alert('No email found.'); btn.disabled = false; btn.textContent = '\uD83D\uDCE7 Email to Me'; return; }
         var content = msgDiv.innerText.substring(0, 5000);
-        await fetch(EDGE_FN, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        await fetch(EDGE_FN, { method: 'POST', headers: await getAuthHeaders(),
           body: JSON.stringify({ emailOnly: true, email: email, wish: 'AI Coach Export', roadmap: { title: 'WishPath AI Export', summary: content } }) });
         btn.textContent = 'Sent!';
         setTimeout(function() { btn.disabled = false; btn.textContent = '\uD83D\uDCE7 Email to Me'; }, 2000);
@@ -17381,7 +17381,7 @@
       var systemPrompt = 'You are Chart Studio, a premium Highcharts visualization engine in WishPath. The user is viewing a saved chart and wants to customize it. Current chart config:\n' + currentConfig + '\n\nUser portfolio:\n' + (holdingsCtx || 'No holdings.') + '\n\nWhen modifying the chart, output a [CHARTDATA] block with the COMPLETE updated Highcharts config JSON. Always include a brief explanation. Keep responses concise (1-2 paragraphs max).';
 
       try {
-        var res = await fetch(EDGE_FN, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        var res = await fetch(EDGE_FN, { method: 'POST', headers: await getAuthHeaders(),
           body: JSON.stringify({ coachMode: true, model: 'claude-sonnet-4-20250514', systemPrompt: systemPrompt, messages: window._fsChartHistory.slice(-8) }) });
         var data = await res.json();
         var reply = data.reply || "Couldn't process that.";
@@ -19009,7 +19009,7 @@
       var systemPrompt = 'You are Chart Studio, a premium Highcharts-powered visualization engine in WishPath. Create beautiful, insightful financial charts. The user\'s portfolio:\n' + (holdingsCtx || 'No holdings.') + '\n\nWhen creating charts, output a [CHARTDATA] block with valid Highcharts config JSON. Example:\n[CHARTDATA]\n{"chart":{"type":"pie"},"title":{"text":"Allocation"},"series":[{"name":"Value","data":[{"name":"AAPL","y":5000},{"name":"MSFT","y":3000}]}]}\n[/CHARTDATA]\n\nAlways include a brief text explanation before the chart data. Use real data when available. Keep your responses concise and actionable. Use 2-3 short paragraphs maximum. Only provide longer responses when the user explicitly asks for more detail or a comprehensive analysis.';
 
       try {
-        var res = await fetch(EDGE_FN, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        var res = await fetch(EDGE_FN, { method: 'POST', headers: await getAuthHeaders(),
           body: JSON.stringify({ coachMode: true, model: 'claude-sonnet-4-20250514', systemPrompt: systemPrompt, messages: chartStudioHistory.slice(-10) }) });
         var data = await res.json();
         var reply = data.reply || "Couldn't process that. Try again.";
@@ -19147,7 +19147,7 @@
 
     async function fetchNewsFeedArticles(requests) {
       for (var i = 0; i < requests.length; i++) {
-        var res = await fetch(SUPABASE_FN + '/news?' + requests[i]);
+        var res = await fetch(SUPABASE_FN + '/news?' + requests[i], { headers: await getAuthHeaders() });
         var data = await res.json();
         if (data && Array.isArray(data.articles) && data.articles.length > 0) {
           return data.articles;
@@ -19718,7 +19718,7 @@
       if (country) filterCtx += ' Country: ' + country + '.';
       if (industry) filterCtx += ' Industry: ' + industry + '.';
       try {
-        var res = await fetch(EDGE_FN, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        var res = await fetch(EDGE_FN, { method: 'POST', headers: await getAuthHeaders(),
           body: JSON.stringify({ coachMode: true, model: 'claude-sonnet-4-20250514',
             systemPrompt: 'Financial news aggregator. Tickers: ' + tickerStr + '.' + filterCtx + ' Return ONLY JSON array: [{"title":"...","source":"...","sentiment":"bullish|bearish|neutral","aiSummary":"..."}]. Return 5 articles. Keep your responses concise and actionable. Use 2-3 short paragraphs maximum. Only provide longer responses when the user explicitly asks for more detail or a comprehensive analysis.',
             messages: [{ role: 'user', content: 'Get top 5 market news.' + filterCtx }] }) });
@@ -19747,7 +19747,7 @@
       msgsEl.innerHTML += '<div class="msg ai" id="ccCoachTyping-' + idx + '"><span class="thinking-dots"><span></span><span></span><span></span></span></div>';
       msgsEl.scrollTop = msgsEl.scrollHeight;
       try {
-        var res = await fetch(EDGE_FN, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        var res = await fetch(EDGE_FN, { method: 'POST', headers: await getAuthHeaders(),
           body: JSON.stringify({ coachMode: true, model: 'claude-sonnet-4-20250514', systemPrompt: 'You are the WishPath AI Coach — expert financial advisor. Be helpful, concise, data-driven. Keep your responses concise and actionable. Use 2-3 short paragraphs maximum. Only provide longer responses when the user explicitly asks for more detail or a comprehensive analysis.', messages: [{ role: 'user', content: msg }] }) });
         var data = await res.json();
         var reply = data.reply || "Couldn't process that.";
@@ -20044,7 +20044,7 @@
 
     async function searchTickers(query, dropdown, input) {
       try {
-        var res = await fetch(SUPABASE_FN + '/stock-search?q=' + encodeURIComponent(query));
+        var res = await fetch(SUPABASE_FN + '/stock-search?q=' + encodeURIComponent(query), { headers: await getAuthHeaders() });
         var results = await res.json();
         if (!Array.isArray(results) || results.length === 0) { dropdown.style.display = 'none'; return; }
         // Filter to stocks/ETFs on major US exchanges + crypto
