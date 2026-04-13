@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-13-v273';
+    var APP_VERSION = '2026-04-13-v274';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -7759,6 +7759,30 @@
       if (el) el.remove();
     }
 
+    // ── Reusable markdown→HTML converter ──
+    function formatMdToHtml(text) {
+      // Process tables BEFORE converting newlines
+      var result = convertMarkdownTables(text);
+      // Convert standalone pipe-delimited lines
+      result = result.replace(/^\|(.+)\|$/gm, function(line) {
+        var cells = line.split('|').map(function(c){ return c.trim(); }).filter(Boolean);
+        if (cells.length < 2) return line;
+        return '<div style="display:flex;gap:8px;padding:4px 0;font-size:0.9em;flex-wrap:wrap;">' + cells.map(function(c){ return '<span>' + c + '</span>'; }).join('') + '</div>';
+      });
+      // Bold BEFORE newline conversion (works on raw text)
+      result = result.replace(/\*\*(.+?)\*\*/g, '<strong style="color:#e6edf3;">$1</strong>');
+      // Headers BEFORE newline conversion (^ works with real \n + m flag)
+      result = result.replace(/^###\s*(.+)$/gm, '<div style="font-weight:700;color:#e6edf3;font-size:0.95em;margin:12px 0 6px;">$1</div>');
+      result = result.replace(/^##\s*(.+)$/gm, '<div style="font-weight:700;color:rgb(113,50,245);font-size:1.05em;margin:14px 0 8px;border-bottom:1px solid rgba(113,50,245,0.2);padding-bottom:6px;">$1</div>');
+      // Bullets BEFORE newline conversion (^ works with real \n + m flag)
+      result = result.replace(/^- (.+)$/gm, '<div style="padding:4px 0 4px 16px;position:relative;"><span style="position:absolute;left:0;color:rgb(113,50,245);">•</span>$1</div>');
+      // Numbered lists BEFORE newline conversion
+      result = result.replace(/^\d+\.\s+(.+)$/gm, function(m, p1) { return '<div style="padding:4px 0 4px 8px;color:#d1d5db;">' + p1 + '</div>'; });
+      // NOW convert remaining newlines to <br>
+      result = result.replace(/\n/g, '<br>');
+      return result;
+    }
+
     function typewriterEffect(container, text, callback) {
       var msgDiv = document.createElement('div');
       msgDiv.className = 'msg ai';
@@ -7767,20 +7791,8 @@
       // Scroll to show TOP of new message so user reads from the beginning
       container.scrollTop = msgDiv.offsetTop - 8;
 
-      // Rich markdown → HTML conversion (tables first, before \n→<br>)
-      var htmlText = convertMarkdownTables(text)
-        // Convert standalone pipe-delimited lines (no header separator) into styled rows
-        .replace(/^\|(.+)\|$/gm, function(line) {
-          var cells = line.split('|').map(function(c){ return c.trim(); }).filter(Boolean);
-          if (cells.length < 2) return line;
-          return '<div style="display:flex;gap:8px;padding:4px 0;font-size:0.9em;flex-wrap:wrap;">' + cells.map(function(c){ return '<span>' + c + '</span>'; }).join('') + '</div>';
-        })
-        .replace(/\n/g, '<br>')
-        .replace(/###\s*(.+?)(<br>|$)/g, '<div style="font-weight:700;color:#e6edf3;font-size:0.95em;margin:12px 0 6px;">$1</div>')
-        .replace(/##\s*(.+?)(<br>|$)/g, '<div style="font-weight:700;color:rgb(113,50,245);font-size:1.05em;margin:14px 0 8px;border-bottom:1px solid rgba(113,50,245,0.2);padding-bottom:6px;">$1</div>')
-        .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#e6edf3;">$1</strong>')
-        .replace(/^- (.+?)(<br>|$)/gm, '<div style="padding:4px 0 4px 16px;position:relative;"><span style="position:absolute;left:0;color:rgb(113,50,245);">•</span>$1</div>')
-        .replace(/^\d+\.\s+(.+?)(<br>|$)/gm, function(m, p1) { return '<div style="padding:4px 0 4px 8px;color:#d1d5db;">' + p1 + '</div>'; });
+      // Rich markdown → HTML conversion using shared formatter
+      var htmlText = formatMdToHtml(text);
 
       var i = 0;
       var speed = 8;
@@ -11624,7 +11636,7 @@
         msgs.innerHTML = '';
         coachHistory.forEach(function(m) {
           var cls = m.role === 'user' ? 'user' : 'ai';
-          var content = m.role === 'user' ? m.content.replace(/</g,'&lt;') : m.content.replace(/\n/g,'<br>').replace(/</g,'&lt;').replace(/&lt;br>/g,'<br>');
+          var content = m.role === 'user' ? m.content.replace(/</g,'&lt;') : formatMdToHtml(m.content);
           msgs.innerHTML += '<div class="msg ' + cls + '">' + content + '</div>';
         });
         if (coachHistory.length === 0) {
@@ -11654,7 +11666,7 @@
           msgs.innerHTML = '';
           coachHistory.forEach(function(m) {
             var cls = m.role === 'user' ? 'user' : 'ai';
-            var content = m.role === 'user' ? m.content.replace(/</g,'&lt;') : m.content.replace(/\n/g,'<br>').replace(/</g,'&lt;').replace(/&lt;br>/g,'<br>');
+            var content = m.role === 'user' ? m.content.replace(/</g,'&lt;') : formatMdToHtml(m.content);
             msgs.innerHTML += '<div class="msg ' + cls + '">' + content + '</div>';
           });
           if (coachHistory.length === 0) {
@@ -13278,12 +13290,7 @@
         var thinking = document.getElementById('mobileHomeThinking');
         if (thinking) thinking.remove();
         var msgs = document.getElementById('mobileChatMessages');
-        var htmlReply = convertMarkdownTables(reply)
-          .replace(/\n/g, '<br>')
-          .replace(/###\s*(.+?)(<br>|$)/g, '<div style="font-weight:700;color:#e6edf3;font-size:0.95em;margin:12px 0 6px;">$1</div>')
-          .replace(/##\s*(.+?)(<br>|$)/g, '<div style="font-weight:700;color:rgb(113,50,245);font-size:1.05em;margin:14px 0 8px;border-bottom:1px solid rgba(113,50,245,0.2);padding-bottom:6px;">$1</div>')
-          .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#e6edf3;">$1</strong>')
-          .replace(/^- (.+?)(<br>|$)/gm, '<div style="padding:4px 0 4px 16px;position:relative;"><span style="position:absolute;left:0;color:rgb(113,50,245);">•</span>$1</div>');
+        var htmlReply = formatMdToHtml(reply);
         var aiMsgWrap = document.createElement('div');
         aiMsgWrap.style.marginBottom = '16px';
         aiMsgWrap.innerHTML = '<div style="display:inline-block;max-width:90%;background:#202020;padding:12px 16px;border-radius:16px 16px 16px 4px;color:rgba(255,255,255,0.85);font-size:15px;line-height:1.6;">' + htmlReply + '</div>';
@@ -13767,13 +13774,14 @@
 
       var result = formatted.join('\n');
 
-      // Format basic markdown
+      // Format basic markdown — BEFORE \n→<br> so ^ anchors work
       result = result
-        .replace(/\n/g, '<br>')
-        .replace(/###\s*(.+?)(<br>|$)/g, '<div class="ai-title-h3">$1</div>')
-        .replace(/##\s*(.+?)(<br>|$)/g, '<div class="ai-title-h2">$1</div>')
         .replace(/\*\*(.+?)\*\*/g, '<strong class="ai-bold">$1</strong>')
-        .replace(/^- (.+?)(<br>|$)/gm, '<div class="ai-bullet">$1</div>');
+        .replace(/^###\s*(.+)$/gm, '<div class="ai-title-h3">$1</div>')
+        .replace(/^##\s*(.+)$/gm, '<div class="ai-title-h2">$1</div>')
+        .replace(/^- (.+)$/gm, '<div class="ai-bullet">$1</div>')
+        .replace(/^\d+\.\s+(.+)$/gm, '<div class="ai-bullet">$1</div>')
+        .replace(/\n/g, '<br>');
 
       return result;
     }
