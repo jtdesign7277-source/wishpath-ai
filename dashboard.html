@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-13-v280';
+    var APP_VERSION = '2026-04-13-v281';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -4142,18 +4142,10 @@
       to { opacity: 1; }
     }
     .streak-splash .streak-tap-hint {
-      position: relative;
-      z-index: 1;
-      font-size: 13px;
-      font-weight: 600;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.5);
-      margin-top: 40px;
-      opacity: 0;
+      display: none;
     }
     .streak-splash .streak-tap-hint.animate {
-      animation: tapHintPulse 1.8s ease-in-out infinite 1.6s;
+      display: none;
     }
     @keyframes tapHintPulse {
       0%, 100% { opacity: 0.35; }
@@ -8264,10 +8256,10 @@
       overlay.addEventListener('touchstart', _dismissStreak, { passive: true });
       overlay.addEventListener('click', _dismissStreak);
 
-      // Safety fallback: auto-dismiss after 8s if user doesn't tap (desktop, etc.)
+      // Auto-dismiss after 2.5s — show the streak briefly then get to the app
       setTimeout(function() {
         if (!_streakDismissed) _dismissStreak();
-      }, 8000);
+      }, 2500);
     }
 
     (function wishRunnerGameIIFE() {
@@ -9804,72 +9796,118 @@
         ctx.restore();
       }
 
+      // ── Asteroid color palettes keyed by health seed ──
+      var _astPalettes = [
+        { core: [80,140,220],  mid: [50,90,160],  dark: [20,40,80],  vein: [120,180,255], glow: 'rgba(80,160,255,0.3)' },   // ice blue
+        { core: [200,80,220],  mid: [140,40,160],  dark: [60,15,80],  vein: [255,120,255], glow: 'rgba(200,80,255,0.3)' },   // purple crystal
+        { core: [60,200,140],  mid: [30,140,90],   dark: [10,60,40],  vein: [100,255,180], glow: 'rgba(60,255,160,0.3)' },   // emerald
+        { core: [220,140,40],  mid: [170,90,20],   dark: [80,40,5],   vein: [255,200,80],  glow: 'rgba(255,180,40,0.3)' },   // molten gold
+        { core: [220,60,60],   mid: [160,30,30],   dark: [70,10,10],  vein: [255,100,80],  glow: 'rgba(255,60,40,0.3)' },    // lava red
+      ];
+
       function drawAsteroid(tg) {
         var r = tg.size * 0.5;
+        var pal = _astPalettes[(tg.health || 0) % _astPalettes.length];
         ctx.save();
         ctx.translate(tg.x, tg.y);
         ctx.rotate(tg.rotation);
 
-        // 3D irregular rocky shape with 10 vertices
+        // Outer glow aura
+        var glowR = r * 1.5;
+        var aura = ctx.createRadialGradient(0, 0, r * 0.6, 0, 0, glowR);
+        aura.addColorStop(0, pal.glow);
+        aura.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = aura;
+        ctx.fillRect(-glowR, -glowR, glowR * 2, glowR * 2);
+
+        // Irregular rocky silhouette — 12 vertices with seeded wobble
+        var verts = [];
+        for (var i = 0; i < 12; i++) {
+          var angle = (i / 12) * Math.PI * 2;
+          var seed = tg.health * 7 + i * 13;
+          var wobble = 0.7 + Math.sin(seed * 0.73) * 0.15 + Math.cos(seed * 1.1 + tg.wobble * 0.3) * 0.1;
+          verts.push({ x: Math.cos(angle) * r * wobble, y: Math.sin(angle) * r * wobble });
+        }
         ctx.beginPath();
-        for (var i = 0; i < 10; i++) {
-          var angle = (i / 10) * Math.PI * 2;
-          var wobble = 0.65 + Math.sin(i * 4.3 + tg.wobble * 0.5) * 0.2 + Math.cos(i * 2.1) * 0.15;
-          var px = Math.cos(angle) * r * wobble;
-          var py = Math.sin(angle) * r * wobble;
-          if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        ctx.moveTo(verts[0].x, verts[0].y);
+        for (var i = 1; i < verts.length; i++) {
+          var prev = verts[i - 1], cur = verts[i];
+          var cpx = (prev.x + cur.x) * 0.5 + (Math.sin(i * 5.7) * r * 0.08);
+          var cpy = (prev.y + cur.y) * 0.5 + (Math.cos(i * 3.3) * r * 0.08);
+          ctx.quadraticCurveTo(cpx, cpy, cur.x, cur.y);
         }
         ctx.closePath();
+        ctx.clip();
 
-        // 3D sphere gradient — light source from top-left
-        var bodyGrad = ctx.createRadialGradient(-r * 0.3, -r * 0.3, r * 0.05, 0, 0, r);
-        bodyGrad.addColorStop(0, '#b8a090');    // bright lit face
-        bodyGrad.addColorStop(0.25, '#8a7060'); // mid tone
-        bodyGrad.addColorStop(0.55, '#5a4535'); // shadow start
-        bodyGrad.addColorStop(0.85, '#2a1a10'); // deep shadow
-        bodyGrad.addColorStop(1, '#0a0505');    // terminator edge
+        // Base body — rich radial gradient with color
+        var bodyGrad = ctx.createRadialGradient(-r * 0.25, -r * 0.25, r * 0.05, 0, 0, r);
+        bodyGrad.addColorStop(0, 'rgb(' + pal.core.join(',') + ')');
+        bodyGrad.addColorStop(0.3, 'rgb(' + pal.mid.join(',') + ')');
+        bodyGrad.addColorStop(0.65, 'rgb(' + pal.dark.join(',') + ')');
+        bodyGrad.addColorStop(1, 'rgb(' + Math.floor(pal.dark[0]*0.3) + ',' + Math.floor(pal.dark[1]*0.3) + ',' + Math.floor(pal.dark[2]*0.3) + ')');
         ctx.fillStyle = bodyGrad;
-        ctx.fill();
+        ctx.fillRect(-r, -r, r * 2, r * 2);
 
-        // Rocky surface texture — darker patches
-        ctx.fillStyle = 'rgba(0,0,0,0.2)';
-        ctx.beginPath(); ctx.arc(r * 0.15, -r * 0.1, r * 0.25, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.arc(-r * 0.3, r * 0.25, r * 0.18, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.arc(r * 0.35, r * 0.3, r * 0.12, 0, Math.PI * 2); ctx.fill();
+        // Surface detail — craters with depth
+        var craters = [
+          { x: 0.2, y: -0.22, r: 0.18 }, { x: -0.25, y: 0.2, r: 0.14 },
+          { x: 0.35, y: 0.25, r: 0.1 }, { x: -0.1, y: -0.35, r: 0.08 },
+          { x: 0.05, y: 0.4, r: 0.12 }
+        ];
+        for (var ci = 0; ci < craters.length; ci++) {
+          var cr = craters[ci];
+          // Crater shadow (sunken)
+          ctx.fillStyle = 'rgba(0,0,0,0.35)';
+          ctx.beginPath(); ctx.arc(cr.x * r, cr.y * r, cr.r * r, 0, Math.PI * 2); ctx.fill();
+          // Inner darker pit
+          ctx.fillStyle = 'rgba(0,0,0,0.25)';
+          ctx.beginPath(); ctx.arc(cr.x * r + 1, cr.y * r + 1, cr.r * r * 0.6, 0, Math.PI * 2); ctx.fill();
+          // Crater rim highlight (top-left lit)
+          ctx.strokeStyle = 'rgba(' + pal.vein.join(',') + ',0.3)';
+          ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.arc(cr.x * r, cr.y * r, cr.r * r, -2.2, -0.3); ctx.stroke();
+        }
 
-        // Deep craters with shadow
-        ctx.fillStyle = 'rgba(0,0,0,0.35)';
-        ctx.beginPath(); ctx.arc(r * 0.2, -r * 0.2, r * 0.15, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.arc(-r * 0.15, r * 0.15, r * 0.1, 0, Math.PI * 2); ctx.fill();
-        // Crater rims (light edge)
-        ctx.strokeStyle = 'rgba(180,160,140,0.3)';
-        ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.arc(r * 0.2, -r * 0.2, r * 0.15, -1.5, 0.8); ctx.stroke();
-        ctx.beginPath(); ctx.arc(-r * 0.15, r * 0.15, r * 0.1, -1.2, 0.5); ctx.stroke();
-
-        // Specular highlight — top-left shine
-        ctx.fillStyle = 'rgba(255,255,255,0.2)';
-        ctx.beginPath();
-        ctx.arc(-r * 0.25, -r * 0.3, r * 0.2, 0, Math.PI * 2);
-        ctx.fill();
-        // Small hot specular
-        ctx.fillStyle = 'rgba(255,255,255,0.35)';
-        ctx.beginPath();
-        ctx.arc(-r * 0.3, -r * 0.35, r * 0.08, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Subtle edge rim light (backlit from space)
-        ctx.strokeStyle = 'rgba(100,140,180,0.15)';
+        // Glowing veins / mineral seams
+        ctx.strokeStyle = 'rgba(' + pal.vein.join(',') + ',0.25)';
         ctx.lineWidth = 1.5;
         ctx.beginPath();
-        ctx.arc(0, 0, r * 0.85, 0.5, 2.5);
+        ctx.moveTo(-r * 0.4, -r * 0.1);
+        ctx.quadraticCurveTo(-r * 0.1, r * 0.15, r * 0.3, -r * 0.05);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(r * 0.1, r * 0.3);
+        ctx.quadraticCurveTo(r * 0.25, r * 0.1, r * 0.4, r * 0.35);
         ctx.stroke();
 
-        // Health text
-        ctx.font = 'bold ' + Math.max(11, Math.floor(r * 0.55)) + 'px ui-sans-serif, system-ui, sans-serif';
+        // Specular highlight — top-left wet shine
+        var specGrad = ctx.createRadialGradient(-r * 0.3, -r * 0.3, 0, -r * 0.3, -r * 0.3, r * 0.35);
+        specGrad.addColorStop(0, 'rgba(255,255,255,0.35)');
+        specGrad.addColorStop(0.5, 'rgba(255,255,255,0.1)');
+        specGrad.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = specGrad;
+        ctx.fillRect(-r, -r, r * 2, r * 2);
+
+        // Rim light — backlit edge glow
+        ctx.restore();
+        ctx.save();
+        ctx.translate(tg.x, tg.y);
+        ctx.rotate(tg.rotation);
+        ctx.strokeStyle = 'rgba(' + pal.vein.join(',') + ',0.2)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        for (var i = 0; i < verts.length; i++) {
+          if (i === 0) ctx.moveTo(verts[i].x, verts[i].y);
+          else ctx.lineTo(verts[i].x, verts[i].y);
+        }
+        ctx.closePath();
+        ctx.stroke();
+
+        // Health number
+        ctx.font = 'bold ' + Math.max(12, Math.floor(r * 0.5)) + 'px ui-sans-serif, system-ui, sans-serif';
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillStyle = '#FFF';
-        ctx.shadowColor = 'rgba(0,0,0,0.9)'; ctx.shadowBlur = 4;
+        ctx.fillStyle = '#fff';
+        ctx.shadowColor = 'rgba(0,0,0,0.9)'; ctx.shadowBlur = 6;
         ctx.fillText(String(tg.health), 0, 0);
         ctx.shadowBlur = 0;
         ctx.restore();
