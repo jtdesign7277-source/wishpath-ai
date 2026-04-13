@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-13-v259';
+    var APP_VERSION = '2026-04-13-v260';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -8410,41 +8410,137 @@
         });
       }
 
+      // Galaxy Attack style explosion system
+      var explosionEffects = []; // screen-level explosion overlays
+
       function spawnExplosion(x, y, color, count) {
         var n = count || 8;
-        // Cap total particles to prevent freeze
+        var isBig = n >= 15; // big explosion = enemy death or player death
+        // Cap total particles
         if (particles.length > MAX_PARTICLES) {
           particles.splice(0, particles.length - MAX_PARTICLES + n);
         }
+
+        // Core fireball particles — orange/yellow like Galaxy Attack
+        var fireColors = ['#FF6600', '#FF9900', '#FFCC00', '#FF4400', '#FFFFFF', color || '#FDE047'];
         for (var i = 0; i < n; i++) {
           var angle = Math.random() * Math.PI * 2;
-          var spd = 60 + Math.random() * 320;
-          var life = 0.6 + Math.random() * 1.0;
+          var spd = 40 + Math.random() * 280;
+          var life = 0.4 + Math.random() * 0.8;
           particles.push({
-            x: x + (Math.random() - 0.5) * 12,
-            y: y + (Math.random() - 0.5) * 12,
+            x: x + (Math.random() - 0.5) * 8,
+            y: y + (Math.random() - 0.5) * 8,
             vx: Math.cos(angle) * spd,
             vy: Math.sin(angle) * spd,
-            life: life,
-            maxLife: life,
-            size: 4 + Math.random() * 10,
-            color: color || '#FDE047'
+            life: life, maxLife: life,
+            size: isBig ? (6 + Math.random() * 14) : (3 + Math.random() * 8),
+            color: fireColors[Math.floor(Math.random() * fireColors.length)]
           });
         }
-        // Extra ring of bright sparks for drama
-        var sparkCount = Math.min(n, 16);
+
+        // Expanding fireball rings (the big orange bubbles from Galaxy Attack)
+        if (isBig) {
+          var ringCount = Math.min(6, Math.floor(n / 3));
+          for (var ri = 0; ri < ringCount; ri++) {
+            var rAngle = Math.random() * Math.PI * 2;
+            var rDist = 10 + Math.random() * 30;
+            particles.push({
+              x: x + Math.cos(rAngle) * rDist,
+              y: y + Math.sin(rAngle) * rDist,
+              vx: Math.cos(rAngle) * (20 + Math.random() * 60),
+              vy: Math.sin(rAngle) * (20 + Math.random() * 60),
+              life: 0.5 + Math.random() * 0.4,
+              maxLife: 0.5 + Math.random() * 0.4,
+              size: 15 + Math.random() * 25, // BIG fireball clouds
+              color: Math.random() > 0.3 ? '#FF8800' : '#FFAA00'
+            });
+          }
+        }
+
+        // White-hot sparks ring
+        var sparkCount = isBig ? 14 : 6;
         for (var s = 0; s < sparkCount; s++) {
-          var sAngle = (s / sparkCount) * Math.PI * 2;
-          var sSpd = 220 + Math.random() * 200;
+          var sAngle = (s / sparkCount) * Math.PI * 2 + Math.random() * 0.3;
+          var sSpd = 200 + Math.random() * 250;
           particles.push({
             x: x, y: y,
             vx: Math.cos(sAngle) * sSpd,
             vy: Math.sin(sAngle) * sSpd,
-            life: 0.35 + Math.random() * 0.35,
-            maxLife: 0.35 + Math.random() * 0.35,
-            size: 2 + Math.random() * 3,
+            life: 0.2 + Math.random() * 0.3,
+            maxLife: 0.2 + Math.random() * 0.3,
+            size: 1.5 + Math.random() * 2.5,
             color: '#fff'
           });
+        }
+
+        // Screen-level explosion overlay (sunburst rays + flash) for big explosions
+        if (isBig) {
+          explosionEffects.push({
+            x: x, y: y,
+            life: 0.55, maxLife: 0.55,
+            rays: 12 + Math.floor(Math.random() * 8), // number of sunburst rays
+            maxRadius: 80 + n * 4, // how far rays extend
+            flash: true
+          });
+        }
+      }
+
+      function updateExplosionEffects(dt) {
+        for (var i = explosionEffects.length - 1; i >= 0; i--) {
+          explosionEffects[i].life -= dt;
+          if (explosionEffects[i].life <= 0) explosionEffects.splice(i, 1);
+        }
+      }
+
+      function drawExplosionEffects() {
+        for (var i = 0; i < explosionEffects.length; i++) {
+          var fx = explosionEffects[i];
+          var progress = 1 - (fx.life / fx.maxLife); // 0 → 1
+          var alpha = fx.life / fx.maxLife; // 1 → 0
+
+          ctx.save();
+          ctx.translate(fx.x, fx.y);
+
+          // Screen flash (white overlay, fades fast)
+          if (fx.flash && progress < 0.3) {
+            var flashAlpha = (0.3 - progress) / 0.3 * 0.5;
+            ctx.globalAlpha = flashAlpha;
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(-fx.x, -fx.y, GW, GH);
+          }
+
+          // Expanding hot core
+          var coreRadius = fx.maxRadius * 0.3 * progress;
+          var coreAlpha = alpha * 0.9;
+          ctx.globalAlpha = coreAlpha;
+          var coreGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, coreRadius);
+          coreGrad.addColorStop(0, 'rgba(255,255,255,0.95)');
+          coreGrad.addColorStop(0.3, 'rgba(255,220,100,0.8)');
+          coreGrad.addColorStop(0.6, 'rgba(255,140,0,0.5)');
+          coreGrad.addColorStop(1, 'rgba(255,80,0,0)');
+          ctx.fillStyle = coreGrad;
+          ctx.beginPath();
+          ctx.arc(0, 0, coreRadius, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Sunburst rays — white/orange lines radiating out
+          var rayLen = fx.maxRadius * (0.3 + progress * 0.7);
+          var rayAlpha = alpha * 0.85;
+          ctx.globalAlpha = rayAlpha;
+          for (var r = 0; r < fx.rays; r++) {
+            var rayAngle = (r / fx.rays) * Math.PI * 2;
+            var rayWidth = 2 + Math.random() * 3;
+            // Alternate white and orange rays
+            ctx.strokeStyle = r % 2 === 0 ? 'rgba(255,255,255,0.9)' : 'rgba(255,180,50,0.8)';
+            ctx.lineWidth = rayWidth * (1 - progress * 0.5);
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(Math.cos(rayAngle) * rayLen, Math.sin(rayAngle) * rayLen);
+            ctx.stroke();
+          }
+
+          ctx.globalAlpha = 1;
+          ctx.restore();
         }
       }
 
@@ -8472,6 +8568,8 @@
       }
 
       function update(dt) {
+        // Update explosion overlay effects
+        updateExplosionEffects(dt);
         // Update screen shake
         if (screenShakeDuration > 0) {
           screenShakeDuration -= dt;
@@ -8633,10 +8731,12 @@
             } else {
               gameOver = true;
               _deathTime = Date.now();
-              spawnExplosion(player.x, player.y, '#FF5252', 18);
-              spawnExplosion(player.x - 15, player.y + 10, '#FF9800', 10);
-              spawnExplosion(player.x + 15, player.y - 10, '#FDE047', 10);
-              triggerScreenShake(5, 0.3);
+              // Epic Galaxy Attack death explosion
+              spawnExplosion(player.x, player.y, '#FF5252', 25);
+              spawnExplosion(player.x - 20, player.y + 15, '#FF9800', 15);
+              spawnExplosion(player.x + 20, player.y - 15, '#FDE047', 15);
+              spawnExplosion(player.x, player.y - 25, '#FFFFFF', 12);
+              triggerScreenShake(8, 0.5);
               // Clear frozen objects so screen isn't cluttered
               targets = [];
               bullets = [];
@@ -8666,9 +8766,9 @@
               if (t.health <= 0) {
                 var pts = 15 + Math.floor((60 - t.size) * 0.3);
                 score += pts;
-                spawnExplosion(t.x, t.y, PLANET_COLORS[t.colorIdx].ring, 10);
-                spawnExplosion(t.x, t.y, PLANET_COLORS[t.colorIdx].base, 6);
-                triggerScreenShake(2.5, 0.15);
+                spawnExplosion(t.x, t.y, '#FF8800', 18);
+                spawnExplosion(t.x, t.y, '#FFCC00', 8);
+                triggerScreenShake(3, 0.2);
                 targets.splice(j, 1);
                 // Milestone check
                 var curMile = Math.floor(score / 100);
@@ -9490,33 +9590,46 @@
           ctx.restore();
         }
 
-        // Draw particles (explosions) — lightweight for mobile perf
+        // Draw particles — Galaxy Attack fireball style
         var pLen = particles.length;
-        var heavyGlow = pLen < 40; // only use shadowBlur when few particles
+        var canGlow = pLen < 35;
         for (var pi = 0; pi < pLen; pi++) {
           var p = particles[pi];
           var pAlpha = Math.max(0, p.life / p.maxLife);
           var pSize = p.size * (0.4 + pAlpha * 0.6);
           ctx.globalAlpha = pAlpha;
-          ctx.fillStyle = p.color;
-          if (heavyGlow) {
-            ctx.shadowColor = p.color;
-            ctx.shadowBlur = 10;
+
+          // Big fireball particles (size > 10) get radial gradient for that Galaxy Attack cloud look
+          if (pSize > 8 && pLen < 60) {
+            var fbGrad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, pSize);
+            fbGrad.addColorStop(0, '#FFFFFF');
+            fbGrad.addColorStop(0.2, p.color);
+            fbGrad.addColorStop(0.7, p.color === '#fff' || p.color === '#FFFFFF' ? 'rgba(255,200,50,0.6)' : p.color);
+            fbGrad.addColorStop(1, 'rgba(255,80,0,0)');
+            ctx.fillStyle = fbGrad;
+          } else {
+            ctx.fillStyle = p.color;
+            if (canGlow) { ctx.shadowColor = p.color; ctx.shadowBlur = 8; }
           }
+
           ctx.beginPath();
           ctx.arc(p.x, p.y, pSize, 0, Math.PI * 2);
           ctx.fill();
-          if (heavyGlow) ctx.shadowBlur = 0;
-          // Inner bright core (skip when many particles)
-          if (pSize > 3 && pLen < 80) {
-            ctx.globalAlpha = pAlpha * 0.6;
+          if (canGlow) ctx.shadowBlur = 0;
+
+          // White-hot center on medium+ particles
+          if (pSize > 4 && pLen < 70) {
+            ctx.globalAlpha = pAlpha * 0.7;
             ctx.fillStyle = '#fff';
             ctx.beginPath();
-            ctx.arc(p.x, p.y, pSize * 0.3, 0, Math.PI * 2);
+            ctx.arc(p.x, p.y, pSize * 0.25, 0, Math.PI * 2);
             ctx.fill();
           }
         }
         ctx.globalAlpha = 1;
+
+        // Galaxy Attack style explosion overlays (sunburst rays + flash)
+        drawExplosionEffects();
 
         // Milestone flash overlay
         if (milestoneFlash > 0) {
