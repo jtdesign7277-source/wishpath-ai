@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-13-v269';
+    var APP_VERSION = '2026-04-13-v270';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -641,6 +641,10 @@
       transition: transform 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
       touch-action: pan-y;
       z-index: 1;
+      border-bottom: 1px solid rgba(113,50,245,0.45);
+    }
+    .notes-item:first-child {
+      border-top: 1px solid rgba(113,50,245,0.45);
     }
     .notes-item.swiped { transform: translateX(-80px); }
     .notes-item:active { background: rgba(255,255,255,0.04); }
@@ -671,7 +675,7 @@
       color: rgba(255,255,255,0.35);
     }
     .notes-item-chevron {
-      color: rgba(255,255,255,0.25);
+      color: #7132F5;
       font-size: 1.2rem;
       flex-shrink: 0;
     }
@@ -3238,6 +3242,9 @@
         cursor: pointer;
         transition: background 0.15s ease;
         gap: 12px;
+      }
+      .lc-chat-item:first-child {
+        border-top: 1px solid rgba(113,50,245,0.45);
       }
       .lc-chat-item:active { background: rgba(255,255,255,0.04); }
       .lc-chat-item-info {
