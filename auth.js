@@ -87,6 +87,15 @@ async function getUserProfile() {
   return data;
 }
 
+async function getAuthHeaders() {
+  const session = await getSession();
+  const headers = { 'Content-Type': 'application/json' };
+  if (session && session.access_token) {
+    headers['Authorization'] = 'Bearer ' + session.access_token;
+  }
+  return headers;
+}
+
 function showToast(msg, type) {
   var t = document.createElement('div');
   t.textContent = msg;
