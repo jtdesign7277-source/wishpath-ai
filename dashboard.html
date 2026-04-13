@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-12-v257';
+    var APP_VERSION = '2026-04-13-v258';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -8066,7 +8066,7 @@
       var canvas = null;
       var ctx = null;
       var dpr = 1;
-      var player = { x: 195, y: 520, size: 28, speed: 5 };
+      var player = { x: 195, y: 520, size: 28, speed: 5, targetY: 520 };
       var moveDx = 0;
       var moveDy = 0;
       var bullets = [];
@@ -8154,6 +8154,7 @@
       function resetGame() {
         player.x = GW * 0.5;
         player.y = GH * 0.76;
+        player.targetY = GH * 0.76;
         moveDx = 0;
         moveDy = 0;
         bullets = [];
@@ -8175,6 +8176,9 @@
         fireCd = 0;
         milestoneFlash = 0;
         lastMilestone = 0;
+        waveNumber = 0;
+        waveEnemyCount = 0;
+        waveEnemiesKilled = 0;
         starsInit = false;
         loadHigh();
         var go = document.getElementById('wp-wish-runner-gameover');
@@ -8186,6 +8190,11 @@
       var particles = [];
       var milestoneFlash = 0;
       var lastMilestone = 0;
+      var waveNumber = 0;
+      var waveEnemyCount = 0;
+      var waveEnemiesKilled = 0;
+      var screenShakeAmount = 0;
+      var screenShakeDuration = 0;
       var SPACE_TYPES = ['planet', 'asteroid', 'debris', 'comet'];
       var PLANET_COLORS = [
         { base: '#E45A3B', ring: '#FFB74D', glow: 'rgba(228,90,59,0.4)' },    // Mars-red
@@ -8279,8 +8288,23 @@
       function spawnTarget() {
         var margin = 34;
         var typeRoll = Math.random();
-        var type, sz, hp;
-        if (typeRoll < 0.35) {
+        var type, sz, hp, isEnemyShip = false;
+
+        // Spawn enemy ships more frequently as score increases
+        if (typeRoll < 0.15 + Math.min(0.4, score * 0.0008)) {
+          // Enemy ship types
+          isEnemyShip = true;
+          var shipType = Math.random();
+          if (shipType < 0.6) {
+            type = 'enemy-fighter';
+            sz = 28 + Math.random() * 12;
+            hp = 2 + Math.floor(Math.random() * 2);
+          } else {
+            type = 'enemy-bomber';
+            sz = 38 + Math.random() * 14;
+            hp = 4 + Math.floor(Math.random() * 3);
+          }
+        } else if (typeRoll < 0.35) {
           type = 'planet';
           sz = 60 + Math.random() * 50;
           hp = Math.floor(Math.random() * 8) + 7;
@@ -8301,8 +8325,12 @@
         var asteroidColor = ASTEROID_COLORS[Math.floor(Math.random() * ASTEROID_COLORS.length)];
         var rotation = Math.random() * Math.PI * 2;
         var rotSpeed = (Math.random() - 0.5) * 2.5;
+
+        var xPos = margin + Math.random() * (GW - margin * 2);
+        var enemyColor = isEnemyShip ? (type === 'enemy-fighter' ? '#ff6644' : '#ff8800') : null;
+
         targets.push({
-          x: margin + Math.random() * (GW - margin * 2),
+          x: xPos,
           y: -sz * 0.5 - 8,
           size: sz,
           health: hp,
@@ -8313,7 +8341,12 @@
           asteroidColor: asteroidColor,
           rotation: rotation,
           rotSpeed: rotSpeed,
-          wobble: Math.random() * Math.PI * 2
+          wobble: Math.random() * Math.PI * 2,
+          isEnemyShip: isEnemyShip,
+          enemyColor: enemyColor,
+          movePattern: Math.random() > 0.5 ? 'sine' : 'straight',
+          patternPhase: Math.random() * Math.PI * 2,
+          fireCounter: Math.random() * 0.5
         });
       }
 
@@ -8355,6 +8388,11 @@
         }
       }
 
+      function triggerScreenShake(amount, duration) {
+        screenShakeAmount = amount;
+        screenShakeDuration = duration;
+      }
+
       function shoot() {
         // Auto-fire handles shooting now — kept for backward compat
         if (gameOver) return;
@@ -8374,6 +8412,13 @@
       }
 
       function update(dt) {
+        // Update screen shake
+        if (screenShakeDuration > 0) {
+          screenShakeDuration -= dt;
+        } else {
+          screenShakeAmount = 0;
+        }
+
         updateStars(dt);
         updateBackgroundPlanets(dt);
         // Update particles
@@ -8463,6 +8508,7 @@
             powerups.splice(pu, 1);
           }
         }
+        // Horizontal movement
         var moveInput = 0;
         if (Math.abs(moveDx) > 0.08) moveInput = moveDx;
         else {
@@ -8473,6 +8519,26 @@
         player.x += moveInput * pxPerSec * dt;
         var half = player.size * 0.5;
         player.x = Math.max(half, Math.min(GW - half, player.x));
+
+        // Vertical movement with smooth lerp to target
+        var verticalInput = 0;
+        if (Math.abs(moveDy) > 0.08) verticalInput = moveDy;
+        else {
+          if (keys.ArrowUp || keys.w || keys.W) verticalInput -= 1;
+          if (keys.ArrowDown || keys.s || keys.S) verticalInput += 1;
+        }
+        var vertPxPerSec = player.speed * 45;
+        player.targetY += verticalInput * vertPxPerSec * dt;
+        player.targetY = Math.max(GH * 0.3, Math.min(GH * 0.85, player.targetY));
+
+        // Smooth lerp player.y toward targetY
+        var lerpSpeed = 8;
+        var yDiff = player.targetY - player.y;
+        if (Math.abs(yDiff) > 1) {
+          player.y += yDiff * Math.min(1, lerpSpeed * dt);
+        } else {
+          player.y = player.targetY;
+        }
 
         spawnAcc += dt;
         var interval = Math.max(0.38, spawnEvery - score * 0.0012);
@@ -8498,6 +8564,7 @@
               // Destroy enemy instead of dying
               var explodeColor = PLANET_COLORS[t.colorIdx] ? PLANET_COLORS[t.colorIdx].base : '#FDE047';
               spawnExplosion(t.x, t.y, explodeColor, 20);
+              triggerScreenShake(2, 0.15);
               var pts = 25 + Math.floor((80 - t.size) * 0.4);
               score += pts;
               targets.splice(j, 1);
@@ -8509,6 +8576,7 @@
               spawnExplosion(player.x, player.y, '#FF5252', 18);
               spawnExplosion(player.x - 15, player.y + 10, '#FF9800', 10);
               spawnExplosion(player.x + 15, player.y - 10, '#FDE047', 10);
+              triggerScreenShake(5, 0.3);
               // Clear frozen objects so screen isn't cluttered
               targets = [];
               bullets = [];
@@ -8540,6 +8608,7 @@
                 score += pts;
                 spawnExplosion(t.x, t.y, PLANET_COLORS[t.colorIdx].ring, 10);
                 spawnExplosion(t.x, t.y, PLANET_COLORS[t.colorIdx].base, 6);
+                triggerScreenShake(2.5, 0.15);
                 targets.splice(j, 1);
                 // Milestone check
                 var curMile = Math.floor(score / 100);
@@ -8571,13 +8640,63 @@
         if (starsInit) return;
         starsInit = true;
         stars = [];
-        for (var i = 0; i < 120; i++) {
+        // 3 layers of stars with different speeds for parallax effect
+        // Layer 1: Tiny dim stars (slow)
+        for (var i = 0; i < 80; i++) {
           stars.push({
             x: Math.random() * GW,
             y: Math.random() * GH,
-            size: Math.random() * 2 + 0.5,
-            speed: Math.random() * 80 + 30,
-            alpha: Math.random() * 0.6 + 0.2
+            size: Math.random() * 0.8 + 0.3,
+            speed: Math.random() * 40 + 20,
+            alpha: Math.random() * 0.3 + 0.1,
+            layer: 1
+          });
+        }
+        // Layer 2: Medium stars (medium speed)
+        for (var i = 0; i < 60; i++) {
+          stars.push({
+            x: Math.random() * GW,
+            y: Math.random() * GH,
+            size: Math.random() * 1.4 + 0.6,
+            speed: Math.random() * 70 + 40,
+            alpha: Math.random() * 0.5 + 0.25,
+            layer: 2
+          });
+        }
+        // Layer 3: Bright stars (fast)
+        for (var i = 0; i < 40; i++) {
+          stars.push({
+            x: Math.random() * GW,
+            y: Math.random() * GH,
+            size: Math.random() * 2 + 1.2,
+            speed: Math.random() * 90 + 60,
+            alpha: Math.random() * 0.7 + 0.4,
+            layer: 3
+          });
+        }
+        // Nebula clouds (parallax background)
+        stars.nebulas = [];
+        for (var i = 0; i < 4; i++) {
+          stars.nebulas.push({
+            x: Math.random() * GW,
+            y: (Math.random() * GH * 1.5) - GH * 0.5,
+            size: 120 + Math.random() * 180,
+            speedY: 30 + Math.random() * 40,
+            opacity: 0.08 + Math.random() * 0.12,
+            hue: Math.random() > 0.5 ? 220 : 280 // blue or purple
+          });
+        }
+        // Floating asteroids
+        stars.asteroids = [];
+        for (var i = 0; i < 6; i++) {
+          stars.asteroids.push({
+            x: Math.random() * GW,
+            y: (Math.random() * GH * 1.2) - GH * 0.2,
+            size: 8 + Math.random() * 16,
+            speedY: 15 + Math.random() * 35,
+            rotation: Math.random() * Math.PI * 2,
+            rotSpeed: (Math.random() - 0.5) * 1.5,
+            color: '#8D6E63'
           });
         }
       }
@@ -8590,6 +8709,105 @@
             stars[i].x = Math.random() * GW;
           }
         }
+        // Update nebulas
+        if (stars.nebulas) {
+          for (var i = 0; i < stars.nebulas.length; i++) {
+            var neb = stars.nebulas[i];
+            neb.y += neb.speedY * dt;
+            if (neb.y > GH + neb.size) {
+              neb.y = -neb.size * 2;
+              neb.x = Math.random() * GW;
+            }
+          }
+        }
+        // Update asteroids
+        if (stars.asteroids) {
+          for (var i = 0; i < stars.asteroids.length; i++) {
+            var ast = stars.asteroids[i];
+            ast.y += ast.speedY * dt;
+            ast.rotation += ast.rotSpeed * dt;
+            if (ast.y > GH + ast.size) {
+              ast.y = -ast.size * 2;
+              ast.x = Math.random() * GW;
+            }
+          }
+        }
+      }
+
+      function drawEnemyShip(tg) {
+        var r = tg.size * 0.5;
+        var isGreen = tg.type === 'enemy-fighter';
+        var color = isGreen ? '#ff6644' : '#ff8800';
+        ctx.save();
+        ctx.translate(tg.x, tg.y);
+        ctx.rotate(tg.rotation);
+
+        // Enemy ship body
+        ctx.fillStyle = color;
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 12;
+
+        if (isGreen) {
+          // Fighter — small angular shape
+          ctx.beginPath();
+          ctx.moveTo(0, -r);
+          ctx.lineTo(r * 0.5, r * 0.4);
+          ctx.lineTo(r * 0.2, r * 0.3);
+          ctx.lineTo(-r * 0.2, r * 0.3);
+          ctx.lineTo(-r * 0.5, r * 0.4);
+          ctx.closePath();
+          ctx.fill();
+          // Wing accents
+          ctx.fillStyle = 'rgba(255, 102, 68, 0.6)';
+          ctx.beginPath();
+          ctx.moveTo(-r * 0.4, -r * 0.1);
+          ctx.lineTo(-r * 0.7, r * 0.15);
+          ctx.lineTo(-r * 0.35, 0);
+          ctx.closePath();
+          ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(r * 0.4, -r * 0.1);
+          ctx.lineTo(r * 0.7, r * 0.15);
+          ctx.lineTo(r * 0.35, 0);
+          ctx.closePath();
+          ctx.fill();
+        } else {
+          // Bomber — larger angular shape
+          ctx.beginPath();
+          ctx.moveTo(0, -r);
+          ctx.lineTo(r * 0.6, -r * 0.2);
+          ctx.lineTo(r * 0.65, r * 0.4);
+          ctx.lineTo(0, r * 0.55);
+          ctx.lineTo(-r * 0.65, r * 0.4);
+          ctx.lineTo(-r * 0.6, -r * 0.2);
+          ctx.closePath();
+          ctx.fill();
+          // Center tech line
+          ctx.strokeStyle = 'rgba(255, 200, 100, 0.7)';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(0, -r * 0.8);
+          ctx.lineTo(0, r * 0.45);
+          ctx.stroke();
+        }
+
+        // Glowing center dot
+        ctx.fillStyle = '#ffff00';
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = '#ffff00';
+        ctx.beginPath();
+        ctx.arc(0, 0, r * 0.15, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Health display
+        ctx.font = 'bold ' + Math.max(10, Math.floor(r * 0.8)) + 'px ui-sans-serif, system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#FFF';
+        ctx.shadowBlur = 0;
+        ctx.fillText(String(tg.health), 0, r * 0.6);
+
+        ctx.restore();
       }
 
       function drawPlanet(tg) {
@@ -8735,82 +8953,140 @@
         ctx.translate(player.x, player.y);
         var sz = player.size;
 
+        // Shield aura (pulsing cyan ring)
+        if (!gameOver) {
+          var pulseAlpha = 0.08 + Math.sin(Date.now() * 0.003) * 0.05;
+          ctx.strokeStyle = 'rgba(0, 212, 255, ' + pulseAlpha + ')';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.arc(0, 0, sz * 0.85, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
         // Invincibility rainbow flash overlay
         if (_invincible) {
           var rainbowColors = ['#FF0000', '#FF7F00', '#FFFF00', '#00FF00', '#0000FF', '#4B0082', '#9400D3'];
           var rainbowIdx = Math.floor((_invincibleFlashCycle / 2) % rainbowColors.length);
-          var rainbowAlpha = 0.25 + Math.sin(_invincibleFlashCycle) * 0.15;
+          var rainbowAlpha = 0.3 + Math.sin(_invincibleFlashCycle) * 0.2;
           ctx.globalAlpha = rainbowAlpha;
           ctx.fillStyle = rainbowColors[rainbowIdx];
           ctx.beginPath();
-          ctx.arc(0, 0, sz * 0.7, 0, Math.PI * 2);
+          ctx.arc(0, 0, sz * 0.8, 0, Math.PI * 2);
           ctx.fill();
           ctx.globalAlpha = 1;
         }
 
-        // Engine glow
-        var engGlow = _invincible ? '#FF6B9D' : '#00E5FF';
-        ctx.shadowColor = engGlow; ctx.shadowBlur = 20;
-        ctx.fillStyle = _invincible ? 'rgba(255,107,157,0.35)' : 'rgba(0,229,255,0.35)';
-        ctx.beginPath();
-        ctx.ellipse(0, sz * 0.45, sz * 0.25, sz * 0.55, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.shadowBlur = 0;
-        // Engine flames
-        var flicker = 0.8 + Math.random() * 0.4;
-        var fGrad = ctx.createLinearGradient(0, sz * 0.15, 0, sz * 0.7 * flicker);
-        fGrad.addColorStop(0, engGlow);
-        fGrad.addColorStop(0.5, '#7132F5');
-        fGrad.addColorStop(1, 'transparent');
-        ctx.fillStyle = fGrad;
-        ctx.beginPath();
-        ctx.moveTo(-sz * 0.15, sz * 0.2);
-        ctx.lineTo(sz * 0.15, sz * 0.2);
-        ctx.lineTo(sz * 0.05, sz * 0.7 * flicker);
-        ctx.lineTo(-sz * 0.05, sz * 0.7 * flicker);
-        ctx.closePath();
-        ctx.fill();
-        // Ship body — sleek triangle
-        var bodyColor1 = _invincible ? '#FF6B9D' : '#5C35B4';
-        var bodyColor2 = _invincible ? '#FF85B5' : '#9B59FF';
-        var bodyGrad = ctx.createLinearGradient(-sz * 0.5, 0, sz * 0.5, 0);
-        bodyGrad.addColorStop(0, bodyColor1);
-        bodyGrad.addColorStop(0.5, bodyColor2);
-        bodyGrad.addColorStop(1, bodyColor1);
+        // Main body — elongated hexagon, dark blue with metallic highlight
+        var bodyDark = _invincible ? '#FF3366' : '#1a2a5a';
+        var bodyLight = _invincible ? '#FF5577' : '#2a4a9a';
+        var bodyGrad = ctx.createLinearGradient(-sz * 0.3, -sz * 0.6, sz * 0.3, sz * 0.4);
+        bodyGrad.addColorStop(0, bodyDark);
+        bodyGrad.addColorStop(0.5, bodyLight);
+        bodyGrad.addColorStop(1, bodyDark);
         ctx.fillStyle = bodyGrad;
-        ctx.shadowColor = bodyColor1; ctx.shadowBlur = 12;
+        ctx.shadowColor = _invincible ? 'rgba(255,51,102,0.8)' : 'rgba(0,100,200,0.6)';
+        ctx.shadowBlur = 14;
+
+        // Hexagon body
         ctx.beginPath();
-        ctx.moveTo(0, -sz * 0.65);
-        ctx.lineTo(sz * 0.4, sz * 0.25);
-        ctx.lineTo(sz * 0.15, sz * 0.3);
-        ctx.lineTo(-sz * 0.15, sz * 0.3);
-        ctx.lineTo(-sz * 0.4, sz * 0.25);
+        ctx.moveTo(0, -sz * 0.68);         // nose
+        ctx.lineTo(sz * 0.35, -sz * 0.28);  // upper right
+        ctx.lineTo(sz * 0.38, sz * 0.35);   // lower right
+        ctx.lineTo(0, sz * 0.45);           // bottom
+        ctx.lineTo(-sz * 0.38, sz * 0.35);  // lower left
+        ctx.lineTo(-sz * 0.35, -sz * 0.28); // upper left
         ctx.closePath();
         ctx.fill();
         ctx.shadowBlur = 0;
-        // Wings
-        var wingColor = _invincible ? '#FF85B5' : '#7132F5';
+
+        // Cockpit — cyan glowing dome
+        var cockGlow = _invincible ? '#FF88BB' : '#00d4ff';
+        ctx.shadowColor = cockGlow;
+        ctx.shadowBlur = 16;
+        ctx.fillStyle = cockGlow;
+        ctx.beginPath();
+        ctx.arc(0, -sz * 0.28, sz * 0.15, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        // Cockpit inner highlight
+        ctx.fillStyle = 'rgba(255,255,255,0.4)';
+        ctx.beginPath();
+        ctx.arc(-sz * 0.06, -sz * 0.35, sz * 0.08, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Wings — swept-back angular shapes with glowing edges
+        var wingColor = _invincible ? '#FF5577' : '#4488ff';
         ctx.fillStyle = wingColor;
+        // Left wing
         ctx.beginPath();
-        ctx.moveTo(-sz * 0.35, sz * 0.15);
-        ctx.lineTo(-sz * 0.58, sz * 0.35);
-        ctx.lineTo(-sz * 0.2, sz * 0.22);
+        ctx.moveTo(-sz * 0.2, -sz * 0.1);
+        ctx.lineTo(-sz * 0.55, -sz * 0.08);
+        ctx.lineTo(-sz * 0.52, sz * 0.15);
+        ctx.lineTo(-sz * 0.22, sz * 0.1);
         ctx.closePath();
         ctx.fill();
+        // Right wing
         ctx.beginPath();
-        ctx.moveTo(sz * 0.35, sz * 0.15);
-        ctx.lineTo(sz * 0.58, sz * 0.35);
-        ctx.lineTo(sz * 0.2, sz * 0.22);
+        ctx.moveTo(sz * 0.2, -sz * 0.1);
+        ctx.lineTo(sz * 0.55, -sz * 0.08);
+        ctx.lineTo(sz * 0.52, sz * 0.15);
+        ctx.lineTo(sz * 0.22, sz * 0.1);
         ctx.closePath();
         ctx.fill();
-        // Cockpit
-        var cockGrad = ctx.createRadialGradient(0, -sz * 0.2, 1, 0, -sz * 0.2, sz * 0.14);
-        cockGrad.addColorStop(0, engGlow);
-        cockGrad.addColorStop(1, _invincible ? 'rgba(255,107,157,0.2)' : 'rgba(0,229,255,0.2)');
-        ctx.fillStyle = cockGrad;
+
+        // Wing gun protrusions
+        ctx.fillStyle = bodyLight;
+        // Left gun
         ctx.beginPath();
-        ctx.ellipse(0, -sz * 0.2, sz * 0.1, sz * 0.14, 0, 0, Math.PI * 2);
+        ctx.arc(-sz * 0.45, 0, sz * 0.08, 0, Math.PI * 2);
         ctx.fill();
+        // Right gun
+        ctx.beginPath();
+        ctx.arc(sz * 0.45, 0, sz * 0.08, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Main engines — 3 cyan glowing circles
+        var engineGlow = _invincible ? '#FF88BB' : '#00ffff';
+        ctx.shadowColor = engineGlow;
+        ctx.shadowBlur = 18;
+        var flicker1 = 0.85 + Math.random() * 0.25;
+        var flicker2 = 0.8 + Math.random() * 0.3;
+        var flicker3 = 0.88 + Math.random() * 0.22;
+
+        // Center engine
+        ctx.fillStyle = 'rgba(0, 255, 255, ' + (0.7 * flicker1) + ')';
+        ctx.beginPath();
+        ctx.arc(0, sz * 0.48, sz * 0.18, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Left engine
+        ctx.fillStyle = 'rgba(0, 255, 255, ' + (0.6 * flicker2) + ')';
+        ctx.beginPath();
+        ctx.arc(-sz * 0.22, sz * 0.52, sz * 0.13, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Right engine
+        ctx.fillStyle = 'rgba(0, 255, 255, ' + (0.6 * flicker3) + ')';
+        ctx.beginPath();
+        ctx.arc(sz * 0.22, sz * 0.52, sz * 0.13, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.shadowBlur = 0;
+
+        // Engine trail flames
+        var trailGrad = ctx.createLinearGradient(0, sz * 0.5, 0, sz * 0.95);
+        trailGrad.addColorStop(0, engineGlow);
+        trailGrad.addColorStop(0.5, 'rgba(65, 136, 255, 0.5)');
+        trailGrad.addColorStop(1, 'transparent');
+        ctx.fillStyle = trailGrad;
+        ctx.beginPath();
+        ctx.moveTo(-sz * 0.15, sz * 0.48);
+        ctx.lineTo(sz * 0.15, sz * 0.48);
+        ctx.lineTo(sz * 0.08, sz * 0.75);
+        ctx.lineTo(-sz * 0.08, sz * 0.75);
+        ctx.closePath();
+        ctx.fill();
+
         ctx.restore();
       }
 
@@ -8823,11 +9099,60 @@
         var sy = ch / GH;
         ctx.save();
         ctx.scale(sx, sy);
+
+        // Apply screen shake
+        if (screenShakeDuration > 0) {
+          var shakeX = (Math.random() - 0.5) * screenShakeAmount;
+          var shakeY = (Math.random() - 0.5) * screenShakeAmount;
+          ctx.translate(shakeX, shakeY);
+        }
+
         // Deep space background
         ctx.fillStyle = '#0B0611';
         ctx.fillRect(0, 0, GW, GH);
 
-        // Scrolling starfield
+        // Draw nebula clouds (low opacity background)
+        if (stars.nebulas) {
+          for (var ni = 0; ni < stars.nebulas.length; ni++) {
+            var neb = stars.nebulas[ni];
+            var nebGrad = ctx.createRadialGradient(neb.x, neb.y, 0, neb.x, neb.y, neb.size);
+            var nebColor = neb.hue === 220 ? 'rgba(0, 100, 180, ' : 'rgba(150, 80, 200, ';
+            nebGrad.addColorStop(0, nebColor + (neb.opacity * 0.8) + ')');
+            nebGrad.addColorStop(0.5, nebColor + (neb.opacity * 0.4) + ')');
+            nebGrad.addColorStop(1, nebColor + '0)');
+            ctx.fillStyle = nebGrad;
+            ctx.beginPath();
+            ctx.arc(neb.x, neb.y, neb.size, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        // Draw floating asteroids
+        if (stars.asteroids) {
+          for (var ai = 0; ai < stars.asteroids.length; ai++) {
+            var ast = stars.asteroids[ai];
+            ctx.save();
+            ctx.translate(ast.x, ast.y);
+            ctx.rotate(ast.rotation);
+            ctx.globalAlpha = 0.15;
+            ctx.fillStyle = ast.color;
+            // Irregular shape
+            ctx.beginPath();
+            for (var asj = 0; asj < 6; asj++) {
+              var asAngle = (asj / 6) * Math.PI * 2;
+              var asWobble = 0.7 + Math.sin(asj * 3.7 + ast.y * 0.01) * 0.3;
+              var asPx = Math.cos(asAngle) * (ast.size * 0.5) * asWobble;
+              var asPy = Math.sin(asAngle) * (ast.size * 0.5) * asWobble;
+              if (asj === 0) ctx.moveTo(asPx, asPy); else ctx.lineTo(asPx, asPy);
+            }
+            ctx.closePath();
+            ctx.fill();
+            ctx.globalAlpha = 1;
+            ctx.restore();
+          }
+        }
+
+        // Scrolling starfield (3 layers)
         for (var si = 0; si < stars.length; si++) {
           var s = stars[si];
           ctx.fillStyle = 'rgba(255,255,255,' + s.alpha + ')';
@@ -8842,7 +9167,8 @@
         // Draw targets as space objects
         for (var ti = 0; ti < targets.length; ti++) {
           var tg = targets[ti];
-          if (tg.type === 'planet') drawPlanet(tg);
+          if (tg.isEnemyShip) drawEnemyShip(tg);
+          else if (tg.type === 'planet') drawPlanet(tg);
           else if (tg.type === 'asteroid') drawAsteroid(tg);
           else if (tg.type === 'comet') drawComet(tg);
           else drawDebris(tg);
@@ -8851,7 +9177,7 @@
         // Draw ship (hide when dead)
         if (!gameOver) drawShip();
 
-        // Draw bullets — laser bolts / cannon
+        // Draw bullets — neon blue laser beams with heavy glow
         for (var bi = 0; bi < bullets.length; bi++) {
           var bu = bullets[bi];
           ctx.save();
@@ -8869,14 +9195,27 @@
             ctx.arc(bu.x, bu.y, 2.5, 0, Math.PI * 2);
             ctx.fill();
           } else {
-            var bColor = activePowerup && activePowerup.type === 'spread' ? '#00E5FF' : '#FDE047';
-            var bGrad = ctx.createLinearGradient(bu.x, bu.y - 10, bu.x, bu.y + 4);
-            bGrad.addColorStop(0, bColor);
-            bGrad.addColorStop(1, activePowerup && activePowerup.type === 'spread' ? '#7132F5' : '#FF9800');
-            ctx.fillStyle = bGrad;
-            ctx.shadowColor = bColor;
-            ctx.shadowBlur = 8;
-            ctx.fillRect(bu.x - 1.5, bu.y - 10, 3, 14);
+            // Neon blue laser beams
+            var laserColor = activePowerup && activePowerup.type === 'spread' ? '#00d4ff' : '#00d4ff';
+            var glowColor = activePowerup && activePowerup.type === 'spread' ? '#0088ff' : '#0088ff';
+
+            // Outer glow layer
+            ctx.shadowColor = glowColor;
+            ctx.shadowBlur = 14;
+            ctx.fillStyle = 'rgba(0, 136, 255, 0.25)';
+            ctx.fillRect(bu.x - 4, bu.y - 12, 8, 16);
+
+            // Main beam
+            ctx.shadowColor = laserColor;
+            ctx.shadowBlur = 10;
+            ctx.fillStyle = laserColor;
+            ctx.fillRect(bu.x - 3, bu.y - 11, 6, 15);
+
+            // Inner bright core
+            ctx.fillStyle = '#ffffff';
+            ctx.shadowBlur = 6;
+            ctx.shadowColor = 'rgba(255,255,255,0.8)';
+            ctx.fillRect(bu.x - 1, bu.y - 10, 2, 13);
           }
           ctx.shadowBlur = 0;
           ctx.restore();
@@ -9224,24 +9563,28 @@
         var c = document.getElementById('wpWishRunnerCanvas');
         if (!c) return;
         canvasFireBound = true;
-        // Touch-drag on canvas moves player directly
+        // Touch-drag on canvas moves player on both X and Y axes
         var touchActive = false;
+        var rect = null;
         c.addEventListener('touchstart', function(ev) {
           if (document.body.getAttribute('data-active-view') !== 'wishrunner') return;
           touchActive = true;
+          rect = c.getBoundingClientRect();
           var touch = ev.touches[0];
-          var rect = c.getBoundingClientRect();
           var sx = GW / rect.width;
+          var sy = GH / rect.height;
           player.x = Math.max(player.size * 0.5, Math.min(GW - player.size * 0.5, (touch.clientX - rect.left) * sx));
+          player.targetY = Math.max(GH * 0.3, Math.min(GH * 0.85, (touch.clientY - rect.top) * sy));
         }, { passive: true });
         c.addEventListener('touchmove', function(ev) {
-          if (!touchActive) return;
+          if (!touchActive || !rect) return;
           var touch = ev.touches[0];
-          var rect = c.getBoundingClientRect();
           var sx = GW / rect.width;
+          var sy = GH / rect.height;
           player.x = Math.max(player.size * 0.5, Math.min(GW - player.size * 0.5, (touch.clientX - rect.left) * sx));
+          player.targetY = Math.max(GH * 0.3, Math.min(GH * 0.85, (touch.clientY - rect.top) * sy));
         }, { passive: true });
-        c.addEventListener('touchend', function() { touchActive = false; }, { passive: true });
+        c.addEventListener('touchend', function() { touchActive = false; rect = null; }, { passive: true });
       }
 
       function onKeyDown(ev) {
