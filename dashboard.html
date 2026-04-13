@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-12-v249';
+    var APP_VERSION = '2026-04-12-v250';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -15912,12 +15912,12 @@
         colorTheme: 'dark',
         isTransparent: true,
         autosize: true,
-        largeChartUrl: ''
+        largeChartUrl: 'https://www.tradingview.com/chart/?symbol=' + encodeURIComponent(fullSymbol)
       };
       var encoded = encodeURIComponent(JSON.stringify(config));
-      return '<div style="border:1px solid rgba(255,255,255,0.08);border-radius:12px;overflow:hidden;height:178px;background:rgba(255,255,255,0.04);">' +
-        '<iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=en#' + encoded + '" style="width:100%;height:100%;border:none;' +
-        (Math.random() > 0.5 ? 'box-shadow:0 0 1px rgba(113,50,245,0.1);' : '') + '" sandbox="allow-scripts allow-same-origin"></iframe>' +
+      return '<div style="border:1px solid rgba(255,255,255,0.08);border-radius:12px;overflow:hidden;height:178px;background:rgba(255,255,255,0.04);cursor:pointer;">' +
+        '<iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=en#' + encoded + '" style="width:100%;height:100%;border:none;" ' +
+        'sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>' +
         '</div>';
     }
 
