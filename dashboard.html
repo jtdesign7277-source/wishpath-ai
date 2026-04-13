@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-13-v258';
+    var APP_VERSION = '2026-04-13-v259';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -4109,6 +4109,17 @@
       .main-header .streak-container { display: none; }
     }
 
+    /* ── Wish Runner Loading Screen ── */
+    @keyframes wrShipFloat {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-12px); }
+    }
+    @keyframes wrShipGlow {
+      0%, 100% { filter: drop-shadow(0 0 20px rgba(0,212,255,0.6)) drop-shadow(0 0 40px rgba(0,100,255,0.3)); }
+      50% { filter: drop-shadow(0 0 30px rgba(0,212,255,0.9)) drop-shadow(0 0 60px rgba(0,100,255,0.5)); }
+    }
+    #wr-loading-ship svg { animation: wrShipGlow 2s ease-in-out infinite; }
+
     /* ── Wish Runner — top-down shooter (in-dashboard) ── */
     body[data-active-view="wishrunner"] .main-content {
       padding: 0 !important;
@@ -5668,6 +5679,55 @@
 
       <!-- Wish Runner — top-down shooter (Last Z style) -->
       <div class="view" id="wishrunnerView">
+        <!-- Galaxy Attack style loading screen -->
+        <div id="wr-loading-screen" style="position:fixed;inset:0;z-index:600;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 30%, #0d1a3a 0%, #060a1a 50%, #020408 100%);overflow:hidden;">
+          <!-- Animated stars background -->
+          <canvas id="wr-loading-stars" style="position:absolute;inset:0;width:100%;height:100%;"></canvas>
+          <!-- Content -->
+          <div style="position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:20px;">
+            <!-- Ship silhouette glow -->
+            <div id="wr-loading-ship" style="width:120px;height:120px;position:relative;">
+              <svg viewBox="0 0 120 120" width="120" height="120" style="filter:drop-shadow(0 0 20px rgba(0,212,255,0.6)) drop-shadow(0 0 40px rgba(0,100,255,0.3));">
+                <!-- Ship body -->
+                <defs>
+                  <linearGradient id="lshipBody" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#4488cc"/>
+                    <stop offset="100%" stop-color="#1a2a5a"/>
+                  </linearGradient>
+                  <radialGradient id="lshipGlow" cx="50%" cy="80%" r="50%">
+                    <stop offset="0%" stop-color="#00ffff" stop-opacity="0.8"/>
+                    <stop offset="100%" stop-color="#00ffff" stop-opacity="0"/>
+                  </radialGradient>
+                </defs>
+                <!-- Wings -->
+                <polygon points="60,15 25,85 35,80 60,45 85,80 95,85" fill="url(#lshipBody)" stroke="#5599dd" stroke-width="0.5"/>
+                <!-- Left wing extension -->
+                <polygon points="35,80 10,100 25,85 40,70" fill="#1a3060" stroke="#3377aa" stroke-width="0.5"/>
+                <!-- Right wing extension -->
+                <polygon points="85,80 110,100 95,85 80,70" fill="#1a3060" stroke="#3377aa" stroke-width="0.5"/>
+                <!-- Cockpit -->
+                <ellipse cx="60" cy="40" rx="8" ry="12" fill="#00d4ff" opacity="0.9"/>
+                <ellipse cx="60" cy="38" rx="4" ry="6" fill="#ffffff" opacity="0.5"/>
+                <!-- Engine glows -->
+                <circle cx="48" cy="88" r="6" fill="#00ffff" opacity="0.9"/>
+                <circle cx="60" cy="92" r="7" fill="#00ffff" opacity="0.9"/>
+                <circle cx="72" cy="88" r="6" fill="#00ffff" opacity="0.9"/>
+                <!-- Engine outer glow -->
+                <circle cx="60" cy="95" r="25" fill="url(#lshipGlow)"/>
+              </svg>
+            </div>
+            <!-- Title -->
+            <div style="font-family:'Courier New',monospace;font-size:28px;font-weight:900;color:#fff;text-shadow:0 0 20px rgba(0,212,255,0.8),0 0 40px rgba(0,100,255,0.4);letter-spacing:4px;">WISH RUNNER</div>
+            <div style="font-size:11px;color:rgba(0,212,255,0.6);letter-spacing:6px;font-weight:600;margin-top:-12px;">SPACE COMMAND</div>
+            <!-- Progress bar -->
+            <div style="width:240px;margin-top:24px;">
+              <div style="width:100%;height:4px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;position:relative;">
+                <div id="wr-loading-bar" style="width:0%;height:100%;background:linear-gradient(90deg,#0066ff,#00d4ff,#00ffcc);border-radius:2px;transition:width 0.15s linear;box-shadow:0 0 12px rgba(0,212,255,0.6);"></div>
+              </div>
+              <div id="wr-loading-text" style="text-align:center;margin-top:10px;font-size:11px;color:rgba(255,255,255,0.35);font-family:'Courier New',monospace;letter-spacing:2px;">INITIALIZING...</div>
+            </div>
+          </div>
+        </div>
         <div id="wish-runner-game" class="wish-runner-container">
           <canvas id="wpWishRunnerCanvas" width="390" height="680" aria-label="Wish Runner game"></canvas>
           <!-- Overlay icons -->
@@ -9642,6 +9702,76 @@
       };
     })();
 
+    function showWRLoadingScreen() {
+      var ls = document.getElementById('wr-loading-screen');
+      var bar = document.getElementById('wr-loading-bar');
+      var txt = document.getElementById('wr-loading-text');
+      var starCanvas = document.getElementById('wr-loading-stars');
+      if (!ls) { try { startWishRunnerGame(); } catch(e){} return; }
+      ls.style.display = 'flex';
+      if (bar) bar.style.width = '0%';
+
+      // Animate stars on loading canvas
+      var sCtx = starCanvas ? starCanvas.getContext('2d') : null;
+      var loadStars = [];
+      var _lsRaf = null;
+      if (sCtx) {
+        starCanvas.width = window.innerWidth;
+        starCanvas.height = window.innerHeight;
+        for (var i = 0; i < 120; i++) {
+          loadStars.push({ x: Math.random() * starCanvas.width, y: Math.random() * starCanvas.height, s: 0.3 + Math.random() * 1.5, sp: 30 + Math.random() * 120, a: 0.3 + Math.random() * 0.7 });
+        }
+        function drawLoadStars() {
+          sCtx.clearRect(0, 0, starCanvas.width, starCanvas.height);
+          for (var i = 0; i < loadStars.length; i++) {
+            var st = loadStars[i];
+            st.y += st.sp * 0.016;
+            if (st.y > starCanvas.height) { st.y = 0; st.x = Math.random() * starCanvas.width; }
+            sCtx.globalAlpha = st.a;
+            sCtx.fillStyle = '#fff';
+            sCtx.beginPath();
+            sCtx.arc(st.x, st.y, st.s, 0, Math.PI * 2);
+            sCtx.fill();
+          }
+          sCtx.globalAlpha = 1;
+          _lsRaf = requestAnimationFrame(drawLoadStars);
+        }
+        drawLoadStars();
+      }
+
+      // Ship float animation
+      var ship = document.getElementById('wr-loading-ship');
+      if (ship) ship.style.animation = 'wrShipFloat 2s ease-in-out infinite';
+
+      // Progress bar animation
+      var msgs = ['INITIALIZING...', 'LOADING WEAPONS...', 'CALIBRATING SHIELDS...', 'SCANNING SECTORS...', 'ENGINES ONLINE...', 'READY FOR LAUNCH'];
+      var progress = 0;
+      var step = 0;
+      var intv = setInterval(function() {
+        step++;
+        progress = Math.min(100, step * 5 + Math.random() * 8);
+        if (bar) bar.style.width = Math.min(progress, 100) + '%';
+        var mi = Math.min(Math.floor(step / 3), msgs.length - 1);
+        if (txt) txt.textContent = msgs[mi];
+        if (progress >= 100) {
+          clearInterval(intv);
+          if (bar) bar.style.width = '100%';
+          if (txt) { txt.textContent = 'LAUNCHING...'; txt.style.color = '#00d4ff'; }
+          setTimeout(function() {
+            if (_lsRaf) cancelAnimationFrame(_lsRaf);
+            ls.style.opacity = '0';
+            ls.style.transition = 'opacity 0.4s ease';
+            setTimeout(function() {
+              ls.style.display = 'none';
+              ls.style.opacity = '1';
+              ls.style.transition = '';
+              try { if (typeof startWishRunnerGame === 'function') startWishRunnerGame(); } catch(e){}
+            }, 400);
+          }, 500);
+        }
+      }, 140);
+    }
+
     function claimDailyStreak() {
       // Keep for backward compat but auto-claim handles it now
       autoClaim();
@@ -10224,9 +10354,7 @@
       }
       updateMobileFMChrome();
       if (view === 'wishrunner') {
-        setTimeout(function() {
-          try { if (typeof startWishRunnerGame === 'function') startWishRunnerGame(); } catch (e) {}
-        }, 0);
+        showWRLoadingScreen();
       }
       if (view === 'fm') {
         refreshActiveFMWidgetLayout(window.innerWidth <= 768);
