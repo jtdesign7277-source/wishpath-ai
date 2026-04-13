@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-13-v262';
+    var APP_VERSION = '2026-04-13-v263';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -16012,15 +16012,16 @@
 
     // ── Portfolio AI Coach ──
     function _getActiveCoachEls() {
-      var fmView = document.getElementById('fmView');
-      if (fmView && fmView.style.display !== 'none' && document.getElementById('fmPortfolioCoachInput')) {
-        return { input: document.getElementById('fmPortfolioCoachInput'), msgs: document.getElementById('fmPortfolioCoachMessages'), typingId: 'fmPortfolioCoachTyping', msgsId: 'fmPortfolioCoachMessages' };
-      }
-      // Check mobile portfolio coach
+      // Check mobile portfolio coach first (most common on phone)
       var mobileInput = document.getElementById('mobilePortfolioCoachInput');
       var mobileMsgs = document.getElementById('mobilePortfolioCoachMessages');
       if (mobileInput && mobileMsgs && window.innerWidth <= 768) {
         return { input: mobileInput, msgs: mobileMsgs, typingId: 'mobilePortfolioCoachTyping', msgsId: 'mobilePortfolioCoachMessages' };
+      }
+      // Check FM view — must actually be the active view (class-based, not inline style)
+      var fmView = document.getElementById('fmView');
+      if (fmView && fmView.classList.contains('active') && document.getElementById('fmPortfolioCoachInput')) {
+        return { input: document.getElementById('fmPortfolioCoachInput'), msgs: document.getElementById('fmPortfolioCoachMessages'), typingId: 'fmPortfolioCoachTyping', msgsId: 'fmPortfolioCoachMessages' };
       }
       return { input: document.getElementById('portfolioCoachInput'), msgs: document.getElementById('portfolioCoachMessages'), typingId: 'portfolioCoachTyping', msgsId: 'portfolioCoachMessages' };
     }
@@ -16031,34 +16032,44 @@
     }
 
     async function sendPortfolioCoachMsg() {
-      if (!checkAgentLimit()) return;
-      var els = _getActiveCoachEls();
-      var input = els.input;
-      var msg = (input.innerText || input.textContent || input.value || '').trim();
-      if (!msg) return;
-      if (input.contentEditable === 'true') { input.textContent = ''; } else { input.value = ''; input.style.height = 'auto'; }
-      var msgs = els.msgs;
-      msgs.innerHTML += '<div class="msg user">' + msg.replace(/</g,'&lt;') + '</div>';
-      msgs.innerHTML += '<div class="msg ai" id="' + els.typingId + '"></div>';
-      showThinking(els.msgsId, els.typingId);
-      msgs.scrollTop = msgs.scrollHeight;
-      portfolioCoachHistory.push({ role: 'user', content: msg });
-
-      // Build portfolio context
-      var holdingsCtx = portfolioHoldings.map(function(h) {
-        var p = portfolioPrices[h.symbol] || {};
-        return h.symbol + ': ' + h.qty + ' shares @ $' + formatNum(p.price) + ' (avg cost: $' + formatNum(h.avgCost) + ', day change: ' + formatNum(p.changePercent) + '%)';
-      }).join('\n');
-
-      var systemPrompt = 'You are the WishPath Portfolio AI Coach — an expert investment advisor. The user\'s current portfolio:\n\n' + (holdingsCtx || 'No holdings yet.') + '\n\nProvide insightful, data-driven advice. Be specific with numbers. When showing allocation breakdowns, sector analysis, or performance data, include percentage figures so charts can be auto-generated. For visual data, you can use these markers to render Highcharts:\n- [CHARTDATA]{ ...highcharts config JSON... }[/CHARTDATA] for custom charts\n- Or just list items with percentages and a pie chart will auto-render\nKeep advice actionable. Current date: ' + new Date().toLocaleDateString() + '. Keep your responses concise and actionable. Use 2-3 short paragraphs maximum. Only provide longer responses when the user explicitly asks for more detail or a comprehensive analysis.';
-
       try {
+        if (!checkAgentLimit()) return;
+        var els = _getActiveCoachEls();
+        var input = els.input;
+        if (!input || !els.msgs) { console.error('Portfolio Coach: input or msgs element not found'); return; }
+        // Extract text — handle contenteditable + textarea + iOS quirks
+        var msg = '';
+        if (input.contentEditable === 'true') {
+          msg = (input.innerText || input.textContent || '').trim();
+        } else {
+          msg = (input.value || '').trim();
+        }
+        if (!msg) return;
+        // Clear input
+        if (input.contentEditable === 'true') { input.innerHTML = ''; input.textContent = ''; } else { input.value = ''; input.style.height = 'auto'; }
+        // Blur to dismiss mobile keyboard
+        try { input.blur(); } catch(e2) {}
+        var msgs = els.msgs;
+        msgs.innerHTML += '<div class="msg user">' + msg.replace(/</g,'&lt;') + '</div>';
+        msgs.innerHTML += '<div class="msg ai" id="' + els.typingId + '"></div>';
+        showThinking(els.msgsId, els.typingId);
+        msgs.scrollTop = msgs.scrollHeight;
+        portfolioCoachHistory.push({ role: 'user', content: msg });
+
+        // Build portfolio context
+        var holdingsCtx = portfolioHoldings.map(function(h) {
+          var p = portfolioPrices[h.symbol] || {};
+          return h.symbol + ': ' + h.qty + ' shares @ $' + formatNum(p.price) + ' (avg cost: $' + formatNum(h.avgCost) + ', day change: ' + formatNum(p.changePercent) + '%)';
+        }).join('\n');
+
+        var systemPrompt = 'You are the WishPath Portfolio AI Coach — an expert investment advisor. The user\'s current portfolio:\n\n' + (holdingsCtx || 'No holdings yet.') + '\n\nProvide insightful, data-driven advice. Be specific with numbers. When showing allocation breakdowns, sector analysis, or performance data, include percentage figures so charts can be auto-generated. For visual data, you can use these markers to render Highcharts:\n- [CHARTDATA]{ ...highcharts config JSON... }[/CHARTDATA] for custom charts\n- Or just list items with percentages and a pie chart will auto-render\nKeep advice actionable. Current date: ' + new Date().toLocaleDateString() + '. Keep your responses concise and actionable. Use 2-3 short paragraphs maximum. Only provide longer responses when the user explicitly asks for more detail or a comprehensive analysis.';
+
         var res = await fetch(EDGE_FN, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ coachMode: true, model: 'claude-sonnet-4-20250514', systemPrompt: systemPrompt, messages: portfolioCoachHistory.slice(-10) })
         });
         var data = await res.json();
-        var reply = data.reply || "I couldn't process that. Try again.";
+        var reply = data.reply || data.text || data.content || data.message || "I couldn't process that. Try again.";
         portfolioCoachHistory.push({ role: 'assistant', content: reply });
         stopThinking(els.typingId);
 
@@ -16071,18 +16082,20 @@
 
         typewriterEffect(msgs, reply, function(msgDiv) {
           wrapAiTables(msgDiv);
-          // Add chart container after the message
           msgDiv.parentNode.insertBefore(chartDiv, msgDiv.nextSibling);
           detectAndRenderCharts(reply, chartDivId);
-          // Add export buttons below the AI message
           addAiOutputActions(msgDiv);
           incrementAgentUsage();
         });
       } catch(e) {
-        stopThinking(els.typingId);
-        msgs.innerHTML += '<div class="msg ai" style="color:#f85149;">Connection error. Please try again.</div>';
+        console.error('Portfolio Coach error:', e);
+        try {
+          var els2 = _getActiveCoachEls();
+          stopThinking(els2.typingId);
+          els2.msgs.innerHTML += '<div class="msg ai" style="color:#f85149;">Connection error: ' + (e.message || 'Please try again.') + '</div>';
+          els2.msgs.scrollTop = els2.msgs.scrollHeight;
+        } catch(e3) {}
       }
-      msgs.scrollTop = msgs.scrollHeight;
     }
 
     // ════════════════════════════════════════
