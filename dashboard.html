@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-13-v265';
+    var APP_VERSION = '2026-04-13-v266';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -3952,7 +3952,10 @@
       display: none !important;
     }
     .streak-splash.streak-splash-running {
-      animation: fadeOutSplash 1.2s ease-out 2.6s forwards;
+      /* no auto-fade — waits for user tap */
+    }
+    .streak-splash.streak-splash-fade-out {
+      animation: fadeOutSplash 0.6s ease-out forwards;
       pointer-events: none;
     }
     .streak-splash.streak-splash-exit-now {
@@ -4064,6 +4067,24 @@
     }
     @keyframes labelFade {
       to { opacity: 1; }
+    }
+    .streak-splash .streak-tap-hint {
+      position: relative;
+      z-index: 1;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.5);
+      margin-top: 40px;
+      opacity: 0;
+    }
+    .streak-splash .streak-tap-hint.animate {
+      animation: tapHintPulse 1.8s ease-in-out infinite 1.6s;
+    }
+    @keyframes tapHintPulse {
+      0%, 100% { opacity: 0.35; }
+      50% { opacity: 0.85; }
     }
     /* ── Streak in sidebar ── */
     .sidebar-streak { display: inline-flex; align-items: center; gap: 3px; margin-left: 6px; }
@@ -4584,6 +4605,7 @@
     <div class="streak-content">
       <div id="streak-number" class="streak-number"></div>
       <div class="streak-label">DAY STREAK</div>
+      <div id="streak-tap-hint" class="streak-tap-hint">TAP TO CONTINUE</div>
     </div>
     <audio id="streak-chime" preload="auto">
       <source src="https://orangefreesounds.com/wp-content/uploads/2025/08/Success-chime-sound-effect.mp3" type="audio/mpeg">
@@ -8102,82 +8124,63 @@
         labelEl.classList.add('animate');
       }
 
+      // Show tap hint after number pops in
+      var tapHint = document.getElementById('streak-tap-hint');
+      if (tapHint) {
+        tapHint.classList.remove('animate');
+        tapHint.offsetHeight;
+        tapHint.classList.add('animate');
+      }
+
+      // Silent confetti on entry (no sound yet — iOS blocks until gesture)
       setTimeout(function() {
         fireConfettiBurst(); wpConfetti('streak'); wpTsConfetti('fireworks');
-        playStreakChime();
-        // Also play MP3 chime
-        try { var ch = document.getElementById('streak-chime'); if (ch) { ch.volume = 0.7; ch.currentTime = 0; ch.play().catch(function(){}); } } catch(e) {}
       }, 160);
 
-      // iOS: AudioContext + Audio element need a user gesture. Play on first tap.
-      var _streakChimePlayed = false;
-      function _streakTapChime() {
-        if (!_streakChimePlayed) {
-          _streakChimePlayed = true;
-          playStreakChime();
-          try { var ch = document.getElementById('streak-chime'); if (ch) { ch.volume = 0.7; ch.currentTime = 0; ch.play().catch(function(){}); } } catch(e) {}
-        }
-        overlay.removeEventListener('touchstart', _streakTapChime);
-        overlay.removeEventListener('click', _streakTapChime);
-      }
-      overlay.addEventListener('touchstart', _streakTapChime, { passive: true });
-      overlay.addEventListener('click', _streakTapChime);
-
-      try {
-        if (typeof navigator !== 'undefined' && navigator.vibrate) {
-          setTimeout(function() { navigator.vibrate([12, 8, 18]); }, 220);
-        }
-      } catch (vErr) {}
-
-      function onStreakFadeStart(e) {
-        if (!e || e.animationName !== 'fadeOutSplash') return;
-        if (e.target !== overlay) return;
-        try {
-          if (typeof navigator !== 'undefined' && navigator.vibrate) {
-            navigator.vibrate([15, 10, 25]);
-          }
-        } catch (vErr2) {}
-        overlay.removeEventListener('animationstart', onStreakFadeStart);
-        overlay._streakFadeStart = null;
-      }
-      overlay._streakFadeStart = onStreakFadeStart;
-      overlay.addEventListener('animationstart', onStreakFadeStart);
-
-      function onStreakAnimEnd(e) {
-        if (!e || e.animationName !== 'fadeOutSplash' || e.target !== overlay) return;
-        overlay.removeEventListener('animationend', onStreakAnimEnd);
-        overlay._streakFadeEnd = null;
-        if (overlay._streakFadeStart) {
-          overlay.removeEventListener('animationstart', overlay._streakFadeStart);
-          overlay._streakFadeStart = null;
-        }
-        overlay.classList.add('dismissed');
-        overlay.classList.remove('streak-splash-running');
-        overlay.style.animation = '';
-        overlay.style.opacity = '';
-      }
-      overlay._streakFadeEnd = onStreakAnimEnd;
-      overlay.addEventListener('animationend', onStreakAnimEnd);
       requestAnimationFrame(function() {
         requestAnimationFrame(function() {
           overlay.classList.add('streak-splash-running');
         });
       });
+
+      // ── TAP TO DISMISS — this is the user gesture that unlocks audio on iOS ──
+      var _streakDismissed = false;
+      function _dismissStreak() {
+        if (_streakDismissed) return;
+        _streakDismissed = true;
+        overlay.removeEventListener('touchstart', _dismissStreak);
+        overlay.removeEventListener('click', _dismissStreak);
+
+        // NOW we have a user gesture — play the dopamine chime
+        try { _getAudioCtx(); } catch(e) {}
+        playStreakChime();
+        try { var ch = document.getElementById('streak-chime'); if (ch) { ch.volume = 0.7; ch.currentTime = 0; ch.play().catch(function(){}); } } catch(e) {}
+
+        // Haptic buzz (Android — iOS doesn't support vibrate)
+        try { if (navigator.vibrate) navigator.vibrate([15, 40, 15, 40, 25]); } catch(e) {}
+
+        // Second confetti burst on dismiss
+        fireConfettiBurst(); wpConfetti('streak'); wpTsConfetti('fireworks');
+
+        // Fade out
+        function onFadeEnd(e) {
+          if (!e || e.animationName !== 'fadeOutSplash' || e.target !== overlay) return;
+          overlay.removeEventListener('animationend', onFadeEnd);
+          overlay.classList.add('dismissed');
+          overlay.classList.remove('streak-splash-running', 'streak-splash-fade-out');
+          overlay.style.animation = '';
+          overlay.style.opacity = '';
+        }
+        overlay.addEventListener('animationend', onFadeEnd);
+        overlay.classList.add('streak-splash-fade-out');
+      }
+      overlay.addEventListener('touchstart', _dismissStreak, { passive: true });
+      overlay.addEventListener('click', _dismissStreak);
+
+      // Safety fallback: auto-dismiss after 8s if user doesn't tap (desktop, etc.)
       setTimeout(function() {
-        if (overlay.classList.contains('dismissed')) return;
-        if (overlay._streakFadeEnd) {
-          overlay.removeEventListener('animationend', overlay._streakFadeEnd);
-          overlay._streakFadeEnd = null;
-        }
-        if (overlay._streakFadeStart) {
-          overlay.removeEventListener('animationstart', overlay._streakFadeStart);
-          overlay._streakFadeStart = null;
-        }
-        overlay.classList.add('dismissed');
-        overlay.classList.remove('streak-splash-running');
-        overlay.style.animation = '';
-        overlay.style.opacity = '';
-      }, 4800);
+        if (!_streakDismissed) _dismissStreak();
+      }, 8000);
     }
 
     (function wishRunnerGameIIFE() {
