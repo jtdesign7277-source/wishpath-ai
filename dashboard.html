@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-12-v255';
+    var APP_VERSION = '2026-04-12-v256';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -619,6 +619,10 @@
       font-size: 22px;
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
+      visibility: hidden;
+    }
+    .notes-swipe-wrap.show-delete .notes-swipe-delete {
+      visibility: visible;
     }
     .notes-swipe-delete:active { background: #b91c1c; }
     .notes-swipe-delete svg { pointer-events: none; }
@@ -10504,7 +10508,7 @@
         item.addEventListener('touchstart', function(e) {
           // Close any other open swipes first
           document.querySelectorAll('.notes-item.swiped').forEach(function(el) {
-            if (el !== item) el.classList.remove('swiped');
+            if (el !== item) { el.classList.remove('swiped'); el.parentElement.classList.remove('show-delete'); }
           });
           startX = e.touches[0].clientX;
           startY = e.touches[0].clientY;
@@ -10519,8 +10523,10 @@
           moving = true;
           if (dx < -30 && !swiped) {
             item.classList.add('swiped');
+            item.parentElement.classList.add('show-delete');
           } else if (dx > 30 && swiped) {
             item.classList.remove('swiped');
+            item.parentElement.classList.remove('show-delete');
           }
         }, { passive: true });
         item.addEventListener('touchend', function() { moving = false; }, { passive: true });
@@ -10530,6 +10536,7 @@
             e.stopPropagation();
             e.preventDefault();
             item.classList.remove('swiped');
+            item.parentElement.classList.remove('show-delete');
           }
         }, true);
       });
