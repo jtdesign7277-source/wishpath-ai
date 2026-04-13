@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-13-v272';
+    var APP_VERSION = '2026-04-13-v273';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -4719,7 +4719,7 @@
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 5h12M4 10h12M4 15h8"/><path d="M2 5l1 1 2-2M2 10l1 1 2-2"/></svg>
         To-Dos
       </a>
-      <a class="nav-item" data-view="feedback" onclick="openFeedbackView();if(window.innerWidth<=768)toggleMobileSidebar();">
+      <a class="nav-item" data-view="feedback" onclick="openFeedbackView();">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
         Feedback
       </a>
@@ -4991,7 +4991,8 @@
             </button>
             <div class="lc-input-bar" id="homePortfolioInputBar">
               <div class="lc-input-wrap">
-                <div class="lc-input" id="portfolioCoachInput" contenteditable="true" role="textbox" data-placeholder="Portfolio coach" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendPortfolioCoachMsg();}"></div>
+                <div style="position:absolute;top:6px;left:16px;font-size:0.72rem;font-weight:600;color:#c4b5fd;letter-spacing:0.04em;z-index:3;pointer-events:none;font-family:'IBM Plex Sans',system-ui,sans-serif;">Portfolio Coach</div>
+                <div class="lc-input" id="portfolioCoachInput" contenteditable="true" role="textbox" data-placeholder="Ask anything..." style="padding-top:28px;" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendPortfolioCoachMsg();}"></div>
                 <button class="lc-send-btn" onclick="sendPortfolioCoachMsg()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
               </div>
             </div>
@@ -5099,7 +5100,8 @@
             </button>
             <div class="lc-input-bar" id="portfolioInputBar">
               <div class="lc-input-wrap">
-                <div class="lc-input" id="fmPortfolioCoachInput" contenteditable="true" role="textbox" data-placeholder="Portfolio coach" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendPortfolioCoachMsg();}"></div>
+                <div style="position:absolute;top:6px;left:16px;font-size:0.72rem;font-weight:600;color:#c4b5fd;letter-spacing:0.04em;z-index:3;pointer-events:none;font-family:'IBM Plex Sans',system-ui,sans-serif;">Portfolio Coach</div>
+                <div class="lc-input" id="fmPortfolioCoachInput" contenteditable="true" role="textbox" data-placeholder="Ask anything..." style="padding-top:28px;" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendPortfolioCoachMsg();}"></div>
                 <button class="lc-send-btn" onclick="sendPortfolioCoachMsg()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
               </div>
             </div>
@@ -8629,6 +8631,26 @@
       var powerupSpawnAcc = 0;
       var powerupSpawnEvery = 12; // seconds between power-up drops
 
+      // Collectible ship upgrades
+      var shipCollectibles = [];
+      var shipCollectSpawnAcc = 0;
+      var shipCollectSpawnEvery = 25; // seconds between collectible ship spawns
+      var playerShipTier = 0; // 0=basic, 1=striker, 2=phantom, 3=nova
+      var SHIP_TIERS = [
+        { name: 'BASIC', hullColor: '#5a7a8a', accentColor: '#00ff44', cockpitColor: '#00ff44', engineColor: '#00ff44' },
+        { name: 'STRIKER', hullColor: '#6a5aaa', accentColor: '#00E5FF', cockpitColor: '#00E5FF', engineColor: '#00BFFF', sizeBoost: 4 },
+        { name: 'PHANTOM', hullColor: '#8a3a6a', accentColor: '#FF6B9D', cockpitColor: '#ff44aa', engineColor: '#FF6B9D', sizeBoost: 7 },
+        { name: 'NOVA', hullColor: '#8a7a2a', accentColor: '#FFD700', cockpitColor: '#FFD700', engineColor: '#FFA500', sizeBoost: 10 }
+      ];
+
+      // Level background themes
+      var LEVEL_THEMES = [
+        { bg: '#0B0611', nebHues: [220, 280], starTint: 'rgba(255,255,255,' },       // L1: deep space
+        { bg: '#0d0520', nebHues: [270, 320], starTint: 'rgba(200,180,255,' },       // L2: purple nebula
+        { bg: '#051520', nebHues: [180, 210], starTint: 'rgba(150,220,255,' },       // L3: blue asteroid field
+        { bg: '#150808', nebHues: [0, 30], starTint: 'rgba(255,180,150,' }            // L4+: red galaxy
+      ];
+
       function loadHigh() {
         try { highScore = parseInt(localStorage.getItem('wp_wish_runner_hi'), 10) || 0; } catch (e) { highScore = 0; }
       }
@@ -8696,6 +8718,10 @@
         _invincibleTimer = 0;
         _invincibleFlashCycle = 0;
         powerupSpawnAcc = 0;
+        shipCollectibles = [];
+        shipCollectSpawnAcc = 0;
+        playerShipTier = 0;
+        player.size = 28;
         score = 0;
         gems = 0;
         gameOver = false;
@@ -9275,6 +9301,40 @@
             powerups.splice(pu, 1);
           }
         }
+        // Spawn collectible ships
+        shipCollectSpawnAcc += dt;
+        if (shipCollectSpawnAcc >= shipCollectSpawnEvery && playerShipTier < 3 && score > 50) {
+          shipCollectSpawnAcc = 0;
+          var nextTier = playerShipTier + 1;
+          shipCollectibles.push({
+            x: 30 + Math.random() * (GW - 60),
+            y: -30,
+            speed: 60 + Math.random() * 30,
+            tier: nextTier,
+            size: 30,
+            pulse: 0,
+            angle: 0
+          });
+        }
+        // Update collectible ships
+        for (var sci = shipCollectibles.length - 1; sci >= 0; sci--) {
+          var sc = shipCollectibles[sci];
+          sc.y += sc.speed * dt;
+          sc.pulse += dt * 4;
+          sc.angle += dt * 2;
+          if (sc.y > GH + 40) { shipCollectibles.splice(sci, 1); continue; }
+          var scdx = sc.x - player.x;
+          var scdy = sc.y - player.y;
+          if (Math.sqrt(scdx * scdx + scdy * scdy) < sc.size + player.size * 0.5) {
+            playerShipTier = sc.tier;
+            var tierDef = SHIP_TIERS[sc.tier];
+            player.size = 28 + (tierDef.sizeBoost || 0);
+            spawnExplosion(sc.x, sc.y, tierDef.accentColor, 30);
+            playPowerupSound();
+            shipCollectibles.splice(sci, 1);
+          }
+        }
+
         // Horizontal movement
         var moveInput = 0;
         if (Math.abs(moveDx) > 0.08) moveInput = moveDx;
@@ -9830,6 +9890,43 @@
         ctx.restore();
       }
 
+      // Draw collectible ship pickup floating down
+      function drawCollectibleShip(sc) {
+        ctx.save();
+        ctx.translate(sc.x, sc.y);
+        ctx.rotate(sc.angle * 0.3);
+        var td = SHIP_TIERS[sc.tier];
+        var pulseSz = 1 + Math.sin(sc.pulse) * 0.1;
+        ctx.scale(pulseSz, pulseSz);
+        // Glowing aura
+        var aGrad = ctx.createRadialGradient(0, 0, 5, 0, 0, sc.size * 1.2);
+        aGrad.addColorStop(0, td.accentColor);
+        aGrad.addColorStop(0.5, td.accentColor.substring(0, 7) + '44');
+        aGrad.addColorStop(1, 'transparent');
+        ctx.fillStyle = aGrad;
+        ctx.beginPath(); ctx.arc(0, 0, sc.size * 1.2, 0, Math.PI * 2); ctx.fill();
+        // Mini ship silhouette
+        ctx.fillStyle = td.hullColor;
+        ctx.beginPath();
+        ctx.moveTo(0, -sc.size * 0.5);
+        ctx.lineTo(sc.size * 0.35, sc.size * 0.3);
+        ctx.lineTo(-sc.size * 0.35, sc.size * 0.3);
+        ctx.closePath();
+        ctx.fill();
+        // Cockpit dot
+        ctx.fillStyle = td.cockpitColor;
+        ctx.beginPath(); ctx.arc(0, -sc.size * 0.1, 4, 0, Math.PI * 2); ctx.fill();
+        // Engine glow
+        ctx.fillStyle = td.engineColor;
+        ctx.beginPath(); ctx.arc(0, sc.size * 0.3, 3, 0, Math.PI * 2); ctx.fill();
+        // Tier label
+        ctx.font = 'bold 9px ui-sans-serif, system-ui, sans-serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        ctx.fillStyle = td.accentColor;
+        ctx.fillText(td.name, 0, sc.size * 0.55);
+        ctx.restore();
+      }
+
       function drawShip() {
         ctx.save();
         ctx.translate(player.x, player.y);
@@ -9860,10 +9957,16 @@
         }
 
         // ===== ULTRA-DETAILED PLAYER SHIP =====
-        // Main hull — metallic silver/gray elongated body
-        var hullDark = '#2a3a4a';
-        var hullMid = '#5a7a8a';
-        var hullLight = '#9abaaa';
+        // Hull colors change based on ship tier
+        var _tier = SHIP_TIERS[playerShipTier];
+        var hullDark, hullMid, hullLight;
+        if (playerShipTier === 0) { hullDark = '#2a3a4a'; hullMid = '#5a7a8a'; hullLight = '#9abaaa'; }
+        else if (playerShipTier === 1) { hullDark = '#2a2a5a'; hullMid = '#5a5aaa'; hullLight = '#8a8add'; }
+        else if (playerShipTier === 2) { hullDark = '#4a1a3a'; hullMid = '#8a3a6a'; hullLight = '#cc5599'; }
+        else { hullDark = '#4a3a1a'; hullMid = '#8a7a2a'; hullLight = '#ddcc55'; }
+        var _tierCockpit = _tier.cockpitColor;
+        var _tierEngine = _tier.engineColor;
+        var _tierAccent = _tier.accentColor;
         var hullGrad = ctx.createLinearGradient(-sz * 0.4, -sz * 0.7, sz * 0.4, sz * 0.5);
         hullGrad.addColorStop(0, hullDark);
         hullGrad.addColorStop(0.3, hullMid);
@@ -9887,8 +9990,8 @@
         ctx.fill();
         ctx.shadowBlur = 0;
 
-        // Center stripe — red/orange running down the middle
-        ctx.strokeStyle = '#ff5533';
+        // Center stripe — accent color running down the middle
+        ctx.strokeStyle = _tierAccent;
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(0, -sz * 0.65);
@@ -9909,8 +10012,8 @@
         ctx.lineTo(sz * 0.18, sz * 0.35);
         ctx.stroke();
 
-        // Cockpit — bright GREEN glowing dome (not cyan)
-        var cockGreen = _invincible ? '#ffff00' : '#00ff44';
+        // Cockpit — bright glowing dome (color from ship tier)
+        var cockGreen = _invincible ? '#ffff00' : _tierCockpit;
         ctx.shadowColor = cockGreen;
         ctx.shadowBlur = 20;
         ctx.fillStyle = cockGreen;
@@ -9919,8 +10022,8 @@
         ctx.fill();
         ctx.shadowBlur = 0;
 
-        // Cockpit rim — darker green border
-        ctx.strokeStyle = 'rgba(0, 200, 50, 0.8)';
+        // Cockpit rim
+        ctx.strokeStyle = _tierCockpit;
         ctx.lineWidth = 1.5;
         ctx.beginPath();
         ctx.arc(0, -sz * 0.35, sz * 0.2, 0, Math.PI * 2);
@@ -9959,8 +10062,8 @@
         ctx.closePath();
         ctx.fill();
 
-        // Wing cannon barrels — visible on wing tips with green glow
-        ctx.shadowColor = '#00ff44';
+        // Wing cannon barrels — visible on wing tips with tier glow
+        ctx.shadowColor = _tierAccent;
         ctx.shadowBlur = 14;
         ctx.fillStyle = '#1a2a3a';
         // Left cannon
@@ -9973,7 +10076,7 @@
         ctx.fill();
 
         // Cannon glowing tips
-        ctx.fillStyle = '#00ff44';
+        ctx.fillStyle = _tierAccent;
         ctx.shadowBlur = 16;
         // Left cannon tip
         ctx.beginPath();
@@ -9986,9 +10089,9 @@
 
         // Engine section — rear with 3 glowing circular thrusters
         // Center main engine
-        ctx.shadowColor = '#00ff44';
+        ctx.shadowColor = _tierEngine;
         ctx.shadowBlur = 22;
-        ctx.fillStyle = 'rgba(0, 255, 68, 0.85)';
+        ctx.fillStyle = _tierEngine;
         var flicker1 = 0.9 + Math.random() * 0.2;
         ctx.globalAlpha = flicker1;
         ctx.beginPath();
@@ -10013,11 +10116,12 @@
         ctx.globalAlpha = 1;
         ctx.shadowBlur = 0;
 
-        // Engine exhaust flame trail — green glow extending backward
+        // Engine exhaust flame trail
         var exhaustGrad = ctx.createLinearGradient(0, sz * 0.48, 0, sz * 0.8);
-        exhaustGrad.addColorStop(0, 'rgba(0, 255, 68, 0.6)');
-        exhaustGrad.addColorStop(0.5, 'rgba(0, 200, 100, 0.3)');
-        exhaustGrad.addColorStop(1, 'transparent');
+        var _eC = playerShipTier === 0 ? 'rgba(0,255,68,' : playerShipTier === 1 ? 'rgba(0,229,255,' : playerShipTier === 2 ? 'rgba(255,107,157,' : 'rgba(255,215,0,';
+        exhaustGrad.addColorStop(0, _eC + '0.6)');
+        exhaustGrad.addColorStop(0.5, _eC + '0.3)');
+        exhaustGrad.addColorStop(1, _eC + '0)');
         ctx.fillStyle = exhaustGrad;
         ctx.beginPath();
         ctx.moveTo(-sz * 0.12, sz * 0.48);
@@ -10056,8 +10160,9 @@
           ctx.translate(shakeX, shakeY);
         }
 
-        // Deep space background
-        ctx.fillStyle = '#0B0611';
+        // Level-based background color
+        var _lvlTheme = LEVEL_THEMES[Math.min(currentLevel - 1, LEVEL_THEMES.length - 1)];
+        ctx.fillStyle = _lvlTheme.bg;
         ctx.fillRect(0, 0, GW, GH);
 
         // Draw nebula clouds (low opacity background)
@@ -10065,7 +10170,12 @@
           for (var ni = 0; ni < stars.nebulas.length; ni++) {
             var neb = stars.nebulas[ni];
             var nebGrad = ctx.createRadialGradient(neb.x, neb.y, 0, neb.x, neb.y, neb.size);
-            var nebColor = neb.hue === 220 ? 'rgba(0, 100, 180, ' : 'rgba(150, 80, 200, ';
+            var _nt = LEVEL_THEMES[Math.min(currentLevel - 1, LEVEL_THEMES.length - 1)];
+            var nebColor;
+            if (_nt.nebHues[0] >= 350 || _nt.nebHues[0] <= 30) nebColor = neb.hue === 220 ? 'rgba(180, 60, 40, ' : 'rgba(200, 100, 50, ';
+            else if (_nt.nebHues[0] >= 160 && _nt.nebHues[0] <= 220) nebColor = neb.hue === 220 ? 'rgba(0, 120, 200, ' : 'rgba(60, 160, 220, ';
+            else if (_nt.nebHues[0] >= 250) nebColor = neb.hue === 220 ? 'rgba(100, 40, 180, ' : 'rgba(180, 60, 220, ';
+            else nebColor = neb.hue === 220 ? 'rgba(0, 100, 180, ' : 'rgba(150, 80, 200, ';
             nebGrad.addColorStop(0, nebColor + (neb.opacity * 0.8) + ')');
             nebGrad.addColorStop(0.5, nebColor + (neb.opacity * 0.4) + ')');
             nebGrad.addColorStop(1, nebColor + '0)');
@@ -10104,7 +10214,8 @@
         // Scrolling starfield (3 layers)
         for (var si = 0; si < stars.length; si++) {
           var s = stars[si];
-          ctx.fillStyle = 'rgba(255,255,255,' + s.alpha + ')';
+          var _stTint = LEVEL_THEMES[Math.min(currentLevel - 1, LEVEL_THEMES.length - 1)].starTint;
+          ctx.fillStyle = _stTint + s.alpha + ')';
           ctx.beginPath();
           ctx.arc(s.x, s.y, s.size, 0, 6.2832);
           ctx.fill();
@@ -10370,6 +10481,11 @@
           ctx.restore();
         }
 
+        // Draw collectible ship pickups
+        for (var dci = 0; dci < shipCollectibles.length; dci++) {
+          drawCollectibleShip(shipCollectibles[dci]);
+        }
+
         // Draw active power-up indicator
         if (activePowerup) {
           var puInfo = POWERUP_TYPES.find(function(p) { return p.type === activePowerup.type; });
@@ -10384,6 +10500,20 @@
             ctx.shadowBlur = 0;
             ctx.restore();
           }
+        }
+
+        // Draw ship tier indicator
+        if (playerShipTier > 0) {
+          ctx.save();
+          ctx.font = 'bold 10px sans-serif';
+          ctx.textAlign = 'left';
+          var _st = SHIP_TIERS[playerShipTier];
+          ctx.fillStyle = _st.accentColor;
+          ctx.shadowColor = _st.accentColor;
+          ctx.shadowBlur = 6;
+          ctx.fillText(_st.name + ' SHIP', 12, 42);
+          ctx.shadowBlur = 0;
+          ctx.restore();
         }
 
         // Draw invincibility indicator
@@ -13229,6 +13359,8 @@
       // Remember where the user came from so back button returns there
       var current = document.body.getAttribute('data-active-view');
       if (current && current !== 'feedback') _feedbackPreviousView = current;
+      // Close sidebar FIRST (it re-shows navBar), then hide navBar after
+      closeMobileSidebar();
       var feedbackFS = document.getElementById('feedbackFullscreen');
       var feedbackView = document.getElementById('feedbackView');
       if (feedbackFS) feedbackFS.style.display = 'flex';
@@ -13239,7 +13371,6 @@
       if (navBar && window.innerWidth <= 768) navBar.style.display = 'none';
       resetFeedbackForm();
       loadUserFeedback();
-      closeMobileSidebar();
     }
 
     function closeFeedbackView() {
@@ -16716,7 +16847,7 @@
           '</div>' +
           '<div class="lc-input-bar">' +
             '<div class="lc-input-wrap">' +
-              '<div style="position:absolute;top:6px;left:16px;font-size:0.72rem;font-weight:600;color:#7132F5;letter-spacing:0.04em;z-index:3;pointer-events:none;font-family:\'IBM Plex Sans\',system-ui,sans-serif;">Portfolio Coach</div>' +
+              '<div style="position:absolute;top:6px;left:16px;font-size:0.72rem;font-weight:600;color:#c4b5fd;letter-spacing:0.04em;z-index:3;pointer-events:none;font-family:\'IBM Plex Sans\',system-ui,sans-serif;">Portfolio Coach</div>' +
               '<div class="lc-input" id="mobilePortfolioCoachInput" contenteditable="true" role="textbox" data-placeholder="Ask anything..." onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();sendPortfolioCoachMsg();}" style="padding-top:28px;"></div>' +
               '<button class="lc-send-btn" onclick="sendPortfolioCoachMsg()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>' +
             '</div>' +
