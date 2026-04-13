@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-13-v261';
+    var APP_VERSION = '2026-04-13-v262';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -8283,6 +8283,13 @@
         waveNumber = 0;
         waveEnemyCount = 0;
         waveEnemiesKilled = 0;
+        currentLevel = 1;
+        levelEnemiesTotal = 0;
+        levelEnemiesKilled = 0;
+        levelTransition = false;
+        levelTransitionTimer = 0;
+        enemyBullets = [];
+        explosionEffects = [];
         starsInit = false;
         loadHigh();
         var go = document.getElementById('wp-wish-runner-gameover');
@@ -8297,6 +8304,12 @@
       var waveNumber = 0;
       var waveEnemyCount = 0;
       var waveEnemiesKilled = 0;
+      var currentLevel = 1;
+      var levelEnemiesTotal = 0;
+      var levelEnemiesKilled = 0;
+      var levelTransition = false;
+      var levelTransitionTimer = 0;
+      var enemyBullets = [];
       var screenShakeAmount = 0;
       var screenShakeDuration = 0;
       var SPACE_TYPES = ['planet', 'asteroid', 'debris', 'comet'];
@@ -8394,37 +8407,58 @@
         var typeRoll = Math.random();
         var type, sz, hp, isEnemyShip = false;
 
-        // Spawn enemy ships more frequently as score increases
-        if (typeRoll < 0.15 + Math.min(0.4, score * 0.0008)) {
-          // Enemy ship types
-          isEnemyShip = true;
-          var shipType = Math.random();
-          if (shipType < 0.6) {
-            type = 'enemy-fighter';
-            sz = 28 + Math.random() * 12;
-            hp = 2 + Math.floor(Math.random() * 2);
+        // Level-aware spawning
+        if (currentLevel === 1) {
+          // Level 1: Only asteroids, debris, comets (no enemies)
+          if (typeRoll < 0.4) {
+            type = 'asteroid';
+            sz = 65 + Math.random() * 70;
+            hp = Math.floor(Math.random() * 7) + 5;
+          } else if (typeRoll < 0.7) {
+            type = 'debris';
+            sz = 45 + Math.random() * 40;
+            hp = Math.floor(Math.random() * 4) + 3;
           } else {
-            type = 'enemy-bomber';
-            sz = 38 + Math.random() * 14;
-            hp = 4 + Math.floor(Math.random() * 3);
+            type = 'comet';
+            sz = 55 + Math.random() * 40;
+            hp = Math.floor(Math.random() * 3) + 2;
           }
-        } else if (typeRoll < 0.35) {
-          type = 'planet';
-          sz = 60 + Math.random() * 50;
-          hp = Math.floor(Math.random() * 8) + 7;
-        } else if (typeRoll < 0.65) {
-          type = 'asteroid';
-          sz = 65 + Math.random() * 70;
-          hp = Math.floor(Math.random() * 7) + 5;
-        } else if (typeRoll < 0.85) {
-          type = 'debris';
-          sz = 45 + Math.random() * 40;
-          hp = Math.floor(Math.random() * 4) + 3;
+        } else if (currentLevel === 2) {
+          // Level 2: Enemy fighters only (no asteroids)
+          isEnemyShip = true;
+          type = 'enemy-fighter';
+          sz = 28 + Math.random() * 12;
+          hp = 2 + Math.floor(Math.random() * 2);
         } else {
-          type = 'comet';
-          sz = 55 + Math.random() * 40;
-          hp = Math.floor(Math.random() * 3) + 2;
+          // Level 3+: Mix of asteroids and enemies, increasing difficulty
+          var mixRoll = Math.random();
+          if (mixRoll < 0.5) {
+            // Enemy fighters
+            isEnemyShip = true;
+            var shipType = Math.random();
+            if (shipType < 0.7) {
+              type = 'enemy-fighter';
+              sz = 28 + Math.random() * 12;
+              hp = 2 + Math.floor(Math.random() * 2);
+            } else {
+              type = 'enemy-bomber';
+              sz = 38 + Math.random() * 14;
+              hp = 4 + Math.floor(Math.random() * 3);
+            }
+          } else {
+            // Asteroids/debris
+            if (typeRoll < 0.6) {
+              type = 'asteroid';
+              sz = 65 + Math.random() * 70;
+              hp = Math.floor(Math.random() * 7) + 5;
+            } else {
+              type = 'debris';
+              sz = 45 + Math.random() * 40;
+              hp = Math.floor(Math.random() * 4) + 3;
+            }
+          }
         }
+
         var colorIdx = Math.floor(Math.random() * PLANET_COLORS.length);
         var asteroidColor = ASTEROID_COLORS[Math.floor(Math.random() * ASTEROID_COLORS.length)];
         var rotation = Math.random() * Math.PI * 2;
@@ -8452,6 +8486,45 @@
           patternPhase: Math.random() * Math.PI * 2,
           fireCounter: Math.random() * 0.5
         });
+
+        if (isEnemyShip) levelEnemiesKilled = Math.max(0, levelEnemiesKilled);
+      }
+
+      function spawnEnemyFormation(formationType) {
+        // Spawn a wave of 5-8 enemy fighters in formation
+        var count = 5 + Math.floor(Math.random() * 4);
+        var baseX = GW * 0.5;
+        var baseY = GH * 0.2;
+
+        for (var i = 0; i < count; i++) {
+          var offsetX = (i % 3) * 50 - 50;
+          var offsetY = Math.floor(i / 3) * 50;
+          var sz = 28 + Math.random() * 12;
+          var hp = 2 + Math.floor(Math.random() * 2);
+
+          targets.push({
+            x: baseX + offsetX,
+            y: baseY + offsetY - sz * 0.5,
+            size: sz,
+            health: hp,
+            maxHealth: hp,
+            speed: 65 + Math.random() * 30,
+            type: 'enemy-fighter',
+            colorIdx: 0,
+            asteroidColor: null,
+            rotation: 0,
+            rotSpeed: 0,
+            wobble: 0,
+            isEnemyShip: true,
+            enemyColor: '#ff6644',
+            movePattern: 'sine',
+            patternPhase: Math.random() * Math.PI * 2,
+            fireCounter: 1 + Math.random() * 0.5,
+            formationEnemy: true,
+            sineAmplitude: 60 + Math.random() * 40
+          });
+          levelEnemiesTotal += 1;
+        }
       }
 
       // Galaxy Attack style explosion system
@@ -8632,7 +8705,69 @@
           if (p.life <= 0) particles.splice(pi, 1);
         }
         if (milestoneFlash > 0) milestoneFlash = Math.max(0, milestoneFlash - dt);
+
+        // Level transition handling
+        if (levelTransition) {
+          levelTransitionTimer -= dt;
+          if (levelTransitionTimer <= 0) {
+            levelTransition = false;
+            currentLevel += 1;
+            levelEnemiesTotal = 0;
+            levelEnemiesKilled = 0;
+            spawnAcc = 0; // Reset spawn accumulator for new level
+          }
+        }
+
         if (gameOver) return;
+
+        // Update enemy bullets
+        for (var ebi = enemyBullets.length - 1; ebi >= 0; ebi--) {
+          var eb = enemyBullets[ebi];
+          eb.x += eb.vx * dt;
+          eb.y += eb.vy * dt;
+          eb.life -= dt;
+          if (eb.life <= 0 || eb.y > GH + 20) {
+            enemyBullets.splice(ebi, 1);
+            continue;
+          }
+          // Check if enemy bullet hits player
+          var edx = eb.x - player.x;
+          var edy = eb.y - player.y;
+          var distToPlayer = Math.sqrt(edx * edx + edy * edy);
+          if (distToPlayer < 8 + player.size * 0.5) {
+            if (_invincible) {
+              // Destroy bullet instead
+              spawnExplosion(eb.x, eb.y, '#00ff00', 6);
+              enemyBullets.splice(ebi, 1);
+            } else {
+              // Death
+              gameOver = true;
+              _deathTime = Date.now();
+              spawnExplosion(player.x, player.y, '#FF5252', 25);
+              spawnExplosion(player.x - 20, player.y + 15, '#FF9800', 15);
+              spawnExplosion(player.x + 20, player.y - 15, '#FDE047', 15);
+              spawnExplosion(player.x, player.y - 25, '#FFFFFF', 12);
+              triggerScreenShake(8, 0.5);
+              targets = [];
+              bullets = [];
+              enemyBullets = [];
+              powerups = [];
+              saveHigh(score);
+              var _deathScore = score;
+              var _deathHi = Math.max(highScore, score);
+              setTimeout(function() {
+                var go = document.getElementById('wp-wish-runner-gameover');
+                var fs = document.getElementById('wp-wish-runner-final');
+                var goHi = document.getElementById('wp-wish-runner-gameover-hi');
+                if (fs) fs.textContent = String(_deathScore);
+                if (goHi) goHi.textContent = String(_deathHi);
+                if (go) { go.hidden = false; go.removeAttribute('hidden'); go.style.display = 'flex'; }
+              }, 800);
+              return;
+            }
+          }
+        }
+
         // Invincibility timer
         if (_invincible) {
           _invincibleTimer -= dt;
@@ -8761,6 +8896,36 @@
           t.y += t.speed * dt;
           t.rotation += t.rotSpeed * dt;
           t.wobble += dt * 1.5;
+
+          // Enemy ship movement and firing
+          if (t.isEnemyShip) {
+            // Sine wave movement (left-right oscillation)
+            if (t.movePattern === 'sine') {
+              var sineOffset = Math.sin(t.wobble + t.patternPhase) * (t.sineAmplitude || 60);
+              t.x += sineOffset * dt * 0.5;
+            }
+
+            // Enemy firing logic
+            t.fireCounter -= dt;
+            if (t.fireCounter <= 0) {
+              // Fire green bullet toward player
+              var toBulletX = player.x - t.x;
+              var toBulletY = player.y - t.y;
+              var bulletDist = Math.sqrt(toBulletX * toBulletX + toBulletY * toBulletY);
+              if (bulletDist > 0) {
+                var bulletSpeed = 200;
+                enemyBullets.push({
+                  x: t.x,
+                  y: t.y + t.size * 0.5,
+                  vx: (toBulletX / bulletDist) * bulletSpeed,
+                  vy: (toBulletY / bulletDist) * bulletSpeed,
+                  life: 3.0
+                });
+              }
+              t.fireCounter = 1.5 + Math.random() * 1.0;
+            }
+          }
+
           if (targetHitsPlayer(t)) {
             if (_invincible) {
               // Destroy enemy instead of dying
@@ -8813,6 +8978,26 @@
                 spawnExplosion(t.x, t.y, '#FF8800', 18);
                 spawnExplosion(t.x, t.y, '#FFCC00', 8);
                 triggerScreenShake(3, 0.2);
+
+                // Track level progression
+                if (t.isEnemyShip) {
+                  levelEnemiesKilled += 1;
+                  // Check if level is complete
+                  var targetKillsForLevel = currentLevel === 1 ? 18 : (currentLevel === 2 ? 20 : 22);
+                  if (levelEnemiesKilled >= targetKillsForLevel) {
+                    levelTransition = true;
+                    levelTransitionTimer = 2.0;
+                  }
+                } else {
+                  // Asteroid/debris killed
+                  levelEnemiesKilled += 1;
+                  var targetKillsForLevel = 18;
+                  if (currentLevel === 1 && levelEnemiesKilled >= targetKillsForLevel) {
+                    levelTransition = true;
+                    levelTransitionTimer = 2.0;
+                  }
+                }
+
                 targets.splice(j, 1);
                 // Milestone check
                 var curMile = Math.floor(score / 100);
@@ -9215,13 +9400,14 @@
         ctx.translate(player.x, player.y);
         var sz = player.size;
 
-        // Shield aura (pulsing cyan ring)
+        // Shield aura (pulsing green ring for invincibility mode)
         if (!gameOver) {
           var pulseAlpha = 0.08 + Math.sin(Date.now() * 0.003) * 0.05;
-          ctx.strokeStyle = 'rgba(0, 212, 255, ' + pulseAlpha + ')';
+          var shieldColor = _invincible ? 'rgba(0, 255, 0, ' : 'rgba(0, 212, 255, ';
+          ctx.strokeStyle = shieldColor + pulseAlpha + ')';
           ctx.lineWidth = 1.5;
           ctx.beginPath();
-          ctx.arc(0, 0, sz * 0.85, 0, Math.PI * 2);
+          ctx.arc(0, 0, sz * 0.9, 0, Math.PI * 2);
           ctx.stroke();
         }
 
@@ -9229,125 +9415,191 @@
         if (_invincible) {
           var rainbowColors = ['#FF0000', '#FF7F00', '#FFFF00', '#00FF00', '#0000FF', '#4B0082', '#9400D3'];
           var rainbowIdx = Math.floor((_invincibleFlashCycle / 2) % rainbowColors.length);
-          var rainbowAlpha = 0.3 + Math.sin(_invincibleFlashCycle) * 0.2;
+          var rainbowAlpha = 0.2 + Math.sin(_invincibleFlashCycle) * 0.15;
           ctx.globalAlpha = rainbowAlpha;
           ctx.fillStyle = rainbowColors[rainbowIdx];
           ctx.beginPath();
-          ctx.arc(0, 0, sz * 0.8, 0, Math.PI * 2);
+          ctx.arc(0, 0, sz * 0.85, 0, Math.PI * 2);
           ctx.fill();
           ctx.globalAlpha = 1;
         }
 
-        // Main body — elongated hexagon, dark blue with metallic highlight
-        var bodyDark = _invincible ? '#FF3366' : '#1a2a5a';
-        var bodyLight = _invincible ? '#FF5577' : '#2a4a9a';
-        var bodyGrad = ctx.createLinearGradient(-sz * 0.3, -sz * 0.6, sz * 0.3, sz * 0.4);
-        bodyGrad.addColorStop(0, bodyDark);
-        bodyGrad.addColorStop(0.5, bodyLight);
-        bodyGrad.addColorStop(1, bodyDark);
-        ctx.fillStyle = bodyGrad;
-        ctx.shadowColor = _invincible ? 'rgba(255,51,102,0.8)' : 'rgba(0,100,200,0.6)';
-        ctx.shadowBlur = 14;
+        // ===== ULTRA-DETAILED PLAYER SHIP =====
+        // Main hull — metallic silver/gray elongated body
+        var hullDark = '#2a3a4a';
+        var hullMid = '#5a7a8a';
+        var hullLight = '#9abaaa';
+        var hullGrad = ctx.createLinearGradient(-sz * 0.4, -sz * 0.7, sz * 0.4, sz * 0.5);
+        hullGrad.addColorStop(0, hullDark);
+        hullGrad.addColorStop(0.3, hullMid);
+        hullGrad.addColorStop(0.7, hullLight);
+        hullGrad.addColorStop(1, hullDark);
+        ctx.fillStyle = hullGrad;
+        ctx.shadowColor = 'rgba(100, 150, 200, 0.5)';
+        ctx.shadowBlur = 12;
 
-        // Hexagon body
+        // Main hull body — elongated diamond shape
         ctx.beginPath();
-        ctx.moveTo(0, -sz * 0.68);         // nose
-        ctx.lineTo(sz * 0.35, -sz * 0.28);  // upper right
-        ctx.lineTo(sz * 0.38, sz * 0.35);   // lower right
-        ctx.lineTo(0, sz * 0.45);           // bottom
-        ctx.lineTo(-sz * 0.38, sz * 0.35);  // lower left
-        ctx.lineTo(-sz * 0.35, -sz * 0.28); // upper left
+        ctx.moveTo(0, -sz * 0.7);           // nose point
+        ctx.lineTo(sz * 0.25, -sz * 0.35);  // upper right shoulder
+        ctx.lineTo(sz * 0.32, sz * 0.15);   // wing root right
+        ctx.lineTo(sz * 0.2, sz * 0.45);    // lower right rear
+        ctx.lineTo(0, sz * 0.5);            // rear center
+        ctx.lineTo(-sz * 0.2, sz * 0.45);   // lower left rear
+        ctx.lineTo(-sz * 0.32, sz * 0.15);  // wing root left
+        ctx.lineTo(-sz * 0.25, -sz * 0.35); // upper left shoulder
         ctx.closePath();
         ctx.fill();
         ctx.shadowBlur = 0;
 
-        // Cockpit — cyan glowing dome
-        var cockGlow = _invincible ? '#FF88BB' : '#00d4ff';
-        ctx.shadowColor = cockGlow;
-        ctx.shadowBlur = 16;
-        ctx.fillStyle = cockGlow;
+        // Center stripe — red/orange running down the middle
+        ctx.strokeStyle = '#ff5533';
+        ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.arc(0, -sz * 0.28, sz * 0.15, 0, Math.PI * 2);
+        ctx.moveTo(0, -sz * 0.65);
+        ctx.lineTo(0, sz * 0.48);
+        ctx.stroke();
+
+        // Panel lines — thin detail strokes
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+        ctx.lineWidth = 0.8;
+        // Left side panel line
+        ctx.beginPath();
+        ctx.moveTo(-sz * 0.15, -sz * 0.5);
+        ctx.lineTo(-sz * 0.18, sz * 0.35);
+        ctx.stroke();
+        // Right side panel line
+        ctx.beginPath();
+        ctx.moveTo(sz * 0.15, -sz * 0.5);
+        ctx.lineTo(sz * 0.18, sz * 0.35);
+        ctx.stroke();
+
+        // Cockpit — bright GREEN glowing dome (not cyan)
+        var cockGreen = _invincible ? '#ffff00' : '#00ff44';
+        ctx.shadowColor = cockGreen;
+        ctx.shadowBlur = 20;
+        ctx.fillStyle = cockGreen;
+        ctx.beginPath();
+        ctx.arc(0, -sz * 0.35, sz * 0.2, 0, Math.PI * 2);
         ctx.fill();
         ctx.shadowBlur = 0;
-        // Cockpit inner highlight
-        ctx.fillStyle = 'rgba(255,255,255,0.4)';
+
+        // Cockpit rim — darker green border
+        ctx.strokeStyle = 'rgba(0, 200, 50, 0.8)';
+        ctx.lineWidth = 1.5;
         ctx.beginPath();
-        ctx.arc(-sz * 0.06, -sz * 0.35, sz * 0.08, 0, Math.PI * 2);
+        ctx.arc(0, -sz * 0.35, sz * 0.2, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Cockpit inner highlight — bright white shine
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.beginPath();
+        ctx.arc(-sz * 0.08, -sz * 0.45, sz * 0.08, 0, Math.PI * 2);
         ctx.fill();
 
-        // Wings — swept-back angular shapes with glowing edges
-        var wingColor = _invincible ? '#FF5577' : '#4488ff';
-        ctx.fillStyle = wingColor;
+        // Swept-back WINGS — wide angular design
+        var wingGradLeft = ctx.createLinearGradient(-sz * 0.32, -sz * 0.1, -sz * 0.65, 0);
+        wingGradLeft.addColorStop(0, '#6a8aaa');
+        wingGradLeft.addColorStop(1, '#4a6a8a');
+        ctx.fillStyle = wingGradLeft;
         // Left wing
         ctx.beginPath();
-        ctx.moveTo(-sz * 0.2, -sz * 0.1);
-        ctx.lineTo(-sz * 0.55, -sz * 0.08);
-        ctx.lineTo(-sz * 0.52, sz * 0.15);
-        ctx.lineTo(-sz * 0.22, sz * 0.1);
+        ctx.moveTo(-sz * 0.25, -sz * 0.2);
+        ctx.lineTo(-sz * 0.65, -sz * 0.1);
+        ctx.lineTo(-sz * 0.62, sz * 0.2);
+        ctx.lineTo(-sz * 0.28, sz * 0.1);
         ctx.closePath();
         ctx.fill();
+
+        var wingGradRight = ctx.createLinearGradient(sz * 0.32, -sz * 0.1, sz * 0.65, 0);
+        wingGradRight.addColorStop(0, '#6a8aaa');
+        wingGradRight.addColorStop(1, '#4a6a8a');
+        ctx.fillStyle = wingGradRight;
         // Right wing
         ctx.beginPath();
-        ctx.moveTo(sz * 0.2, -sz * 0.1);
-        ctx.lineTo(sz * 0.55, -sz * 0.08);
-        ctx.lineTo(sz * 0.52, sz * 0.15);
-        ctx.lineTo(sz * 0.22, sz * 0.1);
+        ctx.moveTo(sz * 0.25, -sz * 0.2);
+        ctx.lineTo(sz * 0.65, -sz * 0.1);
+        ctx.lineTo(sz * 0.62, sz * 0.2);
+        ctx.lineTo(sz * 0.28, sz * 0.1);
         ctx.closePath();
         ctx.fill();
 
-        // Wing gun protrusions
-        ctx.fillStyle = bodyLight;
-        // Left gun
+        // Wing cannon barrels — visible on wing tips with green glow
+        ctx.shadowColor = '#00ff44';
+        ctx.shadowBlur = 14;
+        ctx.fillStyle = '#1a2a3a';
+        // Left cannon
         ctx.beginPath();
-        ctx.arc(-sz * 0.45, 0, sz * 0.08, 0, Math.PI * 2);
+        ctx.arc(-sz * 0.62, 0, sz * 0.09, 0, Math.PI * 2);
         ctx.fill();
-        // Right gun
+        // Right cannon
         ctx.beginPath();
-        ctx.arc(sz * 0.45, 0, sz * 0.08, 0, Math.PI * 2);
+        ctx.arc(sz * 0.62, 0, sz * 0.09, 0, Math.PI * 2);
         ctx.fill();
 
-        // Main engines — 3 cyan glowing circles
-        var engineGlow = _invincible ? '#FF88BB' : '#00ffff';
-        ctx.shadowColor = engineGlow;
-        ctx.shadowBlur = 18;
-        var flicker1 = 0.85 + Math.random() * 0.25;
-        var flicker2 = 0.8 + Math.random() * 0.3;
+        // Cannon glowing tips
+        ctx.fillStyle = '#00ff44';
+        ctx.shadowBlur = 16;
+        // Left cannon tip
+        ctx.beginPath();
+        ctx.arc(-sz * 0.62, 0, sz * 0.05, 0, Math.PI * 2);
+        ctx.fill();
+        // Right cannon tip
+        ctx.beginPath();
+        ctx.arc(sz * 0.62, 0, sz * 0.05, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Engine section — rear with 3 glowing circular thrusters
+        // Center main engine
+        ctx.shadowColor = '#00ff44';
+        ctx.shadowBlur = 22;
+        ctx.fillStyle = 'rgba(0, 255, 68, 0.85)';
+        var flicker1 = 0.9 + Math.random() * 0.2;
+        ctx.globalAlpha = flicker1;
+        ctx.beginPath();
+        ctx.arc(0, sz * 0.48, sz * 0.15, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+
+        // Left thruster
+        var flicker2 = 0.85 + Math.random() * 0.25;
+        ctx.globalAlpha = flicker2 * 0.8;
+        ctx.beginPath();
+        ctx.arc(-sz * 0.18, sz * 0.5, sz * 0.1, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+
+        // Right thruster
         var flicker3 = 0.88 + Math.random() * 0.22;
-
-        // Center engine
-        ctx.fillStyle = 'rgba(0, 255, 255, ' + (0.7 * flicker1) + ')';
+        ctx.globalAlpha = flicker3 * 0.8;
         ctx.beginPath();
-        ctx.arc(0, sz * 0.48, sz * 0.18, 0, Math.PI * 2);
+        ctx.arc(sz * 0.18, sz * 0.5, sz * 0.1, 0, Math.PI * 2);
         ctx.fill();
-
-        // Left engine
-        ctx.fillStyle = 'rgba(0, 255, 255, ' + (0.6 * flicker2) + ')';
-        ctx.beginPath();
-        ctx.arc(-sz * 0.22, sz * 0.52, sz * 0.13, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Right engine
-        ctx.fillStyle = 'rgba(0, 255, 255, ' + (0.6 * flicker3) + ')';
-        ctx.beginPath();
-        ctx.arc(sz * 0.22, sz * 0.52, sz * 0.13, 0, Math.PI * 2);
-        ctx.fill();
-
+        ctx.globalAlpha = 1;
         ctx.shadowBlur = 0;
 
-        // Engine trail flames
-        var trailGrad = ctx.createLinearGradient(0, sz * 0.5, 0, sz * 0.95);
-        trailGrad.addColorStop(0, engineGlow);
-        trailGrad.addColorStop(0.5, 'rgba(65, 136, 255, 0.5)');
-        trailGrad.addColorStop(1, 'transparent');
-        ctx.fillStyle = trailGrad;
+        // Engine exhaust flame trail — green glow extending backward
+        var exhaustGrad = ctx.createLinearGradient(0, sz * 0.48, 0, sz * 0.8);
+        exhaustGrad.addColorStop(0, 'rgba(0, 255, 68, 0.6)');
+        exhaustGrad.addColorStop(0.5, 'rgba(0, 200, 100, 0.3)');
+        exhaustGrad.addColorStop(1, 'transparent');
+        ctx.fillStyle = exhaustGrad;
         ctx.beginPath();
-        ctx.moveTo(-sz * 0.15, sz * 0.48);
-        ctx.lineTo(sz * 0.15, sz * 0.48);
-        ctx.lineTo(sz * 0.08, sz * 0.75);
-        ctx.lineTo(-sz * 0.08, sz * 0.75);
+        ctx.moveTo(-sz * 0.12, sz * 0.48);
+        ctx.lineTo(sz * 0.12, sz * 0.48);
+        ctx.lineTo(sz * 0.06, sz * 0.75);
+        ctx.lineTo(-sz * 0.06, sz * 0.75);
         ctx.closePath();
         ctx.fill();
+
+        // Rivet dots for armor plating detail
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+        for (var rivI = 0; rivI < 6; rivI++) {
+          var rivX = -sz * 0.25 + rivI * sz * 0.08;
+          ctx.beginPath();
+          ctx.arc(rivX, -sz * 0.15, 1.2, 0, Math.PI * 2);
+          ctx.fill();
+        }
 
         ctx.restore();
       }
@@ -9479,6 +9731,28 @@
             ctx.shadowColor = 'rgba(255,255,255,0.8)';
             ctx.fillRect(bu.x - 1, bu.y - 10, 2, 13);
           }
+          ctx.shadowBlur = 0;
+          ctx.restore();
+        }
+
+        // Draw enemy bullets — bright green with glow
+        for (var ebi = 0; ebi < enemyBullets.length; ebi++) {
+          var eb = enemyBullets[ebi];
+          ctx.save();
+          // Bright green glow
+          ctx.shadowColor = '#00ff44';
+          ctx.shadowBlur = 12;
+          ctx.fillStyle = '#00ff44';
+          ctx.beginPath();
+          ctx.arc(eb.x, eb.y, 4, 0, Math.PI * 2);
+          ctx.fill();
+          // Inner bright core
+          ctx.fillStyle = '#ffffff';
+          ctx.shadowBlur = 6;
+          ctx.shadowColor = 'rgba(255,255,255,0.8)';
+          ctx.beginPath();
+          ctx.arc(eb.x, eb.y, 1.5, 0, Math.PI * 2);
+          ctx.fill();
           ctx.shadowBlur = 0;
           ctx.restore();
         }
@@ -9689,6 +9963,35 @@
           var shieldTime = Math.ceil(_invincibleTimer);
           ctx.fillText('SHIELD ' + shieldTime + 's', GW - 12, 12);
           ctx.shadowBlur = 0;
+          ctx.restore();
+        }
+
+        // Draw level indicator (top-left)
+        ctx.save();
+        ctx.font = 'bold 13px sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillStyle = '#00ff44';
+        ctx.shadowColor = '#00ff44';
+        ctx.shadowBlur = 8;
+        ctx.fillText('LEVEL ' + currentLevel, 12, 28);
+        ctx.shadowBlur = 0;
+        ctx.restore();
+
+        // Draw level completion transition text
+        if (levelTransition) {
+          var transProgress = 1 - (levelTransitionTimer / 2.0);
+          var transAlpha = Math.sin(transProgress * Math.PI) * 0.8;
+          ctx.save();
+          ctx.globalAlpha = transAlpha;
+          ctx.font = 'bold 48px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillStyle = '#FDE047';
+          ctx.shadowColor = '#FF9800';
+          ctx.shadowBlur = 24;
+          ctx.fillText('LEVEL ' + currentLevel + ' COMPLETE', GW * 0.5, GH * 0.35);
+          ctx.shadowBlur = 0;
+          ctx.globalAlpha = 1;
           ctx.restore();
         }
 
