@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-13-v277';
+    var APP_VERSION = '2026-04-13-v278';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -2771,13 +2771,13 @@
     #fmMarketsContent #fmTimeRangeBar.time-tabs {
       display: flex !important;
       gap: 8px;
-      padding: 16px 16px 12px 16px;
+      padding: 12px 16px;
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
-      background: #252525;
-      border-top: 1px solid rgba(104,107,130,0.24);
-      margin-top: 12px !important;
-      margin-bottom: 12px !important;
+      background: transparent;
+      border: none;
+      margin-top: 8px !important;
+      margin-bottom: 8px !important;
       margin-left: 0 !important;
       margin-right: 0 !important;
       box-sizing: border-box;
@@ -15337,6 +15337,8 @@
           var isCrypto = CRYPTO.some(function(c) { return c.symbol === symbol; });
           if (isStock) renderMarketCards();
           if (isCrypto) renderCryptoCards();
+          // Update FM stock list prices in-place (no blink)
+          refreshFMStockList();
           var ts = document.getElementById('marketsUpdatedTime');
           var fmTs = document.getElementById('fmMarketsUpdatedTime');
           var timeStr = 'Live via Alpaca \u2022 ' + new Date().toLocaleTimeString();
@@ -15446,11 +15448,7 @@
       // Populate FM Markets tab (list rows) — quoteKey must match marketsCache (e.g. BTC/USD not BTC)
       var fmStockList = document.getElementById('fmStockList');
       if (fmStockList) {
-        var fmRows = MAG7.map(function(s) {
-          return { label: s.symbol, name: s.name, quoteKey: s.symbol, chartSym: s.symbol };
-        }).concat(CRYPTO.map(function(c) {
-          return { label: c.display || c.symbol, name: c.name, quoteKey: c.symbol, chartSym: c.display || c.symbol.replace(/\/USD$/, '') };
-        }));
+        var fmRows = _getFMRows();
         var listHtml = '';
         fmRows.forEach(function(row) {
           var q = marketsCache[row.quoteKey];
@@ -15460,15 +15458,15 @@
           var sign = q && q.change > 0 ? '+' : '';
           var changeText = q ? sign + formatNum(q.change) + ' (' + sign + formatNum(q.changePercent) + '%)' : '';
           var changeColor = changeClass === 'up' ? '#22c55e' : changeClass === 'down' ? '#ef4444' : 'rgba(255,255,255,0.4)';
-          listHtml += '<div onclick="openTickerChart(\'' + row.chartSym + '\')" style="display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.06);cursor:pointer;">'
+          listHtml += '<div data-fm-row="' + row.quoteKey + '" onclick="openTickerChart(\'' + row.chartSym + '\')" style="display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.06);cursor:pointer;">'
             + '<div style="flex-shrink:0;width:36px;height:36px;margin-right:12px;display:flex;align-items:center;justify-content:center;">' + logo + '</div>'
             + '<div style="flex:1;min-width:0;">'
             + '<div style="font-size:15px;font-weight:600;color:#fff;">' + row.label + '</div>'
             + '<div style="font-size:12px;color:rgba(255,255,255,0.45);margin-top:1px;">' + row.name + '</div>'
             + '</div>'
             + '<div style="text-align:right;">'
-            + '<div style="font-size:15px;font-weight:600;color:#fff;">' + price + '</div>'
-            + '<div style="font-size:12px;color:' + changeColor + ';margin-top:1px;">' + changeText + '</div>'
+            + '<div data-fm-price="' + row.quoteKey + '" style="font-size:15px;font-weight:600;color:#fff;">' + price + '</div>'
+            + '<div data-fm-change="' + row.quoteKey + '" style="font-size:12px;color:' + changeColor + ';margin-top:1px;">' + changeText + '</div>'
             + '</div>'
             + '</div>';
         });
@@ -19713,36 +19711,33 @@
       if (document.getElementById('fmStockList')) refreshFMStockList();
     }
 
-    function refreshFMStockList() {
-      var fmStockList = document.getElementById('fmStockList');
-      if (!fmStockList) return;
-      var fmRows = MAG7.map(function(s) {
+    function _getFMRows() {
+      return MAG7.map(function(s) {
         return { label: s.symbol, name: s.name, quoteKey: s.symbol, chartSym: s.symbol };
       }).concat(CRYPTO.map(function(c) {
         return { label: c.display || c.symbol, name: c.name, quoteKey: c.symbol, chartSym: c.display || c.symbol.replace(/\/USD$/, '') };
       }));
-      var listHtml = '';
+    }
+
+    // In-place price update — no innerHTML rebuild, no logo blink
+    function refreshFMStockList() {
+      var fmStockList = document.getElementById('fmStockList');
+      if (!fmStockList) return;
+      // If rows haven't been built yet (no data-fm-row children), skip
+      if (!fmStockList.querySelector('[data-fm-row]')) return;
+      var fmRows = _getFMRows();
       fmRows.forEach(function(row) {
         var q = marketsCache[row.quoteKey];
-        var logo = buildTickerLogoHtml(row.label, 36);
-        var price = q ? '$' + formatNum(q.price) : '--';
-        var changeClass = q && q.change > 0 ? 'up' : q && q.change < 0 ? 'down' : 'flat';
-        var sign = q && q.change > 0 ? '+' : '';
-        var changeText = q ? sign + formatNum(q.change) + ' (' + sign + formatNum(q.changePercent) + '%)' : '';
-        var changeColor = changeClass === 'up' ? '#22c55e' : changeClass === 'down' ? '#ef4444' : 'rgba(255,255,255,0.4)';
-        listHtml += '<div onclick="openTickerChart(\'' + row.chartSym + '\')" style="display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.06);cursor:pointer;">'
-          + '<div style="flex-shrink:0;width:36px;height:36px;margin-right:12px;display:flex;align-items:center;justify-content:center;">' + logo + '</div>'
-          + '<div style="flex:1;min-width:0;">'
-          + '<div style="font-size:15px;font-weight:600;color:#fff;">' + row.label + '</div>'
-          + '<div style="font-size:12px;color:rgba(255,255,255,0.45);margin-top:1px;">' + row.name + '</div>'
-          + '</div>'
-          + '<div style="text-align:right;">'
-          + '<div style="font-size:15px;font-weight:600;color:#fff;">' + price + '</div>'
-          + '<div style="font-size:12px;color:' + changeColor + ';margin-top:1px;">' + changeText + '</div>'
-          + '</div>'
-          + '</div>';
+        if (!q) return;
+        var priceEl = fmStockList.querySelector('[data-fm-price="' + row.quoteKey + '"]');
+        var changeEl = fmStockList.querySelector('[data-fm-change="' + row.quoteKey + '"]');
+        if (priceEl) priceEl.textContent = '$' + formatNum(q.price);
+        if (changeEl) {
+          var sign = q.change > 0 ? '+' : '';
+          changeEl.textContent = sign + formatNum(q.change) + ' (' + sign + formatNum(q.changePercent) + '%)';
+          changeEl.style.color = q.change > 0 ? '#22c55e' : q.change < 0 ? '#ef4444' : 'rgba(255,255,255,0.4)';
+        }
       });
-      fmStockList.innerHTML = listHtml;
     }
 
     setInterval(refreshCryptoPrices, 10000);
