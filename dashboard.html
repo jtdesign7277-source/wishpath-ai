@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-13-v267';
+    var APP_VERSION = '2026-04-13-v268';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -245,8 +245,8 @@
     select { appearance: none !important; -webkit-appearance: none !important; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='rgba(255,255,255,0.6)' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E") !important; background-repeat: no-repeat !important; background-position: right 12px center !important; padding-right: 36px !important; }
     .coach-messages { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 8px 0; margin-bottom: 12px; }
     .msg { max-width: 90%; padding: 12px 16px; border-radius: 16px; font-size: 0.88rem; line-height: 1.6; transition: all 0.3s ease; }
-    .msg.user { align-self: flex-end; background: linear-gradient(135deg, rgba(42,32,64,0.9) 0%, rgba(60,40,100,0.7) 100%); color: rgba(255,255,255,0.9); border-bottom-right-radius: 4px; border: 1px solid rgba(167,139,250,0.15); box-shadow: 0 4px 16px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05); }
-    .msg.ai { align-self: flex-start; background: none; border: none; color: rgba(255,255,255,0.85); padding: 0; max-width: 92%; }
+    .msg.user { align-self: flex-end; background: linear-gradient(135deg, rgba(113,50,245,0.3) 0%, rgba(80,30,200,0.18) 50%, rgba(113,50,245,0.12) 100%); color: rgba(255,255,255,0.95); border-bottom-right-radius: 4px; border: 1px solid rgba(113,50,245,0.3); box-shadow: 0 4px 16px rgba(113,50,245,0.15), inset 0 1px 0 rgba(255,255,255,0.06); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+    .msg.ai { align-self: flex-start; background: linear-gradient(135deg, rgba(42,42,52,0.6) 0%, rgba(30,20,50,0.4) 50%, rgba(42,42,52,0.3) 100%); border: 1px solid rgba(113,50,245,0.12); border-radius: 16px 16px 16px 4px; color: rgba(255,255,255,0.9); max-width: 92%; box-shadow: 0 2px 12px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
     .msg.ai .thinking-status { display: inline-flex; align-items: center; gap: 8px; color: rgba(255,255,255,0.5); font-size: 14px; font-style: italic; }
     .msg.ai .thinking-label { color: rgba(255,255,255,0.5); font-weight: normal; }
     .msg.ai .thinking-dots { display: flex; gap: 4px; }
@@ -977,8 +977,8 @@
     .wish-chat-msg { display: flex; gap: 10px; align-items: flex-start; animation: fadeInUp 0.25s ease; }
     .wish-chat-msg.user { justify-content: flex-end; }
     .wish-chat-bubble { max-width: 85%; padding: 10px 16px; border-radius: 16px; font-size: 0.9rem; line-height: 1.5; }
-    .wish-chat-msg.ai .wish-chat-bubble { background: none; border: none; border-radius: 0; color: rgba(255,255,255,0.85); padding: 0; }
-    .wish-chat-msg.user .wish-chat-bubble { background: rgba(113,50,245,0.18); border: 1px solid rgba(113,50,245,0.2); border-radius: 16px 16px 4px 16px; color: #fff; }
+    .wish-chat-msg.ai .wish-chat-bubble { background: linear-gradient(135deg, rgba(42,42,52,0.6) 0%, rgba(30,20,50,0.4) 50%, rgba(42,42,52,0.3) 100%); border: 1px solid rgba(113,50,245,0.12); border-radius: 16px 16px 16px 4px; color: rgba(255,255,255,0.9); padding: 14px 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+    .wish-chat-msg.user .wish-chat-bubble { background: linear-gradient(135deg, rgba(113,50,245,0.3) 0%, rgba(80,30,200,0.18) 50%, rgba(113,50,245,0.12) 100%); border: 1px solid rgba(113,50,245,0.3); border-radius: 16px 16px 4px 16px; color: #fff; box-shadow: 0 4px 16px rgba(113,50,245,0.15), inset 0 1px 0 rgba(255,255,255,0.06); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
     .wish-submit:disabled { opacity: 0.5; cursor: not-allowed; }
 
     /* Todos */
@@ -2135,12 +2135,22 @@
       .main, .main-header {
         background: #191919 !important;
       }
-      .coach-messages, .msg.ai {
+      .coach-messages {
         background: #191919 !important;
       }
-      .msg.user {
-        background: #2a2040 !important;
+      .msg.ai {
+        background: linear-gradient(135deg, rgba(42,42,52,0.6) 0%, rgba(30,20,50,0.4) 50%, rgba(42,42,52,0.3) 100%) !important;
+        border: 1px solid rgba(113,50,245,0.12) !important;
+        border-radius: 16px 16px 16px 4px !important;
         color: rgba(255,255,255,0.9) !important;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04) !important;
+        padding: 12px 16px !important;
+      }
+      .msg.user {
+        background: linear-gradient(135deg, rgba(113,50,245,0.3) 0%, rgba(80,30,200,0.18) 50%, rgba(113,50,245,0.12) 100%) !important;
+        border: 1px solid rgba(113,50,245,0.3) !important;
+        color: rgba(255,255,255,0.95) !important;
+        box-shadow: 0 4px 16px rgba(113,50,245,0.15), inset 0 1px 0 rgba(255,255,255,0.06) !important;
       }
       textarea, input, select {
         background-color: #202020 !important;
@@ -2608,8 +2618,8 @@
     .chart-container { background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 16px; margin: 16px 0; box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.05); transition: all 0.3s ease; }
     /* Portfolio-specific chart override — Kraken surface */
     #portfolioChartContainer, #fmPortfolioChartContainer { background: var(--kraken-surface1); border: 1px solid var(--kraken-border); box-shadow: rgba(16,24,40,0.04) 0px 1px 4px 0px; }
-    .portfolio-coach-section .msg.ai { background: none; border: none; color: rgba(255,255,255,0.85); box-shadow: none; }
-    .portfolio-coach-section .msg.user { background: rgba(113,50,245,0.2); border: 1px solid rgba(113,50,245,0.25); color: rgba(255,255,255,0.92); box-shadow: none; }
+    .portfolio-coach-section .msg.ai { background: linear-gradient(135deg, rgba(42,42,52,0.6) 0%, rgba(30,20,50,0.4) 50%, rgba(42,42,52,0.3) 100%); border: 1px solid rgba(113,50,245,0.12); border-radius: 16px 16px 16px 4px; color: rgba(255,255,255,0.9); box-shadow: 0 2px 12px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04); }
+    .portfolio-coach-section .msg.user { background: linear-gradient(135deg, rgba(113,50,245,0.3) 0%, rgba(80,30,200,0.18) 50%, rgba(113,50,245,0.12) 100%); border: 1px solid rgba(113,50,245,0.3); color: rgba(255,255,255,0.95); box-shadow: 0 4px 16px rgba(113,50,245,0.15), inset 0 1px 0 rgba(255,255,255,0.06); }
     .portfolio-coach-section .msg.ai .thinking-label { color: rgba(255,255,255,0.5); }
     .portfolio-coach-section .msg.ai .thinking-dots span { background: rgba(113,50,245,0.7); }
     .chart-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
@@ -3345,23 +3355,30 @@
         justify-content: flex-end;
       }
       .lc-msg-user .lc-bubble {
-        background: rgba(113,50,245,0.2);
-        border: 1px solid rgba(113,50,245,0.25);
+        background: linear-gradient(135deg, rgba(113,50,245,0.3) 0%, rgba(80,30,200,0.18) 50%, rgba(113,50,245,0.12) 100%);
+        border: 1px solid rgba(113,50,245,0.3);
         border-radius: 18px 18px 4px 18px;
         padding: 12px 16px;
         max-width: 85%;
-        color: rgba(255,255,255,0.92);
+        color: rgba(255,255,255,0.95);
         font-size: 15px;
         line-height: 1.55;
+        box-shadow: 0 4px 16px rgba(113,50,245,0.15), inset 0 1px 0 rgba(255,255,255,0.06);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
       }
       .lc-msg-ai .lc-bubble {
-        padding: 0;
+        padding: 14px 16px;
         max-width: 92%;
-        color: rgba(255,255,255,0.85);
+        color: rgba(255,255,255,0.9);
         font-size: 15px;
         line-height: 1.65;
-        background: none;
-        border: none;
+        background: linear-gradient(135deg, rgba(42,42,52,0.6) 0%, rgba(30,20,50,0.4) 50%, rgba(42,42,52,0.3) 100%);
+        border: 1px solid rgba(113,50,245,0.12);
+        border-radius: 18px 18px 18px 4px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
       }
       .lc-msg-ai .lc-thinking {
         display: inline-flex;
