@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-13-v264';
+    var APP_VERSION = '2026-04-13-v265';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -8182,6 +8182,224 @@
 
     (function wishRunnerGameIIFE() {
       /* Last Z style vertical shooter — logical canvas GW×GH, scaled to #wpWishRunnerCanvas */
+
+      // ── Premium Game Audio (Web Audio API — low latency, mobile-safe) ──
+      var _gameAudioReady = false;
+      var _bgMusicGain = null;
+      var _bgMusicSource = null;
+      var _bgMusicBuffer = null;
+      var _bgMusicPlaying = false;
+
+      function _gameCtx() {
+        var ctx = _getAudioCtx();
+        _gameAudioReady = ctx && ctx.state === 'running';
+        return ctx;
+      }
+
+      // Laser pew — short bright zap
+      function playLaserSound() {
+        try {
+          var ctx = _gameCtx();
+          if (!ctx || ctx.state === 'suspended') return;
+          var t = ctx.currentTime;
+          var osc = ctx.createOscillator();
+          var gain = ctx.createGain();
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(880, t);
+          osc.frequency.exponentialRampToValueAtTime(220, t + 0.06);
+          gain.gain.setValueAtTime(0.08, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(t);
+          osc.stop(t + 0.08);
+        } catch(e) {}
+      }
+
+      // Explosion — deep boom + crackle
+      function playExplosionSound(big) {
+        try {
+          var ctx = _gameCtx();
+          if (!ctx || ctx.state === 'suspended') return;
+          var t = ctx.currentTime;
+          var vol = big ? 0.25 : 0.15;
+          var dur = big ? 0.4 : 0.25;
+          // Low boom
+          var osc = ctx.createOscillator();
+          var gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(big ? 80 : 120, t);
+          osc.frequency.exponentialRampToValueAtTime(30, t + dur);
+          gain.gain.setValueAtTime(vol, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(t);
+          osc.stop(t + dur + 0.05);
+          // Noise crackle layer
+          var bufSize = ctx.sampleRate * (big ? 0.15 : 0.08);
+          var noiseBuf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+          var data = noiseBuf.getChannelData(0);
+          for (var i = 0; i < bufSize; i++) data[i] = (Math.random() * 2 - 1) * 0.5;
+          var noise = ctx.createBufferSource();
+          var noiseGain = ctx.createGain();
+          noise.buffer = noiseBuf;
+          noiseGain.gain.setValueAtTime(vol * 0.6, t);
+          noiseGain.gain.exponentialRampToValueAtTime(0.001, t + dur * 0.7);
+          noise.connect(noiseGain);
+          noiseGain.connect(ctx.destination);
+          noise.start(t);
+          noise.stop(t + dur);
+        } catch(e) {}
+      }
+
+      // Power-up collect — bright ascending chime
+      function playPowerupSound() {
+        try {
+          var ctx = _gameCtx();
+          if (!ctx || ctx.state === 'suspended') return;
+          var t = ctx.currentTime;
+          var freqs = [523, 659, 784, 1047]; // C5 E5 G5 C6
+          freqs.forEach(function(f, i) {
+            var osc = ctx.createOscillator();
+            var gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.value = f;
+            gain.gain.setValueAtTime(0, t + i * 0.06);
+            gain.gain.linearRampToValueAtTime(0.15, t + i * 0.06 + 0.01);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + i * 0.06 + 0.15);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(t + i * 0.06);
+            osc.stop(t + i * 0.06 + 0.2);
+          });
+        } catch(e) {}
+      }
+
+      // Level complete — triumphant fanfare
+      function playLevelCompleteSound() {
+        try {
+          var ctx = _gameCtx();
+          if (!ctx || ctx.state === 'suspended') return;
+          var t = ctx.currentTime;
+          var fanfare = [
+            { freq: 523, start: 0, dur: 0.15 },    // C5
+            { freq: 659, start: 0.12, dur: 0.15 },  // E5
+            { freq: 784, start: 0.24, dur: 0.2 },   // G5
+            { freq: 1047, start: 0.4, dur: 0.45 }   // C6 sustained
+          ];
+          fanfare.forEach(function(n) {
+            var osc = ctx.createOscillator();
+            var gain = ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.value = n.freq;
+            gain.gain.setValueAtTime(0, t + n.start);
+            gain.gain.linearRampToValueAtTime(0.2, t + n.start + 0.015);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + n.start + n.dur);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(t + n.start);
+            osc.stop(t + n.start + n.dur + 0.05);
+            // Harmonic layer
+            var osc2 = ctx.createOscillator();
+            var g2 = ctx.createGain();
+            osc2.type = 'sine';
+            osc2.frequency.value = n.freq * 2;
+            g2.gain.setValueAtTime(0, t + n.start);
+            g2.gain.linearRampToValueAtTime(0.06, t + n.start + 0.01);
+            g2.gain.exponentialRampToValueAtTime(0.001, t + n.start + n.dur * 0.6);
+            osc2.connect(g2);
+            g2.connect(ctx.destination);
+            osc2.start(t + n.start);
+            osc2.stop(t + n.start + n.dur + 0.05);
+          });
+        } catch(e) {}
+      }
+
+      // Background ambient space drone — soft evolving pad
+      function startBgMusic() {
+        try {
+          if (_bgMusicPlaying) return;
+          var ctx = _gameCtx();
+          if (!ctx || ctx.state === 'suspended') return;
+          _bgMusicGain = ctx.createGain();
+          _bgMusicGain.gain.value = 0.04; // very soft
+          _bgMusicGain.connect(ctx.destination);
+          // Low drone pad — two detuned oscillators
+          var osc1 = ctx.createOscillator();
+          osc1.type = 'sine';
+          osc1.frequency.value = 55; // A1
+          osc1.connect(_bgMusicGain);
+          osc1.start();
+          var osc2 = ctx.createOscillator();
+          osc2.type = 'sine';
+          osc2.frequency.value = 82.5; // E2 (fifth)
+          var g2 = ctx.createGain();
+          g2.gain.value = 0.6;
+          osc2.connect(g2);
+          g2.connect(_bgMusicGain);
+          osc2.start();
+          // Slow LFO on volume for breathing effect
+          var lfo = ctx.createOscillator();
+          var lfoGain = ctx.createGain();
+          lfo.type = 'sine';
+          lfo.frequency.value = 0.08; // very slow
+          lfoGain.gain.value = 0.015;
+          lfo.connect(lfoGain);
+          lfoGain.connect(_bgMusicGain.gain);
+          lfo.start();
+          _bgMusicSource = { osc1: osc1, osc2: osc2, lfo: lfo };
+          _bgMusicPlaying = true;
+        } catch(e) {}
+      }
+
+      function stopBgMusic() {
+        try {
+          if (_bgMusicSource) {
+            _bgMusicSource.osc1.stop();
+            _bgMusicSource.osc2.stop();
+            _bgMusicSource.lfo.stop();
+            _bgMusicSource = null;
+          }
+          _bgMusicPlaying = false;
+        } catch(e) {}
+      }
+
+      // Player death — descending wah + static
+      function playDeathSound() {
+        try {
+          var ctx = _gameCtx();
+          if (!ctx || ctx.state === 'suspended') return;
+          var t = ctx.currentTime;
+          // Descending pitch
+          var osc = ctx.createOscillator();
+          var gain = ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(600, t);
+          osc.frequency.exponentialRampToValueAtTime(40, t + 0.6);
+          gain.gain.setValueAtTime(0.2, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.7);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(t);
+          osc.stop(t + 0.75);
+          // Static burst
+          var bufSize = ctx.sampleRate * 0.3;
+          var noiseBuf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+          var d = noiseBuf.getChannelData(0);
+          for (var i = 0; i < bufSize; i++) d[i] = (Math.random() * 2 - 1);
+          var noise = ctx.createBufferSource();
+          var ng = ctx.createGain();
+          noise.buffer = noiseBuf;
+          ng.gain.setValueAtTime(0.15, t + 0.05);
+          ng.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+          noise.connect(ng);
+          ng.connect(ctx.destination);
+          noise.start(t + 0.05);
+          noise.stop(t + 0.45);
+        } catch(e) {}
+      }
+
       var GW = 390;
       var GH = 680;
       var _wrRaf = null;
@@ -8827,6 +9045,7 @@
             bullets.push({ x: player.x + 10, y: bY, vx: 0, vy: -560, life: 2.2 });
           }
           try { if (navigator.vibrate) navigator.vibrate(3); } catch (e) {}
+          playLaserSound();
           fireCd = currentFireRate;
         }
 
@@ -8867,6 +9086,7 @@
               activePowerup = { type: pw.type, timer: pw.duration };
             }
             spawnExplosion(pw.x, pw.y, pw.color, 20);
+            playPowerupSound();
             powerups.splice(pu, 1);
           }
         }
@@ -8965,6 +9185,8 @@
             } else {
               gameOver = true;
               _deathTime = Date.now();
+              playDeathSound();
+              stopBgMusic();
               // Epic Galaxy Attack death explosion
               spawnExplosion(player.x, player.y, '#FF5252', 25);
               spawnExplosion(player.x - 20, player.y + 15, '#FF9800', 15);
@@ -9003,6 +9225,7 @@
                 spawnExplosion(t.x, t.y, '#FF8800', 18);
                 spawnExplosion(t.x, t.y, '#FFCC00', 8);
                 triggerScreenShake(3, 0.2);
+                playExplosionSound(t.size > 80);
 
                 // Track level progression
                 if (t.isEnemyShip) {
@@ -9012,6 +9235,7 @@
                   if (levelEnemiesKilled >= targetKillsForLevel) {
                     levelTransition = true;
                     levelTransitionTimer = 2.0;
+                    playLevelCompleteSound();
                   }
                 } else {
                   // Asteroid/debris killed
@@ -9020,6 +9244,7 @@
                   if (currentLevel === 1 && levelEnemiesKilled >= targetKillsForLevel) {
                     levelTransition = true;
                     levelTransitionTimer = 2.0;
+                    playLevelCompleteSound();
                   }
                 }
 
@@ -10226,10 +10451,12 @@
         _wrRunning = true;
         _wrLastTs = 0;
         _wrRaf = requestAnimationFrame(loop);
+        try { startBgMusic(); } catch(e){}
       };
 
       window.stopWishRunnerGame = function() {
         _wrRunning = false;
+        try { stopBgMusic(); } catch(e){}
         if (_wrRaf) cancelAnimationFrame(_wrRaf);
         _wrRaf = null;
         window.removeEventListener('keydown', onKeyDown);
@@ -10242,6 +10469,7 @@
 
       window.restartWishRunnerGame = function() {
         resetGame();
+        try { startBgMusic(); } catch(e){}
       };
     })();
 
