@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-12-v251';
+    var APP_VERSION = '2026-04-12-v252';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -15924,12 +15924,14 @@
         colorTheme: 'dark',
         isTransparent: true,
         autosize: true,
-        largeChartUrl: 'https://www.tradingview.com/chart/?symbol=' + encodeURIComponent(fullSymbol)
+        largeChartUrl: ''
       };
       var encoded = encodeURIComponent(JSON.stringify(config));
-      return '<div style="border:1px solid rgba(255,255,255,0.08);border-radius:12px;overflow:hidden;height:178px;background:rgba(255,255,255,0.04);cursor:pointer;">' +
-        '<iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=en#' + encoded + '" style="width:100%;height:100%;border:none;" ' +
-        'sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>' +
+      // Clickable wrapper opens the in-app black TradingView advanced chart
+      return '<div style="border:1px solid rgba(255,255,255,0.08);border-radius:12px;overflow:hidden;height:178px;background:rgba(255,255,255,0.04);cursor:pointer;position:relative;">' +
+        '<iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=en#' + encoded + '" style="width:100%;height:100%;border:none;pointer-events:none;" ' +
+        'sandbox="allow-scripts allow-same-origin"></iframe>' +
+        '<div onclick="openTickerChartFromHome(\'' + symbol.replace(/'/g, '') + '\')" style="position:absolute;inset:0;z-index:2;cursor:pointer;"></div>' +
         '</div>';
     }
 
@@ -15958,11 +15960,10 @@
         watchlistSection.style.display = 'none';
       }
 
-      // Crypto: render TradingView widgets
+      // Crypto: render TradingView widgets with Binance live data
       crypto.innerHTML = CRYPTO.map(function(c) {
-        var ex = c.symbol.includes('BTC') ? 'CRYPTOCAP' : c.symbol.includes('ETH') ? 'CRYPTOCAP' : 'CRYPTOCAP';
-        var sym = c.symbol.replace('/USD', '');
-        return buildTradingViewWidget(sym, ex);
+        var base = c.symbol.replace('/USD', '');
+        return buildTradingViewWidget(base + 'USDT', 'BINANCE');
       }).join('');
 
       // Load watchlist from Supabase
@@ -16717,11 +16718,14 @@
 
     // Open a ticker in TradingView fullscreen chart from any card tap
     function openTickerChart(symbol) {
-      // Convert crypto symbols: BTC/USD → BTCUSD, ETH → ETHUSD
+      // Convert crypto symbols for live TradingView data
       var tvSymbol = symbol.replace('/', '');
-      // If it's a short crypto symbol (BTC, ETH, SOL) without USD suffix, add it
-      var cryptoShorts = ['BTC', 'ETH', 'SOL', 'DOGE', 'ADA', 'XRP', 'AVAX', 'DOT', 'MATIC', 'LINK'];
-      if (cryptoShorts.indexOf(tvSymbol) !== -1) tvSymbol = tvSymbol + 'USD';
+      var cryptoShorts = ['BTC', 'ETH', 'SOL', 'DOGE', 'ADA', 'XRP', 'AVAX', 'DOT', 'MATIC', 'LINK', 'SHIB', 'UNI', 'AAVE'];
+      var isCrypto = cryptoShorts.indexOf(tvSymbol) !== -1 || cryptoShorts.indexOf(tvSymbol.replace('USD','')) !== -1;
+      if (isCrypto) {
+        var base = tvSymbol.replace('USD', '');
+        tvSymbol = 'BINANCE:' + base + 'USDT';
+      }
       // Set the ticker input
       var input = document.getElementById('tvChartTicker');
       if (input) input.value = tvSymbol;
