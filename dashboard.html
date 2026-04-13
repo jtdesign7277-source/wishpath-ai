@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-13-v276';
+    var APP_VERSION = '2026-04-13-v277';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -2711,12 +2711,12 @@
     /* Instant marquee tape (cached-style snapshot; not live quotes) */
     #fmMarketsContent #fmTickerTapeWrap { position: relative; min-height: 44px; }
     #fmMarketsContent #ticker-tape {
-      background: #202333;
+      background: transparent;
       padding: 10px 0;
       overflow: hidden;
       white-space: nowrap;
       border-bottom: 1px solid rgba(104,107,130,0.24);
-      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      box-shadow: none;
       font-size: 13px;
       font-weight: 500;
       color: #d1d1db;
@@ -2727,7 +2727,7 @@
     #fmMarketsContent #ticker-inner {
       display: inline-flex;
       align-items: center;
-      animation: ticker-scroll 25s linear infinite;
+      animation: ticker-scroll 12s linear infinite;
       will-change: transform;
     }
     @media (prefers-reduced-motion: reduce) {
