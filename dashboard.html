@@ -15370,18 +15370,35 @@
     var SUPABASE_FN = 'https://mszilrexlupzthauoaxb.supabase.co/functions/v1';
 
     // ── Alpaca Direct API ──
-    var ALPACA_KEY = 'AK5OCFFPWS7WVXLFTK2USWO5EI';
-    var ALPACA_SECRET = 'AjYwtiVdDR3u63giHrHrGp9wdgvGJjJ2TQhNRqa8ku4q';
     var ALPACA_DATA = 'https://data.alpaca.markets';
-    var ALPACA_HEADERS = { 'APCA-API-KEY-ID': ALPACA_KEY, 'APCA-API-SECRET-KEY': ALPACA_SECRET };
+    var _alpacaCreds = null;
+
+    async function getAlpacaCreds() {
+      if (_alpacaCreds) return _alpacaCreds;
+      try {
+        var session = await getSession();
+        if (!session) return null;
+        var res = await fetch(SUPABASE_FN + '/alpaca-stream-auth', {
+          headers: { 'Authorization': 'Bearer ' + session.access_token }
+        });
+        if (!res.ok) return null;
+        _alpacaCreds = await res.json();
+        return _alpacaCreds;
+      } catch(e) {
+        console.error('Failed to fetch Alpaca credentials:', e);
+        return null;
+      }
+    }
 
     async function fetchAlpacaQuotes(symbols) {
+      var creds = await getAlpacaCreds();
+      var alpacaHeaders = creds ? { 'APCA-API-KEY-ID': creds.key, 'APCA-API-SECRET-KEY': creds.secret } : {};
       var stocks = symbols.filter(function(s) { return s.indexOf('/') === -1; });
       var cryptos = symbols.filter(function(s) { return s.indexOf('/') !== -1; });
       var results = [];
       if (stocks.length > 0) {
         try {
-          var res = await fetch(ALPACA_DATA + '/v2/stocks/snapshots?symbols=' + encodeURIComponent(stocks.join(',')), { headers: ALPACA_HEADERS });
+          var res = await fetch(ALPACA_DATA + '/v2/stocks/snapshots?symbols=' + encodeURIComponent(stocks.join(',')), { headers: alpacaHeaders });
           var data = await res.json();
           Object.keys(data).forEach(function(sym) {
             var snap = data[sym];
@@ -15396,7 +15413,7 @@
       }
       if (cryptos.length > 0) {
         try {
-          var res = await fetch(ALPACA_DATA + '/v1beta3/crypto/us/snapshots?symbols=' + encodeURIComponent(cryptos.join(',')), { headers: ALPACA_HEADERS });
+          var res = await fetch(ALPACA_DATA + '/v1beta3/crypto/us/snapshots?symbols=' + encodeURIComponent(cryptos.join(',')), { headers: alpacaHeaders });
           var data = await res.json();
           var snaps = data.snapshots || data;
           Object.keys(snaps).forEach(function(sym) {
@@ -15426,12 +15443,7 @@
       renderDebounce: null,
 
       async fetchCredentials() {
-        return {
-          key: ALPACA_KEY,
-          secret: ALPACA_SECRET,
-          stocksUrl: 'wss://stream.data.alpaca.markets/v2/iex',
-          cryptoUrl: 'wss://stream.data.alpaca.markets/v1beta3/crypto/us'
-        };
+        return await getAlpacaCreds();
       },
 
       async init() {
