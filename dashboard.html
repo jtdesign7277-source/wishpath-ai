@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-12-v248';
+    var APP_VERSION = '2026-04-12-v249';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -6267,40 +6267,90 @@
     }
 
     // ── Web Audio API: Synthesized Streak Chime ──
+    var _streakAudioCtx = null;
+    function _getAudioCtx() {
+      if (!_streakAudioCtx) {
+        _streakAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      // iOS requires resume after user gesture
+      if (_streakAudioCtx.state === 'suspended') _streakAudioCtx.resume();
+      return _streakAudioCtx;
+    }
+
     function playStreakChime() {
       try {
-        var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        var ctx = _getAudioCtx();
+        var t = ctx.currentTime;
 
-        // Arpeggio notes: C4 (major), E4, G4, C5 — ascending major chord
+        // Bass hit — punchy sub thump for dopamine
+        var bassOsc = ctx.createOscillator();
+        var bassGain = ctx.createGain();
+        bassOsc.type = 'sine';
+        bassOsc.frequency.setValueAtTime(120, t);
+        bassOsc.frequency.exponentialRampToValueAtTime(60, t + 0.15);
+        bassGain.gain.setValueAtTime(0.5, t);
+        bassGain.gain.exponentialRampToValueAtTime(0.01, t + 0.2);
+        bassOsc.connect(bassGain);
+        bassGain.connect(ctx.destination);
+        bassOsc.start(t);
+        bassOsc.stop(t + 0.25);
+
+        // Ascending arpeggio — rich layered tones (triangle + sine)
         var notes = [
-          { freq: 261.63, start: 0, duration: 0.12 },      // C4
-          { freq: 329.63, start: 0.08, duration: 0.12 },   // E4
-          { freq: 392.00, start: 0.16, duration: 0.12 },   // G4
-          { freq: 523.25, start: 0.24, duration: 0.18 }    // C5 (higher, longer)
+          { freq: 523.25, start: 0.0,  dur: 0.22 },  // C5
+          { freq: 659.25, start: 0.08, dur: 0.22 },  // E5
+          { freq: 783.99, start: 0.16, dur: 0.25 },  // G5
+          { freq: 1046.5, start: 0.25, dur: 0.4  }   // C6 — sustained high sparkle
         ];
 
-        notes.forEach(function(note) {
-          var osc = audioCtx.createOscillator();
-          var gain = audioCtx.createGain();
+        notes.forEach(function(n) {
+          // Triangle wave (warm body)
+          var osc1 = ctx.createOscillator();
+          var g1 = ctx.createGain();
+          osc1.type = 'triangle';
+          osc1.frequency.value = n.freq;
+          g1.gain.setValueAtTime(0, t + n.start);
+          g1.gain.linearRampToValueAtTime(0.35, t + n.start + 0.015);
+          g1.gain.exponentialRampToValueAtTime(0.01, t + n.start + n.dur);
+          osc1.connect(g1);
+          g1.connect(ctx.destination);
+          osc1.start(t + n.start);
+          osc1.stop(t + n.start + n.dur + 0.05);
 
-          osc.type = 'sine';
-          osc.frequency.value = note.freq;
-
-          // Smooth gain envelope: fade in quick, decay smooth
-          gain.gain.setValueAtTime(0, audioCtx.currentTime + note.start);
-          gain.gain.linearRampToValueAtTime(0.25, audioCtx.currentTime + note.start + 0.01);
-          gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + note.start + note.duration);
-
-          osc.connect(gain);
-          gain.connect(audioCtx.destination);
-
-          osc.start(audioCtx.currentTime + note.start);
-          osc.stop(audioCtx.currentTime + note.start + note.duration);
+          // Sine overtone (shimmer)
+          var osc2 = ctx.createOscillator();
+          var g2 = ctx.createGain();
+          osc2.type = 'sine';
+          osc2.frequency.value = n.freq * 2;
+          g2.gain.setValueAtTime(0, t + n.start);
+          g2.gain.linearRampToValueAtTime(0.12, t + n.start + 0.01);
+          g2.gain.exponentialRampToValueAtTime(0.001, t + n.start + n.dur * 0.7);
+          osc2.connect(g2);
+          g2.connect(ctx.destination);
+          osc2.start(t + n.start);
+          osc2.stop(t + n.start + n.dur + 0.05);
         });
-      } catch (e) {
-        // Silently fail if Web Audio API unavailable
-      }
+
+        // Final sparkle — high bell tone
+        var bell = ctx.createOscillator();
+        var bellG = ctx.createGain();
+        bell.type = 'sine';
+        bell.frequency.value = 2093;  // C7
+        bellG.gain.setValueAtTime(0, t + 0.35);
+        bellG.gain.linearRampToValueAtTime(0.15, t + 0.36);
+        bellG.gain.exponentialRampToValueAtTime(0.001, t + 0.8);
+        bell.connect(bellG);
+        bellG.connect(ctx.destination);
+        bell.start(t + 0.35);
+        bell.stop(t + 0.85);
+      } catch (e) {}
     }
+
+    // Ensure audio context is unlocked on first user tap (iOS requirement)
+    document.addEventListener('touchstart', function _unlockAudio() {
+      _getAudioCtx();
+      document.removeEventListener('touchstart', _unlockAudio);
+    }, { once: true });
 
     // ── anime.js premium micro-animations ──
     var wpAnime = (function() {
@@ -7888,6 +7938,19 @@
       }
 
       setTimeout(function() { fireConfettiBurst(); wpConfetti('streak'); wpTsConfetti('fireworks'); playStreakChime(); }, 160);
+
+      // iOS: AudioContext needs a user gesture. Play chime on first tap of streak overlay.
+      var _streakChimePlayed = false;
+      function _streakTapChime() {
+        if (!_streakChimePlayed) {
+          _streakChimePlayed = true;
+          playStreakChime();
+        }
+        overlay.removeEventListener('touchstart', _streakTapChime);
+        overlay.removeEventListener('click', _streakTapChime);
+      }
+      overlay.addEventListener('touchstart', _streakTapChime, { passive: true });
+      overlay.addEventListener('click', _streakTapChime);
 
       try {
         if (typeof navigator !== 'undefined' && navigator.vibrate) {
