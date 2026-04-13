@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-13-v271';
+    var APP_VERSION = '2026-04-13-v272';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -258,8 +258,8 @@
     .coach-input-row .chat-input-wrap { flex: 1; }
     .coach-input { flex: 1; padding: 12px 16px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.04); border-radius: 12px; color: var(--text); font: inherit; font-size: 0.9rem; outline: none; resize: none; min-height: 48px; max-height: 240px; overflow-y: auto; box-shadow: inset 4px 4px 8px rgba(0,0,0,0.5), inset -2px -2px 6px rgba(255,255,255,0.02); transition: all 0.3s ease; }
     .coach-input:focus { border-color: rgba(113,50,245,0.3); box-shadow: inset 4px 4px 8px rgba(0,0,0,0.5), inset -2px -2px 6px rgba(255,255,255,0.02), 0 0 12px rgba(113,50,245,0.1); }
-    .coach-send { padding: 0; background: none; color: rgb(113,50,245); border: none; border-radius: 0; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; transition: opacity 0.15s ease, transform 0.1s ease; box-shadow: none; margin: 4px 4px 4px 0; }
-    .coach-send svg { stroke: rgb(113,50,245); width: 16px; height: 16px; }
+    .coach-send { padding: 0; background: none; color: #c4b5fd; border: none; border-radius: 0; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; transition: opacity 0.15s ease, transform 0.1s ease; box-shadow: none; margin: 4px 4px 4px 0; }
+    .coach-send svg { stroke: #c4b5fd; width: 16px; height: 16px; }
     .coach-send:hover { opacity: 0.92; }
     .coach-send:disabled { opacity: 0.5; }
     /* Coach roadmap panel styles */
@@ -1610,22 +1610,22 @@
       .ask-ai-tool-btn:active { background: rgba(255,255,255,0.06); }
       .ask-ai-send-btn {
         margin-left: auto;
-        width: 38px;
-        height: 38px;
-        background: rgba(255,255,255,0.12);
+        width: 34px;
+        height: 34px;
+        background: none;
         border: none;
-        border-radius: 50%;
-        color: rgba(255,255,255,0.92);
+        border-radius: 0;
+        color: #c4b5fd;
         cursor: pointer;
         flex-shrink: 0;
         display: flex;
         align-items: center;
         justify-content: center;
         box-shadow: none;
-        transition: background 0.2s ease, transform 0.2s ease;
+        transition: opacity 0.15s ease, transform 0.1s ease;
       }
-      .ask-ai-send-btn svg { width: 20px; height: 20px; }
-      .ask-ai-send-btn:active { transform: scale(0.96); }
+      .ask-ai-send-btn svg { width: 18px; height: 18px; stroke: #c4b5fd; }
+      .ask-ai-send-btn:active { opacity: 0.6; transform: scale(0.9); }
 
       /* ── Mobile home screen ── */
       /* Tile home sits above <main>; when #mobileHome is transparent, hide main so #homeView doesn’t show through */
@@ -2011,8 +2011,8 @@
       body.fm-widget-active .mobile-nav-bar { display: none !important; }
       .coach-input { background: transparent !important; border: none !important; border-radius: 20px !important; padding: 8px 16px !important; font-size: 14px !important; color: rgba(255,255,255,0.9) !important; flex: 1 !important; min-height: 36px !important; }
       .coach-input::placeholder { color: rgba(255,255,255,0.35) !important; }
-      .coach-send { border-radius: 0 !important; width: 28px !important; height: 28px !important; box-shadow: none !important; background: none !important; color: rgb(113,50,245) !important; padding: 0 !important; flex-shrink: 0 !important; display: flex !important; align-items: center !important; justify-content: center !important; margin: 4px 4px 4px 0 !important; }
-      .coach-send svg { width: 16px !important; height: 16px !important; stroke: rgb(113,50,245) !important; }
+      .coach-send { border-radius: 0 !important; width: 28px !important; height: 28px !important; box-shadow: none !important; background: none !important; color: #c4b5fd !important; padding: 0 !important; flex-shrink: 0 !important; display: flex !important; align-items: center !important; justify-content: center !important; margin: 4px 4px 4px 0 !important; }
+      .coach-send svg { width: 16px !important; height: 16px !important; stroke: #c4b5fd !important; }
       .coach-send:active { opacity: 0.75 !important; transform: scale(0.96) !important; }
 
       /* Bottom nav always visible on mobile — no exceptions */
@@ -3606,7 +3606,7 @@
         height: 28px;
         border-radius: 0;
         background: none;
-        color: rgb(113,50,245);
+        color: #c4b5fd;
         border: none;
         display: flex;
         align-items: center;
@@ -3619,29 +3619,29 @@
       }
       .chat-send-btn:hover { opacity: 0.8; }
       .chat-send-btn:active { opacity: 0.6; transform: scale(0.9); }
-      .chat-send-btn svg { stroke: rgb(113,50,245); width: 16px; height: 16px; }
+      .chat-send-btn svg { stroke: #c4b5fd; width: 16px; height: 16px; }
 
       .lc-send-btn {
         width: 34px;
         height: 34px;
-        border-radius: 50%;
-        background: rgba(113,50,245,0.15);
-        color: rgb(113,50,245);
-        border: 1.5px solid rgba(113,50,245,0.4);
+        border-radius: 0;
+        background: none;
+        color: #c4b5fd;
+        border: none;
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
         flex-shrink: 0;
         -webkit-tap-highlight-color: transparent;
-        box-shadow: 0 2px 8px rgba(113,50,245,0.2);
-        transition: opacity 0.15s ease, transform 0.1s ease, background 0.15s ease;
+        box-shadow: none;
+        transition: opacity 0.15s ease, transform 0.1s ease;
         position: relative;
         z-index: 2;
         margin: 4px 6px 4px 0;
       }
-      .lc-send-btn:active { opacity: 0.8; transform: scale(0.9); background: rgba(113,50,245,0.3); }
-      .lc-send-btn svg { stroke: rgb(113,50,245); width: 16px; height: 16px; stroke-width: 3; }
+      .lc-send-btn:active { opacity: 0.6; transform: scale(0.9); }
+      .lc-send-btn svg { stroke: #c4b5fd; width: 18px; height: 18px; stroke-width: 2.5; }
 
       /* ── Hide chart action buttons on mobile ── */
       .chart-actions { display: none !important; }
