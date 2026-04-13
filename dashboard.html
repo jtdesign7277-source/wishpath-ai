@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-13-v270';
+    var APP_VERSION = '2026-04-13-v271';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -8223,23 +8223,84 @@
         return ctx;
       }
 
-      // Laser pew — short bright zap
+      // Weapon-specific shooting sounds — changes with active power-up
       function playLaserSound() {
         try {
           var ctx = _gameCtx();
           if (!ctx || ctx.state === 'suspended') return;
           var t = ctx.currentTime;
-          var osc = ctx.createOscillator();
-          var gain = ctx.createGain();
-          osc.type = 'square';
-          osc.frequency.setValueAtTime(880, t);
-          osc.frequency.exponentialRampToValueAtTime(220, t + 0.06);
-          gain.gain.setValueAtTime(0.08, t);
-          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.start(t);
-          osc.stop(t + 0.08);
+          var wpType = activePowerup ? activePowerup.type : 'default';
+
+          if (wpType === 'spread') {
+            // SPREAD: electric scatter — high chirp with stereo width
+            var osc = ctx.createOscillator();
+            var gain = ctx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(1400, t);
+            osc.frequency.exponentialRampToValueAtTime(600, t + 0.05);
+            gain.gain.setValueAtTime(0.06, t);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+            osc.connect(gain); gain.connect(ctx.destination);
+            osc.start(t); osc.stop(t + 0.07);
+            // Second voice slightly detuned for width
+            var osc2 = ctx.createOscillator();
+            var g2 = ctx.createGain();
+            osc2.type = 'sawtooth';
+            osc2.frequency.setValueAtTime(1450, t);
+            osc2.frequency.exponentialRampToValueAtTime(580, t + 0.05);
+            g2.gain.setValueAtTime(0.04, t);
+            g2.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+            osc2.connect(g2); g2.connect(ctx.destination);
+            osc2.start(t); osc2.stop(t + 0.07);
+
+          } else if (wpType === 'rapid') {
+            // RAPID: quick tick — tiny percussive click, higher pitch
+            var osc = ctx.createOscillator();
+            var gain = ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(2200, t);
+            osc.frequency.exponentialRampToValueAtTime(800, t + 0.025);
+            gain.gain.setValueAtTime(0.07, t);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + 0.03);
+            osc.connect(gain); gain.connect(ctx.destination);
+            osc.start(t); osc.stop(t + 0.04);
+
+          } else if (wpType === 'cannon') {
+            // CANNON: deep heavy thud — low bass punch with rumble
+            var osc = ctx.createOscillator();
+            var gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(200, t);
+            osc.frequency.exponentialRampToValueAtTime(50, t + 0.15);
+            gain.gain.setValueAtTime(0.18, t);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+            osc.connect(gain); gain.connect(ctx.destination);
+            osc.start(t); osc.stop(t + 0.2);
+            // Noise thump layer
+            var bufSize = Math.floor(ctx.sampleRate * 0.06);
+            var nBuf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+            var nd = nBuf.getChannelData(0);
+            for (var ni = 0; ni < bufSize; ni++) nd[ni] = (Math.random() * 2 - 1) * 0.4;
+            var ns = ctx.createBufferSource();
+            var ng = ctx.createGain();
+            ns.buffer = nBuf;
+            ng.gain.setValueAtTime(0.12, t);
+            ng.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+            ns.connect(ng); ng.connect(ctx.destination);
+            ns.start(t); ns.stop(t + 0.1);
+
+          } else {
+            // DEFAULT: classic laser pew — square wave descending chirp
+            var osc = ctx.createOscillator();
+            var gain = ctx.createGain();
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(880, t);
+            osc.frequency.exponentialRampToValueAtTime(220, t + 0.06);
+            gain.gain.setValueAtTime(0.08, t);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
+            osc.connect(gain); gain.connect(ctx.destination);
+            osc.start(t); osc.stop(t + 0.08);
+          }
         } catch(e) {}
       }
 
