@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-13-v279';
+    var APP_VERSION = '2026-04-13-v280';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -780,18 +780,67 @@
       min-height: 120px;
       background: transparent;
       border-radius: 0;
-      padding: 0;
-      font-size: 16px;
-      line-height: 1.65;
-      color: rgba(255,255,255,0.8);
+      padding: 0 4px;
+      font-size: 15.5px;
+      line-height: 1.7;
+      color: rgba(255,255,255,0.82);
       box-shadow: none;
       border: none;
       outline: none;
       overflow-y: visible;
       -webkit-overflow-scrolling: touch;
       -webkit-tap-highlight-color: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      letter-spacing: 0.01em;
     }
     .notes-editor.note-detail-view #notesContent.note-body:focus { outline: none; }
+    /* Rich note formatting */
+    #notesContent .note-h2 {
+      font-size: 1.15em; font-weight: 700; color: rgb(113,50,245);
+      margin: 20px 0 8px; padding-bottom: 6px;
+      border-bottom: 1px solid rgba(113,50,245,0.18);
+      letter-spacing: 0.01em;
+    }
+    #notesContent .note-h3 {
+      font-size: 1.02em; font-weight: 700; color: #c4b5fd;
+      margin: 16px 0 6px;
+    }
+    #notesContent .note-paragraph {
+      margin: 0 0 12px; color: rgba(255,255,255,0.78);
+    }
+    #notesContent .note-bullet {
+      display: flex; gap: 8px; padding: 3px 0 3px 4px; color: rgba(255,255,255,0.78);
+    }
+    #notesContent .note-bullet::before {
+      content: ''; flex-shrink: 0; width: 6px; height: 6px; margin-top: 9px;
+      border-radius: 50%; background: rgb(113,50,245);
+    }
+    #notesContent .note-checkbox {
+      display: flex; align-items: flex-start; gap: 10px; padding: 4px 0 4px 2px;
+      color: rgba(255,255,255,0.78); cursor: pointer;
+    }
+    #notesContent .note-checkbox .note-cb-box {
+      flex-shrink: 0; width: 20px; height: 20px; margin-top: 2px;
+      border-radius: 6px; border: 1.5px solid rgba(113,50,245,0.5);
+      background: rgba(113,50,245,0.08); display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s ease; cursor: pointer;
+    }
+    #notesContent .note-checkbox.checked .note-cb-box {
+      background: rgb(113,50,245); border-color: rgb(113,50,245);
+    }
+    #notesContent .note-checkbox.checked .note-cb-box::after {
+      content: '\2713'; color: #fff; font-size: 13px; font-weight: 700;
+    }
+    #notesContent .note-checkbox.checked .note-cb-text {
+      text-decoration: line-through; opacity: 0.5;
+    }
+    #notesContent .note-bold { font-weight: 700; color: #e6edf3; }
+    #notesContent .note-emoji-header {
+      font-size: 1.05em; font-weight: 700; color: #d1d1db; margin: 18px 0 6px;
+    }
+    #notesContent .note-divider {
+      height: 1px; background: rgba(113,50,245,0.15); margin: 16px 0; border: none;
+    }
     .notes-editor.note-detail-view .note-actions {
       margin-top: 16px;
       display: flex;
@@ -12178,8 +12227,26 @@
     function getNotesEditorBodyText() {
       var el = document.getElementById('notesContent');
       if (!el) return '';
-      var t = (el.innerText !== undefined ? el.innerText : el.textContent) || '';
-      return t.replace(/\u00a0/g, ' ');
+      // Walk through rich elements and reconstruct plain text with checkbox state
+      var parts = [];
+      var children = el.childNodes;
+      for (var i = 0; i < children.length; i++) {
+        var node = children[i];
+        if (node.nodeType === 3) { parts.push(node.textContent); continue; }
+        if (!node.classList) { parts.push(node.textContent || ''); continue; }
+        if (node.classList.contains('note-checkbox')) {
+          var isChecked = node.classList.contains('checked');
+          var cbText = node.querySelector('.note-cb-text');
+          parts.push((isChecked ? '[x] ' : '[ ] ') + (cbText ? cbText.textContent : ''));
+        } else if (node.classList.contains('note-bullet')) {
+          parts.push('- ' + (node.innerText || node.textContent || '').replace(/^\d+\.\s*/, ''));
+        } else if (node.classList.contains('note-divider')) {
+          parts.push('---');
+        } else {
+          parts.push(node.innerText || node.textContent || '');
+        }
+      }
+      return parts.join('\n').replace(/\u00a0/g, ' ').replace(/\n{3,}/g, '\n\n');
     }
 
     async function openNotesEditor(noteId) {
@@ -12203,7 +12270,10 @@
         var titleEl = document.getElementById('notesTitle');
         var bodyEl = document.getElementById('notesContent');
         if (titleEl) titleEl.textContent = data.title || '';
-        if (bodyEl) bodyEl.textContent = _cleanNoteContent(data.content || '');
+        if (bodyEl) {
+          var cleaned = _cleanNoteContent(data.content || '');
+          bodyEl.innerHTML = _renderNoteRich(cleaned);
+        }
 
         var dateEl = document.getElementById('note-date');
         if (dateEl) {
@@ -12260,6 +12330,94 @@
         }
         wpConfetti('note');
       } catch(e) { console.error('Error saving note:', e); }
+    }
+
+    // ── Rich note renderer: plain text → beautiful formatted HTML ──
+    function _renderNoteRich(text) {
+      if (!text) return '';
+      var cleaned = _cleanNoteContent(text);
+      var lines = cleaned.split('\n');
+      var html = '';
+      var inBulletGroup = false;
+
+      for (var i = 0; i < lines.length; i++) {
+        var line = lines[i];
+        var trimmed = line.trim();
+
+        // Empty line = paragraph break
+        if (!trimmed) {
+          if (inBulletGroup) inBulletGroup = false;
+          html += '<div class="note-paragraph" style="height:8px;"></div>';
+          continue;
+        }
+
+        // Divider lines (---, ===, ___)
+        if (/^[-=_]{3,}\s*$/.test(trimmed)) {
+          html += '<hr class="note-divider">';
+          continue;
+        }
+
+        // Checkbox: [ ] or [x] or [X]
+        if (/^\[[ xX]\]\s*/.test(trimmed)) {
+          var isChecked = /^\[[xX]\]/.test(trimmed);
+          var cbText = trimmed.replace(/^\[[ xX]\]\s*/, '');
+          html += '<div class="note-checkbox' + (isChecked ? ' checked' : '') + '" onclick="this.classList.toggle(\'checked\');if(typeof saveCurrentNote===\'function\')saveCurrentNote();">'
+            + '<div class="note-cb-box"></div>'
+            + '<span class="note-cb-text">' + _escNote(cbText) + '</span></div>';
+          continue;
+        }
+
+        // Emoji-led header line (starts with emoji + capitalized text, short)
+        if (/^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE00}-\u{FEFF}]/u.test(trimmed) && trimmed.length < 80 && !trimmed.match(/^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]\s*[-•]/u)) {
+          html += '<div class="note-emoji-header">' + _escNote(trimmed) + '</div>';
+          continue;
+        }
+
+        // Bullet: starts with - or • or *  (but not ---)
+        if (/^[-•*]\s+/.test(trimmed) && !/^[-]{2,}/.test(trimmed)) {
+          var bulletText = trimmed.replace(/^[-•*]\s+/, '');
+          html += '<div class="note-bullet"><span>' + _inlineFormat(_escNote(bulletText)) + '</span></div>';
+          inBulletGroup = true;
+          continue;
+        }
+
+        // Numbered list: 1. or 1)
+        if (/^\d+[.)]\s+/.test(trimmed)) {
+          var numText = trimmed.replace(/^\d+[.)]\s+/, '');
+          var num = trimmed.match(/^(\d+)/)[1];
+          html += '<div class="note-bullet" style="gap:6px;"><span style="color:rgb(113,50,245);font-weight:700;min-width:18px;flex-shrink:0;">' + num + '.</span><span>' + _inlineFormat(_escNote(numText)) + '</span></div>';
+          continue;
+        }
+
+        // Short ALL-CAPS or short bold-ish line = section header
+        if (trimmed.length < 60 && (/^[A-Z][A-Z\s&:,\-]+$/.test(trimmed) || /^[A-Z].*:$/.test(trimmed))) {
+          html += '<div class="note-h3">' + _escNote(trimmed) + '</div>';
+          continue;
+        }
+
+        // Regular paragraph
+        html += '<div class="note-paragraph">' + _inlineFormat(_escNote(trimmed)) + '</div>';
+      }
+      return html;
+    }
+
+    function _escNote(t) { return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    function _inlineFormat(t) {
+      // Bold markers that survived cleaning (rare) or ALL CAPS phrases
+      return t
+        .replace(/\b([A-Z]{2,}(?:\s+[A-Z]{2,})*)\b/g, '<span class="note-bold">$1</span>')
+        .replace(/→/g, '<span style="color:rgb(113,50,245);">→</span>')
+        .replace(/✅/g, '<span style="font-size:1.1em;">✅</span>')
+        .replace(/⚠️/g, '<span style="font-size:1.1em;">⚠️</span>')
+        .replace(/🎯/g, '<span style="font-size:1.1em;">🎯</span>');
+    }
+
+    // Extract plain text from rich note HTML for saving
+    function _getNotePlainText() {
+      var el = document.getElementById('notesContent');
+      if (!el) return '';
+      return (el.innerText || el.textContent || '').trim();
     }
 
     function toggleNoteMenu(e) {
