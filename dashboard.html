@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-13-v268';
+    var APP_VERSION = '2026-04-13-v269';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -3615,26 +3615,26 @@
       .chat-send-btn svg { stroke: rgb(113,50,245); width: 16px; height: 16px; }
 
       .lc-send-btn {
-        width: 28px;
-        height: 28px;
-        border-radius: 0;
-        background: none;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: rgba(113,50,245,0.15);
         color: rgb(113,50,245);
-        border: none;
+        border: 1.5px solid rgba(113,50,245,0.4);
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
         flex-shrink: 0;
         -webkit-tap-highlight-color: transparent;
-        box-shadow: none;
-        transition: opacity 0.15s ease, transform 0.1s ease;
+        box-shadow: 0 2px 8px rgba(113,50,245,0.2);
+        transition: opacity 0.15s ease, transform 0.1s ease, background 0.15s ease;
         position: relative;
         z-index: 2;
-        margin: 4px 4px 4px 0;
+        margin: 4px 6px 4px 0;
       }
-      .lc-send-btn:active { opacity: 0.6; transform: scale(0.9); }
-      .lc-send-btn svg { stroke: rgb(113,50,245); width: 16px; height: 16px; }
+      .lc-send-btn:active { opacity: 0.8; transform: scale(0.9); background: rgba(113,50,245,0.3); }
+      .lc-send-btn svg { stroke: rgb(113,50,245); width: 16px; height: 16px; stroke-width: 3; }
 
       /* ── Hide chart action buttons on mobile ── */
       .chart-actions { display: none !important; }
@@ -16426,13 +16426,24 @@
         msgs.scrollTop = msgs.scrollHeight;
         portfolioCoachHistory.push({ role: 'user', content: msg });
 
-        // Build portfolio context
+        // Build portfolio context — compute exact totals so AI never guesses wrong
+        var _pcTotalValue = 0, _pcTotalCost = 0, _pcTotalDayPL = 0;
         var holdingsCtx = portfolioHoldings.map(function(h) {
           var p = portfolioPrices[h.symbol] || {};
-          return h.symbol + ': ' + h.qty + ' shares @ $' + formatNum(p.price) + ' (avg cost: $' + formatNum(h.avgCost) + ', day change: ' + formatNum(p.changePercent) + '%)';
+          var price = p.price || 0;
+          var value = price * h.qty;
+          var costBasis = (h.avgCost || 0) * h.qty;
+          var dayPL = (p.change || 0) * h.qty;
+          _pcTotalValue += value;
+          _pcTotalCost += costBasis;
+          _pcTotalDayPL += dayPL;
+          return h.symbol + ': ' + h.qty + ' shares @ $' + formatNum(price) + ' (value: $' + formatNum(value) + ', avg cost: $' + formatNum(h.avgCost) + ', cost basis: $' + formatNum(costBasis) + ', day P&L: ' + (dayPL >= 0 ? '+' : '') + '$' + formatNum(dayPL) + ', total P&L: ' + (value - costBasis >= 0 ? '+' : '') + '$' + formatNum(value - costBasis) + ')';
         }).join('\n');
+        var _pcTotalPL = _pcTotalValue - _pcTotalCost;
+        var _pcTotalPLPct = _pcTotalCost > 0 ? ((_pcTotalPL / _pcTotalCost) * 100).toFixed(2) : '0.00';
+        var portfolioSummary = '\n\n--- PORTFOLIO TOTALS (use these exact numbers, do NOT recalculate) ---\nTotal Portfolio Value: $' + formatNum(_pcTotalValue) + '\nTotal Cost Basis: $' + formatNum(_pcTotalCost) + '\nTotal P&L: ' + (_pcTotalPL >= 0 ? '+' : '') + '$' + formatNum(_pcTotalPL) + ' (' + (_pcTotalPL >= 0 ? '+' : '') + _pcTotalPLPct + '%)' + '\nToday\'s P&L: ' + (_pcTotalDayPL >= 0 ? '+' : '') + '$' + formatNum(_pcTotalDayPL) + '\nPositions: ' + portfolioHoldings.length;
 
-        var systemPrompt = 'You are the WishPath Portfolio AI Coach — an expert investment advisor. The user\'s current portfolio:\n\n' + (holdingsCtx || 'No holdings yet.') + '\n\nProvide insightful, data-driven advice. Be specific with numbers. When showing allocation breakdowns, sector analysis, or performance data, include percentage figures so charts can be auto-generated. For visual data, you can use these markers to render Highcharts:\n- [CHARTDATA]{ ...highcharts config JSON... }[/CHARTDATA] for custom charts\n- Or just list items with percentages and a pie chart will auto-render\nKeep advice actionable. Current date: ' + new Date().toLocaleDateString() + '. Keep your responses concise and actionable. Use 2-3 short paragraphs maximum. Only provide longer responses when the user explicitly asks for more detail or a comprehensive analysis.';
+        var systemPrompt = 'You are the WishPath Portfolio AI Coach — an expert investment advisor. The user\'s current portfolio:\n\n' + (holdingsCtx || 'No holdings yet.') + portfolioSummary + '\n\nIMPORTANT: Always use the exact portfolio totals provided above. Never estimate or recalculate them — the numbers above are computed in real time from market data.\n\nProvide insightful, data-driven advice. Be specific with numbers. When showing allocation breakdowns, sector analysis, or performance data, include percentage figures so charts can be auto-generated. For visual data, you can use these markers to render Highcharts:\n- [CHARTDATA]{ ...highcharts config JSON... }[/CHARTDATA] for custom charts\n- Or just list items with percentages and a pie chart will auto-render\nKeep advice actionable. Current date: ' + new Date().toLocaleDateString() + '. Keep your responses concise and actionable. Use 2-3 short paragraphs maximum. Only provide longer responses when the user explicitly asks for more detail or a comprehensive analysis.';
 
         var res = await fetch(EDGE_FN, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
