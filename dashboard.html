@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-12-v250';
+    var APP_VERSION = '2026-04-12-v251';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -4258,43 +4258,55 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 12px;
-      background: rgba(11, 6, 17, 0.82);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
+      gap: 16px;
+      background: rgba(11, 6, 17, 0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       z-index: 30;
-      border-radius: 20px;
+      border-radius: 0;
       padding: 24px;
       text-align: center;
+      animation: goFadeIn 0.5s ease;
+    }
+    @keyframes goFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
     .wish-runner-gameover[hidden] {
       display: none !important;
     }
     .wish-runner-gameover-title {
-      font-size: 24px;
+      font-size: 32px;
       font-weight: 900;
       color: #FF5252;
       text-transform: uppercase;
-      letter-spacing: 0.12em;
-      text-shadow: 0 0 20px rgba(255,82,82,0.5);
+      letter-spacing: 0.15em;
+      text-shadow: 0 0 30px rgba(255,82,82,0.6), 0 0 60px rgba(255,82,82,0.3);
     }
     .wish-runner-final-score {
-      font-size: 20px;
-      font-weight: 700;
-      color: #FDE047;
-      text-shadow: 0 0 12px rgba(253,224,71,0.4);
+      font-size: 28px;
+      font-weight: 800;
+      color: #FFD700;
+      text-shadow: 0 0 16px rgba(255,215,0,0.5);
     }
     .wish-runner-restart-btn {
-      margin-top: 8px;
-      padding: 12px 24px;
-      border-radius: 14px;
+      margin-top: 12px;
+      padding: 16px 48px;
+      border-radius: 16px;
       font-weight: 800;
-      font-size: 14px;
+      font-size: 16px;
       border: none;
       cursor: pointer;
-      color: #0B0611;
+      color: #fff;
       background: linear-gradient(180deg, #A78BFA 0%, #7132F5 100%);
-      box-shadow: 0 8px 24px rgba(113, 50, 245, 0.4);
+      box-shadow: 0 8px 32px rgba(113, 50, 245, 0.5), 0 0 20px rgba(113, 50, 245, 0.3);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .wish-runner-restart-btn:active {
+      transform: scale(0.95);
+      box-shadow: 0 4px 16px rgba(113, 50, 245, 0.4);
     }
 
     /* ── Mobile: bottom tabs — same items & stroke icons as left sidebar (Home, Chats, News) ── */
@@ -5668,10 +5680,10 @@
             <span id="wp-wish-runner-score">0</span>
           </div>
           <div id="wp-wish-runner-gameover" class="wish-runner-gameover" hidden>
-            <div class="wish-runner-gameover-title">Wiped out</div>
+            <div class="wish-runner-gameover-title">GAME OVER</div>
             <div class="wish-runner-final-score">Score <span id="wp-wish-runner-final">0</span></div>
             <div class="wish-runner-hi-score" style="font-size:14px;font-weight:700;color:rgba(113,50,245,0.85);text-shadow:0 0 8px rgba(113,50,245,0.4);margin-top:-4px;">High Score <span id="wp-wish-runner-gameover-hi">0</span></div>
-            <button type="button" class="wish-runner-restart-btn" onclick="restartWishRunnerGame()">Play again</button>
+            <button type="button" class="wish-runner-restart-btn" onclick="restartWishRunnerGame()">Continue</button>
           </div>
         </div>
       </div>
