@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-12-v253';
+    var APP_VERSION = '2026-04-12-v255';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -7064,16 +7064,27 @@
     }
 
     var DICEBEAR_STYLES = [
-      // Original styles
-      'notionists', 'rings', 'lorelei', 'dylan', 'big-smile', 'croodles', 'miniavs', 'avataaars',
-      // NFT/crypto styles
-      'pixel-art', 'identicon', 'micah', 'bottts', 'avataaars-neutral'
+      // Anime & character styles
+      'adventurer', 'adventurer-neutral', 'lorelei', 'lorelei-neutral', 'personas', 'big-ears', 'big-ears-neutral',
+      // Expressive & playful
+      'notionists', 'fun-emoji', 'thumbs', 'croodles', 'big-smile', 'dylan', 'open-peeps',
+      // Minimalist & abstract
+      'rings', 'shapes', 'glass', 'initials', 'identicon', 'pixel-art',
+      // Robots & tech
+      'bottts', 'micah', 'avataaars', 'avataaars-neutral', 'miniavs'
     ];
+
+    // Multiple seed variations for visual variety
+    var AVATAR_SEED_VARIATIONS = ['Jeff', 'crypto', 'moon', 'diamond', 'rocket', 'nft', 'web3', 'anime', 'dragon', 'samurai', 'ninja', 'pixel'];
+
     var _youAvatarSelected = null;
     var _youAvatarSeed = 'Jeff';
+    var _youAvatarSeedOverride = null;  // Store the selected seed variant
 
     function getDiceBearUrl(style, seed) {
-      return 'https://api.dicebear.com/9.x/' + (style || 'notionists') + '/svg?seed=' + encodeURIComponent(seed || _youAvatarSeed);
+      // Use seed override if set (from picker selection), otherwise use passed seed or default
+      var finalSeed = _youAvatarSeedOverride || seed || _youAvatarSeed;
+      return 'https://api.dicebear.com/9.x/' + (style || 'notionists') + '/svg?seed=' + encodeURIComponent(finalSeed);
     }
 
     function updateAllAvatarImages(style) {
@@ -7091,16 +7102,28 @@
       var overlay = document.getElementById('youAvatarOverlay');
       var grid = document.getElementById('youAvatarGrid');
       if (!overlay || !grid) return;
-      grid.innerHTML = DICEBEAR_STYLES.map(function(style) {
-        var url = 'https://api.dicebear.com/9.x/' + style + '/svg?seed=Jeff&backgroundColor=1a1a2e';
-        var container = '<div style="text-align:center;">' +
-          '<button class="you-avatar-choice" type="button" onclick="selectAvatarChoice(\'' + style + '\')" style="width:68px;height:68px;padding:0;border:none;background:none;cursor:pointer;position:relative;">' +
-            '<img src="' + url + '" alt="' + style + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">' +
-          '</button>' +
-          '<div style="font-size:10px;color:#9497A9;margin-top:6px;">' + style + '</div>' +
-        '</div>';
-        return container;
-      }).join('');
+
+      var html = '';
+
+      DICEBEAR_STYLES.forEach(function(style) {
+        html += '<div style="margin-bottom:24px;">';
+        html += '<div style="font-size:12px;color:#6B7280;margin-bottom:8px;font-weight:500;padding-left:4px;">' + style + '</div>';
+        html += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;">';
+
+        AVATAR_SEED_VARIATIONS.forEach(function(seedVar) {
+          var url = 'https://api.dicebear.com/9.x/' + style + '/svg?seed=' + encodeURIComponent(seedVar);
+          html += '<button class="you-avatar-choice" type="button" onclick="selectAvatarChoice(\'' + style + '\',\'' + seedVar + '\')" ' +
+            'style="width:100%;aspect-ratio:1;padding:0;border:2px solid transparent;background:none;cursor:pointer;position:relative;border-radius:8px;transition:border-color 0.2s;"' +
+            'onmouseover="this.style.borderColor=\'#3b82f6\';" ' +
+            'onmouseout="this.style.borderColor=\'transparent\';">' +
+              '<img src="' + url + '" alt="' + style + '-' + seedVar + '" style="width:100%;height:100%;border-radius:6px;object-fit:cover;">' +
+            '</button>';
+        });
+
+        html += '</div></div>';
+      });
+
+      grid.innerHTML = html;
       overlay.classList.add('active');
       document.body.classList.add('mobile-ai-open');
       wpAnime.avatarRipple('#youAvatarGrid');
@@ -7112,15 +7135,18 @@
       document.body.classList.remove('mobile-ai-open');
     }
 
-    async function selectAvatarChoice(style) {
+    async function selectAvatarChoice(style, seedVar) {
       _youAvatarSelected = style;
+      _youAvatarSeedOverride = seedVar || null;  // Store the selected seed variant
       updateAllAvatarImages(style);
       // Bounce the header avatar
       var hImg = document.getElementById('headerAvatarImg');
       if (hImg) wpAnime.avatarBounce(hImg);
       closeAvatarPicker();
       wpTsConfetti('avatar');
-      try { await saveUserAvatar('dicebear:' + style); } catch(e) {}
+      // Save as "dicebear:style:seed" to preserve exact avatar
+      var payload = seedVar ? ('dicebear:' + style + ':' + seedVar) : ('dicebear:' + style);
+      try { await saveUserAvatar(payload); } catch(e) {}
     }
 
     function showProfileModal() {
@@ -7436,12 +7462,17 @@
         // Set seed from user's name/email for unique avatar
         _youAvatarSeed = displayName || email || 'User';
         if (savedAvatar && savedAvatar.startsWith('dicebear:')) {
-          var style = savedAvatar.replace('dicebear:', '');
+          var avatarSpec = savedAvatar.replace('dicebear:', '');
+          var parts = avatarSpec.split(':');
+          var style = parts[0];
+          var seedVar = parts[1] || null;  // Restore seed variant if saved
           _youAvatarSelected = style;
+          _youAvatarSeedOverride = seedVar;
           updateAllAvatarImages(style);
         } else {
           // Default or legacy emoji — show default DiceBear
           _youAvatarSelected = 'notionists';
+          _youAvatarSeedOverride = null;
           updateAllAvatarImages('notionists');
         }
 
@@ -8054,11 +8085,16 @@
 
       // Power-ups
       var powerups = [];
+      var backgroundPlanets = [];
       var activePowerup = null; // { type, timer }
+      var _invincible = false;
+      var _invincibleTimer = 0;
+      var _invincibleFlashCycle = 0;
       var POWERUP_TYPES = [
         { type: 'spread', label: 'SPREAD', color: '#00E5FF', duration: 8 },
         { type: 'rapid', label: 'RAPID', color: '#FDE047', duration: 7 },
-        { type: 'cannon', label: 'CANNON', color: '#FF5252', duration: 6 }
+        { type: 'cannon', label: 'CANNON', color: '#FF5252', duration: 6 },
+        { type: 'invincible', label: 'SHIELD', color: '#FF6B9D', duration: 20, shimmer: true }
       ];
       var powerupSpawnAcc = 0;
       var powerupSpawnEvery = 12; // seconds between power-up drops
@@ -8120,7 +8156,11 @@
         targets = [];
         particles = [];
         powerups = [];
+        backgroundPlanets = [];
         activePowerup = null;
+        _invincible = false;
+        _invincibleTimer = 0;
+        _invincibleFlashCycle = 0;
         powerupSpawnAcc = 0;
         score = 0;
         gameOver = false;
@@ -8136,6 +8176,7 @@
         var go = document.getElementById('wp-wish-runner-gameover');
         if (go) { go.hidden = true; go.setAttribute('hidden', ''); go.style.display = ''; }
         updateScoreEl();
+        spawnBackgroundPlanets();
       }
 
       var particles = [];
@@ -8154,26 +8195,103 @@
       ];
       var ASTEROID_COLORS = ['#8D6E63', '#A1887F', '#78909C', '#90A4AE', '#616161', '#9E9E9E'];
 
+      function spawnBackgroundPlanets() {
+        backgroundPlanets = [];
+        for (var i = 0; i < 5; i++) {
+          var bpSize = 60 + Math.random() * 120;
+          var bpColorIdx = Math.floor(Math.random() * PLANET_COLORS.length);
+          var hasRing = Math.random() > 0.5;
+          backgroundPlanets.push({
+            x: Math.random() * GW,
+            y: (Math.random() * GH * 1.5) - GH * 0.5,
+            size: bpSize,
+            colorIdx: bpColorIdx,
+            rotation: Math.random() * Math.PI * 2,
+            rotSpeed: (Math.random() - 0.5) * 0.8,
+            speed: 20 + Math.random() * 40,
+            hasRing: hasRing,
+            wobble: Math.random() * Math.PI * 2
+          });
+        }
+      }
+
+      function updateBackgroundPlanets(dt) {
+        for (var i = 0; i < backgroundPlanets.length; i++) {
+          var bp = backgroundPlanets[i];
+          bp.y += bp.speed * dt;
+          bp.rotation += bp.rotSpeed * dt;
+          if (bp.y > GH + bp.size * 2) {
+            backgroundPlanets[i] = {
+              x: Math.random() * GW,
+              y: -bp.size * 2,
+              size: bp.size,
+              colorIdx: bp.colorIdx,
+              rotation: bp.rotation,
+              rotSpeed: bp.rotSpeed,
+              speed: bp.speed,
+              hasRing: bp.hasRing,
+              wobble: Math.random() * Math.PI * 2
+            };
+          }
+        }
+      }
+
+      function drawBackgroundPlanets() {
+        for (var i = 0; i < backgroundPlanets.length; i++) {
+          var bp = backgroundPlanets[i];
+          var r = bp.size * 0.5;
+          var pc = PLANET_COLORS[bp.colorIdx];
+          ctx.save();
+          ctx.translate(bp.x, bp.y);
+          ctx.rotate(bp.rotation * 0.08);
+          ctx.globalAlpha = 0.35;
+          // Glow (subtle for background)
+          ctx.shadowColor = pc.glow;
+          ctx.shadowBlur = 12;
+          // Main sphere gradient
+          var grad = ctx.createRadialGradient(-r * 0.25, -r * 0.25, r * 0.1, 0, 0, r);
+          grad.addColorStop(0, pc.ring);
+          grad.addColorStop(0.5, pc.base);
+          grad.addColorStop(1, 'rgba(0,0,0,0.4)');
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(0, 0, r, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+          // Ring (if has ring)
+          if (bp.hasRing) {
+            ctx.strokeStyle = pc.ring;
+            ctx.lineWidth = 1.5;
+            ctx.globalAlpha = 0.25;
+            ctx.beginPath();
+            ctx.ellipse(0, 0, r * 1.4, r * 0.35, 0.3, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+          ctx.globalAlpha = 1;
+          ctx.restore();
+        }
+      }
+
       function spawnTarget() {
         var margin = 34;
         var typeRoll = Math.random();
         var type, sz, hp;
         if (typeRoll < 0.35) {
           type = 'planet';
-          sz = 38 + Math.random() * 24;
-          hp = Math.floor(Math.random() * 6) + 5;
+          sz = 60 + Math.random() * 50;
+          hp = Math.floor(Math.random() * 8) + 7;
         } else if (typeRoll < 0.65) {
           type = 'asteroid';
-          sz = 28 + Math.random() * 18;
-          hp = Math.floor(Math.random() * 4) + 3;
+          sz = 65 + Math.random() * 70;
+          hp = Math.floor(Math.random() * 7) + 5;
         } else if (typeRoll < 0.85) {
           type = 'debris';
-          sz = 20 + Math.random() * 14;
-          hp = Math.floor(Math.random() * 3) + 2;
+          sz = 45 + Math.random() * 40;
+          hp = Math.floor(Math.random() * 4) + 3;
         } else {
           type = 'comet';
-          sz = 24 + Math.random() * 12;
-          hp = Math.floor(Math.random() * 2) + 2;
+          sz = 55 + Math.random() * 40;
+          hp = Math.floor(Math.random() * 3) + 2;
         }
         var colorIdx = Math.floor(Math.random() * PLANET_COLORS.length);
         var asteroidColor = ASTEROID_COLORS[Math.floor(Math.random() * ASTEROID_COLORS.length)];
@@ -8203,31 +8321,31 @@
         }
         for (var i = 0; i < n; i++) {
           var angle = Math.random() * Math.PI * 2;
-          var spd = 60 + Math.random() * 280;
-          var life = 0.5 + Math.random() * 0.8;
+          var spd = 60 + Math.random() * 320;
+          var life = 0.6 + Math.random() * 1.0;
           particles.push({
-            x: x + (Math.random() - 0.5) * 8,
-            y: y + (Math.random() - 0.5) * 8,
+            x: x + (Math.random() - 0.5) * 12,
+            y: y + (Math.random() - 0.5) * 12,
             vx: Math.cos(angle) * spd,
             vy: Math.sin(angle) * spd,
             life: life,
             maxLife: life,
-            size: 3 + Math.random() * 7,
+            size: 4 + Math.random() * 10,
             color: color || '#FDE047'
           });
         }
         // Extra ring of bright sparks for drama
-        var sparkCount = Math.min(n, 12);
+        var sparkCount = Math.min(n, 16);
         for (var s = 0; s < sparkCount; s++) {
           var sAngle = (s / sparkCount) * Math.PI * 2;
-          var sSpd = 200 + Math.random() * 160;
+          var sSpd = 220 + Math.random() * 200;
           particles.push({
             x: x, y: y,
             vx: Math.cos(sAngle) * sSpd,
             vy: Math.sin(sAngle) * sSpd,
-            life: 0.3 + Math.random() * 0.3,
-            maxLife: 0.3 + Math.random() * 0.3,
-            size: 1.5 + Math.random() * 2,
+            life: 0.35 + Math.random() * 0.35,
+            maxLife: 0.35 + Math.random() * 0.35,
+            size: 2 + Math.random() * 3,
             color: '#fff'
           });
         }
@@ -8253,6 +8371,7 @@
 
       function update(dt) {
         updateStars(dt);
+        updateBackgroundPlanets(dt);
         // Update particles
         for (var pi = particles.length - 1; pi >= 0; pi--) {
           var p = particles[pi];
@@ -8263,6 +8382,15 @@
         }
         if (milestoneFlash > 0) milestoneFlash = Math.max(0, milestoneFlash - dt);
         if (gameOver) return;
+        // Invincibility timer
+        if (_invincible) {
+          _invincibleTimer -= dt;
+          _invincibleFlashCycle += dt * 8;
+          if (_invincibleTimer <= 0) {
+            _invincible = false;
+            _invincibleTimer = 0;
+          }
+        }
         // Power-up timer
         if (activePowerup) {
           activePowerup.timer -= dt;
@@ -8320,8 +8448,14 @@
           var pdx = pw.x - player.x;
           var pdy = pw.y - player.y;
           if (Math.sqrt(pdx * pdx + pdy * pdy) < pw.size + player.size * 0.5) {
-            activePowerup = { type: pw.type, timer: pw.duration };
-            spawnExplosion(pw.x, pw.y, pw.color, 15);
+            if (pw.type === 'invincible') {
+              _invincible = true;
+              _invincibleTimer = pw.duration;
+              _invincibleFlashCycle = 0;
+            } else {
+              activePowerup = { type: pw.type, timer: pw.duration };
+            }
+            spawnExplosion(pw.x, pw.y, pw.color, 20);
             powerups.splice(pu, 1);
           }
         }
@@ -8356,28 +8490,39 @@
           t.rotation += t.rotSpeed * dt;
           t.wobble += dt * 1.5;
           if (targetHitsPlayer(t)) {
-            gameOver = true;
-            _deathTime = Date.now();
-            spawnExplosion(player.x, player.y, '#FF5252', 18);
-            spawnExplosion(player.x - 15, player.y + 10, '#FF9800', 10);
-            spawnExplosion(player.x + 15, player.y - 10, '#FDE047', 10);
-            // Clear frozen objects so screen isn't cluttered
-            targets = [];
-            bullets = [];
-            powerups = [];
-            saveHigh(score);
-            var _deathScore = score;
-            var _deathHi = Math.max(highScore, score);
-            // Delay gameover overlay so explosion plays out
-            setTimeout(function() {
-              var go = document.getElementById('wp-wish-runner-gameover');
-              var fs = document.getElementById('wp-wish-runner-final');
-              var goHi = document.getElementById('wp-wish-runner-gameover-hi');
-              if (fs) fs.textContent = String(_deathScore);
-              if (goHi) goHi.textContent = String(_deathHi);
-              if (go) { go.hidden = false; go.removeAttribute('hidden'); go.style.display = 'flex'; }
-            }, 800);
-            break targetLoop;
+            if (_invincible) {
+              // Destroy enemy instead of dying
+              var explodeColor = PLANET_COLORS[t.colorIdx] ? PLANET_COLORS[t.colorIdx].base : '#FDE047';
+              spawnExplosion(t.x, t.y, explodeColor, 20);
+              var pts = 25 + Math.floor((80 - t.size) * 0.4);
+              score += pts;
+              targets.splice(j, 1);
+              updateScoreEl();
+              continue targetLoop;
+            } else {
+              gameOver = true;
+              _deathTime = Date.now();
+              spawnExplosion(player.x, player.y, '#FF5252', 18);
+              spawnExplosion(player.x - 15, player.y + 10, '#FF9800', 10);
+              spawnExplosion(player.x + 15, player.y - 10, '#FDE047', 10);
+              // Clear frozen objects so screen isn't cluttered
+              targets = [];
+              bullets = [];
+              powerups = [];
+              saveHigh(score);
+              var _deathScore = score;
+              var _deathHi = Math.max(highScore, score);
+              // Delay gameover overlay so explosion plays out
+              setTimeout(function() {
+                var go = document.getElementById('wp-wish-runner-gameover');
+                var fs = document.getElementById('wp-wish-runner-final');
+                var goHi = document.getElementById('wp-wish-runner-gameover-hi');
+                if (fs) fs.textContent = String(_deathScore);
+                if (goHi) goHi.textContent = String(_deathHi);
+                if (go) { go.hidden = false; go.removeAttribute('hidden'); go.style.display = 'flex'; }
+              }, 800);
+              break targetLoop;
+            }
           }
           if (t.y - t.size * 0.5 > GH + 40) { targets.splice(j, 1); continue targetLoop; }
           for (k = bullets.length - 1; k >= 0; k--) {
@@ -8585,9 +8730,24 @@
         ctx.save();
         ctx.translate(player.x, player.y);
         var sz = player.size;
+
+        // Invincibility rainbow flash overlay
+        if (_invincible) {
+          var rainbowColors = ['#FF0000', '#FF7F00', '#FFFF00', '#00FF00', '#0000FF', '#4B0082', '#9400D3'];
+          var rainbowIdx = Math.floor((_invincibleFlashCycle / 2) % rainbowColors.length);
+          var rainbowAlpha = 0.25 + Math.sin(_invincibleFlashCycle) * 0.15;
+          ctx.globalAlpha = rainbowAlpha;
+          ctx.fillStyle = rainbowColors[rainbowIdx];
+          ctx.beginPath();
+          ctx.arc(0, 0, sz * 0.7, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+        }
+
         // Engine glow
-        ctx.shadowColor = '#00E5FF'; ctx.shadowBlur = 20;
-        ctx.fillStyle = 'rgba(0,229,255,0.35)';
+        var engGlow = _invincible ? '#FF6B9D' : '#00E5FF';
+        ctx.shadowColor = engGlow; ctx.shadowBlur = 20;
+        ctx.fillStyle = _invincible ? 'rgba(255,107,157,0.35)' : 'rgba(0,229,255,0.35)';
         ctx.beginPath();
         ctx.ellipse(0, sz * 0.45, sz * 0.25, sz * 0.55, 0, 0, Math.PI * 2);
         ctx.fill();
@@ -8595,7 +8755,7 @@
         // Engine flames
         var flicker = 0.8 + Math.random() * 0.4;
         var fGrad = ctx.createLinearGradient(0, sz * 0.15, 0, sz * 0.7 * flicker);
-        fGrad.addColorStop(0, '#00E5FF');
+        fGrad.addColorStop(0, engGlow);
         fGrad.addColorStop(0.5, '#7132F5');
         fGrad.addColorStop(1, 'transparent');
         ctx.fillStyle = fGrad;
@@ -8607,12 +8767,14 @@
         ctx.closePath();
         ctx.fill();
         // Ship body — sleek triangle
+        var bodyColor1 = _invincible ? '#FF6B9D' : '#5C35B4';
+        var bodyColor2 = _invincible ? '#FF85B5' : '#9B59FF';
         var bodyGrad = ctx.createLinearGradient(-sz * 0.5, 0, sz * 0.5, 0);
-        bodyGrad.addColorStop(0, '#5C35B4');
-        bodyGrad.addColorStop(0.5, '#9B59FF');
-        bodyGrad.addColorStop(1, '#5C35B4');
+        bodyGrad.addColorStop(0, bodyColor1);
+        bodyGrad.addColorStop(0.5, bodyColor2);
+        bodyGrad.addColorStop(1, bodyColor1);
         ctx.fillStyle = bodyGrad;
-        ctx.shadowColor = '#7132F5'; ctx.shadowBlur = 12;
+        ctx.shadowColor = bodyColor1; ctx.shadowBlur = 12;
         ctx.beginPath();
         ctx.moveTo(0, -sz * 0.65);
         ctx.lineTo(sz * 0.4, sz * 0.25);
@@ -8623,7 +8785,8 @@
         ctx.fill();
         ctx.shadowBlur = 0;
         // Wings
-        ctx.fillStyle = '#7132F5';
+        var wingColor = _invincible ? '#FF85B5' : '#7132F5';
+        ctx.fillStyle = wingColor;
         ctx.beginPath();
         ctx.moveTo(-sz * 0.35, sz * 0.15);
         ctx.lineTo(-sz * 0.58, sz * 0.35);
@@ -8638,8 +8801,8 @@
         ctx.fill();
         // Cockpit
         var cockGrad = ctx.createRadialGradient(0, -sz * 0.2, 1, 0, -sz * 0.2, sz * 0.14);
-        cockGrad.addColorStop(0, '#00E5FF');
-        cockGrad.addColorStop(1, 'rgba(0,229,255,0.2)');
+        cockGrad.addColorStop(0, engGlow);
+        cockGrad.addColorStop(1, _invincible ? 'rgba(255,107,157,0.2)' : 'rgba(0,229,255,0.2)');
         ctx.fillStyle = cockGrad;
         ctx.beginPath();
         ctx.ellipse(0, -sz * 0.2, sz * 0.1, sz * 0.14, 0, 0, Math.PI * 2);
@@ -8668,6 +8831,9 @@
           ctx.arc(s.x, s.y, s.size, 0, 6.2832);
           ctx.fill();
         }
+
+        // Draw background planets (far background, dim)
+        drawBackgroundPlanets();
 
         // Draw targets as space objects
         for (var ti = 0; ti < targets.length; ti++) {
@@ -8736,7 +8902,66 @@
           ctx.lineWidth = 2;
           ctx.shadowBlur = 0;
 
-          if (pw.type === 'spread') {
+          if (pw.type === 'invincible') {
+            // Rainbow 3D rotating cube — invincibility power-up
+            var cubeSize = puR * 1.5;
+            var rainbowHue = (pw.pulse * 50) % 360;
+            var rotAngle = pw.rotation + pw.pulse * 0.8;
+            ctx.save();
+            ctx.rotate(rotAngle);
+            // Draw three visible faces of cube with rainbow colors cycling
+            var rainbowColors = ['#FF0000', '#FF7F00', '#FFFF00', '#00FF00', '#0000FF', '#4B0082', '#9400D3'];
+            var faceIdx = Math.floor((pw.pulse / 0.5) % rainbowColors.length);
+            // Front face (darker rainbow color)
+            ctx.fillStyle = rainbowColors[faceIdx];
+            ctx.globalAlpha = 0.8;
+            ctx.fillRect(-cubeSize * 0.5, -cubeSize * 0.5, cubeSize, cubeSize);
+            // Top face (lighter/different rainbow)
+            var topIdx = (faceIdx + 2) % rainbowColors.length;
+            ctx.fillStyle = rainbowColors[topIdx];
+            ctx.globalAlpha = 0.6;
+            ctx.beginPath();
+            ctx.moveTo(-cubeSize * 0.5, -cubeSize * 0.5);
+            ctx.lineTo(-cubeSize * 0.2, -cubeSize * 0.8);
+            ctx.lineTo(cubeSize * 0.2, -cubeSize * 0.8);
+            ctx.lineTo(cubeSize * 0.5, -cubeSize * 0.5);
+            ctx.closePath();
+            ctx.fill();
+            // Right face (another rainbow color)
+            var rightIdx = (faceIdx + 4) % rainbowColors.length;
+            ctx.fillStyle = rainbowColors[rightIdx];
+            ctx.globalAlpha = 0.5;
+            ctx.beginPath();
+            ctx.moveTo(cubeSize * 0.5, -cubeSize * 0.5);
+            ctx.lineTo(cubeSize * 0.2, -cubeSize * 0.8);
+            ctx.lineTo(cubeSize * 0.2, cubeSize * 0.2);
+            ctx.lineTo(cubeSize * 0.5, cubeSize * 0.5);
+            ctx.closePath();
+            ctx.fill();
+            // Shimmer glow rings
+            ctx.globalAlpha = 0.7;
+            ctx.strokeStyle = rainbowColors[faceIdx];
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(0, 0, cubeSize * 0.7, 0, Math.PI * 2);
+            ctx.stroke();
+            // Inner shimmer
+            ctx.globalAlpha = 0.4;
+            ctx.strokeStyle = rainbowColors[topIdx];
+            ctx.beginPath();
+            ctx.arc(0, 0, cubeSize * 0.35, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.globalAlpha = 1;
+            ctx.restore();
+            // Label
+            ctx.font = 'bold 9px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            ctx.fillStyle = '#FF6B9D';
+            ctx.shadowColor = '#FF6B9D'; ctx.shadowBlur = 8;
+            ctx.fillText('SHIELD', 0, puR * 1.3);
+            ctx.shadowBlur = 0;
+          } else if (pw.type === 'spread') {
             // Shotgun/Trident - three barrels fanning out
             ctx.fillStyle = pw.color;
             // Base
@@ -8845,6 +9070,21 @@
             ctx.shadowBlur = 0;
             ctx.restore();
           }
+        }
+
+        // Draw invincibility indicator
+        if (_invincible) {
+          ctx.save();
+          ctx.font = 'bold 11px sans-serif';
+          ctx.textAlign = 'right';
+          var shieldColor = '#FF6B9D';
+          ctx.fillStyle = shieldColor;
+          ctx.shadowColor = shieldColor;
+          ctx.shadowBlur = 8;
+          var shieldTime = Math.ceil(_invincibleTimer);
+          ctx.fillText('SHIELD ' + shieldTime + 's', GW - 12, 12);
+          ctx.shadowBlur = 0;
+          ctx.restore();
         }
 
         // Draw particles (explosions) — lightweight for mobile perf
