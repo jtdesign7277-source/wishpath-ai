@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-12-v246';
+    var APP_VERSION = '2026-04-12-v248';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -3492,7 +3492,7 @@
         border-radius: 24px;
         background: linear-gradient(90deg, transparent 0%, rgba(113,50,245,0.4) 45%, rgba(255,255,255,0.3) 50%, rgba(113,50,245,0.4) 55%, transparent 100%);
         background-size: 200% 100%;
-        animation: laserSweep 3s ease-in-out infinite;
+        animation: laserSweep 2s ease-in-out 1;
         pointer-events: none;
         z-index: 1;
       }
@@ -4110,23 +4110,24 @@
       padding: 0 !important;
     }
     body[data-active-view="wishrunner"] .mobile-nav-bar { display: none !important; }
-    @media (max-width: 768px) {
-      body[data-active-view="wishrunner"] .main-content {
-        padding-bottom: max(8px, env(safe-area-inset-bottom)) !important;
-      }
+    body[data-active-view="wishrunner"] .mobile-home-header,
+    body[data-active-view="wishrunner"] .top-bar,
+    body[data-active-view="wishrunner"] .sidebar { display: none !important; }
+    body[data-active-view="wishrunner"] .main-content {
+      padding: 0 !important;
+      margin: 0 !important;
     }
     #wishrunnerView.view { display: none; }
     #wishrunnerView.view.active {
       display: flex;
       flex-direction: column;
       align-items: stretch;
-      min-height: calc(100vh - 88px);
-      box-sizing: border-box;
-    }
-    @media (max-width: 768px) {
-      #wishrunnerView.view.active {
-        min-height: calc(100dvh - 56px - env(safe-area-inset-top));
-      }
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      background: #0B0611;
+      min-height: 100vh;
+      min-height: 100dvh;
     }
     /* Wish Runner shooter — Last Z style (scoped) */
     .wish-runner-container {
@@ -4135,14 +4136,13 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: flex-start;
+      justify-content: center;
       width: 100%;
-      max-width: 390px;
-      margin: 20px auto;
+      max-width: 100%;
+      margin: 0;
       min-height: 0;
-      border-radius: 20px;
+      border-radius: 0;
       overflow: hidden;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
       touch-action: none;
       -webkit-user-select: none;
       user-select: none;
@@ -4151,12 +4151,14 @@
       display: block;
       background: #0B0611;
       touch-action: none;
-      max-width: 100%;
       width: 100%;
-      height: auto;
+      height: 100%;
+      position: absolute;
+      inset: 0;
       border-radius: 0;
       border: none;
       box-shadow: none;
+      object-fit: cover;
     }
     .wish-runner-container .game-controls {
       display: none !important;
@@ -4194,18 +4196,19 @@
     .wish-runner-container .game-ui {
       position: absolute;
       top: max(16px, calc(env(safe-area-inset-top) + 8px));
-      left: 16px;
-      right: 16px;
-      font-size: 15px;
-      font-weight: 800;
-      letter-spacing: 0.08em;
-      color: rgba(255,255,255,0.85);
-      text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+      left: 0;
+      right: 0;
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      color: #FFD700;
+      text-shadow: 0 0 12px rgba(255,215,0,0.6), 0 2px 6px rgba(0,0,0,0.8);
       pointer-events: none;
       z-index: 10;
       display: flex;
       align-items: center;
-      gap: 10px;
+      justify-content: center;
+      gap: 6px;
       background: none;
       padding: 0;
       border-radius: 0;
@@ -4214,6 +4217,39 @@
     }
     .wish-runner-container .game-ui-hi {
       display: none;
+    }
+    /* Overlay nav icons */
+    .wr-overlay-icon {
+      position: absolute;
+      z-index: 12;
+      top: max(14px, calc(env(safe-area-inset-top) + 6px));
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      pointer-events: auto;
+      -webkit-tap-highlight-color: transparent;
+      color: #7132F5;
+      opacity: 0.85;
+      transition: opacity 0.15s;
+    }
+    .wr-overlay-icon:active { opacity: 1; transform: scale(0.92); }
+    .wr-overlay-icon.wr-back { left: max(12px, env(safe-area-inset-left)); }
+    .wr-overlay-icon.wr-search { right: max(12px, env(safe-area-inset-right)); }
+    /* Score milestone pulse */
+    @keyframes scorePulse {
+      0% { transform: scale(1); text-shadow: 0 0 12px rgba(255,215,0,0.6), 0 2px 6px rgba(0,0,0,0.8); }
+      25% { transform: scale(1.35); text-shadow: 0 0 28px rgba(255,215,0,1), 0 0 60px rgba(255,165,0,0.5); }
+      50% { transform: scale(1); }
+      65% { transform: scale(1.25); text-shadow: 0 0 24px rgba(255,215,0,0.9), 0 0 50px rgba(255,165,0,0.4); }
+      80% { transform: scale(1); }
+      90% { transform: scale(1.15); text-shadow: 0 0 18px rgba(255,215,0,0.7); }
+      100% { transform: scale(1); text-shadow: 0 0 12px rgba(255,215,0,0.6), 0 2px 6px rgba(0,0,0,0.8); }
+    }
+    .score-milestone-pulse {
+      animation: scorePulse 1.2s ease-out;
     }
     .wish-runner-gameover {
       position: absolute;
@@ -5615,6 +5651,13 @@
       <div class="view" id="wishrunnerView">
         <div id="wish-runner-game" class="wish-runner-container">
           <canvas id="wpWishRunnerCanvas" width="390" height="680" aria-label="Wish Runner game"></canvas>
+          <!-- Overlay icons -->
+          <div class="wr-overlay-icon wr-back" onclick="showView('home')">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><polyline points="3 6 3 6 21 6"/><polyline points="3 18 3 18 21 18"/></svg>
+          </div>
+          <div class="wr-overlay-icon wr-search" onclick="showView('home')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </div>
           <div class="game-controls">
             <div id="wp-wish-runner-joystick" class="virtual-joystick" aria-hidden="true">
               <div class="joystick-knob" id="wp-wish-runner-joystick-knob"></div>
@@ -5622,8 +5665,7 @@
             <div id="wp-wish-runner-fire" class="fire-button" role="button" tabindex="0" aria-label="Fire" style="display:none;">&#x1F525;</div>
           </div>
           <div id="score-display" class="game-ui">
-            SCORE <span id="wp-wish-runner-score">0</span>
-            <span class="game-ui-hi">HI <span id="wp-wish-runner-hi">0</span></span>
+            <span id="wp-wish-runner-score">0</span>
           </div>
           <div id="wp-wish-runner-gameover" class="wish-runner-gameover" hidden>
             <div class="wish-runner-gameover-title">Wiped out</div>
@@ -7922,6 +7964,7 @@
       var score = 0;
       var highScore = 0;
       var gameOver = false;
+      var _deathTime = 0;
       var spawnAcc = 0;
       var spawnEvery = 0.8;
       var fireCd = 0;
@@ -7956,9 +7999,20 @@
         }
       }
 
+      var _lastScoreMilestone = 0;
       function updateScoreEl() {
         var el = document.getElementById('wp-wish-runner-score');
-        if (el) el.textContent = String(score);
+        if (el) {
+          el.textContent = String(score);
+          // Milestone pulse at every 100 points
+          var curM = Math.floor(score / 100);
+          if (curM > _lastScoreMilestone && score > 0) {
+            _lastScoreMilestone = curM;
+            el.classList.remove('score-milestone-pulse');
+            void el.offsetWidth; // force reflow to restart animation
+            el.classList.add('score-milestone-pulse');
+          }
+        }
         var hi = document.getElementById('wp-wish-runner-hi');
         if (hi) hi.textContent = String(Math.max(highScore, score));
       }
@@ -7966,15 +8020,16 @@
       function resize() {
         canvas = document.getElementById('wpWishRunnerCanvas');
         if (!canvas || !canvas.parentElement) return;
-        var rect = canvas.parentElement.getBoundingClientRect();
-        var w = Math.min(rect.width || 390, 390);
-        var h = Math.min(w * (GH / GW), Math.max(280, rect.height - 8));
-        if (h < 240) h = Math.max(240, (window.innerHeight || 600) * 0.52);
+        // Fullscreen: use entire viewport
+        var w = window.innerWidth || 390;
+        var h = window.innerHeight || 680;
         dpr = Math.min(window.devicePixelRatio || 1, 2);
         canvas.width = Math.floor(w * dpr);
         canvas.height = Math.floor(h * dpr);
-        canvas.style.width = Math.floor(w) + 'px';
-        canvas.style.height = Math.floor(h) + 'px';
+        canvas.style.width = w + 'px';
+        canvas.style.height = h + 'px';
+        GW = w;
+        GH = h;
         ctx = canvas.getContext('2d');
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         player.y = GH * 0.76;
@@ -7994,6 +8049,8 @@
         powerupSpawnAcc = 0;
         score = 0;
         gameOver = false;
+        _deathTime = 0;
+        _lastScoreMilestone = 0;
         spawnAcc = 0;
         spawnEvery = 0.8;
         fireCd = 0;
@@ -8225,16 +8282,24 @@
           t.wobble += dt * 1.5;
           if (targetHitsPlayer(t)) {
             gameOver = true;
+            _deathTime = Date.now();
             spawnExplosion(player.x, player.y, '#FF5252', 18);
             spawnExplosion(player.x - 15, player.y + 10, '#FF9800', 10);
             spawnExplosion(player.x + 15, player.y - 10, '#FDE047', 10);
+            // Clear frozen objects so screen isn't cluttered
+            targets = [];
+            bullets = [];
+            powerups = [];
             saveHigh(score);
-            var go = document.getElementById('wp-wish-runner-gameover');
-            var fs = document.getElementById('wp-wish-runner-final');
-            var goHi = document.getElementById('wp-wish-runner-gameover-hi');
-            if (fs) fs.textContent = String(score);
-            if (goHi) goHi.textContent = String(hi);
-            if (go) go.hidden = false;
+            // Delay gameover overlay so explosion plays out
+            setTimeout(function() {
+              var go = document.getElementById('wp-wish-runner-gameover');
+              var fs = document.getElementById('wp-wish-runner-final');
+              var goHi = document.getElementById('wp-wish-runner-gameover-hi');
+              if (fs) fs.textContent = String(score);
+              if (goHi) goHi.textContent = String(hi);
+              if (go) go.hidden = false;
+            }, 1200);
             break targetLoop;
           }
           if (t.y - t.size * 0.5 > GH + 40) { targets.splice(j, 1); continue targetLoop; }
@@ -8536,8 +8601,8 @@
           else drawDebris(tg);
         }
 
-        // Draw ship
-        drawShip();
+        // Draw ship (hide when dead)
+        if (!gameOver) drawShip();
 
         // Draw bullets — laser bolts / cannon
         for (var bi = 0; bi < bullets.length; bi++) {
