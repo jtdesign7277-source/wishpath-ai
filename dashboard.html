@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-13-v282';
+    var APP_VERSION = '2026-04-13-v285-creatures-boss-wingmen';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -2776,7 +2776,7 @@
     #fmMarketsContent #ticker-inner {
       display: inline-flex;
       align-items: center;
-      animation: ticker-scroll 12s linear infinite;
+      animation: ticker-scroll 6s linear infinite;
       will-change: transform;
     }
     @media (prefers-reduced-motion: reduce) {
@@ -4412,30 +4412,66 @@
       display: none !important;
     }
     .wish-runner-gameover-title {
-      font-size: 32px;
+      font-size: 22px;
       font-weight: 900;
-      color: #FF5252;
+      color: #B8FF4A;
       text-transform: uppercase;
-      letter-spacing: 0.15em;
-      text-shadow: 0 0 30px rgba(255,82,82,0.6), 0 0 60px rgba(255,82,82,0.3);
+      letter-spacing: 0.2em;
+      text-shadow: 0 0 20px rgba(184,255,74,0.5), 0 2px 8px rgba(0,0,0,0.8);
+      font-style: italic;
     }
     .wish-runner-final-score {
+      font-size: 64px;
+      font-weight: 900;
+      color: #FFFFFF;
+      text-shadow: 0 0 20px rgba(255,255,255,0.4), 0 4px 12px rgba(0,0,0,0.8);
+      line-height: 1;
+      margin-top: -4px;
+    }
+    .wish-runner-hi-label {
+      font-size: 14px;
+      font-weight: 700;
+      color: #B8FF4A;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-top: 4px;
+    }
+    .wish-runner-hi-value {
+      font-size: 32px;
+      font-weight: 900;
+      color: #fff;
+      margin-top: -2px;
+    }
+    .wish-runner-new-record {
       font-size: 28px;
-      font-weight: 800;
+      font-weight: 900;
+      color: #00FF88;
+      text-transform: uppercase;
+      text-shadow: 0 0 20px rgba(0,255,136,0.5);
+      letter-spacing: 0.1em;
+    }
+    .wish-runner-level-info {
+      font-size: 14px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.7);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .wish-runner-level-info span {
       color: #FFD700;
-      text-shadow: 0 0 16px rgba(255,215,0,0.5);
+      font-size: 18px;
     }
     .wish-runner-restart-btn {
-      margin-top: 12px;
-      padding: 16px 48px;
-      border-radius: 16px;
+      margin-top: 16px;
+      padding: 16px 56px;
+      border-radius: 12px;
       font-weight: 800;
       font-size: 16px;
-      border: none;
+      border: 2px solid #44ff44;
       cursor: pointer;
       color: #fff;
-      background: linear-gradient(180deg, #A78BFA 0%, #7132F5 100%);
-      box-shadow: 0 8px 32px rgba(113, 50, 245, 0.5), 0 0 20px rgba(113, 50, 245, 0.3);
+      background: linear-gradient(180deg, #22aa22 0%, #118811 100%);
+      box-shadow: 0 6px 24px rgba(0,180,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
       text-transform: uppercase;
       letter-spacing: 0.1em;
       -webkit-tap-highlight-color: transparent;
@@ -5878,10 +5914,14 @@
             </div>
           </div>
           <div id="wp-wish-runner-gameover" class="wish-runner-gameover" hidden>
-            <div class="wish-runner-gameover-title">GAME OVER</div>
-            <div class="wish-runner-final-score">Score <span id="wp-wish-runner-final">0</span></div>
-            <div class="wish-runner-hi-score" style="font-size:14px;font-weight:700;color:rgba(113,50,245,0.85);text-shadow:0 0 8px rgba(113,50,245,0.4);margin-top:-4px;">High Score <span id="wp-wish-runner-gameover-hi">0</span></div>
-            <button type="button" class="wish-runner-restart-btn" onclick="restartWishRunnerGame()">Continue</button>
+            <div class="wish-runner-gameover-title">YOUR SCORE</div>
+            <div class="wish-runner-final-score" id="wp-wish-runner-final">0</div>
+            <div class="wish-runner-hi-label">YOUR BEST</div>
+            <div class="wish-runner-hi-value" id="wp-wish-runner-gameover-hi">0</div>
+            <div class="wish-runner-new-record" id="wp-wr-new-record" style="display:none;">NEW RECORD!</div>
+            <div class="wish-runner-level-info">LEVEL REACHED <span id="wp-wr-death-level">1</span></div>
+            <button type="button" class="wish-runner-restart-btn" onclick="restartWishRunnerGame()">PLAY AGAIN</button>
+            <button type="button" style="margin-top:8px;padding:10px 40px;border-radius:12px;font-weight:700;font-size:13px;border:2px solid rgba(255,255,255,0.2);cursor:pointer;color:rgba(255,255,255,0.7);background:transparent;text-transform:uppercase;letter-spacing:0.1em;" onclick="document.getElementById('wp-wish-runner-gameover').hidden=true;showView('home');">END GAME</button>
           </div>
         </div>
       </div>
@@ -8795,6 +8835,16 @@
         levelTransitionTimer = 0;
         enemyBullets = [];
         explosionEffects = [];
+        activeBoss = null;
+        _wingmanLevel = 0;
+        _wingmanFireTimer = 0;
+        _shieldActive = false;
+        _shieldHealth = 0;
+        _shieldPulse = 0;
+        _weaponLevel = 0;
+        _formationTimer = 0;
+        _deathFlash = 0;
+        window._upgrades = [];
         starsInit = false;
         loadHigh();
         var go = document.getElementById('wp-wish-runner-gameover');
@@ -8817,6 +8867,49 @@
       var enemyBullets = [];
       var screenShakeAmount = 0;
       var screenShakeDuration = 0;
+
+      // Wingman system
+      var _wingmanLevel = 0; // 0=none, 1=two wingmen, 2=stronger, 3=full power
+      var _wingmanFireTimer = 0;
+
+      // Shield system
+      var _shieldActive = false;
+      var _shieldHealth = 0;
+      var _shieldMaxHealth = 3; // absorbs 3 hits
+      var _shieldPulse = 0;
+
+      // Weapon upgrade system
+      var _weaponLevel = 0; // 0=single, 1=double, 2=triple spread, 3=quad + missiles
+
+      // Death flash effect
+      var _deathFlash = 0;
+
+      // Boss system
+      var activeBoss = null;
+      var BOSS_NAMES = [
+        'Three Eyes Frog', 'Void Sentinel', 'Neon Hydra', 'Star Devourer',
+        'Plasma Kraken', 'Crystal Phantom', 'Iron Scorpion', 'Dark Nebula',
+        'Quantum Beast', 'Shadow Leviathan'
+      ];
+      function spawnBoss(level) {
+        var hp = 30 + level * 20;
+        var bossIdx = (level - 1) % BOSS_NAMES.length;
+        activeBoss = {
+          x: GW * 0.5,
+          y: -100,
+          targetY: GH * 0.18,
+          size: Math.min(GW * 0.4, 160),
+          health: hp,
+          maxHealth: hp,
+          name: BOSS_NAMES[bossIdx],
+          phase: 0,
+          moveTimer: 0,
+          fireTimer: 0,
+          entering: true,
+          rotation: 0,
+          pulsePhase: 0
+        };
+      }
       var SPACE_TYPES = ['planet', 'asteroid', 'debris', 'comet'];
       var PLANET_COLORS = [
         { base: '#E45A3B', ring: '#FFB74D', glow: 'rgba(228,90,59,0.4)' },    // Mars-red
@@ -8834,10 +8927,12 @@
       var _wrSprites = {};
       (function() {
         var defs = {
-          ship: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-16 -20 32 38"><defs><linearGradient id="wrb1" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#3D2080"/><stop offset="50%" stop-color="#9B59FF"/><stop offset="100%" stop-color="#3D2080"/></linearGradient><linearGradient id="wrw1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#7A40D0"/><stop offset="100%" stop-color="#4020A0"/></linearGradient><radialGradient id="wrc1" cx="40%" cy="35%" r="60%"><stop offset="0%" stop-color="white"/><stop offset="40%" stop-color="#80EEFF"/><stop offset="100%" stop-color="#0099CC"/></radialGradient></defs><polygon points="0,-18 11,7 4,9 -4,9 -11,7" fill="url(#wrb1)" stroke="#6A35C8" stroke-width="0.6"/><polygon points="-10,5 -16,10 -5,8" fill="url(#wrw1)"/><polygon points="10,5 16,10 5,8" fill="url(#wrw1)"/><line x1="-10" y1="5" x2="-16" y2="10" stroke="#B080FF" stroke-width="0.8" opacity="0.7"/><line x1="10" y1="5" x2="16" y2="10" stroke="#B080FF" stroke-width="0.8" opacity="0.7"/><ellipse cx="0" cy="-8" rx="3" ry="4" fill="url(#wrc1)"/><ellipse cx="-0.8" cy="-9" rx="1.2" ry="1.8" fill="white" opacity="0.45"/><line x1="0" y1="-17" x2="0" y2="7" stroke="#B080FF" stroke-width="0.7" opacity="0.4"/><rect x="-4" y="7" width="8" height="3" rx="1" fill="#1A1040"/><rect x="-3" y="7.5" width="6" height="1.8" rx="0.8" fill="#00AACC" opacity="0.6"/><line x1="0" y1="-18" x2="6" y2="-4" stroke="#D0A0FF" stroke-width="0.6" opacity="0.4"/><line x1="-4" y1="-8" x2="-9" y2="3" stroke="#8060C0" stroke-width="0.6" opacity="0.4"/><line x1="4" y1="-8" x2="9" y2="3" stroke="#8060C0" stroke-width="0.6" opacity="0.4"/></svg>',
-          asteroid: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64"><defs><radialGradient id="wrag1" cx="30%" cy="25%" r="70%"><stop offset="0%" stop-color="#B09070"/><stop offset="55%" stop-color="#7A5C4A"/><stop offset="100%" stop-color="#3E2C20"/></radialGradient></defs><polygon points="0,-30 14,-24 26,-10 28,6 20,22 8,30 -8,28 -22,18 -28,-4 -20,-20 -8,-28" fill="url(#wrag1)" stroke="#5A3C2C" stroke-width="0.5"/><line x1="-6" y1="-24" x2="10" y2="-6" stroke="#3E2C20" stroke-width="1.5" opacity="0.5"/><line x1="16" y1="-8" x2="22" y2="8" stroke="#3E2C20" stroke-width="1.2" opacity="0.4"/><line x1="-18" y1="6" x2="-6" y2="18" stroke="#3E2C20" stroke-width="1.2" opacity="0.4"/><ellipse cx="6" cy="-4" rx="9" ry="8" fill="#3E2C20" opacity="0.65"/><ellipse cx="6" cy="-4" rx="7" ry="6" fill="#5A3C2C" opacity="0.5"/><ellipse cx="4" cy="-6" rx="2.5" ry="2" fill="#8A6050" opacity="0.4"/><ellipse cx="-14" cy="10" rx="6" ry="5" fill="#3E2C20" opacity="0.55"/><ellipse cx="-14" cy="10" rx="4.5" ry="3.5" fill="#5A3C2C" opacity="0.45"/><ellipse cx="18" cy="14" rx="4" ry="3.5" fill="#3E2C20" opacity="0.5"/><path d="M-8,-28 Q-20,-20 -28,-4" stroke="#C8A880" stroke-width="2" fill="none" opacity="0.55" stroke-linecap="round"/><path d="M0,-30 Q14,-24 26,-10" stroke="#C8A880" stroke-width="1.5" fill="none" opacity="0.4" stroke-linecap="round"/></svg>',
-          debris: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-28 -28 56 56"><defs><linearGradient id="wrdg1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#E0E8F0"/><stop offset="35%" stop-color="#90A8B8"/><stop offset="70%" stop-color="#607080"/><stop offset="100%" stop-color="#3A4A55"/></linearGradient></defs><polygon points="2,-26 18,-10 22,8 14,22 -2,26 -18,14 -22,-4 -12,-22" fill="url(#wrdg1)" stroke="#506070" stroke-width="0.8"/><polygon points="2,-26 18,-10 22,8 -2,26 -18,14" fill="#A0B8C8" opacity="0.3"/><polygon points="-12,-22 -22,-4 -18,14 -2,26 2,-26" fill="#3A4A55" opacity="0.35"/><line x1="2" y1="-26" x2="18" y2="-10" stroke="white" stroke-width="2" opacity="0.7"/><line x1="18" y1="-10" x2="22" y2="8" stroke="white" stroke-width="1.2" opacity="0.4"/><line x1="-4" y1="-18" x2="8" y2="-2" stroke="#3A4A55" stroke-width="1.2" opacity="0.5"/><line x1="4" y1="6" x2="16" y2="16" stroke="#3A4A55" stroke-width="1" opacity="0.4"/><circle cx="6" cy="-10" r="2.5" fill="#3A4A55" opacity="0.7"/><circle cx="-8" cy="8" r="2" fill="#3A4A55" opacity="0.6"/><circle cx="12" cy="6" r="1.8" fill="#3A4A55" opacity="0.6"/></svg>',
-          comet: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-22 -22 44 66"><defs><radialGradient id="wrcc1" cx="45%" cy="40%" r="55%"><stop offset="0%" stop-color="white"/><stop offset="30%" stop-color="#B8E8FF"/><stop offset="70%" stop-color="#29A8E0"/><stop offset="100%" stop-color="#0060A0"/></radialGradient><linearGradient id="wrct1" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#60C8FF" stop-opacity="0.9"/><stop offset="55%" stop-color="#29A8E0" stop-opacity="0.4"/><stop offset="100%" stop-color="#0060A0" stop-opacity="0"/></linearGradient><radialGradient id="wrca1" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#80DCFF" stop-opacity="0.5"/><stop offset="100%" stop-color="#0060A0" stop-opacity="0"/></radialGradient></defs><circle cx="0" cy="0" r="20" fill="url(#wrca1)"/><path d="M-8,14 L8,14 L5,52 L-5,52 Z" fill="url(#wrct1)"/><path d="M-4,14 L4,14 L2.5,44 L-2.5,44 Z" fill="white" opacity="0.18"/><path d="M-7,12 L-12,40 L-7,40 L-5,14" fill="url(#wrct1)" opacity="0.45"/><path d="M7,12 L12,40 L7,40 L5,14" fill="url(#wrct1)" opacity="0.45"/><circle cx="0" cy="0" r="16" fill="url(#wrcc1)"/><circle cx="-5" cy="-5" r="7" fill="white" opacity="0.5"/><circle cx="-5" cy="-5" r="3.5" fill="white" opacity="0.65"/></svg>'
+          ship: '<svg width="44" height="66" viewBox="0 0 44 66" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="hullGr" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#e8eef4"/><stop offset="40%" stop-color="#c0ccd8"/><stop offset="100%" stop-color="#6a7a8a"/></linearGradient><linearGradient id="wingGr" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#b0bcc8"/><stop offset="100%" stop-color="#4a5a6a"/></linearGradient><filter id="playerGlow"><feGaussianBlur stdDeviation="1.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><g filter="url(#playerGlow)"><path d="M22,4 L26,16 L28,30 L26,44 L22,48 L18,44 L16,30 L18,16 Z" fill="url(#hullGr)" stroke="#8898a8" stroke-width="0.5"/><line x1="22" y1="4" x2="22" y2="48" stroke="#a0b0c0" stroke-width="1.5" opacity="0.6"/><polygon points="16,22 2,34 3,40 4,42 18,36" fill="url(#wingGr)" stroke="#708090" stroke-width="0.5"/><polygon points="28,22 42,34 41,40 40,42 26,36" fill="url(#wingGr)" stroke="#708090" stroke-width="0.5"/><circle cx="22" cy="16" r="4" fill="#00ccff" opacity="0.9"/><circle cx="22" cy="16" r="2" fill="#ffffff" opacity="0.8"/><ellipse cx="12" cy="42" rx="3.5" ry="5" fill="#cc3333"/><ellipse cx="32" cy="42" rx="3.5" ry="5" fill="#cc3333"/><ellipse cx="7" cy="40" rx="2.5" ry="4" fill="#cc3333"/><ellipse cx="37" cy="40" rx="2.5" ry="4" fill="#cc3333"/><rect x="10" y="46" width="4" height="10" rx="1" fill="#2288ff" opacity="0.9"/><rect x="30" y="46" width="4" height="10" rx="1" fill="#2288ff" opacity="0.9"/><rect x="5" y="43" width="3" height="8" rx="1" fill="#2288ff" opacity="0.7"/><rect x="36" y="43" width="3" height="8" rx="1" fill="#2288ff" opacity="0.7"/><rect x="11" y="54" width="2" height="6" rx="0.5" fill="#66bbff" opacity="0.7"/><rect x="31" y="54" width="2" height="6" rx="0.5" fill="#66bbff" opacity="0.7"/></g></svg>',
+          asteroid: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64"><defs><radialGradient id="wrag1" cx="50%" cy="40%" r="55%"><stop offset="0%" stop-color="#60ddff"/><stop offset="35%" stop-color="#2090cc"/><stop offset="75%" stop-color="#104060"/><stop offset="100%" stop-color="#081828"/></radialGradient><radialGradient id="wrag2" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#40aaff" stop-opacity="0.4"/><stop offset="100%" stop-color="#0044aa" stop-opacity="0"/></radialGradient><filter id="wraGlow"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><circle cx="0" cy="0" r="30" fill="url(#wrag2)"/><g filter="url(#wraGlow)"><polygon points="0,-28 8,-12 24,-18 16,-4 28,4 14,8 18,24 6,16 0,30 -6,16 -18,24 -14,8 -28,4 -16,-4 -24,-18 -8,-12" fill="#0a1828" stroke="#3090cc" stroke-width="0.8"/><polygon points="0,-20 6,-10 18,-14 12,-2 22,2 12,6 14,18 4,12 0,22 -4,12 -14,18 -12,6 -22,2 -12,-2 -18,-14 -6,-10" fill="#122840" stroke="#40aadd" stroke-width="0.5"/><circle cx="0" cy="0" r="9" fill="url(#wrag1)"/><circle cx="0" cy="0" r="5.5" fill="#80ddff" opacity="0.85"/><circle cx="0" cy="0" r="2.5" fill="#ffffff" opacity="0.8"/><circle cx="-1.5" cy="-1.5" r="1" fill="#ffffff" opacity="0.5"/></g></svg>',
+          debris: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-28 -28 56 56"><defs><radialGradient id="wrdg1" cx="50%" cy="40%" r="55%"><stop offset="0%" stop-color="#80ff80"/><stop offset="35%" stop-color="#40aa40"/><stop offset="75%" stop-color="#1a4a1a"/><stop offset="100%" stop-color="#0a200a"/></radialGradient><radialGradient id="wrdg2" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#40ff60" stop-opacity="0.4"/><stop offset="100%" stop-color="#008020" stop-opacity="0"/></radialGradient><filter id="wrdGlow"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><circle cx="0" cy="0" r="26" fill="url(#wrdg2)"/><g filter="url(#wrdGlow)"><polygon points="0,-24 7,-10 20,-14 13,-2 24,4 12,7 15,20 4,14 0,26 -4,14 -15,20 -12,7 -24,4 -13,-2 -20,-14 -7,-10" fill="#0a1a0a" stroke="#30aa40" stroke-width="0.7"/><circle cx="0" cy="0" r="7" fill="url(#wrdg1)"/><circle cx="0" cy="0" r="4" fill="#80ff90" opacity="0.85"/><circle cx="0" cy="0" r="2" fill="#ffffff" opacity="0.7"/></g></svg>',
+          comet: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-22 -22 44 66"><defs><radialGradient id="wrcc1" cx="45%" cy="40%" r="55%"><stop offset="0%" stop-color="white"/><stop offset="30%" stop-color="#B8E8FF"/><stop offset="70%" stop-color="#29A8E0"/><stop offset="100%" stop-color="#0060A0"/></radialGradient><linearGradient id="wrct1" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#60C8FF" stop-opacity="0.9"/><stop offset="55%" stop-color="#29A8E0" stop-opacity="0.4"/><stop offset="100%" stop-color="#0060A0" stop-opacity="0"/></linearGradient><radialGradient id="wrca1" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#80DCFF" stop-opacity="0.5"/><stop offset="100%" stop-color="#0060A0" stop-opacity="0"/></radialGradient></defs><circle cx="0" cy="0" r="20" fill="url(#wrca1)"/><path d="M-8,14 L8,14 L5,52 L-5,52 Z" fill="url(#wrct1)"/><path d="M-4,14 L4,14 L2.5,44 L-2.5,44 Z" fill="white" opacity="0.18"/><path d="M-7,12 L-12,40 L-7,40 L-5,14" fill="url(#wrct1)" opacity="0.45"/><path d="M7,12 L12,40 L7,40 L5,14" fill="url(#wrct1)" opacity="0.45"/><circle cx="0" cy="0" r="16" fill="url(#wrcc1)"/><circle cx="-5" cy="-5" r="7" fill="white" opacity="0.5"/><circle cx="-5" cy="-5" r="3.5" fill="white" opacity="0.65"/></svg>',
+          enemyBall: '<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="ecGrad" cx="50%" cy="40%" r="50%"><stop offset="0%" stop-color="#ffe880"/><stop offset="30%" stop-color="#ffaa00"/><stop offset="70%" stop-color="#cc5500"/><stop offset="100%" stop-color="#441100"/></radialGradient><radialGradient id="ecAura" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#ff8800" stop-opacity="0.6"/><stop offset="100%" stop-color="#ff4400" stop-opacity="0"/></radialGradient><filter id="ecGlow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><circle cx="32" cy="32" r="30" fill="url(#ecAura)"/><g filter="url(#ecGlow)"><polygon points="32,2 38,14 50,8 42,20 62,22 44,28 56,42 40,34 44,56 32,42 20,56 24,34 8,42 20,28 2,22 22,20 14,8 26,14" fill="#2a1a0a" stroke="#cc6600" stroke-width="0.8"/><polygon points="32,10 36,18 44,16 40,24 52,24 42,28 48,38 38,32 40,46 32,38 24,46 26,32 16,38 22,28 12,24 24,24 20,16 28,18" fill="#4a2a10" stroke="#ff8800" stroke-width="0.5"/><circle cx="32" cy="28" r="10" fill="url(#ecGrad)"/><circle cx="32" cy="28" r="6" fill="#ffdd44" opacity="0.9"/><circle cx="32" cy="28" r="3" fill="#ffffff" opacity="0.8"/><circle cx="30" cy="26" r="1.5" fill="#ffffff" opacity="0.6"/></g></svg>',
+          powerShip: '<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="pcGrad" cx="50%" cy="40%" r="50%"><stop offset="0%" stop-color="#ff80ff"/><stop offset="30%" stop-color="#cc44cc"/><stop offset="70%" stop-color="#881188"/><stop offset="100%" stop-color="#330033"/></radialGradient><radialGradient id="pcAura" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#ff00ff" stop-opacity="0.5"/><stop offset="100%" stop-color="#8800aa" stop-opacity="0"/></radialGradient><filter id="pcGlow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><circle cx="32" cy="32" r="30" fill="url(#pcAura)"/><g filter="url(#pcGlow)"><polygon points="32,2 38,14 50,8 42,20 62,22 44,28 56,42 40,34 44,56 32,42 20,56 24,34 8,42 20,28 2,22 22,20 14,8 26,14" fill="#1a0a2a" stroke="#aa44cc" stroke-width="0.8"/><polygon points="32,10 36,18 44,16 40,24 52,24 42,28 48,38 38,32 40,46 32,38 24,46 26,32 16,38 22,28 12,24 24,24 20,16 28,18" fill="#2a1040" stroke="#cc66ff" stroke-width="0.5"/><circle cx="32" cy="28" r="10" fill="url(#pcGrad)"/><circle cx="32" cy="28" r="6" fill="#ff88ff" opacity="0.9"/><circle cx="32" cy="28" r="3" fill="#ffffff" opacity="0.8"/><circle cx="30" cy="26" r="1.5" fill="#ffffff" opacity="0.6"/></g></svg>'
         };
         Object.keys(defs).forEach(function(key) {
           try {
@@ -9014,41 +9109,81 @@
       }
 
       function spawnEnemyFormation(formationType) {
-        // Spawn a wave of 5-8 enemy fighters in formation
-        var count = 5 + Math.floor(Math.random() * 4);
-        var baseX = GW * 0.5;
-        var baseY = GH * 0.2;
+        var fType = formationType || ['grid', 'v-shape', 'diamond', 'line'][Math.floor(Math.random() * 4)];
+        var positions = [];
+        var spacing = 42;
+        var sz = 30;
+        var hp = 2 + Math.floor(currentLevel * 0.5);
+        var eType = Math.random() > 0.4 ? 'enemy-fighter' : 'enemy-bomber';
+        if (eType === 'enemy-bomber') { sz = 38; hp += 2; }
 
-        for (var i = 0; i < count; i++) {
-          var offsetX = (i % 3) * 50 - 50;
-          var offsetY = Math.floor(i / 3) * 50;
-          var sz = 28 + Math.random() * 12;
-          var hp = 2 + Math.floor(Math.random() * 2);
+        if (fType === 'grid') {
+          // 3-4 rows x 4-6 columns
+          var cols = 4 + Math.floor(Math.random() * 3);
+          var rows = 2 + Math.floor(Math.random() * 2);
+          var startX = GW * 0.5 - (cols - 1) * spacing * 0.5;
+          for (var row = 0; row < rows; row++) {
+            for (var col = 0; col < cols; col++) {
+              positions.push({ x: startX + col * spacing, yOff: row * spacing });
+            }
+          }
+        } else if (fType === 'v-shape') {
+          // V formation — 2 arms of 4-5 each
+          var armLen = 4 + Math.floor(Math.random() * 2);
+          positions.push({ x: GW * 0.5, yOff: 0 }); // leader
+          for (var i = 1; i <= armLen; i++) {
+            positions.push({ x: GW * 0.5 - i * spacing * 0.6, yOff: i * spacing * 0.5 });
+            positions.push({ x: GW * 0.5 + i * spacing * 0.6, yOff: i * spacing * 0.5 });
+          }
+        } else if (fType === 'diamond') {
+          // Diamond shape
+          var dSize = 3;
+          for (var row = -dSize; row <= dSize; row++) {
+            var w = dSize - Math.abs(row);
+            for (var col = -w; col <= w; col++) {
+              positions.push({ x: GW * 0.5 + col * spacing * 0.6, yOff: (row + dSize) * spacing * 0.5 });
+            }
+          }
+        } else {
+          // Line — single row across screen
+          var lineCount = 5 + Math.floor(Math.random() * 3);
+          var startX = GW * 0.5 - (lineCount - 1) * spacing * 0.5;
+          for (var i = 0; i < lineCount; i++) {
+            positions.push({ x: startX + i * spacing, yOff: 0 });
+          }
+        }
 
+        var baseY = -40;
+        for (var i = 0; i < positions.length; i++) {
+          var p = positions[i];
           targets.push({
-            x: baseX + offsetX,
-            y: baseY + offsetY - sz * 0.5,
+            x: p.x,
+            y: baseY - p.yOff,
             size: sz,
             health: hp,
             maxHealth: hp,
-            speed: 65 + Math.random() * 30,
-            type: 'enemy-fighter',
-            colorIdx: 0,
+            speed: 55 + Math.random() * 25 + currentLevel * 5,
+            type: eType,
+            colorIdx: Math.floor(Math.random() * PLANET_COLORS.length),
             asteroidColor: null,
             rotation: 0,
-            rotSpeed: 0,
+            rotSpeed: (Math.random() - 0.5) * 1.5,
             wobble: 0,
             isEnemyShip: true,
-            enemyColor: '#ff6644',
+            enemyColor: eType === 'enemy-fighter' ? '#ff6644' : '#ff8800',
             movePattern: 'sine',
-            patternPhase: Math.random() * Math.PI * 2,
-            fireCounter: 1 + Math.random() * 0.5,
+            patternPhase: i * 0.4,
+            fireCounter: 1.5 + Math.random() * 2,
             formationEnemy: true,
-            sineAmplitude: 60 + Math.random() * 40
+            sineAmplitude: 30 + Math.random() * 40
           });
           levelEnemiesTotal += 1;
         }
       }
+
+      // Formation spawn timer — spawn waves periodically
+      var _formationTimer = 0;
+      var _formationInterval = 6; // seconds between formation waves
 
       // Galaxy Attack style explosion system
       var explosionEffects = []; // screen-level explosion overlays
@@ -9245,6 +9380,141 @@
 
         if (gameOver) return;
 
+        // === Boss update ===
+        if (activeBoss) {
+          var boss = activeBoss;
+          boss.pulsePhase += dt * 3;
+          boss.rotation += dt * 0.3;
+          if (boss.entering) {
+            boss.y += (boss.targetY - boss.y) * dt * 2;
+            if (Math.abs(boss.y - boss.targetY) < 2) { boss.entering = false; boss.y = boss.targetY; }
+          } else {
+            // Side-to-side movement
+            boss.moveTimer += dt;
+            boss.x = GW * 0.5 + Math.sin(boss.moveTimer * 0.8) * (GW * 0.25);
+            // Boss fires
+            boss.fireTimer -= dt;
+            if (boss.fireTimer <= 0) {
+              boss.fireTimer = 0.6 - Math.min(0.3, currentLevel * 0.03);
+              var bAimX = player.x - boss.x, bAimY = player.y - boss.y;
+              var bDist = Math.sqrt(bAimX * bAimX + bAimY * bAimY) || 1;
+              var bSpd = 220;
+              enemyBullets.push({ x: boss.x, y: boss.y + boss.size * 0.4, vx: (bAimX / bDist) * bSpd, vy: (bAimY / bDist) * bSpd, life: 3, color: '#ff4400', size: 5 });
+              // Spread shots at higher levels
+              if (currentLevel >= 2) {
+                var spreadAngle = 0.3;
+                for (var ss = -1; ss <= 1; ss += 2) {
+                  var sa = Math.atan2(bAimY, bAimX) + ss * spreadAngle;
+                  enemyBullets.push({ x: boss.x + ss * 20, y: boss.y + boss.size * 0.35, vx: Math.cos(sa) * bSpd * 0.9, vy: Math.sin(sa) * bSpd * 0.9, life: 2.5, color: '#ff8800', size: 4 });
+                }
+              }
+            }
+          }
+          // Check bullet hits on boss
+          for (var bi = bullets.length - 1; bi >= 0; bi--) {
+            var b = bullets[bi];
+            var bdx = b.x - boss.x, bdy = b.y - boss.y;
+            if (Math.sqrt(bdx * bdx + bdy * bdy) < boss.size * 0.45) {
+              boss.health -= 1;
+              spawnExplosion(b.x, b.y, '#ffaa00', 4);
+              bullets.splice(bi, 1);
+              if (boss.health <= 0) {
+                // Boss defeated!
+                score += 100 + currentLevel * 50;
+                spawnExplosion(boss.x, boss.y, '#FF4400', 40);
+                spawnExplosion(boss.x - 30, boss.y, '#FFCC00', 25);
+                spawnExplosion(boss.x + 30, boss.y, '#FF8800', 25);
+                spawnExplosion(boss.x, boss.y - 30, '#FFFFFF', 20);
+                triggerScreenShake(10, 0.6);
+                playExplosionSound(true);
+                activeBoss = null;
+                levelTransition = true;
+                levelTransitionTimer = 2.5;
+                playLevelCompleteSound();
+                // Drop upgrade pickups — boss drops 2
+                var dropTypes = ['wingman', 'shield', 'weapon'];
+                var drop1 = dropTypes[Math.floor(Math.random() * dropTypes.length)];
+                var drop2 = dropTypes[Math.floor(Math.random() * dropTypes.length)];
+                _upgrades.push({ x: boss.x - 20, y: boss.y, type: drop1, life: 10, vy: 55 });
+                _upgrades.push({ x: boss.x + 20, y: boss.y, type: drop2, life: 10, vy: 55 });
+                updateScoreEl();
+                break;
+              }
+            }
+          }
+          // Boss collision with player
+          if (boss && !boss.entering) {
+            var bpdx = player.x - boss.x, bpdy = player.y - boss.y;
+            if (Math.sqrt(bpdx * bpdx + bpdy * bpdy) < boss.size * 0.4 + player.size * 0.4) {
+              if (_invincible) {
+                // invincible — ignore
+              } else if (_shieldActive && _shieldHealth > 0) {
+                _shieldHealth -= 2;
+                spawnExplosion(player.x, player.y, '#ff44ff', 10);
+                triggerScreenShake(4, 0.2);
+                if (_shieldHealth <= 0) { _shieldActive = false; _shieldHealth = 0; }
+              } else {
+                gameOver = true;
+                _deathTime = Date.now();
+                spawnExplosion(player.x, player.y, '#FF5252', 25);
+                triggerScreenShake(8, 0.5);
+                targets = []; bullets = []; enemyBullets = [];
+              }
+            }
+          }
+        }
+
+        // === Upgrade pickups ===
+        if (!window._upgrades) window._upgrades = [];
+        var _upgrades = window._upgrades;
+        for (var ui = _upgrades.length - 1; ui >= 0; ui--) {
+          var up = _upgrades[ui];
+          up.y += up.vy * dt;
+          up.life -= dt;
+          if (up.life <= 0 || up.y > GH + 30) { _upgrades.splice(ui, 1); continue; }
+          var udx = player.x - up.x, udy = player.y - up.y;
+          if (Math.sqrt(udx * udx + udy * udy) < 30 + player.size * 0.5) {
+            // Collected!
+            if (up.type === 'wingman') {
+              _wingmanLevel = Math.min(3, _wingmanLevel + 1);
+            } else if (up.type === 'shield') {
+              _shieldActive = true;
+              _shieldHealth = _shieldMaxHealth;
+            } else if (up.type === 'weapon') {
+              _weaponLevel = Math.min(3, _weaponLevel + 1);
+            }
+            spawnExplosion(up.x, up.y, up.type === 'shield' ? '#ff44ff' : (up.type === 'weapon' ? '#ff4444' : '#00ffcc'), 12);
+            _upgrades.splice(ui, 1);
+          }
+        }
+
+        // === Wingman bullets ===
+        if (_wingmanLevel > 0 && !gameOver) {
+          _wingmanFireTimer -= dt;
+          if (_wingmanFireTimer <= 0) {
+            _wingmanFireTimer = 0.25;
+            var wOffsets = _wingmanLevel >= 2 ? [-36, 36] : (_wingmanLevel >= 1 ? [-30, 30] : []);
+            for (var wi = 0; wi < wOffsets.length; wi++) {
+              var wx = player.x + wOffsets[wi], wy = player.y - 6;
+              // Different weapon per wingman
+              if (wi === 0) {
+                // Left wingman: orange spread
+                bullets.push({ x: wx, y: wy, vx: -40, vy: -600, size: 3, life: 1.2, color: '#ff8800' });
+                bullets.push({ x: wx, y: wy, vx: 0, vy: -620, size: 3, life: 1.2, color: '#ffaa00' });
+              } else {
+                // Right wingman: green laser
+                bullets.push({ x: wx, y: wy, vx: 40, vy: -600, size: 3, life: 1.2, color: '#00ff88' });
+                bullets.push({ x: wx, y: wy, vx: 0, vy: -620, size: 3, life: 1.2, color: '#44ffaa' });
+              }
+            }
+            // Level 3: extra center rapid fire
+            if (_wingmanLevel >= 3) {
+              bullets.push({ x: player.x - 8, y: player.y - 14, vx: -20, vy: -700, size: 2, life: 1, color: '#ff44ff' });
+              bullets.push({ x: player.x + 8, y: player.y - 14, vx: 20, vy: -700, size: 2, life: 1, color: '#ff44ff' });
+            }
+          }
+        }
+
         // Update enemy bullets
         for (var ebi = enemyBullets.length - 1; ebi >= 0; ebi--) {
           var eb = enemyBullets[ebi];
@@ -9261,11 +9531,15 @@
           var distToPlayer = Math.sqrt(edx * edx + edy * edy);
           if (distToPlayer < 8 + player.size * 0.5) {
             if (_invincible) {
-              // Destroy bullet instead
               spawnExplosion(eb.x, eb.y, '#00ff00', 6);
               enemyBullets.splice(ebi, 1);
+            } else if (_shieldActive && _shieldHealth > 0) {
+              _shieldHealth -= 1;
+              spawnExplosion(eb.x, eb.y, '#ff44ff', 6);
+              triggerScreenShake(2, 0.1);
+              enemyBullets.splice(ebi, 1);
+              if (_shieldHealth <= 0) { _shieldActive = false; _shieldHealth = 0; }
             } else {
-              // Death
               gameOver = true;
               _deathTime = Date.now();
               spawnExplosion(player.x, player.y, '#FF5252', 25);
@@ -9284,8 +9558,12 @@
                 var go = document.getElementById('wp-wish-runner-gameover');
                 var fs = document.getElementById('wp-wish-runner-final');
                 var goHi = document.getElementById('wp-wish-runner-gameover-hi');
+                var newRec = document.getElementById('wp-wr-new-record');
+                var deathLvl = document.getElementById('wp-wr-death-level');
                 if (fs) fs.textContent = String(_deathScore);
                 if (goHi) goHi.textContent = String(_deathHi);
+                if (newRec) newRec.style.display = (_deathScore >= _deathHi && _deathScore > 0) ? 'block' : 'none';
+                if (deathLvl) deathLvl.textContent = String(currentLevel);
                 if (go) { go.hidden = false; go.removeAttribute('hidden'); go.style.display = 'flex'; }
               }, 800);
               return;
@@ -9321,6 +9599,24 @@
           } else if (activePowerup && activePowerup.type === 'cannon') {
             // Big slow shots
             bullets.push({ x: player.x, y: bY, vx: 0, vy: -420, life: 2.5, big: true });
+          } else if (_weaponLevel >= 3) {
+            // Level 3: quad + missiles
+            bullets.push({ x: player.x - 14, y: bY, vx: -30, vy: -580, life: 2.2 });
+            bullets.push({ x: player.x - 5, y: bY, vx: 0, vy: -600, life: 2.2 });
+            bullets.push({ x: player.x + 5, y: bY, vx: 0, vy: -600, life: 2.2 });
+            bullets.push({ x: player.x + 14, y: bY, vx: 30, vy: -580, life: 2.2 });
+            // Side missiles (red)
+            bullets.push({ x: player.x - 20, y: bY + 4, vx: -100, vy: -400, life: 1.8, color: '#ff4444', size: 4 });
+            bullets.push({ x: player.x + 20, y: bY + 4, vx: 100, vy: -400, life: 1.8, color: '#ff4444', size: 4 });
+          } else if (_weaponLevel >= 2) {
+            // Level 2: triple spread
+            bullets.push({ x: player.x, y: bY, vx: 0, vy: -580, life: 2.2 });
+            bullets.push({ x: player.x - 12, y: bY, vx: -60, vy: -550, life: 2.2 });
+            bullets.push({ x: player.x + 12, y: bY, vx: 60, vy: -550, life: 2.2 });
+          } else if (_weaponLevel >= 1) {
+            // Level 1: double (wider)
+            bullets.push({ x: player.x - 12, y: bY, vx: 0, vy: -570, life: 2.2 });
+            bullets.push({ x: player.x + 12, y: bY, vx: 0, vy: -570, life: 2.2 });
           } else {
             // Default dual shot
             bullets.push({ x: player.x - 10, y: bY, vx: 0, vy: -560, life: 2.2 });
@@ -9442,6 +9738,16 @@
         var interval = Math.max(0.38, spawnEvery - score * 0.0012);
         while (spawnAcc >= interval) { spawnAcc -= interval; spawnTarget(); }
 
+        // Formation wave spawning (levels 2+)
+        if (currentLevel >= 2 && !activeBoss) {
+          _formationTimer += dt;
+          if (_formationTimer >= _formationInterval) {
+            _formationTimer = 0;
+            _formationInterval = Math.max(4, 7 - currentLevel * 0.5);
+            spawnEnemyFormation();
+          }
+        }
+
         var i;
         for (i = bullets.length - 1; i >= 0; i--) {
           var b = bullets[i];
@@ -9498,18 +9804,37 @@
               targets.splice(j, 1);
               updateScoreEl();
               continue targetLoop;
+            } else if (_shieldActive && _shieldHealth > 0) {
+              _shieldHealth -= 1;
+              spawnExplosion(t.x, t.y, '#ff44ff', 10);
+              triggerScreenShake(3, 0.15);
+              var pts2 = 10;
+              score += pts2;
+              targets.splice(j, 1);
+              if (_shieldHealth <= 0) { _shieldActive = false; _shieldHealth = 0; }
+              updateScoreEl();
+              continue targetLoop;
             } else {
               gameOver = true;
               _deathTime = Date.now();
               playDeathSound();
               stopBgMusic();
-              // Epic Galaxy Attack death explosion
-              spawnExplosion(player.x, player.y, '#FF5252', 25);
-              spawnExplosion(player.x - 20, player.y + 15, '#FF9800', 15);
-              spawnExplosion(player.x + 20, player.y - 15, '#FDE047', 15);
-              spawnExplosion(player.x, player.y - 25, '#FFFFFF', 12);
-              triggerScreenShake(8, 0.5);
-              // Clear frozen objects so screen isn't cluttered
+              // Epic multi-stage death explosion
+              spawnExplosion(player.x, player.y, '#FF5252', 40);
+              spawnExplosion(player.x - 25, player.y + 15, '#FF9800', 20);
+              spawnExplosion(player.x + 25, player.y - 15, '#FDE047', 20);
+              spawnExplosion(player.x, player.y - 30, '#FFFFFF', 18);
+              spawnExplosion(player.x - 15, player.y - 20, '#00CCFF', 12);
+              spawnExplosion(player.x + 15, player.y + 20, '#FF00FF', 12);
+              // Debris ring — metal shrapnel
+              for (var dr = 0; dr < 20; dr++) {
+                var dAngle = (dr / 20) * Math.PI * 2;
+                var dSpd = 150 + Math.random() * 200;
+                particles.push({ x: player.x, y: player.y, vx: Math.cos(dAngle) * dSpd, vy: Math.sin(dAngle) * dSpd, life: 1.2 + Math.random() * 0.5, maxLife: 1.5, size: 2 + Math.random() * 4, color: ['#c0ccd8', '#8898a8', '#ff6644', '#ffcc00'][Math.floor(Math.random() * 4)] });
+              }
+              // Screen flash
+              _deathFlash = 1.0;
+              triggerScreenShake(12, 0.7);
               targets = [];
               bullets = [];
               powerups = [];
@@ -9521,8 +9846,12 @@
                 var go = document.getElementById('wp-wish-runner-gameover');
                 var fs = document.getElementById('wp-wish-runner-final');
                 var goHi = document.getElementById('wp-wish-runner-gameover-hi');
+                var newRec = document.getElementById('wp-wr-new-record');
+                var deathLvl = document.getElementById('wp-wr-death-level');
                 if (fs) fs.textContent = String(_deathScore);
                 if (goHi) goHi.textContent = String(_deathHi);
+                if (newRec) newRec.style.display = (_deathScore >= _deathHi && _deathScore > 0) ? 'block' : 'none';
+                if (deathLvl) deathLvl.textContent = String(currentLevel);
                 if (go) { go.hidden = false; go.removeAttribute('hidden'); go.style.display = 'flex'; }
               }, 800);
               break targetLoop;
@@ -9543,24 +9872,26 @@
                 triggerScreenShake(3, 0.2);
                 playExplosionSound(t.size > 80);
 
+                // Random upgrade drops (10% chance from enemies, 5% from asteroids)
+                var dropChance = t.isEnemyShip ? 0.10 : 0.05;
+                if (Math.random() < dropChance && window._upgrades) {
+                  var dTypes = ['shield', 'weapon', 'wingman'];
+                  var dType = dTypes[Math.floor(Math.random() * dTypes.length)];
+                  window._upgrades.push({ x: t.x, y: t.y, type: dType, life: 8, vy: 65 });
+                }
+
                 // Track level progression
                 if (t.isEnemyShip) {
                   levelEnemiesKilled += 1;
-                  // Check if level is complete
                   var targetKillsForLevel = currentLevel === 1 ? 18 : (currentLevel === 2 ? 20 : 22);
-                  if (levelEnemiesKilled >= targetKillsForLevel) {
-                    levelTransition = true;
-                    levelTransitionTimer = 2.0;
-                    playLevelCompleteSound();
+                  if (levelEnemiesKilled >= targetKillsForLevel && !activeBoss) {
+                    spawnBoss(currentLevel);
                   }
                 } else {
-                  // Asteroid/debris killed
                   levelEnemiesKilled += 1;
                   var targetKillsForLevel = 18;
-                  if (currentLevel === 1 && levelEnemiesKilled >= targetKillsForLevel) {
-                    levelTransition = true;
-                    levelTransitionTimer = 2.0;
-                    playLevelCompleteSound();
+                  if (currentLevel === 1 && levelEnemiesKilled >= targetKillsForLevel && !activeBoss) {
+                    spawnBoss(currentLevel);
                   }
                 }
 
@@ -9692,75 +10023,107 @@
       function drawEnemyShip(tg) {
         var r = tg.size * 0.5;
         var isGreen = tg.type === 'enemy-fighter';
-        var color = isGreen ? '#ff6644' : '#ff8800';
+        var isPower = tg.type === 'enemy-bomber';
         ctx.save();
         ctx.translate(tg.x, tg.y);
-        ctx.rotate(tg.rotation);
 
-        // Enemy ship body
-        ctx.fillStyle = color;
-        ctx.shadowColor = color;
-        ctx.shadowBlur = 12;
-
-        if (isGreen) {
-          // Fighter — small angular shape
+        // Fire trails (drawn behind, no rotation)
+        var flicker = Math.sin(Date.now() * 0.008 + tg.x) * 0.15 + 0.85;
+        var trailLen = r * (1.6 + flicker * 0.4);
+        // Center trail
+        var tGrad = ctx.createLinearGradient(0, -r * 0.3, 0, -r * 0.3 - trailLen);
+        tGrad.addColorStop(0, isGreen ? 'rgba(255,140,0,0.9)' : 'rgba(255,100,0,0.9)');
+        tGrad.addColorStop(0.4, isGreen ? 'rgba(255,80,0,0.5)' : 'rgba(200,50,0,0.5)');
+        tGrad.addColorStop(1, 'rgba(80,20,0,0)');
+        ctx.fillStyle = tGrad;
+        ctx.beginPath();
+        ctx.moveTo(-r * 0.15, -r * 0.3);
+        ctx.lineTo(r * 0.15, -r * 0.3);
+        ctx.lineTo(r * 0.04, -r * 0.3 - trailLen);
+        ctx.lineTo(-r * 0.04, -r * 0.3 - trailLen);
+        ctx.fill();
+        // Side trails
+        for (var side = -1; side <= 1; side += 2) {
+          var sGrad = ctx.createLinearGradient(side * r * 0.35, -r * 0.15, side * r * 0.35, -r * 0.15 - trailLen * 0.7);
+          sGrad.addColorStop(0, 'rgba(255,120,20,0.7)');
+          sGrad.addColorStop(0.5, 'rgba(200,60,0,0.3)');
+          sGrad.addColorStop(1, 'rgba(60,10,0,0)');
+          ctx.fillStyle = sGrad;
           ctx.beginPath();
-          ctx.moveTo(0, -r);
-          ctx.lineTo(r * 0.5, r * 0.4);
-          ctx.lineTo(r * 0.2, r * 0.3);
-          ctx.lineTo(-r * 0.2, r * 0.3);
-          ctx.lineTo(-r * 0.5, r * 0.4);
-          ctx.closePath();
+          ctx.moveTo(side * r * 0.28, -r * 0.15);
+          ctx.lineTo(side * r * 0.42, -r * 0.15);
+          ctx.lineTo(side * r * 0.36, -r * 0.15 - trailLen * 0.7);
+          ctx.lineTo(side * r * 0.32, -r * 0.15 - trailLen * 0.7);
           ctx.fill();
-          // Wing accents
-          ctx.fillStyle = 'rgba(255, 102, 68, 0.6)';
-          ctx.beginPath();
-          ctx.moveTo(-r * 0.4, -r * 0.1);
-          ctx.lineTo(-r * 0.7, r * 0.15);
-          ctx.lineTo(-r * 0.35, 0);
-          ctx.closePath();
-          ctx.fill();
-          ctx.beginPath();
-          ctx.moveTo(r * 0.4, -r * 0.1);
-          ctx.lineTo(r * 0.7, r * 0.15);
-          ctx.lineTo(r * 0.35, 0);
-          ctx.closePath();
-          ctx.fill();
-        } else {
-          // Bomber — larger angular shape
-          ctx.beginPath();
-          ctx.moveTo(0, -r);
-          ctx.lineTo(r * 0.6, -r * 0.2);
-          ctx.lineTo(r * 0.65, r * 0.4);
-          ctx.lineTo(0, r * 0.55);
-          ctx.lineTo(-r * 0.65, r * 0.4);
-          ctx.lineTo(-r * 0.6, -r * 0.2);
-          ctx.closePath();
-          ctx.fill();
-          // Center tech line
-          ctx.strokeStyle = 'rgba(255, 200, 100, 0.7)';
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.moveTo(0, -r * 0.8);
-          ctx.lineTo(0, r * 0.45);
-          ctx.stroke();
         }
 
-        // Glowing center dot
-        ctx.fillStyle = '#ffff00';
-        ctx.shadowBlur = 8;
-        ctx.shadowColor = '#ffff00';
-        ctx.beginPath();
-        ctx.arc(0, 0, r * 0.15, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.rotate(tg.rotation);
+
+        // Try to use sprite, fallback to canvas creature
+        var spKey = isPower ? 'powerShip' : 'enemyBall';
+        var spEnemy = _wrSprites[spKey] || _wrSprites.enemyBall;
+        if (spEnemy && spEnemy.complete && spEnemy.naturalWidth > 0) {
+          var sc = (r * 2) / 32;
+          ctx.drawImage(spEnemy, -32 * sc, -32 * sc, 64 * sc, 64 * sc);
+        } else {
+          // Fallback: ornate star creature
+          var color1 = isGreen ? '#cc5500' : '#ff8800';
+          var color2 = isGreen ? '#4a2a10' : '#2a1a0a';
+          ctx.shadowColor = color1;
+          ctx.shadowBlur = 14;
+          // Outer star points
+          ctx.fillStyle = color2;
+          ctx.strokeStyle = color1;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          for (var i = 0; i < 8; i++) {
+            var a = (i / 8) * Math.PI * 2 - Math.PI / 2;
+            var outerR = (i % 2 === 0) ? r : r * 0.45;
+            if (i === 0) ctx.moveTo(Math.cos(a) * outerR, Math.sin(a) * outerR);
+            else ctx.lineTo(Math.cos(a) * outerR, Math.sin(a) * outerR);
+          }
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+          // Inner star
+          ctx.fillStyle = isGreen ? '#5a3010' : '#4a2a10';
+          ctx.beginPath();
+          for (var i = 0; i < 8; i++) {
+            var a = (i / 8) * Math.PI * 2 - Math.PI / 2;
+            var innerR = (i % 2 === 0) ? r * 0.7 : r * 0.3;
+            if (i === 0) ctx.moveTo(Math.cos(a) * innerR, Math.sin(a) * innerR);
+            else ctx.lineTo(Math.cos(a) * innerR, Math.sin(a) * innerR);
+          }
+          ctx.closePath();
+          ctx.fill();
+          // Glowing energy core
+          var coreGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, r * 0.35);
+          coreGrad.addColorStop(0, '#ffffff');
+          coreGrad.addColorStop(0.3, '#ffdd44');
+          coreGrad.addColorStop(0.7, '#ff8800');
+          coreGrad.addColorStop(1, '#441100');
+          ctx.fillStyle = coreGrad;
+          ctx.beginPath();
+          ctx.arc(0, 0, r * 0.35, 0, Math.PI * 2);
+          ctx.fill();
+          // Core highlight
+          ctx.fillStyle = 'rgba(255,255,255,0.7)';
+          ctx.beginPath();
+          ctx.arc(-r * 0.08, -r * 0.08, r * 0.1, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        ctx.shadowBlur = 0;
 
         // Health display
         ctx.font = 'bold ' + Math.max(10, Math.floor(r * 0.8)) + 'px ui-sans-serif, system-ui, sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillStyle = '#FFF';
-        ctx.shadowBlur = 0;
+        ctx.shadowColor = 'rgba(0,0,0,0.9)'; ctx.shadowBlur = 4;
         ctx.fillText(String(tg.health), 0, r * 0.6);
+        ctx.shadowBlur = 0;
 
         ctx.restore();
       }
@@ -9828,80 +10191,69 @@
         var pal = _astPalettes[(tg.health || 0) % _astPalettes.length];
         ctx.save();
         ctx.translate(tg.x, tg.y);
+
+        // Fire trail (drawn behind, before rotation)
+        var flicker = Math.sin(Date.now() * 0.007 + tg.y) * 0.15 + 0.85;
+        var trailLen = r * (1.2 + flicker * 0.4);
+        var ftGrad = ctx.createLinearGradient(0, -r * 0.2, 0, -r * 0.2 - trailLen);
+        ftGrad.addColorStop(0, 'rgba(' + pal.core.join(',') + ',0.8)');
+        ftGrad.addColorStop(0.5, 'rgba(' + pal.mid.join(',') + ',0.3)');
+        ftGrad.addColorStop(1, 'rgba(' + pal.dark.join(',') + ',0)');
+        ctx.fillStyle = ftGrad;
+        ctx.beginPath();
+        ctx.moveTo(-r * 0.12, -r * 0.2);
+        ctx.lineTo(r * 0.12, -r * 0.2);
+        ctx.lineTo(r * 0.03, -r * 0.2 - trailLen);
+        ctx.lineTo(-r * 0.03, -r * 0.2 - trailLen);
+        ctx.fill();
+
         ctx.rotate(tg.rotation);
         var sp = _wrSprites.asteroid;
         if (sp && sp.complete && sp.naturalWidth > 0) {
-          // viewBox -32,-32 64×64; SVG body radius ~30 units → scale to r
           var sc = r / 30;
           ctx.drawImage(sp, -32 * sc, -32 * sc, 64 * sc, 64 * sc);
         } else {
-          // Outer glow aura
-          var glowR = r * 1.5;
-          var aura = ctx.createRadialGradient(0, 0, r * 0.6, 0, 0, glowR);
-          aura.addColorStop(0, pal.glow);
-          aura.addColorStop(1, 'rgba(0,0,0,0)');
-          ctx.fillStyle = aura;
-          ctx.fillRect(-glowR, -glowR, glowR * 2, glowR * 2);
-
-          // Irregular rocky silhouette — 12 vertices with seeded wobble
-          var verts = [];
-          for (var i = 0; i < 12; i++) {
-            var angle = (i / 12) * Math.PI * 2;
-            var seed = tg.health * 7 + i * 13;
-            var wobble = 0.7 + Math.sin(seed * 0.73) * 0.15 + Math.cos(seed * 1.1 + tg.wobble * 0.3) * 0.1;
-            verts.push({ x: Math.cos(angle) * r * wobble, y: Math.sin(angle) * r * wobble });
-          }
+          // Fallback: space creature — ornate star with glowing core
+          var coreColor = 'rgb(' + pal.core.join(',') + ')';
+          var darkColor = 'rgb(' + pal.dark.join(',') + ')';
+          ctx.shadowColor = coreColor;
+          ctx.shadowBlur = 12;
+          // Outer star body
+          ctx.fillStyle = darkColor;
+          ctx.strokeStyle = coreColor;
+          ctx.lineWidth = 0.8;
           ctx.beginPath();
-          ctx.moveTo(verts[0].x, verts[0].y);
-          for (var i = 1; i < verts.length; i++) {
-            var prev = verts[i - 1], cur = verts[i];
-            var cpx = (prev.x + cur.x) * 0.5 + (Math.sin(i * 5.7) * r * 0.08);
-            var cpy = (prev.y + cur.y) * 0.5 + (Math.cos(i * 3.3) * r * 0.08);
-            ctx.quadraticCurveTo(cpx, cpy, cur.x, cur.y);
+          for (var i = 0; i < 8; i++) {
+            var a = (i / 8) * Math.PI * 2 - Math.PI / 2;
+            var starR = (i % 2 === 0) ? r : r * 0.4;
+            if (i === 0) ctx.moveTo(Math.cos(a) * starR, Math.sin(a) * starR);
+            else ctx.lineTo(Math.cos(a) * starR, Math.sin(a) * starR);
           }
           ctx.closePath();
-          ctx.clip();
-
-          // Base body — rich radial gradient with color
-          var bodyGrad = ctx.createRadialGradient(-r * 0.25, -r * 0.25, r * 0.05, 0, 0, r);
-          bodyGrad.addColorStop(0, 'rgb(' + pal.core.join(',') + ')');
-          bodyGrad.addColorStop(0.3, 'rgb(' + pal.mid.join(',') + ')');
-          bodyGrad.addColorStop(0.65, 'rgb(' + pal.dark.join(',') + ')');
-          bodyGrad.addColorStop(1, 'rgb(' + Math.floor(pal.dark[0]*0.3) + ',' + Math.floor(pal.dark[1]*0.3) + ',' + Math.floor(pal.dark[2]*0.3) + ')');
-          ctx.fillStyle = bodyGrad;
-          ctx.fillRect(-r, -r, r * 2, r * 2);
-
-          // Surface detail — craters with depth
-          var craters = [
-            { x: 0.2, y: -0.22, r: 0.18 }, { x: -0.25, y: 0.2, r: 0.14 },
-            { x: 0.35, y: 0.25, r: 0.1 }, { x: -0.1, y: -0.35, r: 0.08 },
-            { x: 0.05, y: 0.4, r: 0.12 }
-          ];
-          for (var ci = 0; ci < craters.length; ci++) {
-            var cr = craters[ci];
-            // Crater shadow (sunken)
-            ctx.fillStyle = 'rgba(0,0,0,0.35)';
-            ctx.beginPath(); ctx.arc(cr.x * r, cr.y * r, cr.r * r, 0, Math.PI * 2); ctx.fill();
-            // Inner darker pit
-            ctx.fillStyle = 'rgba(0,0,0,0.25)';
-            ctx.beginPath(); ctx.arc(cr.x * r + 1, cr.y * r + 1, cr.r * r * 0.6, 0, Math.PI * 2); ctx.fill();
-            // Crater rim highlight (top-left lit)
-            ctx.strokeStyle = 'rgba(' + pal.vein.join(',') + ',0.3)';
-            ctx.lineWidth = 1;
-            ctx.beginPath(); ctx.arc(cr.x * r, cr.y * r, cr.r * r, -2.2, -0.3); ctx.stroke();
+          ctx.fill();
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+          // Inner star
+          ctx.fillStyle = 'rgb(' + pal.mid.join(',') + ')';
+          ctx.beginPath();
+          for (var i = 0; i < 8; i++) {
+            var a = (i / 8) * Math.PI * 2 - Math.PI / 2;
+            var innerR = (i % 2 === 0) ? r * 0.65 : r * 0.28;
+            if (i === 0) ctx.moveTo(Math.cos(a) * innerR, Math.sin(a) * innerR);
+            else ctx.lineTo(Math.cos(a) * innerR, Math.sin(a) * innerR);
           }
-
-          // Glowing veins / mineral seams
-          ctx.strokeStyle = 'rgba(' + pal.vein.join(',') + ',0.25)';
-          ctx.lineWidth = 1.5;
+          ctx.closePath();
+          ctx.fill();
+          // Glowing energy core
+          var coreGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, r * 0.3);
+          coreGrad.addColorStop(0, '#ffffff');
+          coreGrad.addColorStop(0.3, 'rgb(' + pal.vein.join(',') + ')');
+          coreGrad.addColorStop(0.7, coreColor);
+          coreGrad.addColorStop(1, darkColor);
+          ctx.fillStyle = coreGrad;
           ctx.beginPath();
-          ctx.moveTo(-r * 0.4, -r * 0.1);
-          ctx.quadraticCurveTo(-r * 0.1, r * 0.15, r * 0.3, -r * 0.05);
-          ctx.stroke();
-          ctx.beginPath();
-          ctx.moveTo(r * 0.1, r * 0.3);
-          ctx.quadraticCurveTo(r * 0.25, r * 0.1, r * 0.4, r * 0.35);
-          ctx.stroke();
+          ctx.arc(0, 0, r * 0.3, 0, Math.PI * 2);
+          ctx.fill();
 
           // Specular highlight — top-left wet shine
           var specGrad = ctx.createRadialGradient(-r * 0.3, -r * 0.3, 0, -r * 0.3, -r * 0.3, r * 0.35);
@@ -10026,6 +10378,7 @@
         var td = SHIP_TIERS[sc.tier];
         var pulseSz = 1 + Math.sin(sc.pulse) * 0.1;
         ctx.scale(pulseSz, pulseSz);
+
         // Glowing aura
         var aGrad = ctx.createRadialGradient(0, 0, 5, 0, 0, sc.size * 1.2);
         aGrad.addColorStop(0, td.accentColor);
@@ -10033,20 +10386,30 @@
         aGrad.addColorStop(1, 'transparent');
         ctx.fillStyle = aGrad;
         ctx.beginPath(); ctx.arc(0, 0, sc.size * 1.2, 0, Math.PI * 2); ctx.fill();
-        // Mini ship silhouette
-        ctx.fillStyle = td.hullColor;
-        ctx.beginPath();
-        ctx.moveTo(0, -sc.size * 0.5);
-        ctx.lineTo(sc.size * 0.35, sc.size * 0.3);
-        ctx.lineTo(-sc.size * 0.35, sc.size * 0.3);
-        ctx.closePath();
-        ctx.fill();
-        // Cockpit dot
-        ctx.fillStyle = td.cockpitColor;
-        ctx.beginPath(); ctx.arc(0, -sc.size * 0.1, 4, 0, Math.PI * 2); ctx.fill();
-        // Engine glow
-        ctx.fillStyle = td.engineColor;
-        ctx.beginPath(); ctx.arc(0, sc.size * 0.3, 3, 0, Math.PI * 2); ctx.fill();
+
+        // Try sprite, fallback to canvas
+        var spPower = _wrSprites.powerShip;
+        if (spPower && spPower.complete && spPower.naturalWidth > 0) {
+          // Draw sprite — powerShip is 40×56, scale it
+          var pScale = (sc.size * 2) / 20; // 20 is approx half the sprite width
+          ctx.drawImage(spPower, -20 * pScale, -28 * pScale, 40 * pScale, 56 * pScale);
+        } else {
+          // Fallback canvas drawing
+          ctx.fillStyle = td.hullColor;
+          ctx.beginPath();
+          ctx.moveTo(0, -sc.size * 0.5);
+          ctx.lineTo(sc.size * 0.35, sc.size * 0.3);
+          ctx.lineTo(-sc.size * 0.35, sc.size * 0.3);
+          ctx.closePath();
+          ctx.fill();
+          // Cockpit dot
+          ctx.fillStyle = td.cockpitColor;
+          ctx.beginPath(); ctx.arc(0, -sc.size * 0.1, 4, 0, Math.PI * 2); ctx.fill();
+          // Engine glow
+          ctx.fillStyle = td.engineColor;
+          ctx.beginPath(); ctx.arc(0, sc.size * 0.3, 3, 0, Math.PI * 2); ctx.fill();
+        }
+
         // Tier label
         ctx.font = 'bold 9px ui-sans-serif, system-ui, sans-serif';
         ctx.textAlign = 'center'; ctx.textBaseline = 'top';
@@ -10084,188 +10447,76 @@
           ctx.globalAlpha = 1;
         }
 
-        // ===== ULTRA-DETAILED PLAYER SHIP =====
-        // Hull colors change based on ship tier
-        var _tier = SHIP_TIERS[playerShipTier];
-        var hullDark, hullMid, hullLight;
-        if (playerShipTier === 0) { hullDark = '#2a3a4a'; hullMid = '#5a7a8a'; hullLight = '#9abaaa'; }
-        else if (playerShipTier === 1) { hullDark = '#2a2a5a'; hullMid = '#5a5aaa'; hullLight = '#8a8add'; }
-        else if (playerShipTier === 2) { hullDark = '#4a1a3a'; hullMid = '#8a3a6a'; hullLight = '#cc5599'; }
-        else { hullDark = '#4a3a1a'; hullMid = '#8a7a2a'; hullLight = '#ddcc55'; }
-        var _tierCockpit = _tier.cockpitColor;
-        var _tierEngine = _tier.engineColor;
-        var _tierAccent = _tier.accentColor;
-        var hullGrad = ctx.createLinearGradient(-sz * 0.4, -sz * 0.7, sz * 0.4, sz * 0.5);
-        hullGrad.addColorStop(0, hullDark);
-        hullGrad.addColorStop(0.3, hullMid);
-        hullGrad.addColorStop(0.7, hullLight);
-        hullGrad.addColorStop(1, hullDark);
-        ctx.fillStyle = hullGrad;
-        ctx.shadowColor = 'rgba(100, 150, 200, 0.5)';
-        ctx.shadowBlur = 12;
+        // ===== SPRITE-BASED PLAYER SHIP (with canvas fallback) =====
+        var spShip = _wrSprites.ship;
+        if (spShip && spShip.complete && spShip.naturalWidth > 0) {
+          // Draw sprite at scale — ship sprite is 44×66, centered around origin
+          var shipScale = sz / 22; // Scale factor for size
+          ctx.drawImage(spShip, -22 * shipScale, -33 * shipScale, 44 * shipScale, 66 * shipScale);
+        } else {
+          // Fallback: Canvas-drawn ship (legacy)
+          // Hull colors change based on ship tier
+          var _tier = SHIP_TIERS[playerShipTier];
+          var hullDark, hullMid, hullLight;
+          if (playerShipTier === 0) { hullDark = '#2a3a4a'; hullMid = '#5a7a8a'; hullLight = '#9abaaa'; }
+          else if (playerShipTier === 1) { hullDark = '#2a2a5a'; hullMid = '#5a5aaa'; hullLight = '#8a8add'; }
+          else if (playerShipTier === 2) { hullDark = '#4a1a3a'; hullMid = '#8a3a6a'; hullLight = '#cc5599'; }
+          else { hullDark = '#4a3a1a'; hullMid = '#8a7a2a'; hullLight = '#ddcc55'; }
+          var _tierCockpit = _tier.cockpitColor;
+          var _tierEngine = _tier.engineColor;
+          var _tierAccent = _tier.accentColor;
+          var hullGrad = ctx.createLinearGradient(-sz * 0.4, -sz * 0.7, sz * 0.4, sz * 0.5);
+          hullGrad.addColorStop(0, hullDark);
+          hullGrad.addColorStop(0.3, hullMid);
+          hullGrad.addColorStop(0.7, hullLight);
+          hullGrad.addColorStop(1, hullDark);
+          ctx.fillStyle = hullGrad;
+          ctx.shadowColor = 'rgba(100, 150, 200, 0.5)';
+          ctx.shadowBlur = 12;
 
-        // Main hull body — elongated diamond shape
-        ctx.beginPath();
-        ctx.moveTo(0, -sz * 0.7);           // nose point
-        ctx.lineTo(sz * 0.25, -sz * 0.35);  // upper right shoulder
-        ctx.lineTo(sz * 0.32, sz * 0.15);   // wing root right
-        ctx.lineTo(sz * 0.2, sz * 0.45);    // lower right rear
-        ctx.lineTo(0, sz * 0.5);            // rear center
-        ctx.lineTo(-sz * 0.2, sz * 0.45);   // lower left rear
-        ctx.lineTo(-sz * 0.32, sz * 0.15);  // wing root left
-        ctx.lineTo(-sz * 0.25, -sz * 0.35); // upper left shoulder
-        ctx.closePath();
-        ctx.fill();
-        ctx.shadowBlur = 0;
-
-        // Center stripe — accent color running down the middle
-        ctx.strokeStyle = _tierAccent;
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(0, -sz * 0.65);
-        ctx.lineTo(0, sz * 0.48);
-        ctx.stroke();
-
-        // Panel lines — thin detail strokes
-        ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
-        ctx.lineWidth = 0.8;
-        // Left side panel line
-        ctx.beginPath();
-        ctx.moveTo(-sz * 0.15, -sz * 0.5);
-        ctx.lineTo(-sz * 0.18, sz * 0.35);
-        ctx.stroke();
-        // Right side panel line
-        ctx.beginPath();
-        ctx.moveTo(sz * 0.15, -sz * 0.5);
-        ctx.lineTo(sz * 0.18, sz * 0.35);
-        ctx.stroke();
-
-        // Cockpit — bright glowing dome (color from ship tier)
-        var cockGreen = _invincible ? '#ffff00' : _tierCockpit;
-        ctx.shadowColor = cockGreen;
-        ctx.shadowBlur = 20;
-        ctx.fillStyle = cockGreen;
-        ctx.beginPath();
-        ctx.arc(0, -sz * 0.35, sz * 0.2, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.shadowBlur = 0;
-
-        // Cockpit rim
-        ctx.strokeStyle = _tierCockpit;
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.arc(0, -sz * 0.35, sz * 0.2, 0, Math.PI * 2);
-        ctx.stroke();
-
-        // Cockpit inner highlight — bright white shine
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-        ctx.beginPath();
-        ctx.arc(-sz * 0.08, -sz * 0.45, sz * 0.08, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Swept-back WINGS — wide angular design
-        var wingGradLeft = ctx.createLinearGradient(-sz * 0.32, -sz * 0.1, -sz * 0.65, 0);
-        wingGradLeft.addColorStop(0, '#6a8aaa');
-        wingGradLeft.addColorStop(1, '#4a6a8a');
-        ctx.fillStyle = wingGradLeft;
-        // Left wing
-        ctx.beginPath();
-        ctx.moveTo(-sz * 0.25, -sz * 0.2);
-        ctx.lineTo(-sz * 0.65, -sz * 0.1);
-        ctx.lineTo(-sz * 0.62, sz * 0.2);
-        ctx.lineTo(-sz * 0.28, sz * 0.1);
-        ctx.closePath();
-        ctx.fill();
-
-        var wingGradRight = ctx.createLinearGradient(sz * 0.32, -sz * 0.1, sz * 0.65, 0);
-        wingGradRight.addColorStop(0, '#6a8aaa');
-        wingGradRight.addColorStop(1, '#4a6a8a');
-        ctx.fillStyle = wingGradRight;
-        // Right wing
-        ctx.beginPath();
-        ctx.moveTo(sz * 0.25, -sz * 0.2);
-        ctx.lineTo(sz * 0.65, -sz * 0.1);
-        ctx.lineTo(sz * 0.62, sz * 0.2);
-        ctx.lineTo(sz * 0.28, sz * 0.1);
-        ctx.closePath();
-        ctx.fill();
-
-        // Wing cannon barrels — visible on wing tips with tier glow
-        ctx.shadowColor = _tierAccent;
-        ctx.shadowBlur = 14;
-        ctx.fillStyle = '#1a2a3a';
-        // Left cannon
-        ctx.beginPath();
-        ctx.arc(-sz * 0.62, 0, sz * 0.09, 0, Math.PI * 2);
-        ctx.fill();
-        // Right cannon
-        ctx.beginPath();
-        ctx.arc(sz * 0.62, 0, sz * 0.09, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Cannon glowing tips
-        ctx.fillStyle = _tierAccent;
-        ctx.shadowBlur = 16;
-        // Left cannon tip
-        ctx.beginPath();
-        ctx.arc(-sz * 0.62, 0, sz * 0.05, 0, Math.PI * 2);
-        ctx.fill();
-        // Right cannon tip
-        ctx.beginPath();
-        ctx.arc(sz * 0.62, 0, sz * 0.05, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Engine section — rear with 3 glowing circular thrusters
-        // Center main engine
-        ctx.shadowColor = _tierEngine;
-        ctx.shadowBlur = 22;
-        ctx.fillStyle = _tierEngine;
-        var flicker1 = 0.9 + Math.random() * 0.2;
-        ctx.globalAlpha = flicker1;
-        ctx.beginPath();
-        ctx.arc(0, sz * 0.48, sz * 0.15, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.globalAlpha = 1;
-
-        // Left thruster
-        var flicker2 = 0.85 + Math.random() * 0.25;
-        ctx.globalAlpha = flicker2 * 0.8;
-        ctx.beginPath();
-        ctx.arc(-sz * 0.18, sz * 0.5, sz * 0.1, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.globalAlpha = 1;
-
-        // Right thruster
-        var flicker3 = 0.88 + Math.random() * 0.22;
-        ctx.globalAlpha = flicker3 * 0.8;
-        ctx.beginPath();
-        ctx.arc(sz * 0.18, sz * 0.5, sz * 0.1, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.globalAlpha = 1;
-        ctx.shadowBlur = 0;
-
-        // Engine exhaust flame trail
-        var exhaustGrad = ctx.createLinearGradient(0, sz * 0.48, 0, sz * 0.8);
-        var _eC = playerShipTier === 0 ? 'rgba(0,255,68,' : playerShipTier === 1 ? 'rgba(0,229,255,' : playerShipTier === 2 ? 'rgba(255,107,157,' : 'rgba(255,215,0,';
-        exhaustGrad.addColorStop(0, _eC + '0.6)');
-        exhaustGrad.addColorStop(0.5, _eC + '0.3)');
-        exhaustGrad.addColorStop(1, _eC + '0)');
-        ctx.fillStyle = exhaustGrad;
-        ctx.beginPath();
-        ctx.moveTo(-sz * 0.12, sz * 0.48);
-        ctx.lineTo(sz * 0.12, sz * 0.48);
-        ctx.lineTo(sz * 0.06, sz * 0.75);
-        ctx.lineTo(-sz * 0.06, sz * 0.75);
-        ctx.closePath();
-        ctx.fill();
-
-        // Rivet dots for armor plating detail
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
-        for (var rivI = 0; rivI < 6; rivI++) {
-          var rivX = -sz * 0.25 + rivI * sz * 0.08;
+          // Main hull body — elongated diamond shape
           ctx.beginPath();
-          ctx.arc(rivX, -sz * 0.15, 1.2, 0, Math.PI * 2);
+          ctx.moveTo(0, -sz * 0.7);
+          ctx.lineTo(sz * 0.25, -sz * 0.35);
+          ctx.lineTo(sz * 0.32, sz * 0.15);
+          ctx.lineTo(sz * 0.2, sz * 0.45);
+          ctx.lineTo(0, sz * 0.5);
+          ctx.lineTo(-sz * 0.2, sz * 0.45);
+          ctx.lineTo(-sz * 0.32, sz * 0.15);
+          ctx.lineTo(-sz * 0.25, -sz * 0.35);
+          ctx.closePath();
           ctx.fill();
+          ctx.shadowBlur = 0;
+
+          // Center stripe
+          ctx.strokeStyle = _tierAccent;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(0, -sz * 0.65);
+          ctx.lineTo(0, sz * 0.48);
+          ctx.stroke();
+
+          // Cockpit
+          var cockGreen = _invincible ? '#ffff00' : _tierCockpit;
+          ctx.shadowColor = cockGreen;
+          ctx.shadowBlur = 20;
+          ctx.fillStyle = cockGreen;
+          ctx.beginPath();
+          ctx.arc(0, -sz * 0.35, sz * 0.2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+
+          // Engine section
+          ctx.shadowColor = _tierEngine;
+          ctx.shadowBlur = 22;
+          ctx.fillStyle = _tierEngine;
+          var flicker1 = 0.9 + Math.random() * 0.2;
+          ctx.globalAlpha = flicker1;
+          ctx.beginPath();
+          ctx.arc(0, sz * 0.48, sz * 0.15, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+          ctx.shadowBlur = 0;
         }
 
         ctx.restore();
@@ -10365,6 +10616,211 @@
         // Draw ship (hide when dead)
         if (!gameOver) drawShip();
 
+        // Draw shield bubble around player
+        if (_shieldActive && _shieldHealth > 0 && !gameOver) {
+          _shieldPulse += 0.05;
+          var shR = player.size * 1.3 + Math.sin(_shieldPulse) * 3;
+          var shAlpha = 0.2 + (_shieldHealth / _shieldMaxHealth) * 0.3;
+          ctx.save();
+          // Outer glow
+          ctx.shadowColor = '#ff44ff';
+          ctx.shadowBlur = 18;
+          ctx.strokeStyle = 'rgba(255,68,255,' + (shAlpha + 0.1) + ')';
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.arc(player.x, player.y, shR, 0, Math.PI * 2);
+          ctx.stroke();
+          // Inner fill
+          var shGrad = ctx.createRadialGradient(player.x, player.y, shR * 0.3, player.x, player.y, shR);
+          shGrad.addColorStop(0, 'rgba(255,100,255,' + (shAlpha * 0.3) + ')');
+          shGrad.addColorStop(0.7, 'rgba(200,40,220,' + (shAlpha * 0.15) + ')');
+          shGrad.addColorStop(1, 'rgba(150,0,200,' + (shAlpha * 0.05) + ')');
+          ctx.fillStyle = shGrad;
+          ctx.beginPath();
+          ctx.arc(player.x, player.y, shR, 0, Math.PI * 2);
+          ctx.fill();
+          // Shield health pips
+          for (var sp = 0; sp < _shieldHealth; sp++) {
+            var spAngle = -Math.PI / 2 + (sp / _shieldMaxHealth) * Math.PI * 2;
+            ctx.fillStyle = '#ff88ff';
+            ctx.beginPath();
+            ctx.arc(player.x + Math.cos(spAngle) * (shR + 5), player.y + Math.sin(spAngle) * (shR + 5), 2.5, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.shadowBlur = 0;
+          ctx.restore();
+        }
+
+        // Draw wingman mini-ships
+        if (_wingmanLevel > 0 && !gameOver) {
+          var wOffsets = [[-36, 8], [36, 8]];
+          var wColors = [['#ff8800', '#cc5500', '#ffaa00'], ['#00ff88', '#00aa55', '#44ffcc']];
+          for (var wi = 0; wi < wOffsets.length; wi++) {
+            var wx = player.x + wOffsets[wi][0], wy = player.y + wOffsets[wi][1];
+            var wc = wColors[wi];
+            ctx.save();
+            ctx.translate(wx, wy);
+            // Mini ship body
+            ctx.shadowColor = wc[0]; ctx.shadowBlur = 8;
+            ctx.fillStyle = wc[1];
+            ctx.beginPath();
+            ctx.moveTo(0, -10); ctx.lineTo(6, 0); ctx.lineTo(4, 8); ctx.lineTo(0, 10);
+            ctx.lineTo(-4, 8); ctx.lineTo(-6, 0); ctx.closePath(); ctx.fill();
+            // Cockpit glow
+            ctx.fillStyle = wc[2]; ctx.shadowBlur = 6;
+            ctx.beginPath(); ctx.arc(0, -2, 3, 0, Math.PI * 2); ctx.fill();
+            // Engine
+            ctx.fillStyle = wc[0]; ctx.shadowBlur = 4;
+            var wFlicker = 0.7 + Math.random() * 0.3;
+            ctx.globalAlpha = wFlicker;
+            ctx.beginPath(); ctx.arc(0, 10, 2.5, 0, Math.PI * 2); ctx.fill();
+            ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+            ctx.restore();
+          }
+          // Level 3: extra center wingman indicator
+          if (_wingmanLevel >= 3) {
+            ctx.save();
+            ctx.fillStyle = '#ff44ff'; ctx.shadowColor = '#ff44ff'; ctx.shadowBlur = 10;
+            ctx.beginPath(); ctx.arc(player.x - 8, player.y - 14, 2, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(player.x + 8, player.y - 14, 2, 0, Math.PI * 2); ctx.fill();
+            ctx.shadowBlur = 0; ctx.restore();
+          }
+        }
+
+        // Draw upgrade pickups — color-coded by type
+        if (window._upgrades) {
+          var _upColors = { wingman: ['#00ffcc', '#003322'], shield: ['#ff44ff', '#220022'], weapon: ['#ff4444', '#220000'] };
+          var _upLabels = { wingman: 'ALLY', shield: 'SHIELD', weapon: 'GUN' };
+          for (var ui = 0; ui < window._upgrades.length; ui++) {
+            var up = window._upgrades[ui];
+            var uc = _upColors[up.type] || _upColors.wingman;
+            ctx.save();
+            ctx.translate(up.x, up.y);
+            var upPulse = 0.8 + Math.sin(Date.now() * 0.005 + ui) * 0.2;
+            ctx.shadowColor = uc[0]; ctx.shadowBlur = 16 * upPulse;
+            ctx.fillStyle = uc[1];
+            ctx.beginPath();
+            for (var si = 0; si < 6; si++) {
+              var sa = (si / 6) * Math.PI * 2 - Math.PI / 2;
+              var sr = (si % 2 === 0) ? 14 : 7;
+              if (si === 0) ctx.moveTo(Math.cos(sa) * sr, Math.sin(sa) * sr);
+              else ctx.lineTo(Math.cos(sa) * sr, Math.sin(sa) * sr);
+            }
+            ctx.closePath(); ctx.fill();
+            ctx.fillStyle = uc[0]; ctx.shadowBlur = 8;
+            ctx.beginPath(); ctx.arc(0, 0, 5, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath(); ctx.arc(0, 0, 2.5, 0, Math.PI * 2); ctx.fill();
+            ctx.shadowBlur = 0;
+            ctx.font = 'bold 8px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillStyle = uc[0];
+            ctx.fillText(_upLabels[up.type] || 'UP', 0, -18);
+            ctx.restore();
+          }
+        }
+
+        // Draw boss
+        if (activeBoss) {
+          var boss = activeBoss;
+          ctx.save();
+          ctx.translate(boss.x, boss.y);
+          var bR = boss.size * 0.5;
+          var bPulse = 0.85 + Math.sin(boss.pulsePhase) * 0.15;
+          // Outer aura
+          var bAura = ctx.createRadialGradient(0, 0, bR * 0.3, 0, 0, bR * 1.3);
+          bAura.addColorStop(0, 'rgba(255,100,0,0.3)');
+          bAura.addColorStop(1, 'rgba(255,40,0,0)');
+          ctx.fillStyle = bAura; ctx.fillRect(-bR * 1.3, -bR * 1.3, bR * 2.6, bR * 2.6);
+          // Fire trails
+          for (var ft = -1; ft <= 1; ft++) {
+            var ftx = ft * bR * 0.35;
+            var ftLen = bR * (0.8 + Math.sin(Date.now() * 0.01 + ft) * 0.2);
+            var ftG = ctx.createLinearGradient(ftx, -bR * 0.4, ftx, -bR * 0.4 - ftLen);
+            ftG.addColorStop(0, 'rgba(255,120,0,0.8)');
+            ftG.addColorStop(0.5, 'rgba(200,50,0,0.3)');
+            ftG.addColorStop(1, 'rgba(80,10,0,0)');
+            ctx.fillStyle = ftG;
+            ctx.beginPath();
+            ctx.moveTo(ftx - bR * 0.06, -bR * 0.4);
+            ctx.lineTo(ftx + bR * 0.06, -bR * 0.4);
+            ctx.lineTo(ftx + bR * 0.02, -bR * 0.4 - ftLen);
+            ctx.lineTo(ftx - bR * 0.02, -bR * 0.4 - ftLen);
+            ctx.fill();
+          }
+          // Main body — mechanical creature
+          ctx.shadowColor = '#ff6600'; ctx.shadowBlur = 20 * bPulse;
+          // Outer shell — 8-pointed star
+          ctx.fillStyle = '#1a0a00';
+          ctx.strokeStyle = '#cc5500';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          for (var bi2 = 0; bi2 < 16; bi2++) {
+            var ba = (bi2 / 16) * Math.PI * 2 - Math.PI / 2;
+            var bsr = (bi2 % 2 === 0) ? bR * 0.95 : bR * 0.5;
+            if (bi2 === 0) ctx.moveTo(Math.cos(ba) * bsr, Math.sin(ba) * bsr);
+            else ctx.lineTo(Math.cos(ba) * bsr, Math.sin(ba) * bsr);
+          }
+          ctx.closePath(); ctx.fill(); ctx.stroke();
+          ctx.shadowBlur = 0;
+          // Inner armored shell
+          ctx.fillStyle = '#2a1500'; ctx.strokeStyle = '#ff8800'; ctx.lineWidth = 1;
+          ctx.beginPath();
+          for (var bi2 = 0; bi2 < 16; bi2++) {
+            var ba = (bi2 / 16) * Math.PI * 2 - Math.PI / 2;
+            var bsr = (bi2 % 2 === 0) ? bR * 0.65 : bR * 0.35;
+            if (bi2 === 0) ctx.moveTo(Math.cos(ba) * bsr, Math.sin(ba) * bsr);
+            else ctx.lineTo(Math.cos(ba) * bsr, Math.sin(ba) * bsr);
+          }
+          ctx.closePath(); ctx.fill(); ctx.stroke();
+          // Mechanical details — side cannons
+          for (var cs = -1; cs <= 1; cs += 2) {
+            ctx.fillStyle = '#3a2000';
+            ctx.fillRect(cs * bR * 0.6 - 4, -6, 8, 18);
+            ctx.fillStyle = '#ff4400';
+            ctx.beginPath(); ctx.arc(cs * bR * 0.6, 14, 3, 0, Math.PI * 2); ctx.fill();
+          }
+          // Central energy core — three "eyes"
+          var coreGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, bR * 0.3);
+          coreGrad.addColorStop(0, '#ffffff');
+          coreGrad.addColorStop(0.25, '#ffdd44');
+          coreGrad.addColorStop(0.6, '#ff8800');
+          coreGrad.addColorStop(1, '#441100');
+          ctx.fillStyle = coreGrad; ctx.shadowColor = '#ffaa00'; ctx.shadowBlur = 16;
+          ctx.beginPath(); ctx.arc(0, 0, bR * 0.3, 0, Math.PI * 2); ctx.fill();
+          // Side eyes
+          for (var eye = -1; eye <= 1; eye += 2) {
+            ctx.fillStyle = '#ff4400'; ctx.shadowColor = '#ff2200'; ctx.shadowBlur = 8;
+            ctx.beginPath(); ctx.arc(eye * bR * 0.35, bR * 0.15, bR * 0.1, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath(); ctx.arc(eye * bR * 0.35, bR * 0.15, bR * 0.04, 0, Math.PI * 2); ctx.fill();
+          }
+          ctx.shadowBlur = 0;
+          ctx.restore();
+          // Boss name label
+          ctx.save();
+          ctx.font = 'bold 13px "Segoe UI", sans-serif';
+          ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+          ctx.fillStyle = '#ffcc00';
+          ctx.shadowColor = '#000'; ctx.shadowBlur = 4;
+          ctx.fillText(boss.name, boss.x, boss.y - bR - 18);
+          ctx.shadowBlur = 0;
+          // Health bar
+          var hbW = boss.size * 0.9, hbH = 6;
+          var hbX = boss.x - hbW * 0.5, hbY = boss.y - bR - 14;
+          ctx.fillStyle = 'rgba(0,0,0,0.6)';
+          ctx.fillRect(hbX - 1, hbY - 1, hbW + 2, hbH + 2);
+          ctx.fillStyle = '#331100';
+          ctx.fillRect(hbX, hbY, hbW, hbH);
+          var hpRatio = Math.max(0, boss.health / boss.maxHealth);
+          var hpColor = hpRatio > 0.5 ? '#ff4400' : (hpRatio > 0.25 ? '#ff8800' : '#ff0000');
+          ctx.fillStyle = hpColor;
+          ctx.fillRect(hbX, hbY, hbW * hpRatio, hbH);
+          // Health bar shine
+          ctx.fillStyle = 'rgba(255,255,255,0.15)';
+          ctx.fillRect(hbX, hbY, hbW * hpRatio, hbH * 0.4);
+          ctx.restore();
+        }
+
         // Draw bullets — neon blue laser beams with heavy glow
         for (var bi = 0; bi < bullets.length; bi++) {
           var bu = bullets[bi];
@@ -10382,6 +10838,14 @@
             ctx.beginPath();
             ctx.arc(bu.x, bu.y, 2.5, 0, Math.PI * 2);
             ctx.fill();
+          } else if (bu.color) {
+            // Wingman bullets — custom colored
+            var bSize = bu.size || 3;
+            ctx.shadowColor = bu.color; ctx.shadowBlur = 10;
+            ctx.fillStyle = bu.color;
+            ctx.fillRect(bu.x - bSize * 0.5, bu.y - 8, bSize, 12);
+            ctx.fillStyle = '#ffffff'; ctx.shadowBlur = 4;
+            ctx.fillRect(bu.x - 0.5, bu.y - 7, 1, 10);
           } else {
             // Neon blue laser beams
             var laserColor = activePowerup && activePowerup.type === 'spread' ? '#00d4ff' : '#00d4ff';
@@ -10409,23 +10873,23 @@
           ctx.restore();
         }
 
-        // Draw enemy bullets — bright green with glow
+        // Draw enemy bullets — colored with glow
         for (var ebi = 0; ebi < enemyBullets.length; ebi++) {
           var eb = enemyBullets[ebi];
+          var ebColor = eb.color || '#00ff44';
+          var ebSize = eb.size || 4;
           ctx.save();
-          // Bright green glow
-          ctx.shadowColor = '#00ff44';
+          ctx.shadowColor = ebColor;
           ctx.shadowBlur = 12;
-          ctx.fillStyle = '#00ff44';
+          ctx.fillStyle = ebColor;
           ctx.beginPath();
-          ctx.arc(eb.x, eb.y, 4, 0, Math.PI * 2);
+          ctx.arc(eb.x, eb.y, ebSize, 0, Math.PI * 2);
           ctx.fill();
-          // Inner bright core
           ctx.fillStyle = '#ffffff';
           ctx.shadowBlur = 6;
           ctx.shadowColor = 'rgba(255,255,255,0.8)';
           ctx.beginPath();
-          ctx.arc(eb.x, eb.y, 1.5, 0, Math.PI * 2);
+          ctx.arc(eb.x, eb.y, ebSize * 0.35, 0, Math.PI * 2);
           ctx.fill();
           ctx.shadowBlur = 0;
           ctx.restore();
@@ -10670,19 +11134,30 @@
         ctx.shadowBlur = 0;
         ctx.restore();
 
-        // Draw level completion transition text
+        // Draw level completion transition text — centered, unmissable
         if (levelTransition) {
           var transProgress = 1 - (levelTransitionTimer / 2.0);
-          var transAlpha = Math.sin(transProgress * Math.PI) * 0.8;
+          var transAlpha = Math.min(1, Math.sin(transProgress * Math.PI) * 1.2);
           ctx.save();
+          // Dim background overlay so text pops
+          ctx.fillStyle = 'rgba(0,0,0,' + (transAlpha * 0.5) + ')';
+          ctx.fillRect(0, GH * 0.3, GW, GH * 0.22);
           ctx.globalAlpha = transAlpha;
-          ctx.font = 'bold 48px sans-serif';
+          // Scale font to screen width — max 42px, min 28px
+          var lcFontSize = Math.max(28, Math.min(42, GW * 0.1));
+          ctx.font = 'bold ' + lcFontSize + 'px "Segoe UI", sans-serif';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
+          // Orange outer glow
+          ctx.shadowColor = '#FF6600';
+          ctx.shadowBlur = 30;
+          ctx.fillStyle = '#FF9800';
+          ctx.fillText('LEVEL ' + currentLevel + ' COMPLETE', GW * 0.5, GH * 0.4);
+          // Yellow inner text (brighter pass)
+          ctx.shadowColor = '#FFCC00';
+          ctx.shadowBlur = 16;
           ctx.fillStyle = '#FDE047';
-          ctx.shadowColor = '#FF9800';
-          ctx.shadowBlur = 24;
-          ctx.fillText('LEVEL ' + currentLevel + ' COMPLETE', GW * 0.5, GH * 0.35);
+          ctx.fillText('LEVEL ' + currentLevel + ' COMPLETE', GW * 0.5, GH * 0.4);
           ctx.shadowBlur = 0;
           ctx.globalAlpha = 1;
           ctx.restore();
@@ -10728,6 +11203,18 @@
 
         // Galaxy Attack style explosion overlays (sunburst rays + flash)
         drawExplosionEffects();
+
+        // Death screen flash
+        if (_deathFlash > 0) {
+          ctx.save();
+          ctx.globalAlpha = Math.min(0.8, _deathFlash);
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, GW, GH);
+          ctx.globalAlpha = 1;
+          ctx.restore();
+          _deathFlash -= 0.02;
+          if (_deathFlash < 0) _deathFlash = 0;
+        }
 
         // Milestone flash overlay
         if (milestoneFlash > 0) {
@@ -15819,9 +16306,32 @@
             window._marketNewsStatus = 'empty';
             window._marketNewsArticles = [];
           }
-          var fallback = '<div class="news-item"><div class="news-item-body"><div class="news-title" style="color:var(--text-dim);">Unable to load news. Try refreshing.</div></div></div>';
-          if (newsList) newsList.innerHTML = fallback;
-          if (fmNewsList) fmNewsList.innerHTML = fallback;
+          var fallbackArticles = [
+            {
+              title: 'Markets Update',
+              source: 'WishPath',
+              description: 'Stay informed with market trends and insights.',
+              content: 'Access real-time market data and analysis.',
+              url: '#',
+              image: null,
+              tickers: ['MARKET'],
+              sentiment: 'neutral',
+              timeAgo: 'just now'
+            }
+          ];
+          var html = fallbackArticles.map(function(a, idx) {
+            var tickerHtml = '<div class="news-tickers">' + a.tickers.map(function(t) { return '<span class="news-ticker-pill">' + t + '</span>'; }).join('') + '</div>';
+            var descHtml = '<div style="font-size:0.78rem;color:var(--text-dim);margin-top:4px;line-height:1.4;">' + a.description + '</div>';
+            return '<div class="news-item" style="cursor:pointer;">' +
+              '<div class="news-item-body">' +
+              tickerHtml +
+              '<div class="news-title">' + a.title + '</div>' +
+              '<div class="news-meta"><span class="news-source">' + a.source + '</span><span>' + a.timeAgo + '</span></div>' +
+              descHtml +
+              '</div></div>';
+          }).join('');
+          if (newsList) newsList.innerHTML = html;
+          if (fmNewsList) fmNewsList.innerHTML = html;
           renderMobileHomeNews();
         }
       } catch(e) {
@@ -15833,7 +16343,7 @@
           window._marketNewsStatus = 'error';
           window._marketNewsArticles = [];
         }
-        var errHtml = '<div class="news-item"><div class="news-item-body"><div class="news-title" style="color:var(--text-dim);">Connection error loading news.</div></div></div>';
+        var errHtml = '<div class="news-item"><div class="news-item-body"><div class="news-title" style="color:var(--text-dim);">Connection error loading news. Please refresh.</div></div></div>';
         if (newsList) newsList.innerHTML = errHtml;
         if (fmNewsList) fmNewsList.innerHTML = errHtml;
         renderMobileHomeNews();
@@ -17058,9 +17568,6 @@
         '</div>';
 
       var marketsContent = '<div id="mobileMarketsTab" style="display:none;">' +
-        '<div style="padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.06);">' +
-          '<input type="text" id="mobileMarketSearch" placeholder="Search stock ticker..." style="width:100%;padding:10px 12px;border:1px solid rgba(255,255,255,0.1);border-radius:8px;background:rgba(255,255,255,0.04);color:#fff;font-size:14px;font-family:inherit;" onkeydown="if(event.key===\'Enter\'){addToMobileWatchlist();}">' +
-        '</div>' +
         '<div class="markets-section-label"><span>&#x1F7E2; Magnificent 7</span><button class="markets-refresh-btn" onclick="refreshMarkets();renderMobileMarkets()"><span class="refresh-icon" style="display:inline-block;">&#x21BB;</span> Refresh</button></div>' +
         '<div id="mobileStockGrid" style="margin-bottom:20px;"></div>' +
         '<div id="mobileWatchlistSection" style="display:none;">' +
