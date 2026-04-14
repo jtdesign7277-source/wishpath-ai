@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-13-v285-creatures-boss-wingmen';
+    var APP_VERSION = '2026-04-13-v286-png-sprites';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -8923,23 +8923,52 @@
       ];
       var ASTEROID_COLORS = ['#8D6E63', '#A1887F', '#78909C', '#90A4AE', '#616161', '#9E9E9E'];
 
-      // === SPRITE SYSTEM ===
+      // === SPRITE SYSTEM (PNG assets) ===
       var _wrSprites = {};
+      var _wrSpritesLoaded = 0;
+      var _wrSpritesTotal = 0;
       (function() {
-        var defs = {
-          ship: '<svg width="44" height="66" viewBox="0 0 44 66" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="hullGr" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#e8eef4"/><stop offset="40%" stop-color="#c0ccd8"/><stop offset="100%" stop-color="#6a7a8a"/></linearGradient><linearGradient id="wingGr" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#b0bcc8"/><stop offset="100%" stop-color="#4a5a6a"/></linearGradient><filter id="playerGlow"><feGaussianBlur stdDeviation="1.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><g filter="url(#playerGlow)"><path d="M22,4 L26,16 L28,30 L26,44 L22,48 L18,44 L16,30 L18,16 Z" fill="url(#hullGr)" stroke="#8898a8" stroke-width="0.5"/><line x1="22" y1="4" x2="22" y2="48" stroke="#a0b0c0" stroke-width="1.5" opacity="0.6"/><polygon points="16,22 2,34 3,40 4,42 18,36" fill="url(#wingGr)" stroke="#708090" stroke-width="0.5"/><polygon points="28,22 42,34 41,40 40,42 26,36" fill="url(#wingGr)" stroke="#708090" stroke-width="0.5"/><circle cx="22" cy="16" r="4" fill="#00ccff" opacity="0.9"/><circle cx="22" cy="16" r="2" fill="#ffffff" opacity="0.8"/><ellipse cx="12" cy="42" rx="3.5" ry="5" fill="#cc3333"/><ellipse cx="32" cy="42" rx="3.5" ry="5" fill="#cc3333"/><ellipse cx="7" cy="40" rx="2.5" ry="4" fill="#cc3333"/><ellipse cx="37" cy="40" rx="2.5" ry="4" fill="#cc3333"/><rect x="10" y="46" width="4" height="10" rx="1" fill="#2288ff" opacity="0.9"/><rect x="30" y="46" width="4" height="10" rx="1" fill="#2288ff" opacity="0.9"/><rect x="5" y="43" width="3" height="8" rx="1" fill="#2288ff" opacity="0.7"/><rect x="36" y="43" width="3" height="8" rx="1" fill="#2288ff" opacity="0.7"/><rect x="11" y="54" width="2" height="6" rx="0.5" fill="#66bbff" opacity="0.7"/><rect x="31" y="54" width="2" height="6" rx="0.5" fill="#66bbff" opacity="0.7"/></g></svg>',
-          asteroid: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64"><defs><radialGradient id="wrag1" cx="50%" cy="40%" r="55%"><stop offset="0%" stop-color="#60ddff"/><stop offset="35%" stop-color="#2090cc"/><stop offset="75%" stop-color="#104060"/><stop offset="100%" stop-color="#081828"/></radialGradient><radialGradient id="wrag2" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#40aaff" stop-opacity="0.4"/><stop offset="100%" stop-color="#0044aa" stop-opacity="0"/></radialGradient><filter id="wraGlow"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><circle cx="0" cy="0" r="30" fill="url(#wrag2)"/><g filter="url(#wraGlow)"><polygon points="0,-28 8,-12 24,-18 16,-4 28,4 14,8 18,24 6,16 0,30 -6,16 -18,24 -14,8 -28,4 -16,-4 -24,-18 -8,-12" fill="#0a1828" stroke="#3090cc" stroke-width="0.8"/><polygon points="0,-20 6,-10 18,-14 12,-2 22,2 12,6 14,18 4,12 0,22 -4,12 -14,18 -12,6 -22,2 -12,-2 -18,-14 -6,-10" fill="#122840" stroke="#40aadd" stroke-width="0.5"/><circle cx="0" cy="0" r="9" fill="url(#wrag1)"/><circle cx="0" cy="0" r="5.5" fill="#80ddff" opacity="0.85"/><circle cx="0" cy="0" r="2.5" fill="#ffffff" opacity="0.8"/><circle cx="-1.5" cy="-1.5" r="1" fill="#ffffff" opacity="0.5"/></g></svg>',
-          debris: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-28 -28 56 56"><defs><radialGradient id="wrdg1" cx="50%" cy="40%" r="55%"><stop offset="0%" stop-color="#80ff80"/><stop offset="35%" stop-color="#40aa40"/><stop offset="75%" stop-color="#1a4a1a"/><stop offset="100%" stop-color="#0a200a"/></radialGradient><radialGradient id="wrdg2" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#40ff60" stop-opacity="0.4"/><stop offset="100%" stop-color="#008020" stop-opacity="0"/></radialGradient><filter id="wrdGlow"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><circle cx="0" cy="0" r="26" fill="url(#wrdg2)"/><g filter="url(#wrdGlow)"><polygon points="0,-24 7,-10 20,-14 13,-2 24,4 12,7 15,20 4,14 0,26 -4,14 -15,20 -12,7 -24,4 -13,-2 -20,-14 -7,-10" fill="#0a1a0a" stroke="#30aa40" stroke-width="0.7"/><circle cx="0" cy="0" r="7" fill="url(#wrdg1)"/><circle cx="0" cy="0" r="4" fill="#80ff90" opacity="0.85"/><circle cx="0" cy="0" r="2" fill="#ffffff" opacity="0.7"/></g></svg>',
-          comet: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-22 -22 44 66"><defs><radialGradient id="wrcc1" cx="45%" cy="40%" r="55%"><stop offset="0%" stop-color="white"/><stop offset="30%" stop-color="#B8E8FF"/><stop offset="70%" stop-color="#29A8E0"/><stop offset="100%" stop-color="#0060A0"/></radialGradient><linearGradient id="wrct1" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#60C8FF" stop-opacity="0.9"/><stop offset="55%" stop-color="#29A8E0" stop-opacity="0.4"/><stop offset="100%" stop-color="#0060A0" stop-opacity="0"/></linearGradient><radialGradient id="wrca1" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#80DCFF" stop-opacity="0.5"/><stop offset="100%" stop-color="#0060A0" stop-opacity="0"/></radialGradient></defs><circle cx="0" cy="0" r="20" fill="url(#wrca1)"/><path d="M-8,14 L8,14 L5,52 L-5,52 Z" fill="url(#wrct1)"/><path d="M-4,14 L4,14 L2.5,44 L-2.5,44 Z" fill="white" opacity="0.18"/><path d="M-7,12 L-12,40 L-7,40 L-5,14" fill="url(#wrct1)" opacity="0.45"/><path d="M7,12 L12,40 L7,40 L5,14" fill="url(#wrct1)" opacity="0.45"/><circle cx="0" cy="0" r="16" fill="url(#wrcc1)"/><circle cx="-5" cy="-5" r="7" fill="white" opacity="0.5"/><circle cx="-5" cy="-5" r="3.5" fill="white" opacity="0.65"/></svg>',
-          enemyBall: '<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="ecGrad" cx="50%" cy="40%" r="50%"><stop offset="0%" stop-color="#ffe880"/><stop offset="30%" stop-color="#ffaa00"/><stop offset="70%" stop-color="#cc5500"/><stop offset="100%" stop-color="#441100"/></radialGradient><radialGradient id="ecAura" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#ff8800" stop-opacity="0.6"/><stop offset="100%" stop-color="#ff4400" stop-opacity="0"/></radialGradient><filter id="ecGlow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><circle cx="32" cy="32" r="30" fill="url(#ecAura)"/><g filter="url(#ecGlow)"><polygon points="32,2 38,14 50,8 42,20 62,22 44,28 56,42 40,34 44,56 32,42 20,56 24,34 8,42 20,28 2,22 22,20 14,8 26,14" fill="#2a1a0a" stroke="#cc6600" stroke-width="0.8"/><polygon points="32,10 36,18 44,16 40,24 52,24 42,28 48,38 38,32 40,46 32,38 24,46 26,32 16,38 22,28 12,24 24,24 20,16 28,18" fill="#4a2a10" stroke="#ff8800" stroke-width="0.5"/><circle cx="32" cy="28" r="10" fill="url(#ecGrad)"/><circle cx="32" cy="28" r="6" fill="#ffdd44" opacity="0.9"/><circle cx="32" cy="28" r="3" fill="#ffffff" opacity="0.8"/><circle cx="30" cy="26" r="1.5" fill="#ffffff" opacity="0.6"/></g></svg>',
-          powerShip: '<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="pcGrad" cx="50%" cy="40%" r="50%"><stop offset="0%" stop-color="#ff80ff"/><stop offset="30%" stop-color="#cc44cc"/><stop offset="70%" stop-color="#881188"/><stop offset="100%" stop-color="#330033"/></radialGradient><radialGradient id="pcAura" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#ff00ff" stop-opacity="0.5"/><stop offset="100%" stop-color="#8800aa" stop-opacity="0"/></radialGradient><filter id="pcGlow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><circle cx="32" cy="32" r="30" fill="url(#pcAura)"/><g filter="url(#pcGlow)"><polygon points="32,2 38,14 50,8 42,20 62,22 44,28 56,42 40,34 44,56 32,42 20,56 24,34 8,42 20,28 2,22 22,20 14,8 26,14" fill="#1a0a2a" stroke="#aa44cc" stroke-width="0.8"/><polygon points="32,10 36,18 44,16 40,24 52,24 42,28 48,38 38,32 40,46 32,38 24,46 26,32 16,38 22,28 12,24 24,24 20,16 28,18" fill="#2a1040" stroke="#cc66ff" stroke-width="0.5"/><circle cx="32" cy="28" r="10" fill="url(#pcGrad)"/><circle cx="32" cy="28" r="6" fill="#ff88ff" opacity="0.9"/><circle cx="32" cy="28" r="3" fill="#ffffff" opacity="0.8"/><circle cx="30" cy="26" r="1.5" fill="#ffffff" opacity="0.6"/></g></svg>'
+        var pngMap = {
+          ship: 'assets/player-ship.png',
+          asteroid: 'assets/asteroid-blue.png',
+          asteroidGold: 'assets/asteroid-gold.png',
+          asteroidRed: 'assets/asteroid-red.png',
+          asteroidGreen: 'assets/asteroid-green.png',
+          debris: 'assets/asteroid-green.png',
+          comet: 'assets/asteroid-gold.png',
+          enemyBall: 'assets/enemy-orange.png',
+          enemyBlue: 'assets/enemy-blue.png',
+          enemyGreen: 'assets/enemy-green.png',
+          enemyPurple: 'assets/enemy-purple.png',
+          enemyRed: 'assets/enemy-red.png',
+          powerShip: 'assets/enemy-purple.png',
+          boss: 'assets/boss.png',
+          bulletBlue: 'assets/bullet-blue.png',
+          bulletOrange: 'assets/bullet-orange.png',
+          bulletGreen: 'assets/bullet-green.png',
+          bulletRed: 'assets/bullet-red.png',
+          bulletPurple: 'assets/bullet-purple.png',
+          bulletEnemy: 'assets/bullet-enemy.png',
+          explosionSheet: 'assets/explosion-sheet.png',
+          bgStars: 'assets/bg-stars.png',
+          bgNebula: 'assets/bg-nebula.png',
+          powerupShield: 'assets/powerup-shield.png',
+          powerupWeapon: 'assets/powerup-weapon.png',
+          powerupWingman: 'assets/powerup-wingman.png',
+          wingmanOrange: 'assets/wingman-orange.png',
+          wingmanGreen: 'assets/wingman-green.png',
+          shieldBubble: 'assets/shield-bubble.png'
         };
-        Object.keys(defs).forEach(function(key) {
+        var keys = Object.keys(pngMap);
+        _wrSpritesTotal = keys.length;
+        keys.forEach(function(key) {
           try {
             var img = new Image();
-            img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(defs[key]);
+            img.onload = function() { _wrSpritesLoaded++; };
+            img.onerror = function() { _wrSpritesLoaded++; };
+            img.src = pngMap[key];
             _wrSprites[key] = img;
-          } catch(e) {}
+          } catch(e) { _wrSpritesLoaded++; }
         });
       })();
 
@@ -10059,12 +10088,13 @@
 
         ctx.rotate(tg.rotation);
 
-        // Try to use sprite, fallback to canvas creature
-        var spKey = isPower ? 'powerShip' : 'enemyBall';
-        var spEnemy = _wrSprites[spKey] || _wrSprites.enemyBall;
+        // Try to use PNG sprite, fallback to canvas creature
+        var enemyVariants = [_wrSprites.enemyBall, _wrSprites.enemyBlue, _wrSprites.enemyGreen, _wrSprites.enemyPurple, _wrSprites.enemyRed];
+        var spEnemy = isPower ? _wrSprites.enemyPurple : (isGreen ? _wrSprites.enemyGreen : enemyVariants[Math.abs((tg.health || 0)) % enemyVariants.length]);
+        if (!spEnemy) spEnemy = _wrSprites.enemyBall;
         if (spEnemy && spEnemy.complete && spEnemy.naturalWidth > 0) {
-          var sc = (r * 2) / 32;
-          ctx.drawImage(spEnemy, -32 * sc, -32 * sc, 64 * sc, 64 * sc);
+          var drawSz = r * 2.2;
+          ctx.drawImage(spEnemy, -drawSz / 2, -drawSz / 2, drawSz, drawSz);
         } else {
           // Fallback: ornate star creature
           var color1 = isGreen ? '#cc5500' : '#ff8800';
@@ -10208,10 +10238,11 @@
         ctx.fill();
 
         ctx.rotate(tg.rotation);
-        var sp = _wrSprites.asteroid;
+        var astVariants = [_wrSprites.asteroid, _wrSprites.asteroidGold, _wrSprites.asteroidRed, _wrSprites.asteroidGreen];
+        var sp = astVariants[Math.abs((tg.health || 0)) % astVariants.length] || _wrSprites.asteroid;
         if (sp && sp.complete && sp.naturalWidth > 0) {
-          var sc = r / 30;
-          ctx.drawImage(sp, -32 * sc, -32 * sc, 64 * sc, 64 * sc);
+          var drawSz = r * 2.2;
+          ctx.drawImage(sp, -drawSz / 2, -drawSz / 2, drawSz, drawSz);
         } else {
           // Fallback: space creature — ornate star with glowing core
           var coreColor = 'rgb(' + pal.core.join(',') + ')';
@@ -10263,19 +10294,11 @@
           ctx.fillStyle = specGrad;
           ctx.fillRect(-r, -r, r * 2, r * 2);
 
-          // Rim light — backlit edge glow
-          ctx.restore();
-          ctx.save();
-          ctx.translate(tg.x, tg.y);
-          ctx.rotate(tg.rotation);
+          // Rim light glow ring
           ctx.strokeStyle = 'rgba(' + pal.vein.join(',') + ',0.2)';
           ctx.lineWidth = 2;
           ctx.beginPath();
-          for (var i = 0; i < verts.length; i++) {
-            if (i === 0) ctx.moveTo(verts[i].x, verts[i].y);
-            else ctx.lineTo(verts[i].x, verts[i].y);
-          }
-          ctx.closePath();
+          ctx.arc(0, 0, r * 0.85, 0, Math.PI * 2);
           ctx.stroke();
         }
 
@@ -10296,9 +10319,8 @@
         ctx.rotate(tg.rotation);
         var sp = _wrSprites.debris;
         if (sp && sp.complete && sp.naturalWidth > 0) {
-          // viewBox -28,-28 56×56; SVG body radius ~24 units → scale to r
-          var sc = r / 24;
-          ctx.drawImage(sp, -28 * sc, -28 * sc, 56 * sc, 56 * sc);
+          var drawSz = r * 2;
+          ctx.drawImage(sp, -drawSz / 2, -drawSz / 2, drawSz, drawSz);
         } else {
           // 3D metallic shard with lighting
           var grad = ctx.createLinearGradient(-r * 0.5, -r, r * 0.5, r);
@@ -10346,9 +10368,8 @@
         ctx.translate(tg.x, tg.y);
         var sp = _wrSprites.comet;
         if (sp && sp.complete && sp.naturalWidth > 0) {
-          // viewBox -22,-22 44×66; core at SVG (0,0) r=16 → scale to r
-          var sc = r / 16;
-          ctx.drawImage(sp, -22 * sc, -22 * sc, 44 * sc, 66 * sc);
+          var drawSz = r * 2.2;
+          ctx.drawImage(sp, -drawSz / 2, -drawSz / 2, drawSz, drawSz);
         } else {
           var tailGrad = ctx.createLinearGradient(0, 0, 0, r * 3);
           tailGrad.addColorStop(0, pc.glow); tailGrad.addColorStop(1, 'transparent');
@@ -10387,12 +10408,11 @@
         ctx.fillStyle = aGrad;
         ctx.beginPath(); ctx.arc(0, 0, sc.size * 1.2, 0, Math.PI * 2); ctx.fill();
 
-        // Try sprite, fallback to canvas
+        // Try PNG sprite, fallback to canvas
         var spPower = _wrSprites.powerShip;
         if (spPower && spPower.complete && spPower.naturalWidth > 0) {
-          // Draw sprite — powerShip is 40×56, scale it
-          var pScale = (sc.size * 2) / 20; // 20 is approx half the sprite width
-          ctx.drawImage(spPower, -20 * pScale, -28 * pScale, 40 * pScale, 56 * pScale);
+          var drawSz = sc.size * 2;
+          ctx.drawImage(spPower, -drawSz / 2, -drawSz / 2, drawSz, drawSz);
         } else {
           // Fallback canvas drawing
           ctx.fillStyle = td.hullColor;
@@ -10447,12 +10467,13 @@
           ctx.globalAlpha = 1;
         }
 
-        // ===== SPRITE-BASED PLAYER SHIP (with canvas fallback) =====
+        // ===== PNG SPRITE PLAYER SHIP (with canvas fallback) =====
         var spShip = _wrSprites.ship;
         if (spShip && spShip.complete && spShip.naturalWidth > 0) {
-          // Draw sprite at scale — ship sprite is 44×66, centered around origin
-          var shipScale = sz / 22; // Scale factor for size
-          ctx.drawImage(spShip, -22 * shipScale, -33 * shipScale, 44 * shipScale, 66 * shipScale);
+          // PNG is 88x132 (2:3 ratio). Scale to fit player size
+          var shipW = sz * 1.6;
+          var shipH = shipW * 1.5;
+          ctx.drawImage(spShip, -shipW / 2, -shipH / 2, shipW, shipH);
         } else {
           // Fallback: Canvas-drawn ship (legacy)
           // Hull colors change based on ship tier
@@ -10622,23 +10643,24 @@
           var shR = player.size * 1.3 + Math.sin(_shieldPulse) * 3;
           var shAlpha = 0.2 + (_shieldHealth / _shieldMaxHealth) * 0.3;
           ctx.save();
-          // Outer glow
-          ctx.shadowColor = '#ff44ff';
-          ctx.shadowBlur = 18;
-          ctx.strokeStyle = 'rgba(255,68,255,' + (shAlpha + 0.1) + ')';
-          ctx.lineWidth = 2.5;
-          ctx.beginPath();
-          ctx.arc(player.x, player.y, shR, 0, Math.PI * 2);
-          ctx.stroke();
-          // Inner fill
-          var shGrad = ctx.createRadialGradient(player.x, player.y, shR * 0.3, player.x, player.y, shR);
-          shGrad.addColorStop(0, 'rgba(255,100,255,' + (shAlpha * 0.3) + ')');
-          shGrad.addColorStop(0.7, 'rgba(200,40,220,' + (shAlpha * 0.15) + ')');
-          shGrad.addColorStop(1, 'rgba(150,0,200,' + (shAlpha * 0.05) + ')');
-          ctx.fillStyle = shGrad;
-          ctx.beginPath();
-          ctx.arc(player.x, player.y, shR, 0, Math.PI * 2);
-          ctx.fill();
+          var shSp = _wrSprites.shieldBubble;
+          if (shSp && shSp.complete && shSp.naturalWidth > 0) {
+            ctx.globalAlpha = shAlpha + 0.3;
+            var shSz = shR * 2.4;
+            ctx.drawImage(shSp, player.x - shSz / 2, player.y - shSz / 2, shSz, shSz);
+            ctx.globalAlpha = 1;
+          } else {
+            ctx.shadowColor = '#ff44ff'; ctx.shadowBlur = 18;
+            ctx.strokeStyle = 'rgba(255,68,255,' + (shAlpha + 0.1) + ')';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath(); ctx.arc(player.x, player.y, shR, 0, Math.PI * 2); ctx.stroke();
+            var shGrad = ctx.createRadialGradient(player.x, player.y, shR * 0.3, player.x, player.y, shR);
+            shGrad.addColorStop(0, 'rgba(255,100,255,' + (shAlpha * 0.3) + ')');
+            shGrad.addColorStop(0.7, 'rgba(200,40,220,' + (shAlpha * 0.15) + ')');
+            shGrad.addColorStop(1, 'rgba(150,0,200,' + (shAlpha * 0.05) + ')');
+            ctx.fillStyle = shGrad;
+            ctx.beginPath(); ctx.arc(player.x, player.y, shR, 0, Math.PI * 2); ctx.fill();
+          }
           // Shield health pips
           for (var sp = 0; sp < _shieldHealth; sp++) {
             var spAngle = -Math.PI / 2 + (sp / _shieldMaxHealth) * Math.PI * 2;
@@ -10651,30 +10673,29 @@
           ctx.restore();
         }
 
-        // Draw wingman mini-ships
+        // Draw wingman mini-ships (PNG sprites)
         if (_wingmanLevel > 0 && !gameOver) {
           var wOffsets = [[-36, 8], [36, 8]];
+          var wSprites = [_wrSprites.wingmanOrange, _wrSprites.wingmanGreen];
           var wColors = [['#ff8800', '#cc5500', '#ffaa00'], ['#00ff88', '#00aa55', '#44ffcc']];
           for (var wi = 0; wi < wOffsets.length; wi++) {
             var wx = player.x + wOffsets[wi][0], wy = player.y + wOffsets[wi][1];
-            var wc = wColors[wi];
+            var wSp = wSprites[wi];
             ctx.save();
             ctx.translate(wx, wy);
-            // Mini ship body
-            ctx.shadowColor = wc[0]; ctx.shadowBlur = 8;
-            ctx.fillStyle = wc[1];
-            ctx.beginPath();
-            ctx.moveTo(0, -10); ctx.lineTo(6, 0); ctx.lineTo(4, 8); ctx.lineTo(0, 10);
-            ctx.lineTo(-4, 8); ctx.lineTo(-6, 0); ctx.closePath(); ctx.fill();
-            // Cockpit glow
-            ctx.fillStyle = wc[2]; ctx.shadowBlur = 6;
-            ctx.beginPath(); ctx.arc(0, -2, 3, 0, Math.PI * 2); ctx.fill();
-            // Engine
-            ctx.fillStyle = wc[0]; ctx.shadowBlur = 4;
-            var wFlicker = 0.7 + Math.random() * 0.3;
-            ctx.globalAlpha = wFlicker;
-            ctx.beginPath(); ctx.arc(0, 10, 2.5, 0, Math.PI * 2); ctx.fill();
-            ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+            if (wSp && wSp.complete && wSp.naturalWidth > 0) {
+              ctx.drawImage(wSp, -14, -19, 28, 38);
+            } else {
+              var wc = wColors[wi];
+              ctx.shadowColor = wc[0]; ctx.shadowBlur = 8;
+              ctx.fillStyle = wc[1];
+              ctx.beginPath();
+              ctx.moveTo(0, -10); ctx.lineTo(6, 0); ctx.lineTo(4, 8); ctx.lineTo(0, 10);
+              ctx.lineTo(-4, 8); ctx.lineTo(-6, 0); ctx.closePath(); ctx.fill();
+              ctx.fillStyle = wc[2]; ctx.shadowBlur = 6;
+              ctx.beginPath(); ctx.arc(0, -2, 3, 0, Math.PI * 2); ctx.fill();
+              ctx.shadowBlur = 0;
+            }
             ctx.restore();
           }
           // Level 3: extra center wingman indicator
@@ -10687,30 +10708,35 @@
           }
         }
 
-        // Draw upgrade pickups — color-coded by type
+        // Draw upgrade pickups — PNG sprites with glow aura
         if (window._upgrades) {
+          var _upSprites = { wingman: _wrSprites.powerupWingman, shield: _wrSprites.powerupShield, weapon: _wrSprites.powerupWeapon };
           var _upColors = { wingman: ['#00ffcc', '#003322'], shield: ['#ff44ff', '#220022'], weapon: ['#ff4444', '#220000'] };
           var _upLabels = { wingman: 'ALLY', shield: 'SHIELD', weapon: 'GUN' };
           for (var ui = 0; ui < window._upgrades.length; ui++) {
             var up = window._upgrades[ui];
             var uc = _upColors[up.type] || _upColors.wingman;
+            var upSp = _upSprites[up.type];
             ctx.save();
             ctx.translate(up.x, up.y);
             var upPulse = 0.8 + Math.sin(Date.now() * 0.005 + ui) * 0.2;
+            // Glow aura
             ctx.shadowColor = uc[0]; ctx.shadowBlur = 16 * upPulse;
-            ctx.fillStyle = uc[1];
-            ctx.beginPath();
-            for (var si = 0; si < 6; si++) {
-              var sa = (si / 6) * Math.PI * 2 - Math.PI / 2;
-              var sr = (si % 2 === 0) ? 14 : 7;
-              if (si === 0) ctx.moveTo(Math.cos(sa) * sr, Math.sin(sa) * sr);
-              else ctx.lineTo(Math.cos(sa) * sr, Math.sin(sa) * sr);
+            if (upSp && upSp.complete && upSp.naturalWidth > 0) {
+              var upSz = 28 * upPulse;
+              ctx.drawImage(upSp, -upSz / 2, -upSz / 2, upSz, upSz);
+            } else {
+              ctx.fillStyle = uc[1];
+              ctx.beginPath();
+              for (var si = 0; si < 6; si++) {
+                var sa = (si / 6) * Math.PI * 2 - Math.PI / 2;
+                var sr = (si % 2 === 0) ? 14 : 7;
+                if (si === 0) ctx.moveTo(Math.cos(sa) * sr, Math.sin(sa) * sr);
+                else ctx.lineTo(Math.cos(sa) * sr, Math.sin(sa) * sr);
+              }
+              ctx.closePath(); ctx.fill();
+              ctx.fillStyle = uc[0]; ctx.beginPath(); ctx.arc(0, 0, 5, 0, Math.PI * 2); ctx.fill();
             }
-            ctx.closePath(); ctx.fill();
-            ctx.fillStyle = uc[0]; ctx.shadowBlur = 8;
-            ctx.beginPath(); ctx.arc(0, 0, 5, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = '#ffffff';
-            ctx.beginPath(); ctx.arc(0, 0, 2.5, 0, Math.PI * 2); ctx.fill();
             ctx.shadowBlur = 0;
             ctx.font = 'bold 8px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
             ctx.fillStyle = uc[0];
@@ -10726,12 +10752,12 @@
           ctx.translate(boss.x, boss.y);
           var bR = boss.size * 0.5;
           var bPulse = 0.85 + Math.sin(boss.pulsePhase) * 0.15;
-          // Outer aura
+          // Outer aura glow
           var bAura = ctx.createRadialGradient(0, 0, bR * 0.3, 0, 0, bR * 1.3);
           bAura.addColorStop(0, 'rgba(255,100,0,0.3)');
           bAura.addColorStop(1, 'rgba(255,40,0,0)');
           ctx.fillStyle = bAura; ctx.fillRect(-bR * 1.3, -bR * 1.3, bR * 2.6, bR * 2.6);
-          // Fire trails
+          // Fire trails behind boss
           for (var ft = -1; ft <= 1; ft++) {
             var ftx = ft * bR * 0.35;
             var ftLen = bR * (0.8 + Math.sin(Date.now() * 0.01 + ft) * 0.2);
@@ -10747,52 +10773,27 @@
             ctx.lineTo(ftx - bR * 0.02, -bR * 0.4 - ftLen);
             ctx.fill();
           }
-          // Main body — mechanical creature
-          ctx.shadowColor = '#ff6600'; ctx.shadowBlur = 20 * bPulse;
-          // Outer shell — 8-pointed star
-          ctx.fillStyle = '#1a0a00';
-          ctx.strokeStyle = '#cc5500';
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          for (var bi2 = 0; bi2 < 16; bi2++) {
-            var ba = (bi2 / 16) * Math.PI * 2 - Math.PI / 2;
-            var bsr = (bi2 % 2 === 0) ? bR * 0.95 : bR * 0.5;
-            if (bi2 === 0) ctx.moveTo(Math.cos(ba) * bsr, Math.sin(ba) * bsr);
-            else ctx.lineTo(Math.cos(ba) * bsr, Math.sin(ba) * bsr);
-          }
-          ctx.closePath(); ctx.fill(); ctx.stroke();
-          ctx.shadowBlur = 0;
-          // Inner armored shell
-          ctx.fillStyle = '#2a1500'; ctx.strokeStyle = '#ff8800'; ctx.lineWidth = 1;
-          ctx.beginPath();
-          for (var bi2 = 0; bi2 < 16; bi2++) {
-            var ba = (bi2 / 16) * Math.PI * 2 - Math.PI / 2;
-            var bsr = (bi2 % 2 === 0) ? bR * 0.65 : bR * 0.35;
-            if (bi2 === 0) ctx.moveTo(Math.cos(ba) * bsr, Math.sin(ba) * bsr);
-            else ctx.lineTo(Math.cos(ba) * bsr, Math.sin(ba) * bsr);
-          }
-          ctx.closePath(); ctx.fill(); ctx.stroke();
-          // Mechanical details — side cannons
-          for (var cs = -1; cs <= 1; cs += 2) {
-            ctx.fillStyle = '#3a2000';
-            ctx.fillRect(cs * bR * 0.6 - 4, -6, 8, 18);
-            ctx.fillStyle = '#ff4400';
-            ctx.beginPath(); ctx.arc(cs * bR * 0.6, 14, 3, 0, Math.PI * 2); ctx.fill();
-          }
-          // Central energy core — three "eyes"
-          var coreGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, bR * 0.3);
-          coreGrad.addColorStop(0, '#ffffff');
-          coreGrad.addColorStop(0.25, '#ffdd44');
-          coreGrad.addColorStop(0.6, '#ff8800');
-          coreGrad.addColorStop(1, '#441100');
-          ctx.fillStyle = coreGrad; ctx.shadowColor = '#ffaa00'; ctx.shadowBlur = 16;
-          ctx.beginPath(); ctx.arc(0, 0, bR * 0.3, 0, Math.PI * 2); ctx.fill();
-          // Side eyes
-          for (var eye = -1; eye <= 1; eye += 2) {
-            ctx.fillStyle = '#ff4400'; ctx.shadowColor = '#ff2200'; ctx.shadowBlur = 8;
-            ctx.beginPath(); ctx.arc(eye * bR * 0.35, bR * 0.15, bR * 0.1, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = '#ffffff';
-            ctx.beginPath(); ctx.arc(eye * bR * 0.35, bR * 0.15, bR * 0.04, 0, Math.PI * 2); ctx.fill();
+          // Boss PNG sprite
+          var spBoss = _wrSprites.boss;
+          if (spBoss && spBoss.complete && spBoss.naturalWidth > 0) {
+            var bossSz = bR * 2.4 * bPulse;
+            ctx.drawImage(spBoss, -bossSz / 2, -bossSz / 2, bossSz, bossSz);
+          } else {
+            // Fallback: canvas boss
+            ctx.shadowColor = '#ff6600'; ctx.shadowBlur = 20 * bPulse;
+            ctx.fillStyle = '#1a0a00'; ctx.strokeStyle = '#cc5500'; ctx.lineWidth = 2;
+            ctx.beginPath();
+            for (var bi2 = 0; bi2 < 16; bi2++) {
+              var ba = (bi2 / 16) * Math.PI * 2 - Math.PI / 2;
+              var bsr = (bi2 % 2 === 0) ? bR * 0.95 : bR * 0.5;
+              if (bi2 === 0) ctx.moveTo(Math.cos(ba) * bsr, Math.sin(ba) * bsr);
+              else ctx.lineTo(Math.cos(ba) * bsr, Math.sin(ba) * bsr);
+            }
+            ctx.closePath(); ctx.fill(); ctx.stroke();
+            ctx.shadowBlur = 0;
+            var coreGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, bR * 0.3);
+            coreGrad.addColorStop(0, '#ffffff'); coreGrad.addColorStop(0.6, '#ff8800'); coreGrad.addColorStop(1, '#441100');
+            ctx.fillStyle = coreGrad; ctx.beginPath(); ctx.arc(0, 0, bR * 0.3, 0, Math.PI * 2); ctx.fill();
           }
           ctx.shadowBlur = 0;
           ctx.restore();
