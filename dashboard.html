@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-15-v290-coach-header-clean';
+    var APP_VERSION = '2026-04-15-v291-kill-rainbow-line';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -2338,6 +2338,7 @@
         gap: 0;
         background: transparent;
         border: none;
+        border-top: none !important;
         border-radius: 0;
         border-bottom: none;
         box-shadow: none;
