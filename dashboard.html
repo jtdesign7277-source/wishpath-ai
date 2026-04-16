@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-15-v291-kill-rainbow-line';
+    var APP_VERSION = '2026-04-15-v292-racetrack-border';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -975,6 +975,13 @@
     .wish-textarea-wrap { position: relative; border-radius: 14px; padding: 2px; overflow: hidden; }
     .wish-textarea-wrap::before { content: ''; position: absolute; inset: -50%; background: conic-gradient(from 0deg, transparent 0%, rgba(140,100,240,0.7) 10%, transparent 20%, transparent 50%, rgba(113,50,245,0.6) 60%, transparent 70%, transparent 100%); animation: wishBorderSpin 3s linear infinite; z-index: 0; }
     @keyframes wishBorderSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    /* Racetrack perimeter border — intro animation */
+    #wp-racetrack { position: fixed; inset: 0; pointer-events: none; z-index: 9999; }
+    #wp-racetrack svg { width: 100%; height: 100%; display: block; }
+    #wp-racetrack rect { fill: none; stroke: url(#wp-racetrack-gradient); stroke-width: 2; filter: drop-shadow(0 0 8px rgba(113,50,245,0.6)) drop-shadow(0 0 16px rgba(113,50,245,0.35)); animation: wpRacetrack 2.2s cubic-bezier(0.65,0,0.35,1) forwards; }
+    @keyframes wpRacetrack { 0% { stroke-dashoffset: 1000; opacity: 1; } 85% { stroke-dashoffset: 0; opacity: 1; } 100% { stroke-dashoffset: 0; opacity: 1; } }
+    #wp-racetrack.wp-racetrack-done rect { animation: wpRacetrackPulse 4s ease-in-out infinite; stroke-dashoffset: 0; }
+    @keyframes wpRacetrackPulse { 0%, 100% { filter: drop-shadow(0 0 8px rgba(113,50,245,0.55)) drop-shadow(0 0 16px rgba(113,50,245,0.3)); } 50% { filter: drop-shadow(0 0 12px rgba(113,50,245,0.75)) drop-shadow(0 0 22px rgba(113,50,245,0.45)); } }
     .wish-textarea-wrap-inner { position: relative; z-index: 1; background: rgba(10,10,15,0.95); border-radius: 12px; }
     .wish-textarea { width: 100%; min-height: 140px; padding: 16px; background: transparent; border: none; border-radius: 12px; color: var(--text); font: inherit; font-size: 0.95rem; line-height: 1.6; outline: none; resize: none; transition: all 0.3s ease; position: relative; z-index: 1; }
     .wish-textarea:focus { box-shadow: 0 0 20px rgba(113,50,245,0.25); }
@@ -4701,6 +4708,19 @@
   <script src="https://code.highcharts.com/gantt/modules/gantt.js"></script>
 </head>
 <body>
+  <!-- Racetrack perimeter border: purple light travels around viewport edge once, then pulses -->
+  <div id="wp-racetrack" aria-hidden="true">
+    <svg preserveAspectRatio="none" pointer-events="none">
+      <defs>
+        <linearGradient id="wp-racetrack-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%"   stop-color="#a78bfa"/>
+          <stop offset="50%"  stop-color="#7132F5"/>
+          <stop offset="100%" stop-color="#a78bfa"/>
+        </linearGradient>
+      </defs>
+      <rect x="6" y="6" rx="24" ry="24"></rect>
+    </svg>
+  </div>
   <!-- Ambient particle background -->
   <canvas id="wpAmbientCanvas" style="position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:0.45;"></canvas>
   <!-- Paywall Modal -->
@@ -20877,6 +20897,37 @@ window.addEventListener('focus', function() {
 document.addEventListener('visibilitychange', function() {
   if (document.visibilityState === 'visible') refreshActiveFMWidgetLayout(false);
 });
+
+/* Racetrack perimeter border initialization */
+(function(){
+  var svg = document.querySelector('#wp-racetrack svg');
+  var rect = svg && svg.querySelector('rect');
+  if (!rect) return;
+  var pad = 6;
+  function sizeRect(){
+    var w = window.innerWidth, h = window.innerHeight;
+    svg.setAttribute('width', w);
+    svg.setAttribute('height', h);
+    svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+    rect.setAttribute('x', pad);
+    rect.setAttribute('y', pad);
+    rect.setAttribute('width', w - pad*2);
+    rect.setAttribute('height', h - pad*2);
+    rect.setAttribute('rx', 24);
+    rect.setAttribute('ry', 24);
+    /* Perimeter length (approximate): 2*(w + h) - 4*r*(2-pi/2) */
+    /* For simplicity, use stroke-dasharray: 1000 as normalized path unit */
+    rect.setAttribute('pathLength', 1000);
+    rect.setAttribute('stroke-dasharray', 1000);
+    rect.setAttribute('stroke-dashoffset', 1000);
+  }
+  sizeRect();
+  window.addEventListener('resize', sizeRect, { passive: true });
+  /* After lap completes (~2.2s), flip to pulse state */
+  setTimeout(function(){
+    document.getElementById('wp-racetrack').classList.add('wp-racetrack-done');
+  }, 2400);
+})();
 
   </script>
 
