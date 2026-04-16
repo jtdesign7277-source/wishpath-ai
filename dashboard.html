@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-15-v289-coach-bubble-split';
+    var APP_VERSION = '2026-04-15-v290-coach-header-clean';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -3357,31 +3357,42 @@
         flex-direction: column;
       }
       .lc-topbar {
+        position: sticky;
+        top: 0;
+        height: 56px;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: calc(max(12px, env(safe-area-inset-top)) + 4px) 16px 10px;
+        padding: 0 16px;
         flex-shrink: 0;
-        border-bottom: 1px solid rgba(255,255,255,0.06);
+        background: rgba(11,6,17,0.95);
+        border-bottom: 1px solid rgba(104,107,130,0.25);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        z-index: 100;
       }
       .lc-back-btn, .lc-new-btn {
         background: none;
         border: none;
-        color: rgba(255,255,255,0.6);
-        cursor: pointer;
+        color: #F0EFF5;
+        font-size: 24px;
+        width: 44px;
+        height: 44px;
         padding: 8px;
         display: flex;
         align-items: center;
         justify-content: center;
+        cursor: pointer;
         -webkit-tap-highlight-color: transparent;
-        border-radius: 10px;
         transition: all 0.15s ease;
       }
-      .lc-back-btn:active, .lc-new-btn:active { background: rgba(255,255,255,0.06); color: #fff; }
+      .lc-back-btn:active, .lc-new-btn:active { color: #F0EFF5; }
       .lc-topbar-title {
-        font-size: 0.95rem;
+        font-size: 18px;
         font-weight: 600;
-        color: rgba(255,255,255,0.85);
+        color: #F0EFF5;
+        letter-spacing: -0.2px;
+        margin: 0;
       }
       .lc-empty-state {
         flex: 1;
@@ -5747,13 +5758,9 @@
         <div class="lc-fullscreen" id="lcFullscreen" style="display:none;">
           <!-- Top bar -->
           <div class="lc-topbar">
-            <button class="lc-back-btn" onclick="closeLifeCoachView()">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-            </button>
+            <button class="lc-back-btn" onclick="closeLifeCoachView()">←</button>
             <span class="lc-topbar-title">Life Coach</span>
-            <button class="lc-new-btn" onclick="startNewLifeCoachChat()">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            </button>
+            <button class="lc-new-btn" onclick="startNewLifeCoachChat()">✚</button>
           </div>
           <!-- Empty state -->
           <div class="lc-empty-state" id="lcEmptyState">
