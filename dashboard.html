@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-15-v287-liquid-glass-search';
+    var APP_VERSION = '2026-04-15-v288-life-coach-glass';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -3351,7 +3351,8 @@
         position: fixed;
         inset: 0;
         z-index: 601;
-        background: var(--bg, #0a0a0a);
+        background: radial-gradient(circle at 50% 30%, rgba(113,50,245,0.12) 0%, #0B0611 50%, #16121F 100%);
+        background-attachment: fixed;
         display: flex;
         flex-direction: column;
       }
@@ -3422,12 +3423,12 @@
         overflow-y: scroll;
         -webkit-overflow-scrolling: touch;
         overscroll-behavior-y: contain;
-        padding: 16px 16px;
+        padding: 24px 16px 20px 16px;
         display: none;
       }
       .lc-messages.has-messages { display: block; }
       .lc-msg {
-        margin-bottom: 20px;
+        margin-bottom: 18px;
         animation: fadeInUp 0.25s ease;
       }
       .lc-msg-user {
@@ -3435,30 +3436,42 @@
         justify-content: flex-end;
       }
       .lc-msg-user .lc-bubble {
-        background: linear-gradient(135deg, rgba(113,50,245,0.3) 0%, rgba(80,30,200,0.18) 50%, rgba(113,50,245,0.12) 100%);
-        border: 1px solid rgba(113,50,245,0.3);
+        background: rgba(37,37,37,0.85);
+        border: 1px solid rgba(104,107,130,0.35);
         border-radius: 18px 18px 4px 18px;
-        padding: 12px 16px;
+        padding: 18px 20px;
         max-width: 85%;
-        color: rgba(255,255,255,0.95);
+        color: #F0EFF5;
         font-size: 15px;
-        line-height: 1.55;
-        box-shadow: 0 4px 16px rgba(113,50,245,0.15), inset 0 1px 0 rgba(255,255,255,0.06);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
+        line-height: 1.5;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -2px 0 rgba(0,0,0,0.6);
+        backdrop-filter: blur(16px) saturate(140%);
+        -webkit-backdrop-filter: blur(16px) saturate(140%);
+      }
+      @supports not (backdrop-filter: blur(1px)) {
+        .lc-msg-user .lc-bubble {
+          background: rgba(37,37,37,0.95);
+          box-shadow: 0 8px 32px rgba(0,0,0,0.45);
+        }
       }
       .lc-msg-ai .lc-bubble {
-        padding: 14px 16px;
+        padding: 18px 20px;
         max-width: 92%;
-        color: rgba(255,255,255,0.9);
+        color: #F0EFF5;
         font-size: 15px;
-        line-height: 1.65;
-        background: linear-gradient(135deg, rgba(42,42,52,0.6) 0%, rgba(30,20,50,0.4) 50%, rgba(42,42,52,0.3) 100%);
-        border: 1px solid rgba(113,50,245,0.12);
+        line-height: 1.5;
+        background: rgba(37,37,37,0.85);
+        border: 1px solid rgba(104,107,130,0.35);
         border-radius: 18px 18px 18px 4px;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -2px 0 rgba(0,0,0,0.6);
+        backdrop-filter: blur(16px) saturate(140%);
+        -webkit-backdrop-filter: blur(16px) saturate(140%);
+      }
+      @supports not (backdrop-filter: blur(1px)) {
+        .lc-msg-ai .lc-bubble {
+          background: rgba(37,37,37,0.95);
+          box-shadow: 0 8px 32px rgba(0,0,0,0.45);
+        }
       }
       .lc-msg-ai .lc-thinking {
         display: inline-flex;
