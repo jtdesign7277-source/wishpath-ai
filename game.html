@@ -58,6 +58,54 @@ function easeOutCubic(t){return 1-Math.pow(1-t,3)}
 function arcadeFont(sz){return `${sz}px 'Press Start 2P', monospace`}
 function hexToRgba(hex,a){const c=hex.replace('#','');return `rgba(${parseInt(c.slice(0,2),16)},${parseInt(c.slice(2,4),16)},${parseInt(c.slice(4,6),16)},${a})`}
 
+// ─── AUDIO ENGINE (Web Audio API — laser SFX) ─────────────────
+let audioCtx=null;
+function getAudioCtx(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();return audioCtx;}
+function playLaserSound(pitch){
+  try{
+    const ac=getAudioCtx();if(ac.state==='suspended')ac.resume();
+    const osc=ac.createOscillator();const gain=ac.createGain();const filter=ac.createBiquadFilter();
+    osc.type='sawtooth';osc.frequency.setValueAtTime(800+pitch*200,ac.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(200+pitch*80,ac.currentTime+0.08);
+    filter.type='lowpass';filter.frequency.setValueAtTime(3000,ac.currentTime);
+    filter.frequency.exponentialRampToValueAtTime(400,ac.currentTime+0.1);
+    gain.gain.setValueAtTime(0.08,ac.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.1);
+    osc.connect(filter);filter.connect(gain);gain.connect(ac.destination);
+    osc.start(ac.currentTime);osc.stop(ac.currentTime+0.12);
+  }catch(e){}
+}
+function playHitSound(){
+  try{
+    const ac=getAudioCtx();if(ac.state==='suspended')ac.resume();
+    const osc=ac.createOscillator();const gain=ac.createGain();
+    osc.type='square';osc.frequency.setValueAtTime(150,ac.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(40,ac.currentTime+0.15);
+    gain.gain.setValueAtTime(0.1,ac.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.15);
+    osc.connect(gain);gain.connect(ac.destination);
+    osc.start(ac.currentTime);osc.stop(ac.currentTime+0.18);
+  }catch(e){}
+}
+function playExplosionSound(){
+  try{
+    const ac=getAudioCtx();if(ac.state==='suspended')ac.resume();
+    const bufSize=ac.sampleRate*0.3;const buf=ac.createBuffer(1,bufSize,ac.sampleRate);
+    const data=buf.getChannelData(0);for(let i=0;i<bufSize;i++)data[i]=(Math.random()*2-1)*Math.pow(1-i/bufSize,2);
+    const src=ac.createBufferSource();src.buffer=buf;
+    const gain=ac.createGain();gain.gain.setValueAtTime(0.15,ac.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.3);
+    const filter=ac.createBiquadFilter();filter.type='lowpass';filter.frequency.value=800;
+    src.connect(filter);filter.connect(gain);gain.connect(ac.destination);
+    src.start(ac.currentTime);
+  }catch(e){}
+}
+// Get laser colors for current level theme
+function getLaserColors(){
+  const theme=getTheme();
+  return {primary:theme.edge,secondary:theme.accent,core:'#FFFFFF'};
+}
+
 // ─── LEVEL THEMES ──────────────────────────────────────────────
 const LEVEL_THEMES = [
   { bg1:'#0B1628',bg2:'#050D1A',edge:'#22D3EE',wall:'#142848',wallEdge:'#1E3A6E',wallHi:'#2A5090',grid:'rgba(60,140,220,0.04)',accent:'#67E8F9',name:'FROZEN VOID' },
@@ -1265,17 +1313,20 @@ function update(dt){
   }
   if(!aButtonPressed&&rocketBoostActive){rocketBoostActive=false;}
 
-  // GUNS — continuous auto-fire (tier sets rate + barrel count / colors)
+  // GUNS — continuous auto-fire with LASER bolts (color matches level theme)
   if(gunCooldown>0)gunCooldown-=dt;
   if(gunCooldown<=0){
     const cfg=GUN_CONFIG[Math.min(gunTier,GUN_CONFIG.length-1)];
     gunCooldown=cfg.interval;
     const bx=SHIP_X+cameraX+SHIP_W,by=ship.y;
+    const lc=getLaserColors();
     for(const b of cfg.bullets){
-      projectiles.push({x:bx,y:by+b.dy,vy:b.vy||0,dead:false,color:b.color||'#FF2EC4'});
+      projectiles.push({x:bx,y:by+b.dy,vy:b.vy||0,dead:false,color:lc.primary,color2:lc.secondary,born:performance.now()});
     }
+    // Laser fire sound — pitch varies with gun tier
+    playLaserSound(gunTier*0.5);
     shakeDur=Math.max(shakeDur,0.025);
-    spawnOrbBurst(SHIP_X+SHIP_W,ship.y,['#FF2EC4','#FF6BD6','#FFF'],4+gunTier,2);
+    spawnOrbBurst(SHIP_X+SHIP_W,ship.y,[lc.primary,lc.secondary,'#FFF'],4+gunTier,2);
   }
 
   // Update projectiles
@@ -1298,10 +1349,12 @@ function update(dt){
           spawnOrbBurst(ex,e.y,[e.type.color,'#FDE047','#FFF','#FF6BD6'],60,10);
           addFloatingText(ex,e.y-30,'💥 +'+pts.toLocaleString(),e.type.color,20);
           shakeDur=0.2;screenFlash=0.25;screenFlashColor=e.type.color;
+          playExplosionSound();
           if(Math.random()<0.12)gunOrbPickups.push({x:e.x,y:e.y,collected:false,anim:rand(0,6.28)});
         } else {
           spawnOrbBurst(ex,e.y,['#FFF','#FF2EC4'],15,4);
           addFloatingText(ex,e.y-20,'HIT!','#FF2EC4',14);
+          playHitSound();
         }
         break;
       }
@@ -1792,8 +1845,43 @@ function draw(){
     ctx.fillText('GUN',0,0);
     ctx.shadowBlur=0;ctx.restore();
   }
-  // Draw projectiles
-  for(const p of projectiles){if(!p.dead){const sx=p.x-cameraX;if(sx<W+20){const col=p.color||'#FF2EC4';ctx.save();ctx.translate(sx,p.y);ctx.shadowColor=col;ctx.shadowBlur=10;const lg=ctx.createLinearGradient(-18,0,18,0);lg.addColorStop(0,'rgba(255,255,255,0.05)');lg.addColorStop(0.35,col);lg.addColorStop(0.65,col);lg.addColorStop(1,'rgba(255,255,255,0.05)');ctx.fillStyle=lg;ctx.fillRect(-18,-2.5,36,5);ctx.fillStyle='rgba(255,255,255,0.85)';ctx.fillRect(-8,-1,16,2);ctx.shadowBlur=0;ctx.restore();}}}
+  // Draw projectiles — LASER BEAMS with level-themed colors
+  for(const p of projectiles){if(!p.dead){const sx=p.x-cameraX;if(sx<W+50){
+    const col=p.color||getLaserColors().primary;
+    const col2=p.color2||getLaserColors().secondary;
+    const age=Math.min((performance.now()-(p.born||0))*0.001,1);
+    const laserLen=32+age*12;const laserW=3.5;
+    ctx.save();ctx.translate(sx,p.y);
+    // Outer glow halo
+    ctx.shadowColor=col;ctx.shadowBlur=20;
+    ctx.globalAlpha=0.3;ctx.fillStyle=col;
+    ctx.beginPath();ctx.ellipse(0,0,laserLen*0.7,laserW*3,0,0,Math.PI*2);ctx.fill();
+    ctx.globalAlpha=1;
+    // Laser beam body — gradient from trail to tip
+    const lg=ctx.createLinearGradient(-laserLen,0,laserLen,0);
+    lg.addColorStop(0,'transparent');lg.addColorStop(0.1,hexToRgba(col,0.3));
+    lg.addColorStop(0.3,col);lg.addColorStop(0.6,col2);lg.addColorStop(0.85,col);lg.addColorStop(1,'transparent');
+    ctx.fillStyle=lg;
+    ctx.beginPath();
+    ctx.moveTo(-laserLen,0);
+    ctx.quadraticCurveTo(-laserLen*0.5,-laserW*1.2,0,-laserW);
+    ctx.lineTo(laserLen*0.8,-laserW*0.6);ctx.lineTo(laserLen,0);
+    ctx.lineTo(laserLen*0.8,laserW*0.6);ctx.lineTo(0,laserW);
+    ctx.quadraticCurveTo(-laserLen*0.5,laserW*1.2,-laserLen,0);
+    ctx.closePath();ctx.fill();
+    // Inner white-hot core
+    ctx.shadowBlur=8;ctx.shadowColor='#FFF';
+    ctx.fillStyle='rgba(255,255,255,0.9)';
+    ctx.beginPath();
+    ctx.moveTo(-laserLen*0.4,0);
+    ctx.quadraticCurveTo(0,-laserW*0.3,laserLen*0.6,0);
+    ctx.quadraticCurveTo(0,laserW*0.3,-laserLen*0.4,0);
+    ctx.closePath();ctx.fill();
+    // Tip spark
+    ctx.fillStyle=col2;ctx.shadowColor=col2;ctx.shadowBlur=12;
+    ctx.beginPath();ctx.arc(laserLen*0.85,0,2+Math.sin(performance.now()*0.02)*0.8,0,Math.PI*2);ctx.fill();
+    ctx.shadowBlur=0;ctx.restore();
+  }}}
   // Draw enemies
   for(const e of enemies){if(!e.dead){const ex=e.x-cameraX;if(ex>-60&&ex<W+60){ctx.save();ctx.translate(ex,e.y);
     const ew=e.type.w,eh=e.type.h;
