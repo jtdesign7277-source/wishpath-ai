@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-18-v293-purple-edge-div';
+    var APP_VERSION = '2026-04-18-v294-rounded-edge';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -93,7 +93,11 @@
     #wpPurpleEdge {
       position: fixed; inset: 0; z-index: 99997; pointer-events: none;
       border: 2px solid rgba(113,50,245,0.45);
+      border-radius: 44px;
       box-shadow: inset 0 0 12px rgba(113,50,245,0.15), inset 0 0 4px rgba(113,50,245,0.25);
+    }
+    @supports (border-radius: env(safe-area-inset-top)) {
+      #wpPurpleEdge { border-radius: max(44px, env(safe-area-inset-top, 44px)); }
     }
 
     /* Glass card — Kraken premium frost */
