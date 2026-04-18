@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-18-v297-faster-ticker';
+    var APP_VERSION = '2026-04-18-v298-fix-starfield-bleed';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -1696,21 +1696,24 @@
       .mobile-home.active {
         display: flex; flex-direction: column;
         position: fixed; top: 0; left: 0; right: 0;
-        bottom: 0; background: transparent; z-index: 500;
+        bottom: 0; background: var(--kraken-bg, #0B0611); z-index: 500;
         overflow: hidden;
       }
       #mobileHomeContent {
         flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
         overscroll-behavior: contain;
         padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 20px);
+        background: var(--kraken-bg, #0B0611);
       }
       #mobileChat {
         flex: 1; display: none; flex-direction: column; overflow: hidden;
+        background: var(--kraken-bg, #0B0611);
       }
       #mobileChatMessages {
         flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
         overscroll-behavior: contain;
         padding: 16px 16px;
+        background: var(--kraken-bg, #0B0611);
         padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 20px);
       }
       .mobile-chat-back {
@@ -1720,7 +1723,7 @@
         font-family: inherit; flex-shrink: 0; text-align: left;
       }
       .mobile-chat-back:active { color: rgba(255,255,255,0.85); }
-      .mobile-home-inner { padding: 0 20px calc(80px + env(safe-area-inset-bottom)); background: linear-gradient(to bottom, #131020 0%, var(--kraken-bg, #0B0611) 80px); }
+      .mobile-home-inner { padding: 0 20px calc(80px + env(safe-area-inset-bottom)); background: var(--kraken-bg, #0B0611); min-height: 100%; }
       /* Personalized mobile home header */
       .mobile-home-topbar {
         padding: 0;
@@ -2197,6 +2200,9 @@
         background: #191919 !important;
       }
       .main, .main-header {
+        background: #191919 !important;
+      }
+      .mobile-home.active, #mobileHomeContent, .mobile-home-inner {
         background: #191919 !important;
       }
       .coach-messages {
