@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-18-v294-rounded-edge';
+    var APP_VERSION = '2026-04-18-v295-fix-market-prices';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -16066,41 +16066,35 @@
     }
 
     async function fetchAlpacaQuotes(symbols) {
-      var creds = await getAlpacaCreds();
-      var alpacaHeaders = creds ? { 'APCA-API-KEY-ID': creds.key, 'APCA-API-SECRET-KEY': creds.secret } : {};
+      // Use watchlist-quotes edge function (Twelve Data proxy) — avoids CORS issues with direct Alpaca calls
       var stocks = symbols.filter(function(s) { return s.indexOf('/') === -1; });
       var cryptos = symbols.filter(function(s) { return s.indexOf('/') !== -1; });
       var results = [];
+      // Fetch stocks via watchlist-quotes edge function
       if (stocks.length > 0) {
         try {
-          var res = await fetch(ALPACA_DATA + '/v2/stocks/snapshots?symbols=' + encodeURIComponent(stocks.join(',')), { headers: alpacaHeaders });
-          var data = await res.json();
-          Object.keys(data).forEach(function(sym) {
-            var snap = data[sym];
-            var price = snap.latestTrade ? snap.latestTrade.p : (snap.dailyBar ? snap.dailyBar.c : 0);
-            var prevClose = snap.prevDailyBar ? snap.prevDailyBar.c : price;
-            var change = price - prevClose;
-            var pct = prevClose !== 0 ? (change / prevClose) * 100 : 0;
-            var nameObj = MAG7.find(function(s) { return s.symbol === sym; });
-            results.push({ symbol: sym, name: nameObj ? nameObj.name : sym, price: price, change: change, changePercent: pct, previousClose: prevClose });
-          });
-        } catch(e) { console.error('Alpaca stocks fetch error:', e); }
+          var res = await fetch(SUPABASE_FN + '/watchlist-quotes?symbols=' + encodeURIComponent(stocks.join(',')));
+          if (res.ok) {
+            var json = await res.json();
+            (json.data || []).forEach(function(q) {
+              var nameObj = MAG7.find(function(s) { return s.symbol === q.symbol; });
+              results.push({ symbol: q.symbol, name: nameObj ? nameObj.name : (q.name || q.symbol), price: q.price || 0, change: q.change || 0, changePercent: q.percentChange || 0, previousClose: q.previousClose || 0 });
+            });
+          }
+        } catch(e) { console.error('Watchlist stocks fetch error:', e); }
       }
+      // Fetch crypto via watchlist-quotes (Twelve Data uses BTC/USD format)
       if (cryptos.length > 0) {
         try {
-          var res = await fetch(ALPACA_DATA + '/v1beta3/crypto/us/snapshots?symbols=' + encodeURIComponent(cryptos.join(',')), { headers: alpacaHeaders });
-          var data = await res.json();
-          var snaps = data.snapshots || data;
-          Object.keys(snaps).forEach(function(sym) {
-            var snap = snaps[sym];
-            var price = snap.latestTrade ? snap.latestTrade.p : (snap.dailyBar ? snap.dailyBar.c : 0);
-            var prevClose = snap.prevDailyBar ? snap.prevDailyBar.c : price;
-            var change = price - prevClose;
-            var pct = prevClose !== 0 ? (change / prevClose) * 100 : 0;
-            var nameObj = CRYPTO.find(function(c) { return c.symbol === sym; });
-            results.push({ symbol: sym, name: nameObj ? nameObj.name : sym, price: price, change: change, changePercent: pct, previousClose: prevClose });
-          });
-        } catch(e) { console.error('Alpaca crypto fetch error:', e); }
+          var res = await fetch(SUPABASE_FN + '/watchlist-quotes?symbols=' + encodeURIComponent(cryptos.join(',')));
+          if (res.ok) {
+            var json = await res.json();
+            (json.data || []).forEach(function(q) {
+              var nameObj = CRYPTO.find(function(c) { return c.symbol === q.symbol; });
+              results.push({ symbol: q.symbol, name: nameObj ? nameObj.name : (q.name || q.symbol), price: q.price || 0, change: q.change || 0, changePercent: q.percentChange || 0, previousClose: q.previousClose || 0 });
+            });
+          }
+        } catch(e) { console.error('Watchlist crypto fetch error:', e); }
       }
       return results;
     }
