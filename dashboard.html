@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-15-v293-lc-header-opaque';
+    var APP_VERSION = '2026-04-18-v289-kill-purple-edge';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -68,16 +68,16 @@
       /* Mobile nav */
       --nav-h: 56px;
     }
-    html { overflow-x: hidden !important; overscroll-behavior-x: none !important; }
-    body { font-family: 'Inter', system-ui, sans-serif; background: var(--kraken-bg); color: var(--text); min-height: 100vh; display: flex; overflow-x: hidden !important; overscroll-behavior-x: none !important; max-width: 100vw !important; }
+    html { overflow-x: hidden !important; overscroll-behavior-x: none !important; width: 100%; height: 100%; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--kraken-bg); color: var(--text); min-height: 100vh; display: flex; overflow-x: hidden !important; overscroll-behavior-x: none !important; max-width: 100vw !important; width: 100%; height: 100%; margin: 0; padding: 0; border: none; outline: none; box-shadow: none; }
 
     /* ── Liquid Kraken 2026 ── */
     /* Layered background with depth */
     body::before {
       content: ''; position: fixed; inset: 0; z-index: -2;
       background:
-        linear-gradient(170deg, transparent 0%, rgba(46,51,80,0.35) 100%),
-        radial-gradient(circle at 50% 18%, rgba(113,50,245,0.08) 0%, #0B0611 40%, #16121F 100%);
+        linear-gradient(170deg, transparent 0%, rgba(46,51,80,0.18) 100%),
+        radial-gradient(circle at 50% 18%, rgba(113,50,245,0.08) 0%, #0B0611 40%, #0B0611 100%);
       background-attachment: fixed;
     }
     /* Subtle animated grain overlay */
@@ -975,13 +975,6 @@
     .wish-textarea-wrap { position: relative; border-radius: 14px; padding: 2px; overflow: hidden; }
     .wish-textarea-wrap::before { content: ''; position: absolute; inset: -50%; background: conic-gradient(from 0deg, transparent 0%, rgba(140,100,240,0.7) 10%, transparent 20%, transparent 50%, rgba(113,50,245,0.6) 60%, transparent 70%, transparent 100%); animation: wishBorderSpin 3s linear infinite; z-index: 0; }
     @keyframes wishBorderSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    /* Racetrack perimeter border — intro animation */
-    #wp-racetrack { position: fixed; inset: 0; pointer-events: none; z-index: 9999; }
-    #wp-racetrack svg { width: 100%; height: 100%; display: block; }
-    #wp-racetrack rect { fill: none; stroke: url(#wp-racetrack-gradient); stroke-width: 2; filter: drop-shadow(0 0 8px rgba(113,50,245,0.6)) drop-shadow(0 0 16px rgba(113,50,245,0.35)); animation: wpRacetrack 2.2s cubic-bezier(0.65,0,0.35,1) forwards; }
-    @keyframes wpRacetrack { 0% { stroke-dashoffset: 1000; opacity: 1; } 85% { stroke-dashoffset: 0; opacity: 1; } 100% { stroke-dashoffset: 0; opacity: 1; } }
-    #wp-racetrack.wp-racetrack-done rect { animation: wpRacetrackPulse 4s ease-in-out infinite; stroke-dashoffset: 0; }
-    @keyframes wpRacetrackPulse { 0%, 100% { filter: drop-shadow(0 0 8px rgba(113,50,245,0.55)) drop-shadow(0 0 16px rgba(113,50,245,0.3)); } 50% { filter: drop-shadow(0 0 12px rgba(113,50,245,0.75)) drop-shadow(0 0 22px rgba(113,50,245,0.45)); } }
     .wish-textarea-wrap-inner { position: relative; z-index: 1; background: rgba(10,10,15,0.95); border-radius: 12px; }
     .wish-textarea { width: 100%; min-height: 140px; padding: 16px; background: transparent; border: none; border-radius: 12px; color: var(--text); font: inherit; font-size: 0.95rem; line-height: 1.6; outline: none; resize: none; transition: all 0.3s ease; position: relative; z-index: 1; }
     .wish-textarea:focus { box-shadow: 0 0 20px rgba(113,50,245,0.25); }
@@ -1619,32 +1612,11 @@
         padding: 0 18px calc(18px + env(safe-area-inset-bottom));
       }
       .mobile-ask-ai-composer {
-        background: linear-gradient(135deg, rgba(167,139,250,0.12) 0%, rgba(255,255,255,0.04) 100%), rgba(167,139,250,0.08);
+        background: #232323;
         border: 1px solid rgba(255,255,255,0.08);
-        border-radius: 9999px;
+        border-radius: 28px;
         padding: 18px 16px 12px;
-        box-shadow:
-          inset 0 1px 0 rgba(255,255,255,0.15),
-          inset 0 0 0 1px rgba(255,255,255,0.06),
-          0 8px 32px rgba(167,139,250,0.25),
-          0 2px 8px rgba(0,0,0,0.2);
-        backdrop-filter: blur(24px) saturate(180%);
-        -webkit-backdrop-filter: blur(24px) saturate(180%);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      }
-      .mobile-ask-ai-composer:focus-within {
-        box-shadow:
-          inset 0 1px 0 rgba(255,255,255,0.2),
-          inset 0 0 0 1px rgba(255,255,255,0.1),
-          0 12px 40px rgba(167,139,250,0.35),
-          0 4px 12px rgba(0,0,0,0.3);
-        background: linear-gradient(135deg, rgba(167,139,250,0.16) 0%, rgba(255,255,255,0.06) 100%), rgba(167,139,250,0.1);
-      }
-      @supports not (backdrop-filter: blur(1px)) {
-        .mobile-ask-ai-composer {
-          background: rgba(167,139,250,0.15);
-          box-shadow: 0 4px 16px rgba(0,0,0,0.3);
-        }
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
       }
       .ask-ai-textarea {
         width: 100%;
@@ -1664,8 +1636,7 @@
         box-shadow: none;
         transition: none;
       }
-      .ask-ai-textarea::placeholder { color: rgba(255,255,255,0.4); transition: color 0.3s ease; }
-      .ask-ai-textarea:focus::placeholder { color: rgba(255,255,255,0.25); }
+      .ask-ai-textarea::placeholder { color: rgba(255,255,255,0.34); }
       .mobile-ask-ai-toolbar {
         display: flex;
         align-items: center;
@@ -1943,10 +1914,8 @@
       .tmpl-topbar-btn { background: none; border: none; color: rgba(255,255,255,0.5); font-size: 20px; cursor: pointer; padding: 4px 8px; line-height: 1; font-family: inherit; -webkit-tap-highlight-color: transparent; }
       .tmpl-topbar-btn:active { color: rgba(255,255,255,0.9); }
       .tmpl-search-wrap { padding: 12px 16px 0; flex-shrink: 0; }
-      .tmpl-search { width: 100%; padding: 11px 16px 11px 40px; background: linear-gradient(135deg, rgba(167,139,250,0.1) 0%, rgba(255,255,255,0.03) 100%), rgba(167,139,250,0.06); border: 1px solid rgba(255,255,255,0.08); border-radius: 9999px; color: rgba(255,255,255,0.9); font: inherit; font-size: 15px; outline: none; backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), inset 0 0 0 1px rgba(255,255,255,0.05), 0 4px 16px rgba(167,139,250,0.15), 0 1px 4px rgba(0,0,0,0.15); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='rgba(255,255,255,0.45)' stroke-width='2' viewBox='0 0 24 24'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: 12px center; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-      .tmpl-search:focus { background: linear-gradient(135deg, rgba(167,139,250,0.14) 0%, rgba(255,255,255,0.05) 100%), rgba(167,139,250,0.08); box-shadow: inset 0 1px 0 rgba(255,255,255,0.16), inset 0 0 0 1px rgba(255,255,255,0.08), 0 6px 24px rgba(167,139,250,0.22), 0 2px 8px rgba(0,0,0,0.2); }
-      .tmpl-search::placeholder { color: rgba(255,255,255,0.35); transition: color 0.3s ease; }
-      .tmpl-search:focus::placeholder { color: rgba(255,255,255,0.22); }
+      .tmpl-search { width: 100%; padding: 11px 16px 11px 40px; background: #252525; border: 1px solid rgba(255,255,255,0.09); border-radius: 12px; color: rgba(255,255,255,0.9); font: inherit; font-size: 15px; outline: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='rgba(255,255,255,0.35)' stroke-width='2' viewBox='0 0 24 24'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: 12px center; }
+      .tmpl-search::placeholder { color: rgba(255,255,255,0.3); }
       .tmpl-cats-wrap { padding: 12px 16px 0; flex-shrink: 0; overflow-x: auto; -webkit-overflow-scrolling: touch; display: flex; gap: 8px; }
       .tmpl-cats-wrap::-webkit-scrollbar { display: none; }
       .tmpl-cat { display: inline-flex; align-items: center; gap: 5px; padding: 7px 14px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); background: #252525; color: rgba(255,255,255,0.6); font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; white-space: nowrap; flex-shrink: 0; transition: all 0.15s; -webkit-tap-highlight-color: transparent; }
@@ -2345,7 +2314,6 @@
         gap: 0;
         background: transparent;
         border: none;
-        border-top: none !important;
         border-radius: 0;
         border-bottom: none;
         box-shadow: none;
@@ -3359,59 +3327,36 @@
         position: fixed;
         inset: 0;
         z-index: 601;
-        background: radial-gradient(circle at 50% 30%, rgba(113,50,245,0.12) 0%, #0B0611 50%, #16121F 100%);
-        background-attachment: fixed;
+        background: var(--bg, #0a0a0a);
         display: flex;
         flex-direction: column;
       }
       .lc-topbar {
-        position: sticky;
-        top: 0;
-        height: 56px;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 0 16px;
+        padding: calc(max(12px, env(safe-area-inset-top)) + 4px) 16px 10px;
         flex-shrink: 0;
-        background: #0B0611;
-        border-bottom: 1px solid rgba(113,50,245,0.2);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        z-index: 1000;
-        isolation: isolate;
-      }
-      .lc-topbar::before {
-        content: '';
-        position: absolute;
-        top: -64px;
-        left: 0;
-        right: 0;
-        height: 64px;
-        background: #0B0611;
-        z-index: -1;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
       }
       .lc-back-btn, .lc-new-btn {
         background: none;
         border: none;
-        color: #F0EFF5;
-        font-size: 24px;
-        width: 44px;
-        height: 44px;
+        color: rgba(255,255,255,0.6);
+        cursor: pointer;
         padding: 8px;
         display: flex;
         align-items: center;
         justify-content: center;
-        cursor: pointer;
         -webkit-tap-highlight-color: transparent;
+        border-radius: 10px;
         transition: all 0.15s ease;
       }
-      .lc-back-btn:active, .lc-new-btn:active { color: #F0EFF5; }
+      .lc-back-btn:active, .lc-new-btn:active { background: rgba(255,255,255,0.06); color: #fff; }
       .lc-topbar-title {
-        font-size: 18px;
+        font-size: 0.95rem;
         font-weight: 600;
-        color: #F0EFF5;
-        letter-spacing: -0.2px;
-        margin: 0;
+        color: rgba(255,255,255,0.85);
       }
       .lc-empty-state {
         flex: 1;
@@ -3453,12 +3398,12 @@
         overflow-y: scroll;
         -webkit-overflow-scrolling: touch;
         overscroll-behavior-y: contain;
-        padding: 24px 16px 20px 16px;
+        padding: 16px 16px;
         display: none;
       }
       .lc-messages.has-messages { display: block; }
       .lc-msg {
-        margin-bottom: 18px;
+        margin-bottom: 20px;
         animation: fadeInUp 0.25s ease;
       }
       .lc-msg-user {
@@ -3466,42 +3411,30 @@
         justify-content: flex-end;
       }
       .lc-msg-user .lc-bubble {
-        background: rgba(113,50,245,0.45);
-        border: 1px solid rgba(145,107,230,0.5);
+        background: linear-gradient(135deg, rgba(113,50,245,0.3) 0%, rgba(80,30,200,0.18) 50%, rgba(113,50,245,0.12) 100%);
+        border: 1px solid rgba(113,50,245,0.3);
         border-radius: 18px 18px 4px 18px;
-        padding: 18px 20px;
+        padding: 12px 16px;
         max-width: 85%;
-        color: #F0EFF5;
+        color: rgba(255,255,255,0.95);
         font-size: 15px;
-        line-height: 1.5;
-        box-shadow: 0 8px 32px rgba(113,50,245,0.3), inset 0 1px 0 rgba(255,255,255,0.12);
-        backdrop-filter: blur(16px) saturate(140%);
-        -webkit-backdrop-filter: blur(16px) saturate(140%);
-      }
-      @supports not (backdrop-filter: blur(1px)) {
-        .lc-msg-user .lc-bubble {
-          background: rgba(113,50,245,0.85);
-          box-shadow: 0 8px 32px rgba(113,50,245,0.3);
-        }
+        line-height: 1.55;
+        box-shadow: 0 4px 16px rgba(113,50,245,0.15), inset 0 1px 0 rgba(255,255,255,0.06);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
       }
       .lc-msg-ai .lc-bubble {
-        padding: 18px 20px;
+        padding: 14px 16px;
         max-width: 92%;
-        color: #F0EFF5;
+        color: rgba(255,255,255,0.9);
         font-size: 15px;
-        line-height: 1.5;
-        background: rgba(37,37,37,0.85);
-        border: 1px solid rgba(104,107,130,0.35);
+        line-height: 1.65;
+        background: linear-gradient(135deg, rgba(42,42,52,0.6) 0%, rgba(30,20,50,0.4) 50%, rgba(42,42,52,0.3) 100%);
+        border: 1px solid rgba(113,50,245,0.12);
         border-radius: 18px 18px 18px 4px;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -2px 0 rgba(0,0,0,0.6);
-        backdrop-filter: blur(16px) saturate(140%);
-        -webkit-backdrop-filter: blur(16px) saturate(140%);
-      }
-      @supports not (backdrop-filter: blur(1px)) {
-        .lc-msg-ai .lc-bubble {
-          background: rgba(37,37,37,0.95);
-          box-shadow: 0 8px 32px rgba(0,0,0,0.45);
-        }
+        box-shadow: 0 2px 12px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
       }
       .lc-msg-ai .lc-thinking {
         display: inline-flex;
@@ -4719,19 +4652,6 @@
   <script src="https://code.highcharts.com/gantt/modules/gantt.js"></script>
 </head>
 <body>
-  <!-- Racetrack perimeter border: purple light travels around viewport edge once, then pulses -->
-  <div id="wp-racetrack" aria-hidden="true">
-    <svg preserveAspectRatio="none" pointer-events="none">
-      <defs>
-        <linearGradient id="wp-racetrack-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%"   stop-color="#a78bfa"/>
-          <stop offset="50%"  stop-color="#7132F5"/>
-          <stop offset="100%" stop-color="#a78bfa"/>
-        </linearGradient>
-      </defs>
-      <rect x="6" y="6" rx="24" ry="24"></rect>
-    </svg>
-  </div>
   <!-- Ambient particle background -->
   <canvas id="wpAmbientCanvas" style="position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:0.45;"></canvas>
   <!-- Paywall Modal -->
@@ -5790,9 +5710,13 @@
         <div class="lc-fullscreen" id="lcFullscreen" style="display:none;">
           <!-- Top bar -->
           <div class="lc-topbar">
-            <button class="lc-back-btn" onclick="closeLifeCoachView()">←</button>
+            <button class="lc-back-btn" onclick="closeLifeCoachView()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            </button>
             <span class="lc-topbar-title">Life Coach</span>
-            <button class="lc-new-btn" onclick="startNewLifeCoachChat()">✚</button>
+            <button class="lc-new-btn" onclick="startNewLifeCoachChat()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
           </div>
           <!-- Empty state -->
           <div class="lc-empty-state" id="lcEmptyState">
@@ -5996,6 +5920,12 @@
             <div class="wish-runner-hi-value" id="wp-wish-runner-gameover-hi">0</div>
             <div class="wish-runner-new-record" id="wp-wr-new-record" style="display:none;">NEW RECORD!</div>
             <div class="wish-runner-level-info">LEVEL REACHED <span id="wp-wr-death-level">1</span></div>
+            <!-- Leaderboard -->
+            <div id="wp-wr-leaderboard" style="margin-top:14px;width:100%;max-width:300px;">
+              <div style="font-size:11px;font-weight:700;letter-spacing:0.15em;color:rgba(255,255,255,0.5);text-transform:uppercase;margin-bottom:8px;text-align:center;">Top Players</div>
+              <div id="wp-wr-leaderboard-list" style="display:flex;flex-direction:column;gap:4px;max-height:180px;overflow-y:auto;"></div>
+              <div id="wp-wr-leaderboard-you" style="margin-top:8px;padding:8px 12px;border-radius:10px;background:rgba(74,222,128,0.12);border:1px solid rgba(74,222,128,0.25);font-size:12px;font-weight:600;color:#4ade80;text-align:center;display:none;"></div>
+            </div>
             <button type="button" class="wish-runner-restart-btn" onclick="restartWishRunnerGame()">PLAY AGAIN</button>
             <button type="button" style="margin-top:8px;padding:10px 40px;border-radius:12px;font-weight:700;font-size:13px;border:2px solid rgba(255,255,255,0.2);cursor:pointer;color:rgba(255,255,255,0.7);background:transparent;text-transform:uppercase;letter-spacing:0.1em;" onclick="document.getElementById('wp-wish-runner-gameover').hidden=true;showView('home');">END GAME</button>
           </div>
@@ -8831,6 +8761,116 @@
         }
       }
 
+      // === LEADERBOARD SYSTEM ===
+      var _wrPlayerName = '';
+
+      async function _wrGetPlayerName() {
+        if (_wrPlayerName) return _wrPlayerName;
+        try {
+          var sb = getSupabase();
+          var user = await getUser();
+          if (!user) return 'Guest';
+          // Try greeting name first (user-set display name)
+          var { data } = await sb.from('user_notes').select('content').eq('user_id', user.id).eq('title', '__WP_GREETING_NAME__').limit(1);
+          if (data && data.length > 0 && data[0].content && data[0].content.trim()) {
+            _wrPlayerName = data[0].content.trim();
+            return _wrPlayerName;
+          }
+          // Fall back to user_profiles display_name
+          var { data: prof } = await sb.from('user_profiles').select('display_name').eq('id', user.id).single();
+          if (prof && prof.display_name) {
+            _wrPlayerName = prof.display_name;
+            return _wrPlayerName;
+          }
+          // Fall back to email prefix
+          _wrPlayerName = user.email ? user.email.split('@')[0] : 'Player';
+          return _wrPlayerName;
+        } catch (e) {
+          return 'Player';
+        }
+      }
+
+      async function _wrSubmitScore(finalScore, level) {
+        try {
+          var sb = getSupabase();
+          var user = await getUser();
+          if (!user) return;
+          var name = await _wrGetPlayerName();
+          await sb.from('wish_runner_leaderboard').insert({
+            user_id: user.id,
+            display_name: name,
+            score: finalScore,
+            level: level
+          });
+        } catch (e) { console.warn('Leaderboard submit failed:', e); }
+      }
+
+      async function _wrLoadLeaderboard(myScore) {
+        var listEl = document.getElementById('wp-wr-leaderboard-list');
+        var youEl = document.getElementById('wp-wr-leaderboard-you');
+        if (!listEl) return;
+        listEl.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,0.3);font-size:11px;padding:8px;">Loading...</div>';
+        try {
+          var sb = getSupabase();
+          var user = await getUser();
+          // Get top 10 all-time best scores (one per user — their personal best)
+          var { data: top } = await sb.rpc('get_wr_top_scores', {});
+          // Fallback: if RPC not available, raw query
+          if (!top) {
+            var { data: raw } = await sb.from('wish_runner_leaderboard').select('display_name, score, level, user_id').order('score', { ascending: false }).limit(50);
+            // Deduplicate: keep best per user
+            var seen = {};
+            top = [];
+            if (raw) {
+              for (var ri = 0; ri < raw.length; ri++) {
+                if (!seen[raw[ri].user_id]) {
+                  seen[raw[ri].user_id] = true;
+                  top.push(raw[ri]);
+                  if (top.length >= 10) break;
+                }
+              }
+            }
+          }
+          if (!top || top.length === 0) {
+            listEl.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,0.3);font-size:11px;padding:8px;">No scores yet — be the first!</div>';
+            return;
+          }
+          var html = '';
+          var medals = ['🥇', '🥈', '🥉'];
+          var myRank = -1;
+          for (var i = 0; i < top.length; i++) {
+            var entry = top[i];
+            var isMe = user && entry.user_id === user.id;
+            if (isMe) myRank = i + 1;
+            var rankLabel = i < 3 ? medals[i] : String(i + 1);
+            var bg = isMe ? 'rgba(74,222,128,0.1)' : 'rgba(255,255,255,0.04)';
+            var border = isMe ? 'border:1px solid rgba(74,222,128,0.2);' : 'border:1px solid rgba(255,255,255,0.06);';
+            var nameColor = isMe ? '#4ade80' : 'rgba(255,255,255,0.85)';
+            html += '<div style="display:flex;align-items:center;padding:6px 10px;border-radius:8px;background:' + bg + ';' + border + '">';
+            html += '<span style="width:24px;font-size:13px;text-align:center;">' + rankLabel + '</span>';
+            html += '<span style="flex:1;font-size:12px;font-weight:600;color:' + nameColor + ';margin-left:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (entry.display_name || 'Player').replace(/</g, '&lt;') + '</span>';
+            html += '<span style="font-size:12px;font-weight:700;color:#fbbf24;margin-left:8px;">' + String(entry.score).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '</span>';
+            html += '<span style="font-size:10px;color:rgba(255,255,255,0.35);margin-left:6px;">L' + entry.level + '</span>';
+            html += '</div>';
+          }
+          listEl.innerHTML = html;
+          // Show user's rank if not in top 10
+          if (youEl && user && myRank === -1 && myScore > 0) {
+            var name = await _wrGetPlayerName();
+            // Find user's rank
+            var { count } = await sb.from('wish_runner_leaderboard').select('id', { count: 'exact', head: true }).gt('score', myScore);
+            var approxRank = (count || 0) + 1;
+            youEl.textContent = 'You: #' + approxRank + ' — ' + name + ' — ' + String(myScore).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            youEl.style.display = 'block';
+          } else if (youEl && myRank > 0) {
+            youEl.style.display = 'none';
+          }
+        } catch (e) {
+          console.warn('Leaderboard load failed:', e);
+          listEl.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,0.3);font-size:11px;padding:8px;">Could not load leaderboard</div>';
+        }
+      }
+
       var _lastScoreMilestone = 0;
       function updateScoreEl() {
         var el = document.getElementById('wp-wish-runner-score');
@@ -9562,8 +9602,29 @@
                 gameOver = true;
                 _deathTime = Date.now();
                 spawnExplosion(player.x, player.y, '#FF5252', 25);
-                triggerScreenShake(8, 0.5);
+                spawnExplosion(player.x - 15, player.y + 10, '#FF9800', 15);
+                spawnExplosion(player.x + 15, player.y - 10, '#FDE047', 12);
+                triggerScreenShake(10, 0.6);
+                _deathFlash = 1.0;
                 targets = []; bullets = []; enemyBullets = [];
+                saveHigh(score);
+                var _bDeathScore = score;
+                var _bDeathHi = Math.max(highScore, score);
+                var _bDeathLevel = currentLevel;
+                _wrSubmitScore(_bDeathScore, _bDeathLevel);
+                setTimeout(function() {
+                  var go = document.getElementById('wp-wish-runner-gameover');
+                  var fs = document.getElementById('wp-wish-runner-final');
+                  var goHi = document.getElementById('wp-wish-runner-gameover-hi');
+                  var newRec = document.getElementById('wp-wr-new-record');
+                  var deathLvl = document.getElementById('wp-wr-death-level');
+                  if (fs) fs.textContent = String(_bDeathScore);
+                  if (goHi) goHi.textContent = String(_bDeathHi);
+                  if (newRec) newRec.style.display = (_bDeathScore >= _bDeathHi && _bDeathScore > 0) ? 'block' : 'none';
+                  if (deathLvl) deathLvl.textContent = String(_bDeathLevel);
+                  if (go) { go.hidden = false; go.removeAttribute('hidden'); go.style.display = 'flex'; }
+                  _wrLoadLeaderboard(_bDeathScore);
+                }, 800);
               }
             }
           }
@@ -9659,6 +9720,9 @@
               saveHigh(score);
               var _deathScore = score;
               var _deathHi = Math.max(highScore, score);
+              var _deathLevel = currentLevel;
+              // Submit to leaderboard (async, non-blocking)
+              _wrSubmitScore(_deathScore, _deathLevel);
               setTimeout(function() {
                 var go = document.getElementById('wp-wish-runner-gameover');
                 var fs = document.getElementById('wp-wish-runner-final');
@@ -9668,8 +9732,10 @@
                 if (fs) fs.textContent = String(_deathScore);
                 if (goHi) goHi.textContent = String(_deathHi);
                 if (newRec) newRec.style.display = (_deathScore >= _deathHi && _deathScore > 0) ? 'block' : 'none';
-                if (deathLvl) deathLvl.textContent = String(currentLevel);
+                if (deathLvl) deathLvl.textContent = String(_deathLevel);
                 if (go) { go.hidden = false; go.removeAttribute('hidden'); go.style.display = 'flex'; }
+                // Load leaderboard
+                _wrLoadLeaderboard(_deathScore);
               }, 800);
               return;
             }
@@ -9946,6 +10012,8 @@
               saveHigh(score);
               var _deathScore = score;
               var _deathHi = Math.max(highScore, score);
+              var _deathLevel = currentLevel;
+              _wrSubmitScore(_deathScore, _deathLevel);
               // Delay gameover overlay so explosion plays out
               setTimeout(function() {
                 var go = document.getElementById('wp-wish-runner-gameover');
@@ -9956,8 +10024,9 @@
                 if (fs) fs.textContent = String(_deathScore);
                 if (goHi) goHi.textContent = String(_deathHi);
                 if (newRec) newRec.style.display = (_deathScore >= _deathHi && _deathScore > 0) ? 'block' : 'none';
-                if (deathLvl) deathLvl.textContent = String(currentLevel);
+                if (deathLvl) deathLvl.textContent = String(_deathLevel);
                 if (go) { go.hidden = false; go.removeAttribute('hidden'); go.style.display = 'flex'; }
+                _wrLoadLeaderboard(_deathScore);
               }, 800);
               break targetLoop;
             }
@@ -20908,37 +20977,6 @@ window.addEventListener('focus', function() {
 document.addEventListener('visibilitychange', function() {
   if (document.visibilityState === 'visible') refreshActiveFMWidgetLayout(false);
 });
-
-/* Racetrack perimeter border initialization */
-(function(){
-  var svg = document.querySelector('#wp-racetrack svg');
-  var rect = svg && svg.querySelector('rect');
-  if (!rect) return;
-  var pad = 6;
-  function sizeRect(){
-    var w = window.innerWidth, h = window.innerHeight;
-    svg.setAttribute('width', w);
-    svg.setAttribute('height', h);
-    svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
-    rect.setAttribute('x', pad);
-    rect.setAttribute('y', pad);
-    rect.setAttribute('width', w - pad*2);
-    rect.setAttribute('height', h - pad*2);
-    rect.setAttribute('rx', 24);
-    rect.setAttribute('ry', 24);
-    /* Perimeter length (approximate): 2*(w + h) - 4*r*(2-pi/2) */
-    /* For simplicity, use stroke-dasharray: 1000 as normalized path unit */
-    rect.setAttribute('pathLength', 1000);
-    rect.setAttribute('stroke-dasharray', 1000);
-    rect.setAttribute('stroke-dashoffset', 1000);
-  }
-  sizeRect();
-  window.addEventListener('resize', sizeRect, { passive: true });
-  /* After lap completes (~2.2s), flip to pulse state */
-  setTimeout(function(){
-    document.getElementById('wp-racetrack').classList.add('wp-racetrack-done');
-  }, 2400);
-})();
 
   </script>
 
