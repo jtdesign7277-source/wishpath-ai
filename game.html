@@ -100,6 +100,41 @@ function playExplosionSound(){
     src.start(ac.currentTime);
   }catch(e){}
 }
+function playNukeSound(){
+  try{
+    const ac=getAudioCtx();if(ac.state==='suspended')ac.resume();
+    // Deep bass rumble
+    const osc=ac.createOscillator();const gain=ac.createGain();
+    osc.type='sawtooth';osc.frequency.setValueAtTime(60,ac.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(20,ac.currentTime+1.2);
+    gain.gain.setValueAtTime(0.2,ac.currentTime);
+    gain.gain.linearRampToValueAtTime(0.25,ac.currentTime+0.1);
+    gain.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+1.5);
+    const filter=ac.createBiquadFilter();filter.type='lowpass';filter.frequency.value=200;
+    osc.connect(filter);filter.connect(gain);gain.connect(ac.destination);
+    osc.start(ac.currentTime);osc.stop(ac.currentTime+1.6);
+    // White noise blast
+    const bufSize=ac.sampleRate*0.8;const buf=ac.createBuffer(1,bufSize,ac.sampleRate);
+    const data=buf.getChannelData(0);for(let i=0;i<bufSize;i++)data[i]=(Math.random()*2-1)*Math.pow(1-i/bufSize,1.5);
+    const src=ac.createBufferSource();src.buffer=buf;
+    const g2=ac.createGain();g2.gain.setValueAtTime(0.01,ac.currentTime);
+    g2.gain.linearRampToValueAtTime(0.2,ac.currentTime+0.05);
+    g2.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.8);
+    src.connect(g2);g2.connect(ac.destination);src.start(ac.currentTime);
+  }catch(e){}
+}
+function playNukeChargeSound(){
+  try{
+    const ac=getAudioCtx();if(ac.state==='suspended')ac.resume();
+    const osc=ac.createOscillator();const gain=ac.createGain();
+    osc.type='sine';osc.frequency.setValueAtTime(400,ac.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(1200,ac.currentTime+0.25);
+    gain.gain.setValueAtTime(0.12,ac.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.35);
+    osc.connect(gain);gain.connect(ac.destination);
+    osc.start(ac.currentTime);osc.stop(ac.currentTime+0.4);
+  }catch(e){}
+}
 // Get laser colors for current level theme
 function getLaserColors(){
   const theme=getTheme();
@@ -131,7 +166,7 @@ let runStartTime=0;
 // Ship — bigger, more combative
 const SHIP_W=68,SHIP_H=38;
 const ship={y:0,vy:0,targetY:0,bankAngle:0,flamePhase:0,trail:[]};
-const SHIP_SPEED=440;
+const SHIP_SPEED=300;
 
 // Maze
 let walls=[];
@@ -218,6 +253,16 @@ let isDragging=false,dragStartY=0,dragShipStartY=0;
 let useMouseFollow=false;
 const keysDown={};
 let lastTime=0;
+
+// NUKE SYSTEM — charges at 1000/3000/5000 pts, bottom-right button
+const NUKE_THRESHOLDS=[1000,3000,5000];
+let nukeCharges=0; // 0-3 charges available
+let nukeLastScore=0; // track score thresholds reached
+let nukeActive=false; // explosion animation playing
+let nukeTimer=0; // explosion duration
+let nukeFlashPhase=0; // visual flash
+let nukeBtnPulse=0; // button glow animation
+const NUKE_DURATION=1.5; // seconds of explosion
 
 // ─── DEEP SPACE STARFIELD (multi-layer parallax) ──────────────
 const STAR_LAYERS=[
@@ -1076,7 +1121,7 @@ function drawWreckage(time){
 function updateShip(dt){
   if(state!==STATE.PLAYING)return;
   // Smooth drag-follow — ship glides to target, never teleports
-  const dy=ship.targetY-ship.y;ship.vy=dy*8;ship.vy=clamp(ship.vy,-SHIP_SPEED,SHIP_SPEED);
+  const dy=ship.targetY-ship.y;ship.vy=dy*4;ship.vy=clamp(ship.vy,-SHIP_SPEED,SHIP_SPEED);
   ship.y+=ship.vy*dt;ship.y=clamp(ship.y,25,H-25);
   ship.bankAngle=lerp(ship.bankAngle,clamp(ship.vy/SHIP_SPEED*0.45,-0.45,0.45),0.3);
 
@@ -1284,6 +1329,7 @@ function startGame(){
   enemies=[];enemySpawnTimer=0;projectiles=[];gunTier=0;gunCooldown=0;gunOrbPickups=[];
   shakeX=0;shakeY=0;shakeDur=0;screenFlash=0;deathTimer=0;blueDiamondHudFlash=0;rocketBoostHudFlash=0;
   comboMultiplier=1;comboTimer=0;
+  nukeCharges=0;nukeLastScore=0;nukeActive=false;nukeTimer=0;nukeBtnPulse=0;
   aButtonPressed=false;useMouseFollow=false;patternWallsLeft=0;
   runStartTime=performance.now();generateWalls();
 }
@@ -1312,6 +1358,34 @@ function update(dt){
     addFloatingText(W/2,H/2,'🚀 WICKED FAST!','#F97316',24);
   }
   if(!aButtonPressed&&rocketBoostActive){rocketBoostActive=false;}
+
+  // NUKE CHARGE — check score thresholds
+  for(let i=0;i<NUKE_THRESHOLDS.length;i++){
+    if(score>=NUKE_THRESHOLDS[i]&&nukeLastScore<NUKE_THRESHOLDS[i]){
+      nukeCharges=Math.min(nukeCharges+1,3);
+      nukeLastScore=NUKE_THRESHOLDS[i];
+      nukeBtnPulse=1.5;
+      playNukeChargeSound();
+      addFloatingText(W-70,H-80,'☢ NUKE READY!','#FDE047',16);
+    }
+  }
+  if(nukeBtnPulse>0)nukeBtnPulse-=dt;
+
+  // NUKE EXPLOSION — destroy all enemies on screen
+  if(nukeActive){
+    nukeTimer-=dt;nukeFlashPhase+=dt*12;
+    if(nukeTimer<=0){nukeActive=false;nukeTimer=0;}
+    // Kill all enemies during explosion
+    for(const e of enemies){
+      if(!e.dead){
+        e.dead=true;
+        const ex=e.x-cameraX;
+        const pts=e.type.pts*2*comboMultiplier;score+=pts;
+        spawnOrbBurst(ex,e.y,['#FF4500','#FDE047','#FFF','#FF2EC4','#22D3EE'],80,14);
+        addFloatingText(ex,e.y-30,'☢ +'+pts.toLocaleString(),'#FDE047',18);
+      }
+    }
+  }
 
   // GUNS — continuous auto-fire with LASER bolts (color matches level theme)
   if(gunCooldown>0)gunCooldown-=dt;
@@ -1706,6 +1780,102 @@ function drawHUD(){
     }
   }
 
+  // ═══ NUKE BUTTON — bottom right, shaded when empty, glows when charged ═══
+  {
+    const nbX=W-65,nbY=H-75;
+    const charged=nukeCharges>0;
+    const now2=performance.now();
+    const breathe2=charged?(0.95+Math.sin(now2*0.005)*0.05):1;
+
+    ctx.save();
+    ctx.translate(nbX,nbY);
+    ctx.scale(breathe2,breathe2);
+
+    if(charged){
+      // Radioactive glow aura
+      const aR=42+Math.sin(now2*0.004)*6;
+      const nukeGlow=ctx.createRadialGradient(0,0,15,0,0,aR);
+      nukeGlow.addColorStop(0,'rgba(253,224,71,0)');
+      nukeGlow.addColorStop(0.4,'rgba(253,224,71,0.15)');
+      nukeGlow.addColorStop(0.7,'rgba(239,68,68,0.1)');
+      nukeGlow.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.fillStyle=nukeGlow;ctx.beginPath();ctx.arc(0,0,aR,0,Math.PI*2);ctx.fill();
+
+      // Outer ring — pulsing danger
+      const ringHue=nukeBtnPulse>0?60:0;
+      ctx.shadowColor=nukeBtnPulse>0?'#FDE047':'#EF4444';
+      ctx.shadowBlur=nukeBtnPulse>0?25:14;
+      ctx.strokeStyle=nukeBtnPulse>0?'#FDE047':`hsl(${ringHue},100%,55%)`;
+      ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(0,0,33,0,Math.PI*2);ctx.stroke();ctx.shadowBlur=0;
+    } else {
+      // Shaded/dimmed ring
+      ctx.strokeStyle='rgba(255,255,255,0.1)';ctx.lineWidth=2;
+      ctx.beginPath();ctx.arc(0,0,33,0,Math.PI*2);ctx.stroke();
+    }
+
+    // Inner fill
+    const nbBg=ctx.createRadialGradient(0,-6,4,0,4,30);
+    if(charged){
+      nbBg.addColorStop(0,'#2A1A00');nbBg.addColorStop(1,'#1A0800');
+    } else {
+      nbBg.addColorStop(0,'#111');nbBg.addColorStop(1,'#080808');
+    }
+    ctx.fillStyle=nbBg;ctx.beginPath();ctx.arc(0,0,30,0,Math.PI*2);ctx.fill();
+
+    // ☢ Radiation symbol
+    if(charged){
+      ctx.shadowColor='#FDE047';ctx.shadowBlur=8;
+      ctx.fillStyle='#FDE047';
+    } else {
+      ctx.fillStyle='rgba(255,255,255,0.15)';
+    }
+    ctx.font='bold 22px Arial';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('☢',0,1);ctx.shadowBlur=0;
+
+    // Charge count pips (1-3 dots)
+    for(let ci=0;ci<3;ci++){
+      const cx2=-10+ci*10,cy2=18;
+      if(ci<nukeCharges){
+        ctx.fillStyle=ci===0?'#22C55E':ci===1?'#FDE047':'#EF4444';
+        ctx.shadowColor=ctx.fillStyle;ctx.shadowBlur=6;
+      } else {
+        ctx.fillStyle='rgba(255,255,255,0.1)';ctx.shadowBlur=0;
+      }
+      ctx.beginPath();ctx.arc(cx2,cy2,3,0,Math.PI*2);ctx.fill();
+    }
+    ctx.shadowBlur=0;
+
+    ctx.restore();
+
+    // Label
+    ctx.font=arcadeFont(6);ctx.textAlign='center';
+    if(charged){
+      ctx.fillStyle='#FDE047';ctx.fillText('NUKE x'+nukeCharges,nbX,nbY+48);
+    } else {
+      ctx.fillStyle='rgba(255,255,255,0.2)';ctx.fillText('NUKE',nbX,nbY+48);
+    }
+  }
+
+  // Nuke explosion overlay
+  if(nukeActive){
+    const np=nukeTimer/NUKE_DURATION;
+    // White flash
+    if(np>0.7){ctx.globalAlpha=(np-0.7)/0.3;ctx.fillStyle='#FFF';ctx.fillRect(0,0,W,H);ctx.globalAlpha=1;}
+    // Fireball expanding ring
+    const ringR=W*(1-np)*1.2;
+    const nukeRG=ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,ringR);
+    nukeRG.addColorStop(0,'rgba(255,200,50,'+np*0.4+')');
+    nukeRG.addColorStop(0.3,'rgba(255,80,0,'+np*0.3+')');
+    nukeRG.addColorStop(0.6,'rgba(200,0,0,'+np*0.15+')');
+    nukeRG.addColorStop(1,'transparent');
+    ctx.fillStyle=nukeRG;ctx.fillRect(0,0,W,H);
+    // Shockwave ring
+    const shockR=W*(1-np)*0.8;
+    ctx.strokeStyle='rgba(255,255,200,'+np*0.6+')';ctx.lineWidth=4;
+    ctx.beginPath();ctx.arc(W/2,H/2,shockR,0,Math.PI*2);ctx.stroke();
+    ctx.globalAlpha=1;
+  }
+
   // Jackpot/warp overlay
   if(jackpotTimer>0){const p2=0.5+Math.sin(performance.now()*0.015)*0.3;ctx.globalAlpha=p2;ctx.font=arcadeFont(20);ctx.fillStyle='#FDE047';ctx.textAlign='center';ctx.shadowColor='#FDE047';ctx.shadowBlur=20;ctx.fillText('★ LEVEL WARP! ★',W/2,H/2-15);ctx.font=arcadeFont(14);ctx.fillText('+'+Math.floor(jackpotScoreAnim).toLocaleString(),W/2,H/2+18);ctx.shadowBlur=0;ctx.globalAlpha=1;}
   if(levelUpFlash>0&&jackpotTimer<=0){const a=Math.min(1,levelUpFlash);ctx.globalAlpha=a*0.8;ctx.font=arcadeFont(22);ctx.fillStyle=theme.edge;ctx.textAlign='center';ctx.shadowColor=theme.edge;ctx.shadowBlur=20;ctx.fillText('LEVEL '+level,W/2,H*0.35);ctx.shadowBlur=0;ctx.globalAlpha=1;}
@@ -1845,36 +2015,42 @@ function draw(){
     ctx.fillText('GUN',0,0);
     ctx.shadowBlur=0;ctx.restore();
   }
-  // Draw projectiles — LASER BEAMS with level-themed colors
-  for(const p of projectiles){if(!p.dead){const sx=p.x-cameraX;if(sx<W+50){
+  // Draw projectiles — LONG LASER STREAKS with level-themed colors
+  for(const p of projectiles){if(!p.dead){const sx=p.x-cameraX;if(sx<W+80){
     const col=p.color||getLaserColors().primary;
     const col2=p.color2||getLaserColors().secondary;
     const age=Math.min((performance.now()-(p.born||0))*0.001,1);
-    const laserLen=32+age*12;const laserW=3.5;
+    const laserLen=60+age*20;const laserW=2.2;
     ctx.save();ctx.translate(sx,p.y);
-    // Outer glow halo
-    ctx.shadowColor=col;ctx.shadowBlur=20;
-    ctx.globalAlpha=0.3;ctx.fillStyle=col;
-    ctx.beginPath();ctx.ellipse(0,0,laserLen*0.7,laserW*3,0,0,Math.PI*2);ctx.fill();
+    // Long outer glow trail
+    ctx.shadowColor=col;ctx.shadowBlur=18;
+    ctx.globalAlpha=0.2;ctx.fillStyle=col;
+    ctx.beginPath();ctx.ellipse(0,0,laserLen*0.85,laserW*2.5,0,0,Math.PI*2);ctx.fill();
     ctx.globalAlpha=1;
-    // Laser beam body — gradient from trail to tip
+    // Laser streak body — long, thin, tapered
     const lg=ctx.createLinearGradient(-laserLen,0,laserLen,0);
-    lg.addColorStop(0,'transparent');lg.addColorStop(0.1,hexToRgba(col,0.3));
-    lg.addColorStop(0.3,col);lg.addColorStop(0.6,col2);lg.addColorStop(0.85,col);lg.addColorStop(1,'transparent');
+    lg.addColorStop(0,'transparent');lg.addColorStop(0.05,hexToRgba(col,0.15));
+    lg.addColorStop(0.2,col);lg.addColorStop(0.5,col2);lg.addColorStop(0.8,col);lg.addColorStop(0.95,hexToRgba(col2,0.6));lg.addColorStop(1,'transparent');
     ctx.fillStyle=lg;
     ctx.beginPath();
     ctx.moveTo(-laserLen,0);
-    ctx.quadraticCurveTo(-laserLen*0.5,-laserW*1.2,0,-laserW);
-    ctx.lineTo(laserLen*0.8,-laserW*0.6);ctx.lineTo(laserLen,0);
-    ctx.lineTo(laserLen*0.8,laserW*0.6);ctx.lineTo(0,laserW);
-    ctx.quadraticCurveTo(-laserLen*0.5,laserW*1.2,-laserLen,0);
+    ctx.lineTo(-laserLen*0.6,-laserW*0.4);
+    ctx.lineTo(-laserLen*0.2,-laserW);
+    ctx.lineTo(laserLen*0.5,-laserW*0.8);
+    ctx.lineTo(laserLen*0.9,-laserW*0.3);ctx.lineTo(laserLen,0);
+    ctx.lineTo(laserLen*0.9,laserW*0.3);
+    ctx.lineTo(laserLen*0.5,laserW*0.8);
+    ctx.lineTo(-laserLen*0.2,laserW);
+    ctx.lineTo(-laserLen*0.6,laserW*0.4);
     ctx.closePath();ctx.fill();
-    // Inner white-hot core
-    ctx.shadowBlur=8;ctx.shadowColor='#FFF';
-    ctx.fillStyle='rgba(255,255,255,0.9)';
+    // Inner white-hot core — thin streak
+    ctx.shadowBlur=6;ctx.shadowColor='#FFF';
+    ctx.fillStyle='rgba(255,255,255,0.95)';
     ctx.beginPath();
-    ctx.moveTo(-laserLen*0.4,0);
-    ctx.quadraticCurveTo(0,-laserW*0.3,laserLen*0.6,0);
+    ctx.moveTo(-laserLen*0.5,0);
+    ctx.lineTo(-laserLen*0.1,-laserW*0.25);
+    ctx.lineTo(laserLen*0.7,0);
+    ctx.lineTo(-laserLen*0.1,laserW*0.25);
     ctx.quadraticCurveTo(0,laserW*0.3,-laserLen*0.4,0);
     ctx.closePath();ctx.fill();
     // Tip spark
@@ -1926,6 +2102,19 @@ canvas.addEventListener('touchstart',(e)=>{
   const canvasX=tx*(W/(isP?rect.height:rect.width));
   const canvasY=ty*(H/(isP?rect.width:rect.height));
 
+  // Check if touching NUKE button (bottom-right)
+  if(nukeCharges>0&&!nukeActive&&Math.abs(canvasX-(W-65))<40&&Math.abs(canvasY-(H-75))<40){
+    nukeCharges--;nukeActive=true;nukeTimer=NUKE_DURATION;nukeFlashPhase=0;
+    playNukeSound();
+    shakeDur=1.0;shakeX=rand(-15,15);shakeY=rand(-15,15);
+    screenFlash=0.8;screenFlashColor='#FF4400';
+    // Massive particle burst from center
+    const cx=W/2,cy=H/2;
+    for(let i=0;i<200;i++){const a=rand(0,Math.PI*2),spd=rand(4,25);
+      spawnP(cx,cy,['#FF4500','#FDE047','#FFF','#FF8800','#FF2200'][randInt(0,4)],Math.cos(a)*spd,Math.sin(a)*spd,rand(0.5,1.5),rand(3,12),0.02);}
+    addFloatingText(W/2,H/2-40,'☢ NUCLEAR BLAST! ☢','#FDE047',26);
+    return;
+  }
   // Check if touching A button area
   if((rocketBoostReady||rocketBoostActive)&&canvasX>W-120&&canvasY>H-110){
     aButtonPressed=true;return;
