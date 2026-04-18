@@ -2,6 +2,10 @@
   Cache-Control: no-cache, no-store, must-revalidate
   Pragma: no-cache
 
+/game.html
+  Cache-Control: no-cache, no-store, must-revalidate
+  Pragma: no-cache
+
 /login.html
   Cache-Control: no-cache, no-store, must-revalidate
 

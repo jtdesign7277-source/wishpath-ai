@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-18-v302-enemy-ships-streak-spacing';
+    var APP_VERSION = '2026-04-18-v303-fix-markets-single-fetch';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -14156,38 +14156,29 @@
     function fetchHomeMarkets() {
       // Hardcode URL — SUPABASE_FN may not be defined yet at call time
       var _MQ = 'https://mszilrexlupzthauoaxb.supabase.co/functions/v1/market-quotes';
-      var stocks = _homeMarketsTickers.filter(function(t) { return t.symbol.indexOf('/') === -1; }).map(function(t) { return t.symbol; });
-      var cryptos = _homeMarketsTickers.filter(function(t) { return t.symbol.indexOf('/') !== -1; }).map(function(t) { return t.symbol; });
-      var results = [];
-      var done = 0;
-      var total = (stocks.length ? 1 : 0) + (cryptos.length ? 1 : 0);
-      if (total === 0) return;
-      function finish() {
-        done++;
-        if (done >= total) {
-          var ordered = [];
-          _homeMarketsTickers.forEach(function(t) {
-            var match = results.find(function(r) { return r.symbol === t.symbol; });
-            if (match) ordered.push(match);
-          });
-          _homeMarketsData = ordered;
-          renderHomeMarkets(ordered);
-        }
-      }
-      if (stocks.length) {
-        fetch(_MQ + '?symbols=' + encodeURIComponent(stocks.join(',')))
-          .then(function(r) { return r.json(); })
-          .then(function(j) { if (j.data) results = results.concat(j.data); })
-          .catch(function(e) { console.error('Home markets stocks error:', e); })
-          .finally(finish);
-      }
-      if (cryptos.length) {
-        fetch(_MQ + '?symbols=' + encodeURIComponent(cryptos.join(',')))
-          .then(function(r) { return r.json(); })
-          .then(function(j) { if (j.data) results = results.concat(j.data); })
-          .catch(function(e) { console.error('Home markets crypto error:', e); })
-          .finally(finish);
-      }
+      var allSymbols = _homeMarketsTickers.map(function(t) { return t.symbol; });
+      console.log('[HomeMarkets] Fetching:', allSymbols.join(','));
+      fetch(_MQ + '?symbols=' + encodeURIComponent(allSymbols.join(',')))
+        .then(function(r) {
+          console.log('[HomeMarkets] Response status:', r.status);
+          return r.json();
+        })
+        .then(function(j) {
+          console.log('[HomeMarkets] Data received:', j.data ? j.data.length + ' items' : 'no data', j);
+          if (j.data && j.data.length) {
+            var ordered = [];
+            _homeMarketsTickers.forEach(function(t) {
+              var match = j.data.find(function(r) { return r.symbol === t.symbol; });
+              if (match) ordered.push(match);
+            });
+            console.log('[HomeMarkets] Ordered:', ordered.length, 'matched of', _homeMarketsTickers.length);
+            _homeMarketsData = ordered;
+            renderHomeMarkets(ordered);
+          } else {
+            console.warn('[HomeMarkets] Empty data, keeping loading state');
+          }
+        })
+        .catch(function(e) { console.error('[HomeMarkets] Fetch error:', e); });
     }
 
     function renderMobileHomeNews() {
