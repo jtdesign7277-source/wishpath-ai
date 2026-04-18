@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-18-v295-fix-market-prices';
+    var APP_VERSION = '2026-04-18-v296-alpaca-market-quotes';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -16066,35 +16066,35 @@
     }
 
     async function fetchAlpacaQuotes(symbols) {
-      // Use watchlist-quotes edge function (Twelve Data proxy) — avoids CORS issues with direct Alpaca calls
+      // Use market-quotes edge function (Alpaca proxy) — avoids CORS and Twelve Data rate limits
       var stocks = symbols.filter(function(s) { return s.indexOf('/') === -1; });
       var cryptos = symbols.filter(function(s) { return s.indexOf('/') !== -1; });
       var results = [];
-      // Fetch stocks via watchlist-quotes edge function
+      // Fetch stocks via market-quotes edge function (Alpaca snapshots)
       if (stocks.length > 0) {
         try {
-          var res = await fetch(SUPABASE_FN + '/watchlist-quotes?symbols=' + encodeURIComponent(stocks.join(',')));
+          var res = await fetch(SUPABASE_FN + '/market-quotes?symbols=' + encodeURIComponent(stocks.join(',')));
           if (res.ok) {
             var json = await res.json();
             (json.data || []).forEach(function(q) {
               var nameObj = MAG7.find(function(s) { return s.symbol === q.symbol; });
-              results.push({ symbol: q.symbol, name: nameObj ? nameObj.name : (q.name || q.symbol), price: q.price || 0, change: q.change || 0, changePercent: q.percentChange || 0, previousClose: q.previousClose || 0 });
+              results.push({ symbol: q.symbol, name: nameObj ? nameObj.name : (q.name || q.symbol), price: q.price || 0, change: q.change || 0, changePercent: q.changePercent || 0, previousClose: q.previousClose || 0 });
             });
           }
-        } catch(e) { console.error('Watchlist stocks fetch error:', e); }
+        } catch(e) { console.error('Market stocks fetch error:', e); }
       }
-      // Fetch crypto via watchlist-quotes (Twelve Data uses BTC/USD format)
+      // Fetch crypto via market-quotes (Alpaca crypto snapshots)
       if (cryptos.length > 0) {
         try {
-          var res = await fetch(SUPABASE_FN + '/watchlist-quotes?symbols=' + encodeURIComponent(cryptos.join(',')));
+          var res = await fetch(SUPABASE_FN + '/market-quotes?symbols=' + encodeURIComponent(cryptos.join(',')));
           if (res.ok) {
             var json = await res.json();
             (json.data || []).forEach(function(q) {
               var nameObj = CRYPTO.find(function(c) { return c.symbol === q.symbol; });
-              results.push({ symbol: q.symbol, name: nameObj ? nameObj.name : (q.name || q.symbol), price: q.price || 0, change: q.change || 0, changePercent: q.percentChange || 0, previousClose: q.previousClose || 0 });
+              results.push({ symbol: q.symbol, name: nameObj ? nameObj.name : (q.name || q.symbol), price: q.price || 0, change: q.change || 0, changePercent: q.changePercent || 0, previousClose: q.previousClose || 0 });
             });
           }
-        } catch(e) { console.error('Watchlist crypto fetch error:', e); }
+        } catch(e) { console.error('Market crypto fetch error:', e); }
       }
       return results;
     }
