@@ -165,6 +165,7 @@ let runStartTime=0;
 
 // Ship — bigger, more combative
 const SHIP_W=68,SHIP_H=38;
+const TOUCH_Y_OFFSET=-80; // Ship renders above finger so player can see it
 const ship={y:0,vy:0,targetY:0,bankAngle:0,flamePhase:0,trail:[]};
 const SHIP_SPEED=300;
 
@@ -2122,6 +2123,8 @@ canvas.addEventListener('touchstart',(e)=>{
   isDragging=true;
   dragStartY=isP?(rect.right-touch.clientX):(touch.clientY-rect.top);
   dragShipStartY=ship.targetY;
+  // Immediately offset ship above finger so it's visible
+  ship.targetY=clamp(ship.targetY+TOUCH_Y_OFFSET,25,H-25);
 },{passive:false});
 
 canvas.addEventListener('touchmove',(e)=>{
