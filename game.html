@@ -221,9 +221,21 @@ let enemySpawnTimer=0;
 const ENEMY_SPAWN_INTERVAL=2.5; // seconds between spawns
 const ENEMY_SPEED=180;
 const ENEMY_TYPES=[
-  {w:40,h:20,hp:1,pts:1500,color:'#EF4444',name:'Scout'},
-  {w:50,h:26,hp:2,pts:3000,color:'#A855F7',name:'Cruiser'},
-  {w:60,h:30,hp:3,pts:5000,color:'#F97316',name:'Destroyer'},
+  {w:44,h:22,hp:1,pts:1500,color:'#EF4444',trim:'#FF8888',engine:'#FF4400',name:'Scout',shootRate:0},
+  {w:52,h:28,hp:2,pts:3000,color:'#A855F7',trim:'#D8B4FE',engine:'#7C3AED',name:'Cruiser',shootRate:2.5},
+  {w:62,h:32,hp:3,pts:5000,color:'#F97316',trim:'#FDBA74',engine:'#EA580C',name:'Destroyer',shootRate:1.8},
+  {w:72,h:36,hp:5,pts:8000,color:'#22D3EE',trim:'#67E8F9',engine:'#0891B2',name:'Dreadnought',shootRate:1.2},
+];
+// Enemy lasers (shot at player)
+let enemyLasers=[];
+const ENEMY_LASER_SPEED=420;
+// Formation patterns
+const FORMATIONS=[
+  {name:'V',count:5,offsets:function(i){return{dx:i*55,dy:(i<3?i-2:i-2)*40};}},
+  {name:'line',count:4,offsets:function(i){return{dx:0,dy:(i-1.5)*50};}},
+  {name:'arc',count:7,offsets:function(i){var a=(i-3)*0.35;return{dx:Math.cos(a)*120-120,dy:Math.sin(a)*100};}},
+  {name:'diamond',count:4,offsets:function(i){var pts=[{dx:0,dy:0},{dx:-50,dy:-45},{dx:-50,dy:45},{dx:-100,dy:0}];return pts[i];}},
+  {name:'swarm',count:6,offsets:function(i){return{dx:rand(-30,30),dy:(i-2.5)*38};}},
 ];
 
 // SPACESHIP GUNS — auto-fire; tier up from diamond gun-orbs
@@ -1327,7 +1339,7 @@ function startGame(){
   ship.y=H/2;ship.vy=0;ship.targetY=H/2;ship.bankAngle=0;ship.trail=[];
   walls=[];diamonds=[];bitcoins=[];blueDiamonds=[];rocketBoosters=[];
   particles=[];deathParticles=[];persistentSmoke=[];floatingTexts=[];speedLines=[];sparkles=[];
-  enemies=[];enemySpawnTimer=0;projectiles=[];gunTier=0;gunCooldown=0;gunOrbPickups=[];
+  enemies=[];enemySpawnTimer=0;projectiles=[];gunTier=0;gunCooldown=0;gunOrbPickups=[];enemyLasers=[];
   shakeX=0;shakeY=0;shakeDur=0;screenFlash=0;deathTimer=0;blueDiamondHudFlash=0;rocketBoostHudFlash=0;
   comboMultiplier=1;comboTimer=0;
   nukeCharges=0;nukeLastScore=0;nukeActive=false;nukeTimer=0;nukeBtnPulse=0;
@@ -1446,24 +1458,48 @@ function update(dt){
   }
   projectiles=projectiles.filter(p=>!p.dead);
 
-  // ENEMY SPAWNING
+  // ENEMY SPAWNING — formation waves
   enemySpawnTimer-=dt;
   if(enemySpawnTimer<=0){
-    enemySpawnTimer=ENEMY_SPAWN_INTERVAL*(0.7+Math.random()*0.6);
-    // Harder enemies as score increases
-    const r=Math.random();const typeIdx=score>10000?(r<0.3?2:r<0.65?1:0):(score>3000?(r<0.15?2:r<0.5?1:0):0);
+    enemySpawnTimer=ENEMY_SPAWN_INTERVAL*(0.8+Math.random()*0.5);
+    // Pick enemy type based on score
+    const r=Math.random();
+    const typeIdx=score>20000?(r<0.15?3:r<0.4?2:r<0.7?1:0):(score>10000?(r<0.25?2:r<0.6?1:0):(score>3000?(r<0.15?2:r<0.5?1:0):0));
     const type=ENEMY_TYPES[typeIdx];
-    enemies.push({x:cameraX+W+100,y:rand(50,H-50),type,hp:type.hp,dead:false,phase:rand(0,6.28),speed:ENEMY_SPEED+rand(-40,40)});
+    // Formation or solo
+    if(Math.random()<0.4&&score>2000){
+      const f=FORMATIONS[randInt(0,FORMATIONS.length-1)];
+      const baseY=rand(80,H-80);
+      for(var fi=0;fi<f.count;fi++){
+        var off=f.offsets(fi);
+        enemies.push({x:cameraX+W+120+off.dx,y:clamp(baseY+off.dy,35,H-35),type,hp:type.hp,dead:false,phase:rand(0,6.28),speed:ENEMY_SPEED+rand(-30,30),shootTimer:type.shootRate>0?rand(0.5,type.shootRate):999,wingPhase:rand(0,6.28)});
+      }
+      enemySpawnTimer+=1.0; // extra delay after formation
+    } else {
+      enemies.push({x:cameraX+W+100,y:rand(50,H-50),type,hp:type.hp,dead:false,phase:rand(0,6.28),speed:ENEMY_SPEED+rand(-40,40),shootTimer:type.shootRate>0?rand(0.5,type.shootRate):999,wingPhase:rand(0,6.28)});
+    }
   }
 
-  // Update enemies — fly left with sine wave motion
+  // Update enemies — fly left with sine wave motion + SHOOT
   for(const e of enemies){
     if(e.dead)continue;
-    e.x-=e.speed*dt;e.phase+=dt*3;
+    e.x-=e.speed*dt;e.phase+=dt*3;e.wingPhase+=dt*5;
     e.y+=Math.sin(e.phase)*1.5;
     e.y=clamp(e.y,30,H-30);
-    // Off-screen left = remove
     if(e.x<cameraX-100){e.dead=true;continue;}
+    // Enemy shoots at player
+    if(e.type.shootRate>0){
+      e.shootTimer-=dt;
+      if(e.shootTimer<=0){
+        e.shootTimer=e.type.shootRate*(0.7+Math.random()*0.6);
+        const ex=e.x-cameraX;
+        if(ex>0&&ex<W+50){
+          const angle=Math.atan2(ship.y-e.y,SHIP_X-ex);
+          enemyLasers.push({x:e.x-e.type.w*0.5,y:e.y,vx:Math.cos(angle)*ENEMY_LASER_SPEED,vy:Math.sin(angle)*ENEMY_LASER_SPEED,dead:false,color:e.type.color,born:performance.now()});
+          // Laser sound (quieter)
+        }
+      }
+    }
     // Collide with player ship
     if(!shieldActive&&invincTimer<=0){
       const ex=e.x-cameraX;
@@ -1484,6 +1520,23 @@ function update(dt){
     }
   }
   enemies=enemies.filter(e=>!e.dead);
+
+  // Update enemy lasers
+  for(const el of enemyLasers){
+    if(el.dead)continue;
+    el.x+=el.vx*dt;el.y+=el.vy*dt;
+    const elx=el.x-cameraX;
+    if(elx<-50||elx>W+50||el.y<-20||el.y>H+20){el.dead=true;continue;}
+    // Hit player
+    if(!shieldActive&&invincTimer<=0&&Math.abs(SHIP_X-elx)<SHIP_W*0.4&&Math.abs(ship.y-el.y)<SHIP_H*0.5){
+      el.dead=true;health--;damageLevel=maxHealth-health;invincTimer=1.0;hitFlashTimer=0.3;shakeDur=0.3;damageFlash=0.8;
+      spawnOrbBurst(SHIP_X,ship.y,['#EF4444','#FFF'],20,5);
+      if(health<=0){die();return;}
+    } else if(shieldActive&&Math.abs(SHIP_X-elx)<SHIP_W*0.5&&Math.abs(ship.y-el.y)<SHIP_H*0.6){
+      el.dead=true;spawnOrbBurst(SHIP_X,ship.y,['#FFD700','#FFF'],10,3);
+    }
+  }
+  enemyLasers=enemyLasers.filter(el=>!el.dead);
 
   generateWalls();updateShip(dt);checkCollisions();
   updateParticles(dt);updatePersistentSmoke(dt);updateFloatingTexts(dt);updateSpeedLines(dt);updateSparkles(dt);
@@ -2059,23 +2112,118 @@ function draw(){
     ctx.beginPath();ctx.arc(laserLen*0.85,0,2+Math.sin(performance.now()*0.02)*0.8,0,Math.PI*2);ctx.fill();
     ctx.shadowBlur=0;ctx.restore();
   }}}
-  // Draw enemies
-  for(const e of enemies){if(!e.dead){const ex=e.x-cameraX;if(ex>-60&&ex<W+60){ctx.save();ctx.translate(ex,e.y);
+  // Draw enemies — detailed spaceships facing LEFT (toward player)
+  for(const e of enemies){if(!e.dead){const ex=e.x-cameraX;if(ex>-80&&ex<W+80){ctx.save();ctx.translate(ex,e.y);
     const ew=e.type.w,eh=e.type.h;
-    ctx.shadowColor=e.type.color;ctx.shadowBlur=15;
-    // Enemy ship body
-    ctx.fillStyle=e.type.color;ctx.beginPath();ctx.moveTo(ew/2,0);ctx.lineTo(-ew/2,-eh/2);ctx.lineTo(-ew/3,0);ctx.lineTo(-ew/2,eh/2);ctx.closePath();ctx.fill();
-    // Cockpit
-    ctx.fillStyle='rgba(255,255,255,0.3)';ctx.beginPath();ctx.arc(ew*0.15,0,eh*0.25,0,Math.PI*2);ctx.fill();
-    // Engine glow
-    ctx.fillStyle=e.type.color;ctx.globalAlpha=0.5+Math.sin(time*0.02+e.phase)*0.3;
-    ctx.beginPath();ctx.moveTo(-ew/2,0);ctx.lineTo(-ew/2-12,-eh*0.2);ctx.lineTo(-ew/2-12,eh*0.2);ctx.closePath();ctx.fill();
+    const col=e.type.color,trim=e.type.trim,eng=e.type.engine;
+    const wob=Math.sin(e.wingPhase)*0.08; // subtle wing wobble
+
+    // Engine flames (right side — ships face left)
+    ctx.globalAlpha=0.5+Math.sin(time*0.03+e.phase)*0.35;
+    const flameLen=ew*0.35+Math.sin(time*0.05+e.phase)*5;
+    const fg=ctx.createLinearGradient(ew*0.4,0,ew*0.4+flameLen,0);
+    fg.addColorStop(0,eng);fg.addColorStop(0.4,col);fg.addColorStop(1,'transparent');
+    ctx.fillStyle=fg;
+    ctx.beginPath();ctx.moveTo(ew*0.4,-eh*0.15);ctx.quadraticCurveTo(ew*0.4+flameLen*0.7,0,ew*0.4+flameLen,0);
+    ctx.quadraticCurveTo(ew*0.4+flameLen*0.7,0,ew*0.4,eh*0.15);ctx.closePath();ctx.fill();
+    // Inner flame
+    const ig=ctx.createLinearGradient(ew*0.4,0,ew*0.4+flameLen*0.5,0);
+    ig.addColorStop(0,'#FFF');ig.addColorStop(0.5,trim);ig.addColorStop(1,'transparent');
+    ctx.fillStyle=ig;
+    ctx.beginPath();ctx.moveTo(ew*0.4,-eh*0.06);ctx.quadraticCurveTo(ew*0.4+flameLen*0.3,0,ew*0.4+flameLen*0.5,0);
+    ctx.quadraticCurveTo(ew*0.4+flameLen*0.3,0,ew*0.4,eh*0.06);ctx.closePath();ctx.fill();
     ctx.globalAlpha=1;
+
+    // Ship glow
+    ctx.shadowColor=col;ctx.shadowBlur=18;
+
+    // Wings (top + bottom) — angled backward
+    ctx.save();ctx.rotate(wob);
+    const wg=ctx.createLinearGradient(0,-eh*0.8,0,0);wg.addColorStop(0,trim);wg.addColorStop(1,col);
+    ctx.fillStyle=wg;
+    // Top wing
+    ctx.beginPath();ctx.moveTo(-ew*0.05,-eh*0.22);ctx.lineTo(ew*0.25,-eh*0.8);
+    ctx.lineTo(ew*0.35,-eh*0.65);ctx.lineTo(ew*0.2,-eh*0.18);ctx.closePath();ctx.fill();
+    // Bottom wing
+    const wg2=ctx.createLinearGradient(0,eh*0.8,0,0);wg2.addColorStop(0,trim);wg2.addColorStop(1,col);
+    ctx.fillStyle=wg2;
+    ctx.beginPath();ctx.moveTo(-ew*0.05,eh*0.22);ctx.lineTo(ew*0.25,eh*0.8);
+    ctx.lineTo(ew*0.35,eh*0.65);ctx.lineTo(ew*0.2,eh*0.18);ctx.closePath();ctx.fill();
+    // Wing tip lights
+    ctx.fillStyle=trim;ctx.globalAlpha=0.6+Math.sin(time*0.04+e.phase)*0.4;
+    ctx.beginPath();ctx.arc(ew*0.3,-eh*0.72,2.5,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(ew*0.3,eh*0.72,2.5,0,Math.PI*2);ctx.fill();
+    ctx.globalAlpha=1;
+    ctx.restore();
+
+    // Main hull — pointed nose facing left
+    const hg=ctx.createLinearGradient(-ew*0.5,0,ew*0.4,0);
+    hg.addColorStop(0,trim);hg.addColorStop(0.3,col);hg.addColorStop(1,eng);
+    ctx.fillStyle=hg;
+    ctx.beginPath();
+    ctx.moveTo(-ew*0.5,0); // nose
+    ctx.lineTo(-ew*0.3,-eh*0.2);ctx.lineTo(-ew*0.1,-eh*0.28);
+    ctx.lineTo(ew*0.2,-eh*0.22);ctx.lineTo(ew*0.4,-eh*0.1);
+    ctx.lineTo(ew*0.4,eh*0.1);ctx.lineTo(ew*0.2,eh*0.22);
+    ctx.lineTo(-ew*0.1,eh*0.28);ctx.lineTo(-ew*0.3,eh*0.2);
+    ctx.closePath();ctx.fill();
+
+    // Hull panel lines
+    ctx.strokeStyle='rgba(255,255,255,0.15)';ctx.lineWidth=0.8;
+    ctx.beginPath();ctx.moveTo(-ew*0.2,-eh*0.05);ctx.lineTo(ew*0.2,-eh*0.05);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(-ew*0.2,eh*0.05);ctx.lineTo(ew*0.2,eh*0.05);ctx.stroke();
+
+    // Cockpit window — glowing
+    const cg=ctx.createRadialGradient(-ew*0.25,0,0,-ew*0.25,0,eh*0.18);
+    cg.addColorStop(0,'rgba(255,255,255,0.8)');cg.addColorStop(0.5,trim);cg.addColorStop(1,'rgba(0,0,0,0.3)');
+    ctx.fillStyle=cg;ctx.beginPath();ctx.ellipse(-ew*0.25,0,eh*0.16,eh*0.12,0,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,0.4)';ctx.lineWidth=0.7;
+    ctx.beginPath();ctx.ellipse(-ew*0.25,0,eh*0.17,eh*0.13,0,0,Math.PI*2);ctx.stroke();
+
+    // Gun barrels (nose)
+    ctx.fillStyle=trim;
+    ctx.fillRect(-ew*0.52,-eh*0.08,ew*0.12,3);
+    ctx.fillRect(-ew*0.52,eh*0.05,ew*0.12,3);
+
+    // Engine nacelles
+    ctx.fillStyle=eng;
+    ctx.beginPath();ctx.arc(ew*0.38,-eh*0.15,3,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(ew*0.38,eh*0.15,3,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=trim;ctx.globalAlpha=0.5+Math.sin(time*0.04+e.phase)*0.3;
+    ctx.beginPath();ctx.arc(ew*0.38,-eh*0.15,1.8,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(ew*0.38,eh*0.15,1.8,0,Math.PI*2);ctx.fill();
+    ctx.globalAlpha=1;
+
+    // Damage flash
+    if(e.hp<e.type.hp){
+      ctx.globalAlpha=0.15;ctx.fillStyle='#FF0000';
+      ctx.beginPath();ctx.moveTo(-ew*0.5,0);ctx.lineTo(ew*0.4,-eh*0.3);ctx.lineTo(ew*0.4,eh*0.3);ctx.closePath();ctx.fill();
+      ctx.globalAlpha=1;
+    }
+
     // HP bar for multi-hit enemies
-    if(e.type.hp>1){const bw=ew*0.8,bh=3,bx=-bw/2,by=-eh/2-8;
-      ctx.fillStyle='rgba(0,0,0,0.5)';ctx.fillRect(bx,by,bw,bh);
-      ctx.fillStyle=e.hp>1?'#22c55e':'#ef4444';ctx.fillRect(bx,by,bw*(e.hp/e.type.hp),bh);}
+    if(e.type.hp>1){const bw=ew*0.8,bh=3,bx=-bw/2,by=-eh/2-10;
+      ctx.fillStyle='rgba(0,0,0,0.6)';ctx.fillRect(bx,by,bw,bh);
+      ctx.fillStyle=e.hp>e.type.hp*0.5?'#22c55e':'#ef4444';ctx.fillRect(bx,by,bw*(e.hp/e.type.hp),bh);}
     ctx.shadowBlur=0;ctx.restore();}}}
+
+  // Draw enemy lasers
+  for(const el of enemyLasers){if(!el.dead){
+    const elx=el.x-cameraX;
+    if(elx>-30&&elx<W+30){
+      ctx.save();ctx.translate(elx,el.y);
+      const angle=Math.atan2(el.vy,el.vx);
+      ctx.rotate(angle);
+      const laserLen=22;
+      const lg=ctx.createLinearGradient(-laserLen,0,4,0);
+      lg.addColorStop(0,'transparent');lg.addColorStop(0.3,el.color);lg.addColorStop(1,'#FFF');
+      ctx.strokeStyle=lg;ctx.lineWidth=3;ctx.shadowColor=el.color;ctx.shadowBlur=10;
+      ctx.beginPath();ctx.moveTo(-laserLen,0);ctx.lineTo(4,0);ctx.stroke();
+      ctx.strokeStyle='rgba(255,255,255,0.7)';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(-laserLen*0.6,0);ctx.lineTo(4,0);ctx.stroke();
+      ctx.shadowBlur=0;ctx.restore();
+    }
+  }}
   drawPersistentSmoke();
   if(state===STATE.PLAYING||state===STATE.DEAD)drawShip(time);
   drawParticles();drawFloatingTexts();ctx.restore();
