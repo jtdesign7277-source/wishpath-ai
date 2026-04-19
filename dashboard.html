@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-19-v313-desktop-lifecoach-polish';
+    var APP_VERSION = '2026-04-19-v314-desktop-lifecoach-sidepanel';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -4648,21 +4648,27 @@
       .wp-bottom-tabs { display: none !important; }
 
       /* ── Desktop Life Coach View Polishing ── */
-      .lc-chat-list, .lc-fullscreen {
+      #lifecoachView {
+        display: grid;
+        grid-template-columns: 240px 1fr;
+        height: 100%;
+        gap: 0;
+      }
+      #lifecoachView .lc-chat-list {
         position: relative !important;
         inset: auto !important;
-        max-width: 900px;
-        margin: 0 auto;
-        height: 100%;
-        border-radius: 0;
+        z-index: 1;
+        max-width: none;
+        border-right: 1px solid var(--border);
       }
-      #lifecoachView {
-        display: flex;
-        flex-direction: column;
-        height: 100vh;
+      #lifecoachView .lc-fullscreen {
+        position: relative !important;
+        inset: auto !important;
+        max-width: none;
+        display: flex !important;
       }
-      .lc-messages { padding: 20px 20px; }
-      .lc-input-bar { padding: 16px 20px calc(16px + env(safe-area-inset-bottom)) 20px; }
+      #lifecoachView .lc-messages { padding: 20px; }
+      #lifecoachView .lc-input-bar { padding: 16px 20px; }
     }
 
     /* ── Premium Glassmorphic AI Response Titles ── */
