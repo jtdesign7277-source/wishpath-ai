@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-19-v316-prices-seamless-charts';
+    var APP_VERSION = '2026-04-19-v317-bigger-charts';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -2734,9 +2734,10 @@
     .portfolio-coach-chip:hover { background: var(--kraken-purple-tint); color: var(--kraken-purple); border-color: rgba(113,50,245,0.3); }
 
     /* ── Chart Containers ── */
-    .chart-container { background: transparent; border: none; border-radius: 0; padding: 8px 0; margin: 8px 0; box-shadow: none; transition: all 0.3s ease; }
+    .chart-container { background: transparent; border: none; border-radius: 0; padding: 8px 0; margin: 8px auto; box-shadow: none; transition: all 0.3s ease; width: 100%; max-width: 100%; }
     /* Portfolio-specific chart override — seamless */
     #portfolioChartContainer, #fmPortfolioChartContainer { background: transparent; border: none; box-shadow: none; }
+    .chart-container .highcharts-container { margin: 0 auto; }
     .portfolio-coach-section .msg.ai { background: linear-gradient(135deg, rgba(42,42,52,0.6) 0%, rgba(30,20,50,0.4) 50%, rgba(42,42,52,0.3) 100%); border: 1px solid rgba(113,50,245,0.12); border-radius: 16px 16px 16px 4px; color: rgba(255,255,255,0.9); box-shadow: 0 2px 12px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04); }
     .portfolio-coach-section .msg.user { background: linear-gradient(135deg, rgba(113,50,245,0.3) 0%, rgba(80,30,200,0.18) 50%, rgba(113,50,245,0.12) 100%); border: 1px solid rgba(113,50,245,0.3); color: rgba(255,255,255,0.95); box-shadow: 0 4px 16px rgba(113,50,245,0.15), inset 0 1px 0 rgba(255,255,255,0.06); }
     .portfolio-coach-section .msg.ai .thinking-label { color: rgba(255,255,255,0.5); }
@@ -16189,20 +16190,20 @@
       if (typeof Highcharts === 'undefined') return;
       Highcharts.setOptions({
         colors: ['#22c55e','#3b82f6','#f59e0b','#ef4444','#a78bfa','#06b6d4','#ec4899','#f97316','#84cc16','#8b5cf6','#14b8a6','#e879f9'],
-        chart: { backgroundColor: 'transparent', style: { fontFamily: 'Inter, system-ui, sans-serif' }, borderRadius: 0, animation: { duration: 800, easing: 'easeOutQuart' } },
-        title: { style: { color: '#e6edf3', fontSize: '14px', fontWeight: '700' } },
-        subtitle: { style: { color: '#8b949e', fontSize: '12px' } },
-        xAxis: { gridLineColor: 'rgba(48,54,61,0.5)', lineColor: '#30363d', tickColor: '#30363d', labels: { style: { color: '#8b949e', fontSize: '11px' } }, title: { style: { color: '#8b949e' } } },
-        yAxis: { gridLineColor: 'rgba(48,54,61,0.5)', lineColor: '#30363d', tickColor: '#30363d', labels: { style: { color: '#8b949e', fontSize: '11px' } }, title: { style: { color: '#8b949e' } } },
-        legend: { itemStyle: { color: '#e6edf3', fontSize: '12px' }, itemHoverStyle: { color: '#22c55e' }, itemHiddenStyle: { color: '#484f58' } },
-        tooltip: { backgroundColor: '#1c2128', borderColor: '#30363d', style: { color: '#e6edf3', fontSize: '12px' }, shadow: { color: 'rgba(0,0,0,0.4)', offsetX: 0, offsetY: 4, width: 12 } },
+        chart: { backgroundColor: 'transparent', style: { fontFamily: 'Inter, system-ui, sans-serif' }, borderRadius: 0, spacing: [20, 20, 20, 20], animation: { duration: 800, easing: 'easeOutQuart' } },
+        title: { style: { color: '#e6edf3', fontSize: '16px', fontWeight: '700' }, align: 'center' },
+        subtitle: { style: { color: '#8b949e', fontSize: '13px' }, align: 'center' },
+        xAxis: { gridLineColor: 'rgba(48,54,61,0.3)', lineColor: '#30363d', tickColor: '#30363d', labels: { style: { color: '#c9d1d9', fontSize: '12px' } }, title: { style: { color: '#c9d1d9', fontSize: '13px' } } },
+        yAxis: { gridLineColor: 'rgba(48,54,61,0.3)', lineColor: '#30363d', tickColor: '#30363d', labels: { style: { color: '#c9d1d9', fontSize: '12px' } }, title: { style: { color: '#c9d1d9', fontSize: '13px' } } },
+        legend: { itemStyle: { color: '#e6edf3', fontSize: '13px' }, itemHoverStyle: { color: '#22c55e' }, itemHiddenStyle: { color: '#484f58' } },
+        tooltip: { backgroundColor: 'rgba(28,33,40,0.95)', borderColor: '#30363d', borderRadius: 8, style: { color: '#e6edf3', fontSize: '13px' }, shadow: { color: 'rgba(0,0,0,0.5)', offsetX: 0, offsetY: 4, width: 16 } },
         plotOptions: {
           series: { borderWidth: 0, animation: { duration: 1000, easing: 'easeOutBounce' } },
-          column: { borderWidth: 0, borderRadius: 4, animation: { duration: 900 } },
-          bar: { borderWidth: 0, borderRadius: 4, animation: { duration: 900 } },
-          pie: { borderWidth: 0, animation: { duration: 1200 }, dataLabels: { color: '#e6edf3', style: { fontSize: '11px', textOutline: 'none' } } },
-          line: { lineWidth: 3, marker: { radius: 4, lineWidth: 2, lineColor: '#161b22' }, animation: { duration: 1200 } },
-          area: { fillOpacity: 0.25, lineWidth: 3, marker: { radius: 4, lineWidth: 2, lineColor: '#161b22' }, animation: { duration: 1200 } }
+          column: { borderWidth: 0, borderRadius: 6, animation: { duration: 900 } },
+          bar: { borderWidth: 0, borderRadius: 6, animation: { duration: 900 } },
+          pie: { borderWidth: 0, animation: { duration: 1200 }, dataLabels: { color: '#e6edf3', style: { fontSize: '13px', textOutline: 'none' }, distance: 15 }, size: '85%' },
+          line: { lineWidth: 3, marker: { enabled: true, radius: 5, lineWidth: 2, lineColor: null, symbol: 'circle' }, animation: { duration: 1200 } },
+          area: { fillOpacity: 0.2, lineWidth: 3, marker: { enabled: true, radius: 5, lineWidth: 2, lineColor: null, symbol: 'circle' }, animation: { duration: 1200 } }
         },
         navigation: { buttonOptions: { symbolStroke: '#8b949e', theme: { fill: '#161b22', stroke: '#30363d', states: { hover: { fill: '#1c2128' }, select: { fill: '#1c2128' } } } } },
         exporting: {
@@ -16245,7 +16246,7 @@
       var el = document.getElementById(containerId);
       if (!el || typeof Highcharts === 'undefined') return null;
       el.style.display = 'block';
-      el.innerHTML = '<div id="' + containerId + '-chart" style="min-height:300px;"></div>';
+      el.innerHTML = '<div id="' + containerId + '-chart" style="min-height:400px;width:100%;"></div>';
       var chartActions = document.createElement('div');
       chartActions.className = 'chart-actions';
       var saveLabel = _activeChartStudioTemplate ? 'Save Template' : 'Save Chart';
