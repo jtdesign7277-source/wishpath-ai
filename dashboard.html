@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-19-v328-crypto-ws-fix';
+    var APP_VERSION = '2026-04-19-v329-ability-buttons';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -8654,6 +8654,73 @@
         } catch(e) {}
       }
 
+      function playMissileSound() {
+        try {
+          var ctx = _gameCtx();
+          if (!ctx || ctx.state === 'suspended') return;
+          var t = ctx.currentTime;
+          var o = ctx.createOscillator(), g = ctx.createGain();
+          o.type = 'sawtooth';
+          o.frequency.setValueAtTime(80, t);
+          o.frequency.exponentialRampToValueAtTime(420, t + 0.12);
+          o.frequency.exponentialRampToValueAtTime(180, t + 0.3);
+          g.gain.setValueAtTime(0.16, t);
+          g.gain.exponentialRampToValueAtTime(0.001, t + 0.38);
+          o.connect(g); g.connect(ctx.destination);
+          o.start(t); o.stop(t + 0.42);
+          var bufSz = Math.floor(ctx.sampleRate * 0.1);
+          var nBuf = ctx.createBuffer(1, bufSz, ctx.sampleRate);
+          var nd = nBuf.getChannelData(0);
+          for (var ni = 0; ni < bufSz; ni++) nd[ni] = (Math.random()*2-1)*0.3;
+          var ns = ctx.createBufferSource(), ng = ctx.createGain();
+          ns.buffer = nBuf;
+          ng.gain.setValueAtTime(0.09, t); ng.gain.exponentialRampToValueAtTime(0.001, t+0.14);
+          ns.connect(ng); ng.connect(ctx.destination); ns.start(t); ns.stop(t+0.16);
+        } catch(e) {}
+      }
+
+      function playLaserBeamSound() {
+        try {
+          var ctx = _gameCtx();
+          if (!ctx || ctx.state === 'suspended') return;
+          var t = ctx.currentTime;
+          var o = ctx.createOscillator(), g = ctx.createGain();
+          o.type = 'sawtooth';
+          o.frequency.setValueAtTime(100, t);
+          o.frequency.exponentialRampToValueAtTime(900, t + 0.07);
+          g.gain.setValueAtTime(0.2, t);
+          g.gain.exponentialRampToValueAtTime(0.07, t + 0.3);
+          g.gain.exponentialRampToValueAtTime(0.001, t + 2.2);
+          o.connect(g); g.connect(ctx.destination);
+          o.start(t); o.stop(t + 2.3);
+          var o2 = ctx.createOscillator(), g2 = ctx.createGain();
+          o2.type = 'square'; o2.frequency.setValueAtTime(1800, t); o2.frequency.exponentialRampToValueAtTime(3400, t+0.06);
+          g2.gain.setValueAtTime(0.09, t); g2.gain.exponentialRampToValueAtTime(0.001, t+0.18);
+          o2.connect(g2); g2.connect(ctx.destination); o2.start(t); o2.stop(t+0.22);
+        } catch(e) {}
+      }
+
+      function playShieldSound() {
+        try {
+          var ctx = _gameCtx();
+          if (!ctx || ctx.state === 'suspended') return;
+          var t = ctx.currentTime;
+          [220, 440, 880, 660].forEach(function(f, i) {
+            var o = ctx.createOscillator(), g = ctx.createGain();
+            o.type = 'sine'; o.frequency.value = f;
+            g.gain.setValueAtTime(0, t + i*0.04);
+            g.gain.linearRampToValueAtTime(0.13, t + i*0.04 + 0.02);
+            g.gain.exponentialRampToValueAtTime(0.001, t + i*0.04 + 0.45);
+            o.connect(g); g.connect(ctx.destination);
+            o.start(t + i*0.04); o.stop(t + i*0.04 + 0.5);
+          });
+          var oh = ctx.createOscillator(), gh = ctx.createGain();
+          oh.type = 'sine'; oh.frequency.value = 330;
+          gh.gain.setValueAtTime(0.07, t+0.1); gh.gain.exponentialRampToValueAtTime(0.001, t+5.0);
+          oh.connect(gh); gh.connect(ctx.destination); oh.start(t+0.1); oh.stop(t+5.1);
+        } catch(e) {}
+      }
+
       // Level complete — triumphant fanfare
       function playLevelCompleteSound() {
         try {
@@ -9122,9 +9189,11 @@
       // Special abilities — missile / laser / shield
       var _abCDs     = [0, 0, 0];
       var _abMaxCDs  = [15, 20, 25];
+      var _abFlash   = [0, 0, 0];
       var _laserActive = false;
       var _laserTimer  = 0;
       var _missiles    = [];
+      var _abilityShield = false;
 
       // Power-ups
       var powerups = [];
@@ -9372,7 +9441,7 @@
         _shieldHealth = 0;
         _shieldPulse = 0;
         _weaponLevel = 0;
-        _abCDs = [0, 0, 0];
+        _abCDs = [0, 0, 0]; _abFlash = [0, 0, 0]; _abilityShield = false;
         _laserActive = false; _laserTimer = 0; _missiles = [];
         _formationTimer = 0;
         _deathFlash = 0;
@@ -9584,24 +9653,29 @@
       function triggerAbility(idx) {
         if (_abCDs[idx] > 0 || gameOver) return;
         _abCDs[idx] = _abMaxCDs[idx];
+        _abFlash[idx] = 0.28;
         if (idx === 0) {
-          // MISSILE — 3 homing missiles
+          // MISSILE — 1 big homing missile + 2 flanking missiles
+          var _mOffsets = [[0, -4, 0, -340, true], [-18, 6, -95, -295, false], [18, 6, 95, -295, false]];
           for (var _tami = 0; _tami < 3; _tami++) {
-            var _taAng = -Math.PI * 0.5 + (_tami - 1) * 0.35;
-            _missiles.push({ x: player.x + (_tami-1)*14, y: player.y - player.size*0.5 - 6,
-              vx: Math.cos(_taAng)*220, vy: Math.sin(_taAng)*220, life: 4.5 });
+            var _mo = _mOffsets[_tami];
+            _missiles.push({ x: player.x + _mo[0], y: player.y - player.size*0.5 + _mo[1],
+              vx: _mo[2], vy: _mo[3], life: 5.0, big: _mo[4] });
           }
-          playLaserSound();
+          playMissileSound();
+          triggerScreenShake(4, 0.22);
         } else if (idx === 1) {
-          // LASER — wide beam 2 seconds
-          _laserActive = true; _laserTimer = 2.0;
-          triggerScreenShake(4, 0.3);
-          playLaserSound();
+          // LASER — thick beam 2.2 seconds
+          _laserActive = true; _laserTimer = 2.2;
+          triggerScreenShake(7, 0.5);
+          playLaserBeamSound();
         } else {
-          // SHIELD — 5 second invincibility
+          // SHIELD — 5 second invincibility + visible shield bubble
           _invincible = true; _invincibleTimer = 5.0;
-          triggerScreenShake(2, 0.12);
-          playPowerupSound();
+          _abilityShield = true;
+          _shieldActive = true; _shieldHealth = _shieldMaxHealth; _shieldPulse = 0;
+          triggerScreenShake(3, 0.2);
+          playShieldSound();
         }
       }
 
@@ -10189,6 +10263,7 @@
           if (_invincibleTimer <= 0) {
             _invincible = false;
             _invincibleTimer = 0;
+            if (_abilityShield) { _abilityShield = false; _shieldActive = false; _shieldHealth = 0; }
           }
         }
         // Power-up timer
@@ -10238,8 +10313,11 @@
           fireCd = currentFireRate;
         }
 
-        // Ability cooldowns
-        for (var _aCI = 0; _aCI < 3; _aCI++) { if (_abCDs[_aCI] > 0) _abCDs[_aCI] = Math.max(0, _abCDs[_aCI] - dt); }
+        // Ability cooldowns + button flash
+        for (var _aCI = 0; _aCI < 3; _aCI++) {
+          if (_abCDs[_aCI] > 0) _abCDs[_aCI] = Math.max(0, _abCDs[_aCI] - dt);
+          if (_abFlash[_aCI] > 0) _abFlash[_aCI] = Math.max(0, _abFlash[_aCI] - dt);
+        }
 
         // Laser beam — damage all targets in column
         if (_laserActive) {
@@ -10264,36 +10342,64 @@
           var _ms = _missiles[_msi];
           _ms.life -= dt;
           if (_ms.life <= 0 || _ms.y < -40) { _missiles.splice(_msi, 1); continue; }
+          // Rocket trail particles
+          if (particles.length < MAX_PARTICLES - 5) {
+            var _tCount = _ms.big ? 3 : 1;
+            for (var _tri = 0; _tri < _tCount; _tri++) {
+              particles.push({
+                x: _ms.x + (Math.random()-0.5)*5,
+                y: _ms.y + (_ms.big ? 14 : 9),
+                vx: (Math.random()-0.5)*50, vy: 70 + Math.random()*80,
+                life: 0.16+Math.random()*0.12, maxLife: 0.28,
+                size: _ms.big ? 4+Math.random()*4 : 2+Math.random()*2,
+                color: _tri === 0 ? '#ffcc00' : (Math.random()>0.5 ? '#ff6600' : '#ff3300')
+              });
+            }
+          }
           // Seek nearest target
           var _nearD = 9999, _nearI = -1;
           for (var _mti = 0; _mti < targets.length; _mti++) {
             var _mt = targets[_mti];
             var _mdx = _mt.x - _ms.x, _mdy = _mt.y - _ms.y;
-            var _md = Math.sqrt(_mdx*_mdx+_mdy*_mdy);
-            if (_md < _nearD) { _nearD = _md; _nearI = _mti; }
+            var _md2 = Math.sqrt(_mdx*_mdx+_mdy*_mdy);
+            if (_md2 < _nearD) { _nearD = _md2; _nearI = _mti; }
           }
           if (_nearI >= 0) {
             var _mt2 = targets[_nearI];
             var _d2 = Math.sqrt(Math.pow(_mt2.x-_ms.x,2)+Math.pow(_mt2.y-_ms.y,2));
             if (_d2 > 0) {
-              _ms.vx += (_mt2.x-_ms.x)/_d2 * 4 * 200 * dt;
-              _ms.vy += (_mt2.y-_ms.y)/_d2 * 4 * 200 * dt;
-              var _spd = Math.sqrt(_ms.vx*_ms.vx+_ms.vy*_ms.vy);
-              if (_spd > 340) { _ms.vx=_ms.vx/_spd*340; _ms.vy=_ms.vy/_spd*340; }
+              var _homStr = _ms.big ? 1200 : 900;
+              _ms.vx += (_mt2.x-_ms.x)/_d2 * _homStr * dt;
+              _ms.vy += (_mt2.y-_ms.y)/_d2 * _homStr * dt;
+              var _mspd = Math.sqrt(_ms.vx*_ms.vx+_ms.vy*_ms.vy);
+              var _mcap = _ms.big ? 420 : 360;
+              if (_mspd > _mcap) { _ms.vx=_ms.vx/_mspd*_mcap; _ms.vy=_ms.vy/_mspd*_mcap; }
             }
           }
           _ms.x += _ms.vx * dt; _ms.y += _ms.vy * dt;
-          // Hit check
-          for (var _mci = targets.length - 1; _mci >= 0; _mci--) {
+          // Hit check — detect impact then splash all in radius
+          var _mHit = false;
+          var _hitRadius = _ms.big ? 16 : 11;
+          for (var _mci = 0; _mci < targets.length; _mci++) {
             var _mct = targets[_mci];
-            var _mcd = Math.sqrt(Math.pow(_mct.x-_ms.x,2)+Math.pow(_mct.y-_ms.y,2));
-            if (_mcd < _mct.size*0.5+10) {
-              spawnExplosion(_ms.x, _ms.y, '#ff8800', 16);
-              triggerScreenShake(3, 0.15);
-              _mct.health -= 3;
-              if (_mct.health <= 0) { score += 25; targets.splice(_mci, 1); updateScoreEl(); }
-              _missiles.splice(_msi, 1); break;
+            if (Math.sqrt(Math.pow(_mct.x-_ms.x,2)+Math.pow(_mct.y-_ms.y,2)) < _mct.size*0.5 + _hitRadius) {
+              _mHit = true; break;
             }
+          }
+          if (_mHit) {
+            var _splashR = _ms.big ? 85 : 45;
+            spawnExplosion(_ms.x, _ms.y, '#ff8800', _ms.big ? 30 : 16);
+            triggerScreenShake(_ms.big ? 7 : 3, 0.25);
+            for (var _spi = targets.length - 1; _spi >= 0; _spi--) {
+              var _spt = targets[_spi];
+              var _spDist = Math.sqrt(Math.pow(_spt.x-_ms.x,2)+Math.pow(_spt.y-_ms.y,2));
+              if (_spDist < _splashR) {
+                var _dmg = _ms.big ? Math.max(1,Math.ceil(8*(1-_spDist/_splashR))) : Math.max(1,Math.ceil(4*(1-_spDist/_splashR)));
+                _spt.health -= _dmg;
+                if (_spt.health <= 0) { spawnExplosion(_spt.x,_spt.y,'#ff6600',12); score += 20; targets.splice(_spi,1); updateScoreEl(); }
+              }
+            }
+            _missiles.splice(_msi, 1);
           }
         }
 
@@ -11686,29 +11792,58 @@
         // Draw homing missiles
         for (var _mdi = 0; _mdi < _missiles.length; _mdi++) {
           var _md = _missiles[_mdi];
+          var _isBig = _md.big;
+          var _mScale = _isBig ? 2.2 : 1;
           var _mdA = Math.atan2(_md.vy, _md.vx) + Math.PI*0.5;
-          ctx.save(); ctx.translate(_md.x, _md.y); ctx.rotate(_mdA);
-          var _mTG = ctx.createLinearGradient(0, 4, 0, 22);
-          _mTG.addColorStop(0, 'rgba(255,140,0,0.85)'); _mTG.addColorStop(1, 'rgba(255,40,0,0)');
-          ctx.fillStyle = _mTG; ctx.fillRect(-2.5, 4, 5, 18);
-          ctx.shadowColor = '#ff6600'; ctx.shadowBlur = 10;
-          ctx.fillStyle = '#ff5500'; ctx.fillRect(-2.5, -7, 5, 14);
-          ctx.fillStyle = '#ffcc44'; ctx.shadowBlur = 4; ctx.fillRect(-1, -7, 2, 9);
+          ctx.save(); ctx.translate(_md.x, _md.y); ctx.rotate(_mdA); ctx.scale(_mScale, _mScale);
+          // Exhaust flame gradient
+          var _mTG = ctx.createLinearGradient(0, 5, 0, 28);
+          _mTG.addColorStop(0, 'rgba(255,200,0,0.95)'); _mTG.addColorStop(0.4, 'rgba(255,80,0,0.7)'); _mTG.addColorStop(1, 'rgba(255,30,0,0)');
+          ctx.fillStyle = _mTG; ctx.fillRect(-3.5, 5, 7, 23);
+          // Glow
+          ctx.shadowColor = _isBig ? '#ff4400' : '#ff6600';
+          ctx.shadowBlur = _isBig ? 20 : 10;
+          // Body
+          ctx.fillStyle = _isBig ? '#cc2200' : '#ff5500';
+          ctx.fillRect(-3.5, -12, 7, 18);
+          // Fins
+          ctx.fillStyle = _isBig ? '#881100' : '#cc3300';
+          ctx.beginPath(); ctx.moveTo(-3.5, 4); ctx.lineTo(-8, 10); ctx.lineTo(-3.5, 6); ctx.closePath(); ctx.fill();
+          ctx.beginPath(); ctx.moveTo(3.5, 4); ctx.lineTo(8, 10); ctx.lineTo(3.5, 6); ctx.closePath(); ctx.fill();
+          // Nose cone
+          ctx.fillStyle = _isBig ? '#ffaa00' : '#ffcc44';
+          ctx.beginPath(); ctx.moveTo(-3.5, -12); ctx.lineTo(3.5, -12); ctx.lineTo(0, -22); ctx.closePath(); ctx.fill();
+          // Center hot stripe
+          ctx.fillStyle = '#ffffff'; ctx.shadowBlur = 5;
+          ctx.fillRect(-1.5, -10, 3, 13);
           ctx.shadowBlur = 0; ctx.restore();
         }
 
         // Draw laser beam (ability)
         if (_laserActive && !gameOver) {
           var _lA = Math.min(1, _laserTimer * 2.5);
-          ctx.save(); ctx.globalAlpha = _lA * 0.88;
-          ctx.shadowColor = '#ffffff'; ctx.shadowBlur = 28;
-          var _lG = ctx.createLinearGradient(player.x - 22, 0, player.x + 22, 0);
-          _lG.addColorStop(0, 'rgba(100,220,255,0)');
-          _lG.addColorStop(0.35, 'rgba(160,240,255,0.9)');
+          var _lFlicker = 0.80 + Math.sin(Date.now() * 0.045) * 0.20;
+          ctx.save();
+          // Outer energy glow column
+          ctx.globalAlpha = _lA * 0.35 * _lFlicker;
+          ctx.shadowColor = '#00eeff'; ctx.shadowBlur = 50;
+          ctx.fillStyle = 'rgba(0,200,255,0.55)';
+          ctx.fillRect(player.x - 42, 0, 84, player.y);
+          // Core beam with gradient
+          ctx.globalAlpha = _lA * 0.94 * _lFlicker;
+          ctx.shadowColor = '#ffffff'; ctx.shadowBlur = 36;
+          var _lG = ctx.createLinearGradient(player.x - 30, 0, player.x + 30, 0);
+          _lG.addColorStop(0, 'rgba(80,210,255,0)');
+          _lG.addColorStop(0.22, 'rgba(140,230,255,0.88)');
           _lG.addColorStop(0.5, '#ffffff');
-          _lG.addColorStop(0.65, 'rgba(160,240,255,0.9)');
-          _lG.addColorStop(1, 'rgba(100,220,255,0)');
-          ctx.fillStyle = _lG; ctx.fillRect(player.x - 22, 0, 44, player.y);
+          _lG.addColorStop(0.78, 'rgba(140,230,255,0.88)');
+          _lG.addColorStop(1, 'rgba(80,210,255,0)');
+          ctx.fillStyle = _lG; ctx.fillRect(player.x - 30, 0, 60, player.y);
+          // Bright center spine
+          ctx.globalAlpha = _lA * _lFlicker;
+          ctx.shadowBlur = 8;
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(player.x - 4, 0, 8, player.y);
           ctx.globalAlpha = 1; ctx.shadowBlur = 0; ctx.restore();
         }
 
@@ -11961,20 +12096,22 @@
             var _abX = _abBX, _abY = _abBYs[_abi];
             var _abCD = _abCDs[_abi], _abMX = _abMaxCDs[_abi];
             var _abRdy = _abCD <= 0;
+            var _abFl = _abFlash[_abi] > 0;
             ctx.save();
-            if (_abRdy) { ctx.shadowColor = '#ff8800'; ctx.shadowBlur = 9; }
-            ctx.fillStyle = _abRdy ? 'rgba(18,10,4,0.88)' : 'rgba(8,5,2,0.92)';
-            ctx.strokeStyle = _abRdy ? '#ff8800' : '#442200';
+            if (_abFl) { ctx.shadowColor = '#ffffff'; ctx.shadowBlur = 24; }
+            else if (_abRdy) { ctx.shadowColor = '#ff8800'; ctx.shadowBlur = 9; }
+            ctx.fillStyle = _abFl ? 'rgba(255,210,60,0.96)' : (_abRdy ? 'rgba(18,10,4,0.88)' : 'rgba(8,5,2,0.92)');
+            ctx.strokeStyle = _abFl ? '#ffffff' : (_abRdy ? '#ff8800' : '#442200');
             ctx.lineWidth = 2;
             ctx.beginPath(); ctx.arc(_abX, _abY, _abBR, 0, Math.PI*2); ctx.fill(); ctx.stroke();
             ctx.shadowBlur = 0;
             ctx.font = 'bold 14px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-            ctx.fillStyle = _abRdy ? '#ffcc44' : '#553311';
+            ctx.fillStyle = _abFl ? '#1a0a00' : (_abRdy ? '#ffcc44' : '#553311');
             ctx.fillText(_abIcons[_abi], _abX, _abY - 5);
             ctx.font = 'bold 7px sans-serif';
-            ctx.fillStyle = _abRdy ? '#ffaa22' : '#442211';
+            ctx.fillStyle = _abFl ? '#1a0a00' : (_abRdy ? '#ffaa22' : '#442211');
             ctx.fillText(_abLbls[_abi], _abX, _abY + 8);
-            if (!_abRdy) {
+            if (!_abRdy && !_abFl) {
               var _abFr = _abCD / _abMX;
               ctx.fillStyle = 'rgba(0,0,0,' + (_abFr * 0.55) + ')';
               ctx.beginPath(); ctx.arc(_abX, _abY, _abBR, 0, Math.PI*2); ctx.fill();
@@ -12193,7 +12330,7 @@
           var _abBYs2 = [GH*0.55, GH*0.68, GH*0.81];
           for (var _abTi = 0; _abTi < 3; _abTi++) {
             var _abDx = _tgx - 30, _abDy = _tgy - _abBYs2[_abTi];
-            if (Math.sqrt(_abDx*_abDx+_abDy*_abDy) <= 24) {
+            if (Math.sqrt(_abDx*_abDx+_abDy*_abDy) <= 34) {
               triggerAbility(_abTi);
               return;
             }
