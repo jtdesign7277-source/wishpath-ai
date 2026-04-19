@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-19-v320-fix-weapon-pickup-glow';
+    var APP_VERSION = '2026-04-19-v321-enemy-ships-touch-fix';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -8872,7 +8872,7 @@
       var canvas = null;
       var ctx = null;
       var dpr = 1;
-      var player = { x: 195, y: 520, size: 28, speed: 5, targetY: 520 };
+      var player = { x: 195, y: 520, size: 28, speed: 5, targetY: 520, targetX: 195 };
       var moveDx = 0;
       var moveDy = 0;
       var bullets = [];
@@ -9089,12 +9089,14 @@
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         player.y = GH * 0.76;
         player.x = Math.max(player.size * 0.5, Math.min(GW - player.size * 0.5, player.x));
+        player.targetX = player.x;
       }
 
       function resetGame() {
         player.x = GW * 0.5;
         player.y = GH * 0.76;
         player.targetY = GH * 0.76;
+        player.targetX = GW * 0.5;
         moveDx = 0;
         moveDy = 0;
         bullets = [];
@@ -10053,19 +10055,19 @@
           }
         }
 
-        // Horizontal movement
+        // Horizontal movement — update targetX, lerp player.x toward it
         var moveInput = 0;
         if (Math.abs(moveDx) > 0.08) moveInput = moveDx;
         else {
           if (keys.ArrowLeft || keys.a || keys.A) moveInput -= 1;
           if (keys.ArrowRight || keys.d || keys.D) moveInput += 1;
         }
-        var pxPerSec = player.speed * 56;
-        player.x += moveInput * pxPerSec * dt;
         var half = player.size * 0.5;
-        player.x = Math.max(half, Math.min(GW - half, player.x));
+        var pxPerSec = player.speed * 56;
+        player.targetX += moveInput * pxPerSec * dt;
+        player.targetX = Math.max(half, Math.min(GW - half, player.targetX));
 
-        // Vertical movement with smooth lerp to target
+        // Vertical movement with smooth lerp to targetY
         var verticalInput = 0;
         if (Math.abs(moveDy) > 0.08) verticalInput = moveDy;
         else {
@@ -10076,14 +10078,14 @@
         player.targetY += verticalInput * vertPxPerSec * dt;
         player.targetY = Math.max(GH * 0.3, Math.min(GH * 0.85, player.targetY));
 
-        // Smooth lerp player.y toward targetY
+        // Smooth lerp both axes
         var lerpSpeed = 8;
+        var xDiff = player.targetX - player.x;
+        if (Math.abs(xDiff) > 0.5) player.x += xDiff * Math.min(1, lerpSpeed * dt);
+        else player.x = player.targetX;
         var yDiff = player.targetY - player.y;
-        if (Math.abs(yDiff) > 1) {
-          player.y += yDiff * Math.min(1, lerpSpeed * dt);
-        } else {
-          player.y = player.targetY;
-        }
+        if (Math.abs(yDiff) > 1) player.y += yDiff * Math.min(1, lerpSpeed * dt);
+        else player.y = player.targetY;
 
         spawnAcc += dt;
         var interval = Math.max(0.38, spawnEvery - score * 0.0012);
@@ -10115,32 +10117,29 @@
           t.rotation += t.rotSpeed * dt;
           t.wobble += dt * 1.5;
 
-          // Enemy ship movement and firing
-          if (t.isEnemyShip) {
-            // Sine wave movement (left-right oscillation)
-            if (t.movePattern === 'sine') {
-              var sineOffset = Math.sin(t.wobble + t.patternPhase) * (t.sineAmplitude || 60);
-              t.x += sineOffset * dt * 0.5;
-            }
-
-            // Enemy firing logic
+          // All targets: sine wave drift + fire at player
+          if (t.movePattern === 'sine') {
+            var sineOffset = Math.sin(t.wobble + t.patternPhase) * (t.sineAmplitude || 55);
+            t.x += sineOffset * dt * 0.5;
+          }
+          if (!activeBoss) {
             t.fireCounter -= dt;
             if (t.fireCounter <= 0) {
-              // Fire green bullet toward player
               var toBulletX = player.x - t.x;
               var toBulletY = player.y - t.y;
               var bulletDist = Math.sqrt(toBulletX * toBulletX + toBulletY * toBulletY);
               if (bulletDist > 0) {
-                var bulletSpeed = 200;
+                var bSpd = t.isEnemyShip ? 220 : 160;
+                var bClr = t.isEnemyShip ? '#00ff88' : '#ff4400';
+                var bSz  = t.isEnemyShip ? 4 : 3;
                 enemyBullets.push({
-                  x: t.x,
-                  y: t.y + t.size * 0.5,
-                  vx: (toBulletX / bulletDist) * bulletSpeed,
-                  vy: (toBulletY / bulletDist) * bulletSpeed,
-                  life: 3.0
+                  x: t.x, y: t.y + t.size * 0.4,
+                  vx: (toBulletX / bulletDist) * bSpd,
+                  vy: (toBulletY / bulletDist) * bSpd,
+                  life: 3.0, color: bClr, size: bSz
                 });
               }
-              t.fireCounter = 1.5 + Math.random() * 1.0;
+              t.fireCounter = 2.0 + Math.random() * 1.5;
             }
           }
 
@@ -10541,148 +10540,192 @@
         { core: [220,60,60],   mid: [160,30,30],   dark: [70,10,10],  vein: [255,100,80],  glow: 'rgba(255,60,40,0.3)' },    // lava red
       ];
 
+      // Ship color schemes per health tier: [hull, accent, glow]
+      var _shipTiers = [
+        ['#cc2222','#ff5555','rgba(255,60,60,0.7)'],   // 1hp  — red scout
+        ['#8822cc','#cc66ff','rgba(180,60,255,0.7)'],  // 2hp  — purple cruiser
+        ['#cc6600','#ff9933','rgba(255,140,40,0.7)'],  // 3hp  — orange destroyer
+        ['#1166cc','#44aaff','rgba(60,160,255,0.7)'],  // 4hp  — blue battleship
+        ['#22aa44','#55ff88','rgba(60,255,120,0.7)'],  // 5hp  — green carrier
+        ['#aa2266','#ff44aa','rgba(255,80,180,0.7)'],  // 6hp+ — pink dreadnought
+      ];
+
       function drawAsteroid(tg) {
         var r = tg.size * 0.5;
-        var pal = _astPalettes[(tg.health || 0) % _astPalettes.length];
+        var tier = _shipTiers[Math.min(tg.maxHealth - 1, _shipTiers.length - 1)];
+        var hull = tier[0], accent = tier[1], glowClr = tier[2];
+        var now = Date.now();
         ctx.save();
         ctx.translate(tg.x, tg.y);
 
-        // Fire trail (drawn behind, before rotation)
-        var flicker = Math.sin(Date.now() * 0.007 + tg.y) * 0.15 + 0.85;
-        var trailLen = r * (1.2 + flicker * 0.4);
-        var ftGrad = ctx.createLinearGradient(0, -r * 0.2, 0, -r * 0.2 - trailLen);
-        ftGrad.addColorStop(0, 'rgba(' + pal.core.join(',') + ',0.8)');
-        ftGrad.addColorStop(0.5, 'rgba(' + pal.mid.join(',') + ',0.3)');
-        ftGrad.addColorStop(1, 'rgba(' + pal.dark.join(',') + ',0)');
-        ctx.fillStyle = ftGrad;
-        ctx.beginPath();
-        ctx.moveTo(-r * 0.12, -r * 0.2);
-        ctx.lineTo(r * 0.12, -r * 0.2);
-        ctx.lineTo(r * 0.03, -r * 0.2 - trailLen);
-        ctx.lineTo(-r * 0.03, -r * 0.2 - trailLen);
-        ctx.fill();
-
-        ctx.rotate(tg.rotation);
-        var astVariants = [_wrSprites.asteroid, _wrSprites.asteroidGold, _wrSprites.asteroidRed, _wrSprites.asteroidGreen];
-        var sp = astVariants[Math.abs((tg.health || 0)) % astVariants.length] || _wrSprites.asteroid;
-        if (sp && sp.complete && sp.naturalWidth > 0) {
-          var drawSz = r * 2.2;
-          ctx.drawImage(sp, -drawSz / 2, -drawSz / 2, drawSz, drawSz);
-        } else {
-          // Fallback: space creature — ornate star with glowing core
-          var coreColor = 'rgb(' + pal.core.join(',') + ')';
-          var darkColor = 'rgb(' + pal.dark.join(',') + ')';
-          ctx.shadowColor = coreColor;
-          ctx.shadowBlur = 12;
-          // Outer star body
-          ctx.fillStyle = darkColor;
-          ctx.strokeStyle = coreColor;
-          ctx.lineWidth = 0.8;
+        // Engine flames at the bottom (ship travels downward, engines face up toward player)
+        var flicker = Math.sin(now * 0.009 + tg.wobble) * 0.2 + 0.8;
+        var engineLen = r * (0.9 + flicker * 0.5);
+        for (var side = -1; side <= 1; side += 2) {
+          var ex = side * r * 0.32;
+          var eGrad = ctx.createLinearGradient(ex, r * 0.3, ex, r * 0.3 + engineLen);
+          eGrad.addColorStop(0, accent.replace(')', ',0.9)').replace('rgb', 'rgba'));
+          eGrad.addColorStop(0.5, hull.replace(')', ',0.4)').replace('rgb', 'rgba'));
+          eGrad.addColorStop(1, 'rgba(255,100,0,0)');
+          ctx.fillStyle = eGrad;
           ctx.beginPath();
-          for (var i = 0; i < 8; i++) {
-            var a = (i / 8) * Math.PI * 2 - Math.PI / 2;
-            var starR = (i % 2 === 0) ? r : r * 0.4;
-            if (i === 0) ctx.moveTo(Math.cos(a) * starR, Math.sin(a) * starR);
-            else ctx.lineTo(Math.cos(a) * starR, Math.sin(a) * starR);
-          }
-          ctx.closePath();
+          ctx.moveTo(ex - r * 0.09, r * 0.3);
+          ctx.lineTo(ex + r * 0.09, r * 0.3);
+          ctx.lineTo(ex + r * 0.02, r * 0.3 + engineLen);
+          ctx.lineTo(ex - r * 0.02, r * 0.3 + engineLen);
           ctx.fill();
-          ctx.stroke();
-          ctx.shadowBlur = 0;
-          // Inner star
-          ctx.fillStyle = 'rgb(' + pal.mid.join(',') + ')';
-          ctx.beginPath();
-          for (var i = 0; i < 8; i++) {
-            var a = (i / 8) * Math.PI * 2 - Math.PI / 2;
-            var innerR = (i % 2 === 0) ? r * 0.65 : r * 0.28;
-            if (i === 0) ctx.moveTo(Math.cos(a) * innerR, Math.sin(a) * innerR);
-            else ctx.lineTo(Math.cos(a) * innerR, Math.sin(a) * innerR);
-          }
-          ctx.closePath();
-          ctx.fill();
-          // Glowing energy core
-          var coreGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, r * 0.3);
-          coreGrad.addColorStop(0, '#ffffff');
-          coreGrad.addColorStop(0.3, 'rgb(' + pal.vein.join(',') + ')');
-          coreGrad.addColorStop(0.7, coreColor);
-          coreGrad.addColorStop(1, darkColor);
-          ctx.fillStyle = coreGrad;
-          ctx.beginPath();
-          ctx.arc(0, 0, r * 0.3, 0, Math.PI * 2);
-          ctx.fill();
-
-          // Specular highlight — top-left wet shine
-          var specGrad = ctx.createRadialGradient(-r * 0.3, -r * 0.3, 0, -r * 0.3, -r * 0.3, r * 0.35);
-          specGrad.addColorStop(0, 'rgba(255,255,255,0.35)');
-          specGrad.addColorStop(0.5, 'rgba(255,255,255,0.1)');
-          specGrad.addColorStop(1, 'rgba(255,255,255,0)');
-          ctx.fillStyle = specGrad;
-          ctx.fillRect(-r, -r, r * 2, r * 2);
-
-          // Rim light glow ring
-          ctx.strokeStyle = 'rgba(' + pal.vein.join(',') + ',0.2)';
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.arc(0, 0, r * 0.85, 0, Math.PI * 2);
-          ctx.stroke();
         }
 
-        // Health number
-        ctx.font = 'bold ' + Math.max(12, Math.floor(r * 0.5)) + 'px ui-sans-serif, system-ui, sans-serif';
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillStyle = '#fff';
-        ctx.shadowColor = 'rgba(0,0,0,0.9)'; ctx.shadowBlur = 6;
-        ctx.fillText(String(tg.health), 0, 0);
+        // Outer glow
+        ctx.shadowColor = glowClr;
+        ctx.shadowBlur = 14;
+
+        // Main hull — diamond/arrowhead pointing upward (toward player)
+        ctx.fillStyle = hull;
+        ctx.strokeStyle = accent;
+        ctx.lineWidth = Math.max(1, r * 0.08);
+        ctx.beginPath();
+        ctx.moveTo(0, -r);                        // nose
+        ctx.lineTo(r * 0.85, r * 0.15);           // right shoulder
+        ctx.lineTo(r * 0.45, r * 0.55);           // right rear
+        ctx.lineTo(0, r * 0.35);                  // center rear notch
+        ctx.lineTo(-r * 0.45, r * 0.55);          // left rear
+        ctx.lineTo(-r * 0.85, r * 0.15);          // left shoulder
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
         ctx.shadowBlur = 0;
+
+        // Cockpit dome
+        var cockpitGrad = ctx.createRadialGradient(-r * 0.08, -r * 0.35, 0, 0, -r * 0.3, r * 0.22);
+        cockpitGrad.addColorStop(0, 'rgba(255,255,255,0.9)');
+        cockpitGrad.addColorStop(0.4, accent.replace(')', ',0.7)').replace('rgb', 'rgba'));
+        cockpitGrad.addColorStop(1, hull.replace(')', ',0.3)').replace('rgb', 'rgba'));
+        ctx.fillStyle = cockpitGrad;
+        ctx.beginPath();
+        ctx.ellipse(0, -r * 0.3, r * 0.22, r * 0.18, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Wing stripe detail
+        ctx.strokeStyle = accent.replace(')', ',0.5)').replace('rgb', 'rgba');
+        ctx.lineWidth = Math.max(0.8, r * 0.05);
+        ctx.beginPath();
+        ctx.moveTo(r * 0.18, -r * 0.05);
+        ctx.lineTo(r * 0.75, r * 0.12);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(-r * 0.18, -r * 0.05);
+        ctx.lineTo(-r * 0.75, r * 0.12);
+        ctx.stroke();
+
+        // Pulsing wing-tip lights
+        var pulse = Math.sin(now * 0.005 + tg.wobble) * 0.5 + 0.5;
+        ctx.fillStyle = 'rgba(255,255,255,' + (0.5 + pulse * 0.5) + ')';
+        ctx.shadowColor = accent;
+        ctx.shadowBlur = 6 + pulse * 6;
+        ctx.beginPath(); ctx.arc(r * 0.82, r * 0.15, r * 0.07, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(-r * 0.82, r * 0.15, r * 0.07, 0, Math.PI * 2); ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // HP bar above ship (only for multi-hp enemies)
+        if (tg.maxHealth > 1) {
+          var barW = r * 1.6, barH = Math.max(3, r * 0.14);
+          var barX = -barW * 0.5, barY = -r - barH - 5;
+          ctx.fillStyle = 'rgba(0,0,0,0.5)';
+          ctx.fillRect(barX, barY, barW, barH);
+          var hpFrac = Math.max(0, tg.health / tg.maxHealth);
+          var hpColor = hpFrac > 0.5 ? accent : (hpFrac > 0.25 ? '#ffcc00' : '#ff3333');
+          ctx.fillStyle = hpColor;
+          ctx.fillRect(barX, barY, barW * hpFrac, barH);
+          ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+          ctx.lineWidth = 0.5;
+          ctx.strokeRect(barX, barY, barW, barH);
+        }
+
         ctx.restore();
       }
 
       function drawDebris(tg) {
         var r = tg.size * 0.5;
+        var tier = _shipTiers[Math.min(tg.maxHealth - 1, _shipTiers.length - 1)];
+        var hull = tier[0], accent = tier[1];
+        var now = Date.now();
         ctx.save();
         ctx.translate(tg.x, tg.y);
+
+        // Drifting smoke trail
+        var smokeLen = r * 0.8;
+        var sGrad = ctx.createLinearGradient(0, 0, 0, smokeLen);
+        sGrad.addColorStop(0, 'rgba(180,180,180,0.4)');
+        sGrad.addColorStop(1, 'rgba(80,80,80,0)');
+        ctx.fillStyle = sGrad;
+        ctx.beginPath();
+        ctx.ellipse(0, smokeLen * 0.5, r * 0.3, smokeLen * 0.5, 0, 0, Math.PI * 2);
+        ctx.fill();
+
         ctx.rotate(tg.rotation);
-        var sp = _wrSprites.debris;
-        if (sp && sp.complete && sp.naturalWidth > 0) {
-          var drawSz = r * 2;
-          ctx.drawImage(sp, -drawSz / 2, -drawSz / 2, drawSz, drawSz);
-        } else {
-          // 3D metallic shard with lighting
-          var grad = ctx.createLinearGradient(-r * 0.5, -r, r * 0.5, r);
-          grad.addColorStop(0, '#c0c8d0');   // bright edge
-          grad.addColorStop(0.3, '#8090a0'); // mid
-          grad.addColorStop(0.6, '#506070'); // shadow
-          grad.addColorStop(1, '#2a3540');   // dark edge
-          ctx.fillStyle = grad;
-          ctx.beginPath();
-          ctx.moveTo(0, -r);
-          ctx.lineTo(r * 0.85, r * 0.35);
-          ctx.lineTo(r * 0.15, r);
-          ctx.lineTo(-r * 0.75, r * 0.45);
-          ctx.lineTo(-r * 0.35, -r * 0.35);
-          ctx.closePath();
-          ctx.fill();
-          // Specular edge highlight
-          ctx.strokeStyle = 'rgba(200,220,240,0.3)';
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.moveTo(0, -r);
-          ctx.lineTo(r * 0.85, r * 0.35);
-          ctx.stroke();
-          // Dark facet line (surface detail)
-          ctx.strokeStyle = 'rgba(0,0,0,0.3)';
-          ctx.beginPath();
-          ctx.moveTo(-r * 0.1, -r * 0.4);
-          ctx.lineTo(r * 0.15, r);
-          ctx.stroke();
-        }
-        // Health
-        ctx.font = 'bold ' + Math.max(10, Math.floor(r * 0.55)) + 'px ui-sans-serif, system-ui, sans-serif';
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillStyle = '#FFF';
-        ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 3;
-        ctx.fillText(String(tg.health), 0, r * 0.1);
+
+        // Broken hull plate — jagged asymmetric shape
+        ctx.shadowColor = hull;
+        ctx.shadowBlur = 8;
+        var grad = ctx.createLinearGradient(-r * 0.4, -r, r * 0.4, r);
+        grad.addColorStop(0, accent);
+        grad.addColorStop(0.35, hull);
+        grad.addColorStop(0.7, '#1a1a2e');
+        grad.addColorStop(1, '#0a0a14');
+        ctx.fillStyle = grad;
+        ctx.strokeStyle = accent.replace(')', ',0.5)').replace('rgb', 'rgba');
+        ctx.lineWidth = Math.max(0.8, r * 0.07);
+        ctx.beginPath();
+        ctx.moveTo(0, -r);
+        ctx.lineTo(r * 0.6, -r * 0.3);
+        ctx.lineTo(r * 0.9, r * 0.1);
+        ctx.lineTo(r * 0.55, r * 0.7);
+        ctx.lineTo(r * 0.1, r);
+        ctx.lineTo(-r * 0.5, r * 0.6);
+        ctx.lineTo(-r * 0.8, r * 0.05);
+        ctx.lineTo(-r * 0.4, -r * 0.5);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
         ctx.shadowBlur = 0;
+
+        // Exposed wiring / sparks detail
+        ctx.strokeStyle = 'rgba(255,220,80,0.6)';
+        ctx.lineWidth = Math.max(0.5, r * 0.04);
+        ctx.beginPath();
+        ctx.moveTo(-r * 0.2, -r * 0.2);
+        ctx.lineTo(r * 0.3, r * 0.1);
+        ctx.lineTo(r * 0.1, r * 0.45);
+        ctx.stroke();
+
+        // Spark flash
+        var spark = Math.sin(now * 0.012 + tg.wobble);
+        if (spark > 0.7) {
+          ctx.fillStyle = 'rgba(255,240,100,' + ((spark - 0.7) * 3) + ')';
+          ctx.shadowColor = '#ffee44';
+          ctx.shadowBlur = 10;
+          ctx.beginPath();
+          ctx.arc(r * 0.1, r * 0.3, r * 0.08, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        }
+
+        // HP bar above
+        if (tg.maxHealth > 1) {
+          ctx.rotate(-tg.rotation);
+          var barW = r * 1.5, barH = Math.max(3, r * 0.13);
+          var barX = -barW * 0.5, barY = -r - barH - 5;
+          ctx.fillStyle = 'rgba(0,0,0,0.5)';
+          ctx.fillRect(barX, barY, barW, barH);
+          var hpFrac = Math.max(0, tg.health / tg.maxHealth);
+          ctx.fillStyle = hpFrac > 0.5 ? accent : (hpFrac > 0.25 ? '#ffcc00' : '#ff3333');
+          ctx.fillRect(barX, barY, barW * hpFrac, barH);
+          ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+          ctx.lineWidth = 0.5;
+          ctx.strokeRect(barX, barY, barW, barH);
+        }
+
         ctx.restore();
       }
 
@@ -11647,26 +11690,34 @@
         var c = document.getElementById('wpWishRunnerCanvas');
         if (!c) return;
         canvasFireBound = true;
-        // Touch-drag on canvas moves player on both X and Y axes
         var touchActive = false;
         var rect = null;
+        // Anchors recorded on touchstart
+        var touchStartClientX = 0, touchStartClientY = 0;
+        var touchPlayerStartX = 0, touchPlayerStartY = 0;
         c.addEventListener('touchstart', function(ev) {
           if (document.body.getAttribute('data-active-view') !== 'wishrunner') return;
           touchActive = true;
           rect = c.getBoundingClientRect();
           var touch = ev.touches[0];
           var sx = GW / rect.width;
-          var sy = GH / rect.height;
-          player.x = Math.max(player.size * 0.5, Math.min(GW - player.size * 0.5, (touch.clientX - rect.left) * sx));
-          player.targetY = Math.max(GH * 0.3, Math.min(GH * 0.85, (touch.clientY - rect.top) * sy));
+          touchStartClientX = touch.clientX;
+          touchStartClientY = touch.clientY;
+          // Position ship 60 game units above finger so it's always visible
+          touchPlayerStartX = (touch.clientX - rect.left) * sx;
+          touchPlayerStartY = (touch.clientY - rect.top) * (GH / rect.height) - 60;
         }, { passive: true });
         c.addEventListener('touchmove', function(ev) {
           if (!touchActive || !rect) return;
           var touch = ev.touches[0];
           var sx = GW / rect.width;
           var sy = GH / rect.height;
-          player.x = Math.max(player.size * 0.5, Math.min(GW - player.size * 0.5, (touch.clientX - rect.left) * sx));
-          player.targetY = Math.max(GH * 0.3, Math.min(GH * 0.85, (touch.clientY - rect.top) * sy));
+          // Delta in game coords from where touch started
+          var dx = (touch.clientX - touchStartClientX) * sx;
+          var dy = (touch.clientY - touchStartClientY) * sy;
+          var half = player.size * 0.5;
+          player.targetX = Math.max(half, Math.min(GW - half, touchPlayerStartX + dx));
+          player.targetY = Math.max(GH * 0.3, Math.min(GH * 0.85, touchPlayerStartY + dy));
         }, { passive: true });
         c.addEventListener('touchend', function() { touchActive = false; rect = null; }, { passive: true });
       }
