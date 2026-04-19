@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-19-v319-fix-coach-tables';
+    var APP_VERSION = '2026-04-19-v320-fix-weapon-pickup-glow';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -11230,13 +11230,13 @@
           ctx.translate(pw.x, pw.y);
           ctx.rotate(pw.rotation);
 
-          // Pulsing aura glow
+          // Pulsing aura glow — small subtle halo behind weapon icon
           ctx.shadowColor = pw.color;
-          ctx.shadowBlur = 24;
-          ctx.globalAlpha = 0.6 + Math.sin(pw.pulse) * 0.2;
+          ctx.shadowBlur = 8;
+          ctx.globalAlpha = 0.25 + Math.sin(pw.pulse) * 0.08;
           ctx.fillStyle = pw.color;
           ctx.beginPath();
-          ctx.arc(0, 0, puR * 2.2, 0, Math.PI * 2);
+          ctx.arc(0, 0, puR * 1.1, 0, Math.PI * 2);
           ctx.fill();
 
           // Draw specific weapon based on type
