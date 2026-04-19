@@ -247,6 +247,7 @@ const ENEMY_TYPES=[
   {w:52,h:28,hp:2,pts:3000,color:'#A855F7',trim:'#D8B4FE',engine:'#7C3AED',name:'Cruiser',shootRate:2.5},
   {w:62,h:32,hp:3,pts:5000,color:'#F97316',trim:'#FDBA74',engine:'#EA580C',name:'Destroyer',shootRate:1.8},
   {w:72,h:36,hp:5,pts:8000,color:'#22D3EE',trim:'#67E8F9',engine:'#0891B2',name:'Dreadnought',shootRate:1.2},
+  {w:38,h:20,hp:2,pts:2500,color:'#818CF8',trim:'#C7D2FE',engine:'#4F46E5',name:'Stealth',shootRate:3.0},
 ];
 // Enemy lasers (shot at player)
 let enemyLasers=[];
@@ -258,7 +259,14 @@ const FORMATIONS=[
   {name:'arc',count:7,offsets:function(i){var a=(i-3)*0.35;return{dx:Math.cos(a)*120-120,dy:Math.sin(a)*100};}},
   {name:'diamond',count:4,offsets:function(i){var pts=[{dx:0,dy:0},{dx:-50,dy:-45},{dx:-50,dy:45},{dx:-100,dy:0}];return pts[i];}},
   {name:'swarm',count:6,offsets:function(i){return{dx:rand(-30,30),dy:(i-2.5)*38};}},
+  {name:'wall',count:7,offsets:function(i){return{dx:rand(-12,12),dy:(i-3)*46};}},
+  {name:'spiral',count:8,offsets:function(i){var a=i*0.7,r=i*18;return{dx:Math.cos(a)*r-60,dy:Math.sin(a)*r};}},
 ];
+
+// ─── BOSS FIGHT STATE ─────────────────────────────────────────────
+let currentBoss=null,bossActive=false,bossWarningTimer=0;
+let nextBossLevel=5;
+let homingMissiles=[];
 
 // SPACESHIP GUNS — auto-fire; tier up from diamond gun-orbs
 let gunTier=0,gunCooldown=0;
@@ -1386,6 +1394,7 @@ function startGame(){
   shakeX=0;shakeY=0;shakeDur=0;screenFlash=0;deathTimer=0;blueDiamondHudFlash=0;rocketBoostHudFlash=0;
   comboMultiplier=1;comboTimer=0;
   nukeCharges=0;nukeLastScore=0;nukeActive=false;nukeTimer=0;nukeBtnPulse=0;
+  currentBoss=null;bossActive=false;bossWarningTimer=0;nextBossLevel=5;homingMissiles=[];
   aButtonPressed=false;useMouseFollow=false;patternWallsLeft=0;
   runStartTime=performance.now();generateWalls();
 }
@@ -1469,6 +1478,7 @@ function update(dt){
     // Hit enemies
     for(const e of enemies){
       if(e.dead)continue;
+      if(e.shieldOn)continue; // Dreadnought shield phase — immune
       const ex=e.x-cameraX,px=p.x-cameraX;
       if(Math.abs(px-ex)<e.type.w*0.6&&Math.abs(p.y-e.y)<e.type.h*0.8){
         p.dead=true;e.hp--;
@@ -1489,6 +1499,28 @@ function update(dt){
         break;
       }
     }
+    // Hit boss
+    if(bossActive&&currentBoss&&!currentBoss.dead&&!p.dead){
+      const b=currentBoss;
+      const px=p.x-cameraX;
+      if(Math.abs(px-b.screenX)<b.w*0.55&&Math.abs(p.y-b.y)<b.h*0.55){
+        p.dead=true;b.hp--;b.hitFlash=1.0;playHitSound();
+        spawnBurst(b.screenX,b.y,'#FF4444',12,5,0.3,4);
+        if(b.hp<=0)killBoss();
+      }
+    }
+    // Homing missile shoot-down
+    if(!p.dead){
+      for(let mi=homingMissiles.length-1;mi>=0;mi--){
+        const m=homingMissiles[mi];if(m.dead)continue;
+        const mx=m.x-cameraX,px2=p.x-cameraX;
+        if(Math.abs(px2-mx)<20&&Math.abs(p.y-m.y)<20){
+          p.dead=true;m.hp--;
+          if(m.hp<=0){m.dead=true;spawnBurst(mx,m.y,'#FF4500',25,6,0.5,5);addFloatingText(mx,m.y-20,'MISSILE DOWN!','#FF4500',14);score+=500;}
+          break;
+        }
+      }
+    }
     // Hit walls
     for(const w of walls){
       if(w.hit)continue;
@@ -1501,59 +1533,167 @@ function update(dt){
   }
   projectiles=projectiles.filter(p=>!p.dead);
 
-  // ENEMY SPAWNING — formation waves
+  // BOSS TRIGGER — every 5 levels
+  if(!bossActive&&level>=nextBossLevel&&bossWarningTimer<=0){
+    bossWarningTimer=2.5;
+    setTimeout(()=>{if(state===STATE.PLAYING)spawnBoss();},2500);
+    nextBossLevel+=5;
+    addFloatingText(W/2,H/2-30,'⚠ WARNING — MOTHERSHIP INCOMING ⚠','#FF4444',18);
+    addFloatingText(W/2,H/2+15,'BRACE FOR IMPACT','#FF8800',13);
+    screenFlash=0.5;screenFlashColor='#FF2200';shakeDur=0.6;
+  }
+  if(bossWarningTimer>0)bossWarningTimer-=dt;
+
+  // ENEMY SPAWNING — skip while boss warning, pause normal spawns during boss
   enemySpawnTimer-=dt;
-  if(enemySpawnTimer<=0){
+  if(enemySpawnTimer<=0&&!bossActive){
     enemySpawnTimer=ENEMY_SPAWN_INTERVAL*(0.8+Math.random()*0.5);
-    // Pick enemy type based on score
     const r=Math.random();
     const typeIdx=score>20000?(r<0.15?3:r<0.4?2:r<0.7?1:0):(score>10000?(r<0.25?2:r<0.6?1:0):(score>3000?(r<0.15?2:r<0.5?1:0):0));
     const type=ENEMY_TYPES[typeIdx];
-    // Formation or solo
-    if(Math.random()<0.4&&score>2000){
+
+    const roll=Math.random();
+    if(roll<0.12&&score>8000){
+      // Sine wave squadron
+      for(let si=0;si<5;si++){
+        enemies.push({x:cameraX+W+100+si*55,y:clamp(H/2+Math.sin(si*1.25)*70,40,H-40),
+          type:ENEMY_TYPES[0],hp:ENEMY_TYPES[0].hp,dead:false,phase:si*1.25,
+          speed:ENEMY_SPEED-25,shootTimer:999,wingPhase:rand(0,6.28),sineAmp:35});
+      }
+      enemySpawnTimer+=1.5;
+    } else if(roll<0.22&&score>15000){
+      // Pincer attack — converge from top & bottom
+      const playerY=ship.y;
+      const count=3;
+      for(let pi=0;pi<count;pi++){
+        const ptype=ENEMY_TYPES[randInt(0,2)];
+        enemies.push({x:cameraX+W+100+pi*65,y:clamp(30+pi*12,25,H/2-60),type:ptype,hp:ptype.hp,dead:false,phase:rand(0,6.28),speed:ENEMY_SPEED-15,shootTimer:rand(0.5,2),wingPhase:rand(0,6.28),pincerTarget:playerY,pincerConverging:true});
+        enemies.push({x:cameraX+W+100+pi*65,y:clamp(H-30-pi*12,H/2+60,H-25),type:ptype,hp:ptype.hp,dead:false,phase:rand(0,6.28),speed:ENEMY_SPEED-15,shootTimer:rand(0.5,2),wingPhase:rand(0,6.28),pincerTarget:playerY,pincerConverging:true});
+      }
+      enemySpawnTimer+=1.5;
+    } else if(roll<0.55&&score>2000){
+      // Formation
       const f=FORMATIONS[randInt(0,FORMATIONS.length-1)];
       const baseY=rand(80,H-80);
       for(var fi=0;fi<f.count;fi++){
         var off=f.offsets(fi);
         enemies.push({x:cameraX+W+120+off.dx,y:clamp(baseY+off.dy,35,H-35),type,hp:type.hp,dead:false,phase:rand(0,6.28),speed:ENEMY_SPEED+rand(-30,30),shootTimer:type.shootRate>0?rand(0.5,type.shootRate):999,wingPhase:rand(0,6.28)});
       }
-      enemySpawnTimer+=1.0; // extra delay after formation
+      enemySpawnTimer+=1.0;
     } else {
       enemies.push({x:cameraX+W+100,y:rand(50,H-50),type,hp:type.hp,dead:false,phase:rand(0,6.28),speed:ENEMY_SPEED+rand(-40,40),shootTimer:type.shootRate>0?rand(0.5,type.shootRate):999,wingPhase:rand(0,6.28)});
     }
   }
 
-  // Update enemies — fly left with sine wave motion + SHOOT
+  // Update enemies — smart AI by type
   for(const e of enemies){
     if(e.dead)continue;
-    e.x-=e.speed*dt;e.phase+=dt*3;e.wingPhase+=dt*5;
-    e.y+=Math.sin(e.phase)*1.5;
+    e.phase+=dt*3;e.wingPhase+=dt*5;
+    const ex=e.x-cameraX;
+    const ename=e.type.name;
+
+    // Pincer convergence — override Y toward target
+    if(e.pincerConverging){
+      e.y=lerp(e.y,e.pincerTarget,dt*2.2);
+      if(Math.abs(e.y-e.pincerTarget)<18)e.pincerConverging=false;
+    }
+
+    if(ename==='Scout'){
+      // Dodge bullets heading toward within 80px
+      let dodging=false;
+      for(const p of projectiles){
+        if(p.dead)continue;
+        const px=p.x-cameraX;
+        if(px<ex+10&&px>ex-80&&Math.abs(p.y-e.y)<80){
+          e.y+=(e.y<H/2?200:-200)*dt;dodging=true;break;
+        }
+      }
+      if(!dodging&&!e.pincerConverging)e.y+=Math.sin(e.phase)*(e.sineAmp?e.sineAmp/10:1.5);
+      e.x-=e.speed*dt;
+    } else if(ename==='Cruiser'){
+      if(!e.aiState){e.aiState='moving';e.strafeTargetY=rand(60,H-60);e.burstCount=0;e.aiTimer=0;}
+      if(e.aiState==='moving'){
+        e.x-=e.speed*dt;
+        if(!e.pincerConverging)e.y=lerp(e.y,e.strafeTargetY,dt*2.5);
+        if(Math.abs(e.y-e.strafeTargetY)<22&&ex>W*0.15&&ex<W*0.9){
+          e.aiState='firing';e.burstCount=0;e.aiTimer=0.12;
+        }
+      } else if(e.aiState==='firing'){
+        e.x-=e.speed*0.05*dt;
+        e.aiTimer-=dt;
+        if(e.aiTimer<=0){
+          if(e.burstCount<3){
+            if(ex>0&&ex<W+50){
+              const ang=Math.atan2(ship.y-e.y,SHIP_X-ex);
+              enemyLasers.push({x:e.x-e.type.w*0.5,y:e.y,vx:Math.cos(ang)*ENEMY_LASER_SPEED,vy:Math.sin(ang)*ENEMY_LASER_SPEED,dead:false,color:e.type.color,born:performance.now()});
+            }
+            e.burstCount++;e.aiTimer=0.18;
+          } else {e.aiState='moving';e.strafeTargetY=rand(60,H-60);e.aiTimer=0;}
+        }
+      }
+    } else if(ename==='Destroyer'){
+      if(!e.aiState){e.aiState='normal';e.aiTimer=rand(1.5,3.0);}
+      if(e.aiState==='normal'){
+        e.x-=e.speed*dt;
+        if(!e.pincerConverging)e.y+=Math.sin(e.phase)*1.5;
+        e.aiTimer-=dt;
+        if(e.aiTimer<=0&&Math.random()<0.30&&ex>50&&ex<W*0.65){
+          e.aiState='kamikaze';
+          e.kamikazeVx=-e.speed*2.5;
+          e.kamikazeVy=(ship.y-e.y)*(0.5+Math.random()*0.5);
+        }
+      } else {
+        e.x+=e.kamikazeVx*dt;e.y+=e.kamikazeVy*dt;
+        if(ex<-60){e.dead=true;continue;}
+      }
+    } else if(ename==='Dreadnought'){
+      if(!e.shieldCycleTimer){e.shieldCycleTimer=4.0;e.shieldOn=false;}
+      e.x-=e.speed*dt;
+      if(!e.pincerConverging)e.y+=Math.sin(e.phase)*1.2;
+      e.shieldCycleTimer-=dt;
+      if(e.shieldCycleTimer<=0){
+        e.shieldOn=!e.shieldOn;
+        e.shieldCycleTimer=e.shieldOn?1.0:4.0;
+        if(e.shieldOn){spawnBurst(ex,e.y,'#22D3EE',20,5,0.4,4);addFloatingText(ex,e.y-28,'SHIELD!','#22D3EE',12);}
+      }
+    } else if(ename==='Stealth'){
+      if(e.stealthAlpha===undefined)e.stealthAlpha=0.2;
+      e.x-=e.speed*dt;
+      if(!e.pincerConverging)e.y+=Math.sin(e.phase)*2;
+      const distP=Math.abs(ex-SHIP_X);
+      const tA=distP<130?0.92:(e.shootTimer<0.6?0.88:0.2);
+      e.stealthAlpha=lerp(e.stealthAlpha,tA,dt*3);
+    } else {
+      e.x-=e.speed*dt;
+      if(!e.pincerConverging)e.y+=Math.sin(e.phase)*(e.sineAmp?e.sineAmp/10:1.5);
+    }
+
     e.y=clamp(e.y,30,H-30);
     if(e.x<cameraX-100){e.dead=true;continue;}
-    // Enemy shoots at player
-    if(e.type.shootRate>0){
+
+    // Shoot (Cruiser handles its own burst above)
+    if(e.type.shootRate>0&&ename!=='Cruiser'){
       e.shootTimer-=dt;
       if(e.shootTimer<=0){
         e.shootTimer=e.type.shootRate*(0.7+Math.random()*0.6);
-        const ex=e.x-cameraX;
         if(ex>0&&ex<W+50){
-          const angle=Math.atan2(ship.y-e.y,SHIP_X-ex);
-          enemyLasers.push({x:e.x-e.type.w*0.5,y:e.y,vx:Math.cos(angle)*ENEMY_LASER_SPEED,vy:Math.sin(angle)*ENEMY_LASER_SPEED,dead:false,color:e.type.color,born:performance.now()});
-          // Laser sound (quieter)
+          const ang=Math.atan2(ship.y-e.y,SHIP_X-ex);
+          enemyLasers.push({x:e.x-e.type.w*0.5,y:e.y,vx:Math.cos(ang)*ENEMY_LASER_SPEED,vy:Math.sin(ang)*ENEMY_LASER_SPEED,dead:false,color:e.type.color,born:performance.now()});
+          if(ename==='Stealth')e.stealthAlpha=0.9;
         }
       }
     }
-    // Collide with player ship
+
+    // Collide with player
     if(!shieldActive&&invincTimer<=0){
-      const ex=e.x-cameraX;
-      if(Math.abs(SHIP_X-ex)<(SHIP_W+e.type.w)*0.4&&Math.abs(ship.y-e.y)<(SHIP_H+e.type.h)*0.5){
+      if(ename==='Dreadnought'&&e.shieldOn){/* immune to collision too */}
+      else if(Math.abs(SHIP_X-ex)<(SHIP_W+e.type.w)*0.4&&Math.abs(ship.y-e.y)<(SHIP_H+e.type.h)*0.5){
         e.dead=true;
         spawnOrbBurst(ex,e.y,['#EF4444','#FF6BD6','#FFF'],40,8);
         health--;damageLevel=maxHealth-health;invincTimer=1.5;hitFlashTimer=0.3;shakeDur=0.4;damageFlash=1.0;
         if(health<=0){die();return;}
       }
     } else if(shieldActive){
-      const ex=e.x-cameraX;
       if(Math.abs(SHIP_X-ex)<(SHIP_W+e.type.w)*0.5&&Math.abs(ship.y-e.y)<(SHIP_H+e.type.h)*0.6){
         e.dead=true;const pts=e.type.pts*2*comboMultiplier;score+=pts;
         spawnOrbBurst(ex,e.y,[e.type.color,'#FFD700','#FFF'],70,12);
@@ -1581,6 +1721,8 @@ function update(dt){
   }
   enemyLasers=enemyLasers.filter(el=>!el.dead);
 
+  updateBoss(dt);if(state!==STATE.PLAYING)return;
+  updateHomingMissiles(dt);if(state!==STATE.PLAYING)return;
   generateWalls();updateShip(dt);checkCollisions();
   updateParticles(dt);updatePersistentSmoke(dt);updateFloatingTexts(dt);updateSpeedLines(dt);updateSparkles(dt);
 
@@ -2018,6 +2160,9 @@ function drawHUD(){
     ctx.fillStyle=mg;ctx.fillRect(0,0,W,H);ctx.globalAlpha=1;
   }
 
+  // Boss HP bar (top center, only when boss active)
+  drawBossHPBar();
+
   // Pause button — top-right corner
   const pbX=W-50,pbY=22,pbS=isPaused?'#FDE047':'rgba(255,255,255,0.55)';
   ctx.save();ctx.shadowColor=pbS;ctx.shadowBlur=isPaused?12:6;
@@ -2087,6 +2232,329 @@ function drawGameOverScreen(){
     ctx.fillStyle='#FFF';ctx.strokeStyle='#FFF';ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,bR*0.4,-0.8,Math.PI*1.5,false);ctx.stroke();ctx.beginPath();ctx.moveTo(bR*0.15,-bR*0.5);ctx.lineTo(bR*0.45,-bR*0.25);ctx.lineTo(bR*0.05,-bR*0.15);ctx.closePath();ctx.fill();ctx.restore();
     ctx.font=arcadeFont(Math.min(7,W*0.009));ctx.fillStyle='rgba(255,255,255,0.5)';ctx.textAlign='center';ctx.fillText('TAP TO RETRY',W/2,bY2+bR+18);}
   ctx.globalAlpha=1;
+}
+
+// ─── BOSS FIGHT ────────────────────────────────────────────────
+function spawnBoss(){
+  if(bossActive)return;
+  bossActive=true;
+  const bossHp=100+level*20;
+  currentBoss={
+    screenX:W+160,y:H/2,targetY:H/2,
+    hp:bossHp,maxHp:bossHp,
+    w:130,h:64,
+    phase:0,phaseTimer:3.5,
+    phaseDur:[2.5,3.8,4.2,5.0],
+    attackTimer:1.0,
+    laserState:'idle',laserChargeTimer:0,laserFireTimer:0,
+    hitFlash:0,bobPhase:0,
+    entryDone:false,dead:false,
+  };
+  addFloatingText(W/2,H/3,'⚠ MOTHERSHIP INCOMING ⚠','#FF2200',20);
+  screenFlash=0.6;screenFlashColor='#FF2200';shakeDur=0.8;
+}
+
+function killBoss(){
+  if(!currentBoss)return;
+  const b=currentBoss;
+  b.dead=true;bossActive=false;
+  // Massive explosion
+  for(let i=0;i<8;i++){
+    setTimeout(()=>{
+      if(state!==STATE.PLAYING)return;
+      spawnBurst(b.screenX+rand(-60,60),b.y+rand(-30,30),
+        ['#FF4500','#FF8800','#FFF','#FDE047','#FF2EC4'][randInt(0,4)],50,14,0.8,8);
+    },i*120);
+  }
+  playExplosionSound();
+  const bpts=25000+level*1000;
+  score+=bpts;comboMultiplier=Math.min(comboMultiplier+3,8);comboTimer=3;
+  shakeDur=1.2;screenFlash=0.9;screenFlashColor='#FF4500';
+  addFloatingText(W/2,H/2-40,'💥 BOSS DEFEATED! 💥','#FDE047',26);
+  addFloatingText(W/2,H/2+5,'+'+bpts.toLocaleString(),'#FF8800',18);
+  // Drop rewards at boss screen position
+  for(let i=0;i<3;i++)gunOrbPickups.push({x:b.screenX+cameraX+rand(-50,50),y:b.y+rand(-40,40),collected:false,anim:rand(0,6.28)});
+  for(let i=0;i<2;i++)rocketBoosters.push({x:b.screenX+cameraX+rand(-60,60),y:b.y+rand(-50,50),collected:false,anim:rand(0,6.28)});
+  currentBoss=null;
+}
+
+function updateBoss(dt){
+  if(!bossActive||!currentBoss||currentBoss.dead)return;
+  const b=currentBoss;
+  b.bobPhase+=dt*1.1;
+  b.hitFlash=Math.max(0,b.hitFlash-dt*4);
+
+  // Entry slide in
+  if(!b.entryDone){
+    b.screenX=lerp(b.screenX,W*0.72,dt*2.5);
+    if(b.screenX<=W*0.73)b.entryDone=true;
+    return;
+  }
+
+  // Hover up/down
+  b.targetY=H/2+Math.sin(b.bobPhase*0.7)*H*0.28;
+  b.y=lerp(b.y,b.targetY,dt*1.8);
+  b.y=clamp(b.y,b.h/2+25,H-b.h/2-25);
+
+  // Phase cycle
+  b.phaseTimer-=dt;
+  if(b.phaseTimer<=0){
+    b.laserState='idle';
+    b.phase=(b.phase+1)%4;
+    b.phaseTimer=b.phaseDur[b.phase];
+    b.attackTimer=0.6;
+  }
+  b.attackTimer-=dt;
+
+  if(b.phase===0&&b.attackTimer<=0){
+    // Spread shot — 6 bullets fan
+    b.attackTimer=1.4;
+    const n=6;const spread=0.55;
+    const baseAng=Math.atan2(ship.y-b.y,SHIP_X-b.screenX);
+    for(let i=0;i<n;i++){
+      const ang=baseAng+(i-(n-1)/2)*spread/(n-1)*2;
+      enemyLasers.push({x:b.screenX+cameraX-b.w*0.45,y:b.y,vx:Math.cos(ang)*ENEMY_LASER_SPEED*0.85,vy:Math.sin(ang)*ENEMY_LASER_SPEED*0.85,dead:false,color:'#FF4500',born:performance.now(),boss:true});
+    }
+    playLaserSound(0.7);spawnBurst(b.screenX,b.y,'#FF4500',15,4,0.3,3);
+  } else if(b.phase===1){
+    // Laser beam — charge then fire
+    if(b.laserState==='idle'&&b.attackTimer<=0){
+      b.laserState='charging';b.laserChargeTimer=1.0;b.attackTimer=999;
+    } else if(b.laserState==='charging'){
+      b.laserChargeTimer-=dt;
+      if(b.laserChargeTimer<=0){b.laserState='firing';b.laserFireTimer=1.5;}
+    } else if(b.laserState==='firing'){
+      b.laserFireTimer-=dt;
+      // Damage player if in beam path
+      if(!shieldActive&&invincTimer<=0&&Math.abs(ship.y-b.y)<22){
+        health--;damageLevel=maxHealth-health;invincTimer=0.9;hitFlashTimer=0.3;shakeDur=0.3;damageFlash=0.8;
+        spawnOrbBurst(SHIP_X,ship.y,['#EF4444','#FFF'],20,5);
+        if(health<=0){die();return;}
+      }
+      if(b.laserFireTimer<=0){b.laserState='idle';b.attackTimer=1.2;}
+    }
+  } else if(b.phase===2&&b.attackTimer<=0){
+    // Minion spawn
+    b.attackTimer=3.0;
+    const cnt=randInt(3,5);
+    for(let i=0;i<cnt;i++){
+      enemies.push({x:cameraX+W+80+i*35,y:rand(i%2===0?30:H/2,i%2===0?H/2:H-30),
+        type:ENEMY_TYPES[0],hp:ENEMY_TYPES[0].hp,dead:false,phase:rand(0,6.28),
+        speed:ENEMY_SPEED+40,shootTimer:1.2,wingPhase:rand(0,6.28)});
+    }
+    addFloatingText(b.screenX,b.y-b.h*0.6-10,'MINIONS!','#FF4500',13);
+    spawnBurst(b.screenX,b.y,'#EF4444',25,6,0.4,4);
+  } else if(b.phase===3&&b.attackTimer<=0){
+    // Homing missiles
+    b.attackTimer=2.2;
+    const cnt=randInt(2,3);
+    for(let i=0;i<cnt;i++){
+      homingMissiles.push({
+        x:b.screenX+cameraX-b.w*0.4,y:b.y+(i-1)*28,
+        vx:-80,vy:0,speed:110,hp:3,dead:false,
+        trail:[],trailTimer:0,
+      });
+    }
+    spawnBurst(b.screenX,b.y,'#F97316',20,5,0.4,4);
+  }
+}
+
+function updateHomingMissiles(dt){
+  for(let i=homingMissiles.length-1;i>=0;i--){
+    const m=homingMissiles[i];
+    if(m.dead){swapRemove(homingMissiles,i);continue;}
+    // Steer toward player
+    const tx=SHIP_X+cameraX,ty=ship.y;
+    const dx=tx-m.x,dy2=ty-m.y;
+    const dist=Math.sqrt(dx*dx+dy2*dy2);
+    if(dist>0){
+      const dvx=dx/dist*m.speed,dvy=dy2/dist*m.speed;
+      m.vx=lerp(m.vx,dvx,dt*1.2);m.vy=lerp(m.vy,dvy,dt*1.2);
+    }
+    m.x+=m.vx*dt;m.y+=m.vy*dt;
+    m.trailTimer-=dt;
+    if(m.trailTimer<=0){m.trail.push({x:m.x,y:m.y});m.trailTimer=0.04;if(m.trail.length>12)m.trail.shift();}
+    const mx=m.x-cameraX;
+    if(mx<-60||mx>W+60||m.y<-30||m.y>H+30){m.dead=true;continue;}
+    // Hit player
+    if(!shieldActive&&invincTimer<=0&&Math.abs(SHIP_X-mx)<SHIP_W*0.45&&Math.abs(ship.y-m.y)<SHIP_H*0.5){
+      m.dead=true;
+      health--;damageLevel=maxHealth-health;invincTimer=1.0;hitFlashTimer=0.3;shakeDur=0.35;damageFlash=0.8;
+      spawnOrbBurst(SHIP_X,ship.y,['#EF4444','#FFF'],20,5);
+      if(health<=0){die();return;}
+    }
+    if(shieldActive&&Math.abs(SHIP_X-mx)<SHIP_W*0.5&&Math.abs(ship.y-m.y)<SHIP_H*0.6){
+      m.dead=true;spawnOrbBurst(SHIP_X,ship.y,['#FFD700','#FFF'],15,4);score+=800;
+    }
+  }
+}
+
+function drawBoss(time){
+  if(!currentBoss||currentBoss.dead)return;
+  const b=currentBoss;
+  const bx=b.screenX,by=b.y;
+  const w=b.w,h=b.h;
+  const pulse=Math.sin(time*0.005)*0.5+0.5;
+
+  ctx.save();ctx.translate(bx,by);
+
+  // Entry glow & ambient aura
+  ctx.shadowColor='#FF2200';ctx.shadowBlur=30+pulse*20;
+
+  // Engine flames (right side)
+  ctx.globalAlpha=0.6+Math.sin(time*0.03)*0.3;
+  const flLen=w*0.4+Math.sin(time*0.05)*8;
+  const fg=ctx.createLinearGradient(w*0.45,0,w*0.45+flLen,0);
+  fg.addColorStop(0,'#FF4400');fg.addColorStop(0.5,'#FF8800');fg.addColorStop(1,'transparent');
+  for(let fi=-1;fi<=1;fi++){
+    ctx.fillStyle=fg;ctx.beginPath();
+    ctx.moveTo(w*0.45,fi*h*0.2-h*0.06);ctx.quadraticCurveTo(w*0.45+flLen*0.6,fi*h*0.2,w*0.45+flLen,fi*h*0.2);
+    ctx.quadraticCurveTo(w*0.45+flLen*0.6,fi*h*0.2,w*0.45,fi*h*0.2+h*0.06);ctx.closePath();ctx.fill();
+  }
+  ctx.globalAlpha=1;
+
+  // Top/bottom heavy wings
+  ctx.shadowBlur=15;ctx.shadowColor='#CC2200';
+  const wg=ctx.createLinearGradient(0,-h*0.9,0,0);wg.addColorStop(0,'#4A0000');wg.addColorStop(1,'#8B1A1A');
+  ctx.fillStyle=wg;
+  ctx.beginPath();ctx.moveTo(-w*0.1,-h*0.3);ctx.lineTo(w*0.3,-h*0.9);ctx.lineTo(w*0.42,-h*0.7);ctx.lineTo(w*0.25,-h*0.28);ctx.closePath();ctx.fill();
+  const wg2=ctx.createLinearGradient(0,h*0.9,0,0);wg2.addColorStop(0,'#4A0000');wg2.addColorStop(1,'#8B1A1A');
+  ctx.fillStyle=wg2;
+  ctx.beginPath();ctx.moveTo(-w*0.1,h*0.3);ctx.lineTo(w*0.3,h*0.9);ctx.lineTo(w*0.42,h*0.7);ctx.lineTo(w*0.25,h*0.28);ctx.closePath();ctx.fill();
+
+  // Main hull
+  const hg=ctx.createLinearGradient(-w*0.5,0,w*0.45,0);
+  hg.addColorStop(0,'#FF3300');hg.addColorStop(0.25,'#CC1100');hg.addColorStop(0.6,'#880000');hg.addColorStop(1,'#440000');
+  ctx.fillStyle=hg;ctx.shadowBlur=20;ctx.shadowColor='#FF2200';
+  ctx.beginPath();
+  ctx.moveTo(-w*0.5,0);
+  ctx.lineTo(-w*0.35,-h*0.25);ctx.lineTo(-w*0.1,-h*0.38);
+  ctx.lineTo(w*0.2,-h*0.3);ctx.lineTo(w*0.45,-h*0.12);
+  ctx.lineTo(w*0.45,h*0.12);ctx.lineTo(w*0.2,h*0.3);
+  ctx.lineTo(-w*0.1,h*0.38);ctx.lineTo(-w*0.35,h*0.25);
+  ctx.closePath();ctx.fill();
+
+  // Armor panel lines
+  ctx.strokeStyle='rgba(255,80,0,0.3)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(-w*0.3,-h*0.08);ctx.lineTo(w*0.25,-h*0.08);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(-w*0.3,h*0.08);ctx.lineTo(w*0.25,h*0.08);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(w*0.05,-h*0.3);ctx.lineTo(w*0.05,h*0.3);ctx.stroke();
+
+  // Hit zone flash
+  if(b.hitFlash>0){
+    ctx.globalAlpha=b.hitFlash*0.5;ctx.fillStyle='#FFFFFF';
+    ctx.beginPath();ctx.moveTo(-w*0.5,0);ctx.lineTo(w*0.45,-h*0.38);ctx.lineTo(w*0.45,h*0.38);ctx.closePath();ctx.fill();
+    ctx.globalAlpha=1;
+  }
+
+  // Bridge/cockpit
+  const cg=ctx.createRadialGradient(-w*0.3,0,0,-w*0.3,0,h*0.22);
+  cg.addColorStop(0,'rgba(255,100,100,0.9)');cg.addColorStop(0.5,'#CC2200');cg.addColorStop(1,'rgba(0,0,0,0.5)');
+  ctx.fillStyle=cg;ctx.shadowColor='#FF4444';ctx.shadowBlur=14;
+  ctx.beginPath();ctx.ellipse(-w*0.3,0,h*0.2,h*0.14,0,0,Math.PI*2);ctx.fill();
+
+  // Gun ports (3 on nose)
+  ctx.fillStyle='#FF6600';ctx.shadowColor='#FF4400';ctx.shadowBlur=10;
+  for(let gi=0;gi<3;gi++){
+    const gy=(gi-1)*h*0.15;
+    ctx.fillRect(-w*0.52,gy-2,w*0.13,4);
+    ctx.fillStyle=`rgba(255,100,0,${0.5+Math.sin(time*0.04+gi)*0.4})`;
+    ctx.beginPath();ctx.arc(-w*0.53,gy,4,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#FF6600';
+  }
+
+  // Shield glow when charging laser
+  if(b.laserState==='charging'){
+    const cp=1-b.laserChargeTimer/1.0;
+    ctx.globalAlpha=cp*0.6;ctx.fillStyle='rgba(255,200,0,0.3)';
+    ctx.shadowColor='#FFD700';ctx.shadowBlur=30+cp*40;
+    ctx.beginPath();ctx.ellipse(0,0,w*0.6*(0.5+cp*0.5),h*0.7*(0.5+cp*0.5),0,0,Math.PI*2);ctx.fill();
+    ctx.globalAlpha=1;ctx.shadowBlur=0;
+  }
+
+  ctx.shadowBlur=0;ctx.restore();
+
+  // Laser beam
+  if(b.laserState==='firing'){
+    const beamY=by,bx2=bx-w*0.5;
+    ctx.save();
+    // Outer glow
+    ctx.shadowColor='#FF8800';ctx.shadowBlur=30;
+    const lg2=ctx.createLinearGradient(0,beamY-20,0,beamY+20);
+    lg2.addColorStop(0,'transparent');lg2.addColorStop(0.3,'rgba(255,100,0,0.4)');
+    lg2.addColorStop(0.5,'rgba(255,200,0,0.7)');lg2.addColorStop(0.7,'rgba(255,100,0,0.4)');lg2.addColorStop(1,'transparent');
+    ctx.fillStyle=lg2;ctx.fillRect(0,beamY-22,bx2,44);
+    // Core beam
+    const coreG=ctx.createLinearGradient(0,beamY-8,0,beamY+8);
+    coreG.addColorStop(0,'rgba(255,150,0,0.9)');coreG.addColorStop(0.5,'rgba(255,255,200,1)');coreG.addColorStop(1,'rgba(255,150,0,0.9)');
+    ctx.fillStyle=coreG;ctx.shadowBlur=0;ctx.fillRect(0,beamY-8,bx2,16);
+    ctx.restore();
+  }
+  // Laser charge warning bar
+  if(b.laserState==='charging'){
+    const cp=1-b.laserChargeTimer/1.0;
+    const warnFlash=Math.floor(b.laserChargeTimer*8)%2===0;
+    ctx.save();ctx.globalAlpha=warnFlash?1:0.6;
+    ctx.fillStyle='rgba(0,0,0,0.6)';ctx.fillRect(bx-b.w*0.4,by-b.h*0.6-16,b.w*0.8,10);
+    ctx.fillStyle='#FFD700';ctx.shadowColor='#FFD700';ctx.shadowBlur=10;
+    ctx.fillRect(bx-b.w*0.4,by-b.h*0.6-16,b.w*0.8*cp,10);
+    ctx.font=arcadeFont(8);ctx.fillStyle='#FFD700';ctx.textAlign='center';ctx.fillText('⚡ LASER CHARGING',bx,by-b.h*0.6-20);
+    ctx.shadowBlur=0;ctx.restore();
+  }
+}
+
+function drawHomingMissiles(){
+  for(const m of homingMissiles){
+    if(m.dead)continue;
+    const mx=m.x-cameraX;
+    if(mx<-60||mx>W+60)continue;
+    // Trail
+    for(let ti=0;ti<m.trail.length;ti++){
+      const t=m.trail[ti];const a=(ti/m.trail.length)*0.6;
+      ctx.globalAlpha=a;ctx.fillStyle='#FF4500';ctx.shadowColor='#FF4500';ctx.shadowBlur=6;
+      ctx.beginPath();ctx.arc(t.x-cameraX,t.y,4*(ti/m.trail.length),0,Math.PI*2);ctx.fill();
+    }
+    ctx.globalAlpha=1;ctx.shadowBlur=0;
+    // Missile body
+    ctx.save();ctx.translate(mx,m.y);
+    const ang2=Math.atan2(m.vy,m.vx);ctx.rotate(ang2);
+    ctx.shadowColor='#FF4500';ctx.shadowBlur=14;
+    ctx.fillStyle='#FF4500';
+    ctx.beginPath();ctx.moveTo(14,0);ctx.lineTo(-10,-5);ctx.lineTo(-8,0);ctx.lineTo(-10,5);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#FF8800';ctx.beginPath();ctx.arc(-10,0,5,0,Math.PI*2);ctx.fill();
+    // Exhaust flame
+    ctx.globalAlpha=0.7+Math.random()*0.3;
+    const fl=ctx.createLinearGradient(-10,0,-22,0);fl.addColorStop(0,'#FFF');fl.addColorStop(0.5,'#FF6600');fl.addColorStop(1,'transparent');
+    ctx.fillStyle=fl;ctx.beginPath();ctx.moveTo(-10,-3);ctx.lineTo(-22,0);ctx.lineTo(-10,3);ctx.closePath();ctx.fill();
+    ctx.shadowBlur=0;ctx.globalAlpha=1;ctx.restore();
+  }
+}
+
+function drawBossHPBar(){
+  if(!bossActive||!currentBoss||currentBoss.dead)return;
+  const b=currentBoss;
+  const pct=clamp(b.hp/b.maxHp,0,1);
+  const bw=Math.min(W*0.45,340),bh=16,bx=(W-bw)/2,by2=18;
+  const now2=performance.now();
+  const warning=pct<0.3;const flash=warning&&Math.floor(now2*0.006)%2===0;
+  // Background
+  ctx.fillStyle='rgba(0,0,0,0.75)';ctx.beginPath();ctx.roundRect(bx-4,by2-4,bw+8,bh+8,10);ctx.fill();
+  ctx.strokeStyle='rgba(255,50,0,0.6)';ctx.lineWidth=1.5;ctx.stroke();
+  // Fill
+  const hbg=ctx.createLinearGradient(bx,0,bx+bw,0);
+  hbg.addColorStop(0,warning?'#FF2200':'#FF4500');hbg.addColorStop(1,warning?'#FF6600':'#FF8800');
+  ctx.fillStyle=flash?'rgba(255,100,100,0.5)':hbg;
+  ctx.shadowColor='#FF3300';ctx.shadowBlur=warning?14:8;
+  ctx.beginPath();ctx.roundRect(bx,by2,bw*pct,bh,7);ctx.fill();ctx.shadowBlur=0;
+  // Label
+  ctx.font=arcadeFont(8);ctx.fillStyle='#FFF';ctx.textAlign='left';
+  ctx.fillText('MOTHERSHIP',bx+6,by2-6);
+  ctx.fillStyle='#FF8800';ctx.textAlign='right';
+  ctx.fillText(b.hp+'/'+b.maxHp,bx+bw-2,by2-6);
+  // Phase label
+  const phases=['SPREAD SHOT','LASER BEAM','MINION SPAWN','MISSILES'];
+  ctx.font=arcadeFont(7);ctx.fillStyle='rgba(255,180,100,0.8)';ctx.textAlign='center';
+  ctx.fillText('PHASE: '+phases[b.phase],bx+bw/2,by2+bh+14);
 }
 
 // ─── DRAW ──────────────────────────────────────────────────────
@@ -2164,6 +2632,8 @@ function draw(){
   }}}
   // Draw enemies — detailed spaceships facing LEFT (toward player)
   for(const e of enemies){if(!e.dead){const ex=e.x-cameraX;if(ex>-80&&ex<W+80){ctx.save();ctx.translate(ex,e.y);
+    // Stealth alpha
+    if(e.type.name==='Stealth')ctx.globalAlpha=clamp(e.stealthAlpha||0.2,0.05,1);
     const ew=e.type.w,eh=e.type.h;
     const col=e.type.color,trim=e.type.trim,eng=e.type.engine;
     const wob=Math.sin(e.wingPhase)*0.08; // subtle wing wobble
@@ -2255,7 +2725,19 @@ function draw(){
     if(e.type.hp>1){const bw=ew*0.8,bh=3,bx=-bw/2,by=-eh/2-10;
       ctx.fillStyle='rgba(0,0,0,0.6)';ctx.fillRect(bx,by,bw,bh);
       ctx.fillStyle=e.hp>e.type.hp*0.5?'#22c55e':'#ef4444';ctx.fillRect(bx,by,bw*(e.hp/e.type.hp),bh);}
-    ctx.shadowBlur=0;ctx.restore();}}}
+    // Dreadnought shield glow
+    if(e.type.name==='Dreadnought'&&e.shieldOn){
+      ctx.globalAlpha=0.5+Math.sin(time*0.02)*0.3;
+      ctx.strokeStyle='#22D3EE';ctx.lineWidth=3;ctx.shadowColor='#22D3EE';ctx.shadowBlur=22;
+      ctx.beginPath();ctx.ellipse(0,0,ew*0.65,eh*0.75,0,0,Math.PI*2);ctx.stroke();
+      ctx.globalAlpha=0.12;ctx.fillStyle='#22D3EE';ctx.fill();
+      ctx.globalAlpha=1;ctx.shadowBlur=0;
+    }
+    ctx.globalAlpha=1;ctx.shadowBlur=0;ctx.restore();}}}
+
+  // Draw boss and homing missiles (after normal enemies)
+  drawBoss(time);
+  drawHomingMissiles();
 
   // Draw enemy lasers
   for(const el of enemyLasers){if(!el.dead){
