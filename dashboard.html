@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-19-v326-ws-instant-price';
+    var APP_VERSION = '2026-04-19-v327-bigger-bullets';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -9984,13 +9984,13 @@
               var bAimX = player.x - boss.x, bAimY = player.y - boss.y;
               var bDist = Math.sqrt(bAimX * bAimX + bAimY * bAimY) || 1;
               var bSpd = 220;
-              enemyBullets.push({ x: boss.x, y: boss.y + boss.size * 0.4, vx: (bAimX / bDist) * bSpd, vy: (bAimY / bDist) * bSpd, life: 3, color: '#ff4400', size: 5 });
+              enemyBullets.push({ x: boss.x, y: boss.y + boss.size * 0.4, vx: (bAimX / bDist) * bSpd, vy: (bAimY / bDist) * bSpd, life: 3, color: '#ff4400', size: 14 });
               // Spread shots at higher levels
               if (currentLevel >= 2) {
                 var spreadAngle = 0.3;
                 for (var ss = -1; ss <= 1; ss += 2) {
                   var sa = Math.atan2(bAimY, bAimX) + ss * spreadAngle;
-                  enemyBullets.push({ x: boss.x + ss * 20, y: boss.y + boss.size * 0.35, vx: Math.cos(sa) * bSpd * 0.9, vy: Math.sin(sa) * bSpd * 0.9, life: 2.5, color: '#ff8800', size: 4 });
+                  enemyBullets.push({ x: boss.x + ss * 20, y: boss.y + boss.size * 0.35, vx: Math.cos(sa) * bSpd * 0.9, vy: Math.sin(sa) * bSpd * 0.9, life: 2.5, color: '#ff8800', size: 12 });
                 }
               }
             }
@@ -10135,7 +10135,7 @@
           var edx = eb.x - player.x;
           var edy = eb.y - player.y;
           var distToPlayer = Math.sqrt(edx * edx + edy * edy);
-          if (distToPlayer < 8 + player.size * 0.5) {
+          if (distToPlayer < eb.size + player.size * 0.5) {
             if (_invincible) {
               spawnExplosion(eb.x, eb.y, '#00ff00', 6);
               enemyBullets.splice(ebi, 1);
@@ -10448,7 +10448,7 @@
               if (bulletDist > 0) {
                 var bSpd = t.isEnemyShip ? 220 : 160;
                 var bClr = t.isEnemyShip ? '#00ff88' : '#ff4400';
-                var bSz  = t.isEnemyShip ? 4 : 3;
+                var bSz  = t.isEnemyShip ? 12 : 10;
                 enemyBullets.push({
                   x: t.x, y: t.y + t.size * 0.4,
                   vx: (toBulletX / bulletDist) * bSpd,
@@ -11665,7 +11665,7 @@
         for (var ebi = 0; ebi < enemyBullets.length; ebi++) {
           var eb = enemyBullets[ebi];
           var ebColor = eb.color || '#00ff44';
-          var ebSize = eb.size || 4;
+          var ebSize = eb.size || 12;
           ctx.save();
           ctx.shadowColor = ebColor;
           ctx.shadowBlur = 12;
