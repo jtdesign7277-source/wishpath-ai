@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-19-v312-profile-autocreate-fallback';
+    var APP_VERSION = '2026-04-19-v313-desktop-lifecoach-polish';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -4646,6 +4646,23 @@
       .todo-mobile-overlay,
       .mobile-fm-menu,
       .wp-bottom-tabs { display: none !important; }
+
+      /* ── Desktop Life Coach View Polishing ── */
+      .lc-chat-list, .lc-fullscreen {
+        position: relative !important;
+        inset: auto !important;
+        max-width: 900px;
+        margin: 0 auto;
+        height: 100%;
+        border-radius: 0;
+      }
+      #lifecoachView {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+      }
+      .lc-messages { padding: 20px 20px; }
+      .lc-input-bar { padding: 16px 20px calc(16px + env(safe-area-inset-bottom)) 20px; }
     }
 
     /* ── Premium Glassmorphic AI Response Titles ── */
