@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-19-v329-ability-buttons';
+    var APP_VERSION = '2026-04-19-v330-crypto-ws-abilities';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -9440,6 +9440,7 @@
         _shieldActive = false;
         _shieldHealth = 0;
         _shieldPulse = 0;
+        _shdBubble = false; _shdPulse = 0;
         _weaponLevel = 0;
         _abCDs = [0, 0, 0]; _abFlash = [0, 0, 0]; _abilityShield = false;
         _laserActive = false; _laserTimer = 0; _missiles = [];
@@ -9478,6 +9479,8 @@
       var _shieldHealth = 0;
       var _shieldMaxHealth = 3; // absorbs 3 hits
       var _shieldPulse = 0;
+      var _shdBubble = false;
+      var _shdPulse = 0;
 
       // Weapon upgrade system
       var _weaponLevel = 0; // 0=single, 1=double, 2=triple spread, 3=quad + missiles
@@ -10211,7 +10214,7 @@
           var distToPlayer = Math.sqrt(edx * edx + edy * edy);
           if (distToPlayer < eb.size + player.size * 0.5) {
             if (_invincible) {
-              spawnExplosion(eb.x, eb.y, '#00ff00', 6);
+              spawnExplosion(eb.x, eb.y, _shdBubble ? '#44aaff' : '#00ff00', 6);
               enemyBullets.splice(ebi, 1);
             } else if (_shieldActive && _shieldHealth > 0) {
               _shieldHealth -= 1;
@@ -11579,6 +11582,22 @@
           ctx.restore();
         }
 
+        // Draw SHD ability bubble — pulsing blue circle around player
+        if (_shdBubble && !gameOver) {
+          _shdPulse += 0.08;
+          var _sbR = player.size * 1.5 + Math.sin(_shdPulse) * 5;
+          ctx.save();
+          ctx.shadowColor = '#44aaff'; ctx.shadowBlur = 22;
+          ctx.strokeStyle = 'rgba(68,170,255,' + (0.7 + Math.sin(_shdPulse) * 0.25) + ')';
+          ctx.lineWidth = 2.5;
+          ctx.beginPath(); ctx.arc(player.x, player.y, _sbR, 0, Math.PI * 2); ctx.stroke();
+          ctx.globalAlpha = 0.12 + Math.sin(_shdPulse) * 0.06;
+          ctx.fillStyle = '#2288ff';
+          ctx.beginPath(); ctx.arc(player.x, player.y, _sbR, 0, Math.PI * 2); ctx.fill();
+          ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+          ctx.restore();
+        }
+
         // Draw wingman mini-ships (PNG sprites)
         if (_wingmanLevel > 0 && !gameOver) {
           var wOffsets = [[-36, 8], [36, 8]];
@@ -12331,6 +12350,7 @@
           for (var _abTi = 0; _abTi < 3; _abTi++) {
             var _abDx = _tgx - 30, _abDy = _tgy - _abBYs2[_abTi];
             if (Math.sqrt(_abDx*_abDx+_abDy*_abDy) <= 34) {
+              ev.preventDefault();
               triggerAbility(_abTi);
               return;
             }
@@ -12341,9 +12361,10 @@
           touchStartClientY = touch.clientY;
           touchPlayerStartX = _tgx;
           touchPlayerStartY = _tgy - 60;
-        }, { passive: true });
+        }, { passive: false });
         c.addEventListener('touchmove', function(ev) {
           if (!touchActive || !rect) return;
+          ev.preventDefault();
           var touch = ev.touches[0];
           var sx = GW / rect.width;
           var sy = GH / rect.height;
@@ -12353,7 +12374,7 @@
           var half = player.size * 0.5;
           player.targetX = Math.max(half, Math.min(GW - half, touchPlayerStartX + dx));
           player.targetY = Math.max(GH * 0.3, Math.min(GH * 0.85, touchPlayerStartY + dy));
-        }, { passive: true });
+        }, { passive: false });
         c.addEventListener('touchend', function() { touchActive = false; rect = null; }, { passive: true });
       }
 
@@ -17183,8 +17204,13 @@
       heartbeatTimer: null,
       lastMessageTime: 0,
       symbolLastUpdate: {},
-      _dirtyStocks: false,
-      _dirtyCrypto: false,
+      cryptoSymbolMap: (function() {
+        var m = {};
+        [{ s: 'BTC/USD', a: 'BTCUSD', d: 'BTC' }, { s: 'ETH/USD', a: 'ETHUSD', d: 'ETH' }, { s: 'SOL/USD', a: 'SOLUSD', d: 'SOL' }].forEach(function(c) {
+          m[c.s] = c.s; m[c.a] = c.s; m[c.d] = c.s;
+        });
+        return m;
+      }()),
 
       async fetchCredentials() {
         return await getAlpacaCreds();
@@ -17224,8 +17250,9 @@
       connectCrypto() {
         if (!this.credentials) return;
         var self = this;
+        var cryptoUrl = this.credentials.cryptoUrl || 'wss://stream.data.alpaca.markets/v1beta3/crypto/us';
         try {
-          this.cryptoSocket = new WebSocket(this.credentials.cryptoUrl);
+          this.cryptoSocket = new WebSocket(cryptoUrl);
           this.cryptoSocket.onopen = function() {
             console.log('[Alpaca Crypto] Connected, authenticating...');
             self.startHeartbeat();
@@ -17280,7 +17307,8 @@
           } else if (msg.T === 'error') {
             console.error('[Alpaca Crypto] Error:', msg.code, msg.msg);
           } else if (msg.T === 't') {
-            self.handleTrade(msg.S, msg.p);
+            var sym = self.cryptoSymbolMap[msg.S] || msg.S;
+            self.handleTrade(sym, msg.p);
           }
         });
       },
@@ -17321,8 +17349,8 @@
         if (this.renderDebounce) clearTimeout(this.renderDebounce);
         var self = this;
         this.renderDebounce = setTimeout(function() {
-          if (self._dirtyStocks) { renderMarketCards(); self._dirtyStocks = false; }
-          if (self._dirtyCrypto) { renderCryptoCards(); self._dirtyCrypto = false; }
+          renderMarketCards();
+          renderCryptoCards();
           refreshFMStockList();
           var ts = document.getElementById('marketsUpdatedTime');
           var fmTs = document.getElementById('fmMarketsUpdatedTime');
