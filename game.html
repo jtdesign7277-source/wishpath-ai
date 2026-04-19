@@ -174,8 +174,9 @@ const LEVEL_THEMES = [
 function getTheme(){return LEVEL_THEMES[(level-1)%LEVEL_THEMES.length]}
 
 // ─── STATE ─────────────────────────────────────────────────────
-const STATE={MENU:0,PLAYING:1,DEAD:2};
+const STATE={MENU:0,PLAYING:1,DEAD:2,PAUSED:3};
 let state=STATE.MENU;
+let isPaused=false;
 
 let score=0,distance=0;
 let highScore=parseInt(localStorage.getItem('wr_m3_hi'))||0;
@@ -185,7 +186,7 @@ let runStartTime=0;
 
 // Ship — bigger, more combative
 const SHIP_W=68,SHIP_H=38;
-const TOUCH_Y_OFFSET=-80; // Ship renders above finger so player can see it
+const TOUCH_Y_OFFSET=-140; // Ship renders above finger so player can see it
 const ship={y:0,vy:0,targetY:0,bankAngle:0,flamePhase:0,trail:[]};
 const SHIP_SPEED=300;
 
@@ -681,6 +682,7 @@ function generateWalls(){
 
 function drawWalls(time){
   const theme=getTheme();
+  const glowPulse=16+Math.sin(time*0.003)*6;
   for(const w of walls){
     const sx=w.x-cameraX;
     if(sx<-80||sx>W+80)continue;
@@ -689,12 +691,25 @@ function drawWalls(time){
     const botY=w.gapY+w.gapH/2;
     draw3DWall(sx,0,wallW,topH,theme,w.hit,true);
     draw3DWall(sx,botY,wallW,H-botY,theme,w.hit,false);
-    // Neon gap edge glow
+    // Neon gap edge glow — thicker, animated pulse
     if(!w.hit){
-      ctx.shadowColor=theme.edge;ctx.shadowBlur=12;ctx.strokeStyle=theme.edge;ctx.lineWidth=2;
+      // Outer glow pass
+      ctx.shadowColor=theme.edge;ctx.shadowBlur=glowPulse+8;ctx.strokeStyle=theme.edge;ctx.lineWidth=1;ctx.globalAlpha=0.4;
+      ctx.beginPath();ctx.moveTo(sx,topH);ctx.lineTo(sx+wallW,topH);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(sx,botY);ctx.lineTo(sx+wallW,botY);ctx.stroke();
+      // Inner bright line
+      ctx.globalAlpha=1;ctx.shadowBlur=glowPulse;ctx.lineWidth=2.5;
       ctx.beginPath();ctx.moveTo(sx,topH);ctx.lineTo(sx+wallW,topH);ctx.stroke();
       ctx.beginPath();ctx.moveTo(sx,botY);ctx.lineTo(sx+wallW,botY);ctx.stroke();
       ctx.shadowBlur=0;
+      // Occasional sparkle dots along gap edges
+      if(Math.random()<0.12){
+        const spkX=sx+Math.random()*wallW,spkY=Math.random()<0.5?topH:botY;
+        ctx.save();ctx.globalAlpha=0.6+Math.random()*0.4;ctx.fillStyle=theme.edge;
+        ctx.shadowColor=theme.edge;ctx.shadowBlur=10;
+        ctx.beginPath();ctx.arc(spkX,spkY,1.5+Math.random()*1.5,0,Math.PI*2);ctx.fill();
+        ctx.shadowBlur=0;ctx.restore();
+      }
     }
   }
 }
@@ -707,8 +722,15 @@ function draw3DWall(x,y,w,h,theme,hit,isTop){
   ctx.fillStyle=hit?'rgba(255,50,50,0.35)':theme.wall;
   ctx.fillRect(x,y,w,h);
 
-  // Inner grid
-  ctx.strokeStyle=hit?'rgba(255,100,100,0.08)':hexToRgba(theme.wallEdge,0.12);
+  // Depth gradient overlay — darker at base, lighter near gap edge
+  const depthG=ctx.createLinearGradient(x,y,x+w,y);
+  depthG.addColorStop(0,hit?'rgba(255,60,60,0.18)':'rgba(255,255,255,0.06)');
+  depthG.addColorStop(0.5,'transparent');
+  depthG.addColorStop(1,'rgba(0,0,0,0.18)');
+  ctx.fillStyle=depthG;ctx.fillRect(x,y,w,h);
+
+  // Inner grid — more subtle
+  ctx.strokeStyle=hit?'rgba(255,100,100,0.05)':hexToRgba(theme.wallEdge,0.07);
   ctx.lineWidth=0.5;ctx.beginPath();
   const ts=25;
   for(let gx=x;gx<=x+w;gx+=ts){ctx.moveTo(gx,y);ctx.lineTo(gx,y+h);}
@@ -1994,6 +2016,13 @@ function drawHUD(){
     const mg=ctx.createLinearGradient(0,0,W,0);mg.addColorStop(0,'#F97316');mg.addColorStop(0.5,'transparent');mg.addColorStop(1,'#F97316');
     ctx.fillStyle=mg;ctx.fillRect(0,0,W,H);ctx.globalAlpha=1;
   }
+
+  // Pause button — top-right corner
+  const pbX=W-50,pbY=22,pbS=isPaused?'#FDE047':'rgba(255,255,255,0.55)';
+  ctx.save();ctx.shadowColor=pbS;ctx.shadowBlur=isPaused?12:6;
+  ctx.fillStyle=pbS;
+  ctx.fillRect(pbX-6,pbY-11,7,22);ctx.fillRect(pbX+3,pbY-11,7,22);
+  ctx.shadowBlur=0;ctx.restore();
 }
 
 // ─── MENU ──────────────────────────────────────────────────────
@@ -2249,13 +2278,25 @@ function draw(){
   drawParticles();drawFloatingTexts();ctx.restore();
   if(screenFlash>0){ctx.globalAlpha=screenFlash*0.35;ctx.fillStyle=screenFlashColor;ctx.fillRect(0,0,W,H);ctx.globalAlpha=1;}
   drawSparkles();
-  if(state===STATE.PLAYING){drawHUD();}
+  if(state===STATE.PLAYING){drawHUD();if(isPaused)drawPauseOverlay();}
   if(state===STATE.MENU)drawMenuScreen();
   if(state===STATE.DEAD)drawGameOverScreen();
 }
 
+function drawPauseOverlay(){
+  ctx.fillStyle='rgba(5,10,25,0.72)';ctx.fillRect(0,0,W,H);
+  const pulse=1+Math.sin(performance.now()*0.004)*0.04;
+  ctx.save();ctx.translate(W/2,H/2-30);ctx.scale(pulse,pulse);
+  ctx.shadowColor='#A855F7';ctx.shadowBlur=28;
+  ctx.font=arcadeFont(Math.min(36,W*0.045));ctx.fillStyle='#FFF';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('PAUSED',0,0);ctx.shadowBlur=0;ctx.restore();
+  ctx.font=arcadeFont(Math.min(11,W*0.015));ctx.fillStyle='rgba(255,255,255,0.5)';ctx.textAlign='center';
+  ctx.fillText('TAP ▐▌ TO RESUME',W/2,H/2+20);
+}
+
 // ─── GAME LOOP ─────────────────────────────────────────────────
-function loop(time){requestAnimationFrame(loop);const dt=Math.min((time-lastTime)/1000,0.05);lastTime=time;update(dt);draw();}
+function loop(time){requestAnimationFrame(loop);const dt=Math.min((time-lastTime)/1000,0.05);lastTime=time;if(!isPaused)update(dt);draw();}
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&state===STATE.PLAYING)isPaused=true;});
 
 // ─── INPUT ─────────────────────────────────────────────────────
 // INSTANT restart — GD "one more try" addiction. Tap anywhere after brief death anim.
@@ -2270,6 +2311,11 @@ canvas.addEventListener('touchstart',(e)=>{
   const ty=isP?(rect.right-touch.clientX):(touch.clientY-rect.top);
   const canvasX=tx*(W/(isP?rect.height:rect.width));
   const canvasY=ty*(H/(isP?rect.width:rect.height));
+
+  // Pause button (top-right corner)
+  if(canvasX>W-80&&canvasY<60){isPaused=!isPaused;return;}
+
+  if(isPaused)return;
 
   // Check if touching NUKE button (bottom-right)
   if(nukeCharges>0&&!nukeActive&&Math.abs(canvasX-(W-65))<40&&Math.abs(canvasY-(H-75))<40){
@@ -2290,18 +2336,17 @@ canvas.addEventListener('touchstart',(e)=>{
   }
   isDragging=true;
   dragStartY=isP?(rect.right-touch.clientX):(touch.clientY-rect.top);
-  dragShipStartY=ship.targetY;
-  // Immediately offset ship above finger so it's visible
-  ship.targetY=clamp(ship.targetY+TOUCH_Y_OFFSET,25,H-25);
+  dragShipStartY=ship.y;
 },{passive:false});
 
 canvas.addEventListener('touchmove',(e)=>{
-  e.preventDefault();if(!isDragging||state!==STATE.PLAYING)return;
+  e.preventDefault();if(!isDragging||state!==STATE.PLAYING||isPaused)return;
   const touch=e.touches[0],rect=canvas.getBoundingClientRect();
   const isP=window.innerWidth<window.innerHeight&&window.innerWidth<900;
   const currentY=isP?(rect.right-touch.clientX):(touch.clientY-rect.top);
   const scale=isP?(H/rect.width):(H/rect.height);
-  ship.targetY=clamp(dragShipStartY+(currentY-dragStartY)*scale,25,H-25);
+  const rawTarget=dragShipStartY+(currentY-dragStartY)*scale;
+  ship.targetY=clamp(rawTarget+TOUCH_Y_OFFSET,25,H-25);
 },{passive:false});
 
 canvas.addEventListener('touchend',(e)=>{e.preventDefault();isDragging=false;aButtonPressed=false;},{passive:false});
