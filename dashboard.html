@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-19-v318-notion-notes';
+    var APP_VERSION = '2026-04-19-v319-fix-coach-tables';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -257,7 +257,7 @@
     .coach-messages { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 8px 0; margin-bottom: 12px; }
     .msg { max-width: 90%; padding: 12px 16px; border-radius: 16px; font-size: 0.88rem; line-height: 1.6; transition: all 0.3s ease; }
     .msg.user { align-self: flex-end; background: linear-gradient(135deg, rgba(113,50,245,0.3) 0%, rgba(80,30,200,0.18) 50%, rgba(113,50,245,0.12) 100%); color: rgba(255,255,255,0.95); border-bottom-right-radius: 4px; border: 1px solid rgba(113,50,245,0.3); box-shadow: 0 4px 16px rgba(113,50,245,0.15), inset 0 1px 0 rgba(255,255,255,0.06); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
-    .msg.ai { align-self: flex-start; background: linear-gradient(135deg, rgba(42,42,52,0.6) 0%, rgba(30,20,50,0.4) 50%, rgba(42,42,52,0.3) 100%); border: 1px solid rgba(113,50,245,0.12); border-radius: 16px 16px 16px 4px; color: rgba(255,255,255,0.9); max-width: 92%; box-shadow: 0 2px 12px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+    .msg.ai { align-self: flex-start; background: linear-gradient(135deg, rgba(42,42,52,0.6) 0%, rgba(30,20,50,0.4) 50%, rgba(42,42,52,0.3) 100%); border: 1px solid rgba(113,50,245,0.12); border-radius: 16px 16px 16px 4px; color: rgba(255,255,255,0.9); max-width: 92%; box-shadow: 0 2px 12px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); overflow-x: auto; word-wrap: break-word; overflow-wrap: break-word; }
     .msg.ai .thinking-status { display: inline-flex; align-items: center; gap: 8px; color: rgba(255,255,255,0.5); font-size: 14px; font-style: italic; }
     .msg.ai .thinking-label { color: rgba(255,255,255,0.5); font-weight: normal; }
     .msg.ai .thinking-dots { display: flex; gap: 4px; }
@@ -1099,10 +1099,12 @@
     .todo-notion-text:focus, .todo-notion-detail:focus { border-radius: 6px; box-shadow: 0 0 0 1px rgba(255,255,255,0.05); }
     .todo-notion-empty { padding: 28px 0 12px 44px; color: rgba(255,255,255,0.4); font-size: 1rem; line-height: 1.45; }
     /* Auto-rendered right panel content */
-    .auto-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-    .auto-table th { text-align: left; padding: 8px 12px; background: rgba(255,255,255,0.04); border-bottom: 1px solid var(--border); font-weight: 600; color: var(--text); font-size: 0.78rem; text-transform: uppercase; }
-    .auto-table td { padding: 8px 12px; border-bottom: 1px solid rgba(48,54,61,0.3); color: var(--text-muted); }
-    .auto-table tr:hover td { background: rgba(255,255,255,0.02); }
+    .auto-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; table-layout: auto; }
+    .auto-table th { text-align: left; padding: 6px 10px; background: rgba(113,50,245,0.1); border-bottom: 1px solid rgba(113,50,245,0.2); font-weight: 600; color: #e6edf3; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.03em; white-space: nowrap; }
+    .auto-table td { padding: 6px 10px; border-bottom: 1px solid rgba(48,54,61,0.3); color: rgba(255,255,255,0.82); font-size: 0.82rem; }
+    .auto-table tr:hover td { background: rgba(255,255,255,0.03); }
+    .msg.ai .table-scroll-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 8px -8px; padding: 0 8px; border-radius: 8px; }
+    .msg.ai table { min-width: 280px; }
 
     /* AI-generated table: scrollable wrapper + action bar */
     .table-scroll-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 8px 0 2px; border-radius: 8px; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
