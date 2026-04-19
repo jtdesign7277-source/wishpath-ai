@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-19-v317-bigger-charts';
+    var APP_VERSION = '2026-04-19-v318-notion-notes';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -806,21 +806,27 @@
     }
     .notes-editor.note-detail-view #notesContent.note-body:focus { outline: none; }
     /* Rich note formatting */
+    #notesContent .note-h1 {
+      font-size: 1.4em; font-weight: 800; color: #fff;
+      margin: 28px 0 12px; padding-bottom: 8px;
+      border-bottom: 2px solid rgba(113,50,245,0.25);
+      letter-spacing: -0.01em; line-height: 1.3;
+    }
     #notesContent .note-h2 {
-      font-size: 1.15em; font-weight: 700; color: rgb(113,50,245);
-      margin: 20px 0 8px; padding-bottom: 6px;
+      font-size: 1.2em; font-weight: 700; color: rgb(113,50,245);
+      margin: 24px 0 10px; padding-bottom: 6px;
       border-bottom: 1px solid rgba(113,50,245,0.18);
-      letter-spacing: 0.01em;
+      letter-spacing: 0.01em; line-height: 1.3;
     }
     #notesContent .note-h3 {
-      font-size: 1.02em; font-weight: 700; color: #c4b5fd;
-      margin: 16px 0 6px;
+      font-size: 1.05em; font-weight: 700; color: #c4b5fd;
+      margin: 20px 0 8px; line-height: 1.3;
     }
     #notesContent .note-paragraph {
-      margin: 0 0 12px; color: rgba(255,255,255,0.78);
+      margin: 0 0 16px; color: rgba(255,255,255,0.82); line-height: 1.75; font-size: 0.94rem;
     }
     #notesContent .note-bullet {
-      display: flex; gap: 8px; padding: 3px 0 3px 4px; color: rgba(255,255,255,0.78);
+      display: flex; gap: 8px; padding: 4px 0 4px 4px; color: rgba(255,255,255,0.82); line-height: 1.65;
     }
     #notesContent .note-bullet::before {
       content: ''; flex-shrink: 0; width: 6px; height: 6px; margin-top: 9px;
@@ -13347,9 +13353,18 @@
           continue;
         }
 
+        // Markdown headers: # H1, ## H2, ### H3
+        if (/^#{1,3}\s+/.test(trimmed)) {
+          var hLevel = trimmed.match(/^(#{1,3})\s+/)[1].length;
+          var hText = trimmed.replace(/^#{1,3}\s+/, '');
+          var hClass = hLevel === 1 ? 'note-h1' : (hLevel === 2 ? 'note-h2' : 'note-h3');
+          html += '<div class="' + hClass + '">' + _inlineFormat(_escNote(hText)) + '</div>';
+          continue;
+        }
+
         // Emoji-led header line (starts with emoji + capitalized text, short)
         if (/^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE00}-\u{FEFF}]/u.test(trimmed) && trimmed.length < 80 && !trimmed.match(/^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]\s*[-•]/u)) {
-          html += '<div class="note-emoji-header">' + _escNote(trimmed) + '</div>';
+          html += '<div class="note-emoji-header">' + _inlineFormat(_escNote(trimmed)) + '</div>';
           continue;
         }
 
@@ -13384,8 +13399,14 @@
     function _escNote(t) { return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
     function _inlineFormat(t) {
-      // Bold markers that survived cleaning (rare) or ALL CAPS phrases
       return t
+        // **bold** markdown
+        .replace(/\*\*([^*]+)\*\*/g, '<span class="note-bold">$1</span>')
+        // *italic* markdown
+        .replace(/\*([^*]+)\*/g, '<em style="color:rgba(255,255,255,0.8);">$1</em>')
+        // `code` markdown
+        .replace(/`([^`]+)`/g, '<code style="background:rgba(113,50,245,0.15);color:#a78bfa;padding:1px 5px;border-radius:4px;font-size:0.88em;">$1</code>')
+        // ALL CAPS phrases
         .replace(/\b([A-Z]{2,}(?:\s+[A-Z]{2,})*)\b/g, '<span class="note-bold">$1</span>')
         .replace(/→/g, '<span style="color:rgb(113,50,245);">→</span>')
         .replace(/✅/g, '<span style="font-size:1.1em;">✅</span>')
