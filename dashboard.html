@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-19-v322-detailed-enemy-ships';
+    var APP_VERSION = '2026-04-19-v323-insectoid-enemies-abilities';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -8894,6 +8894,13 @@
       var canvasFireBound = false;
       var MAX_PARTICLES = 80;
 
+      // Special abilities — missile / laser / shield
+      var _abCDs     = [0, 0, 0];
+      var _abMaxCDs  = [15, 20, 25];
+      var _laserActive = false;
+      var _laserTimer  = 0;
+      var _missiles    = [];
+
       // Power-ups
       var powerups = [];
       var backgroundPlanets = [];
@@ -9140,6 +9147,8 @@
         _shieldHealth = 0;
         _shieldPulse = 0;
         _weaponLevel = 0;
+        _abCDs = [0, 0, 0];
+        _laserActive = false; _laserTimer = 0; _missiles = [];
         _formationTimer = 0;
         _deathFlash = 0;
         window._upgrades = [];
@@ -9344,6 +9353,30 @@
           }
           ctx.globalAlpha = 1;
           ctx.restore();
+        }
+      }
+
+      function triggerAbility(idx) {
+        if (_abCDs[idx] > 0 || gameOver) return;
+        _abCDs[idx] = _abMaxCDs[idx];
+        if (idx === 0) {
+          // MISSILE — 3 homing missiles
+          for (var _tami = 0; _tami < 3; _tami++) {
+            var _taAng = -Math.PI * 0.5 + (_tami - 1) * 0.35;
+            _missiles.push({ x: player.x + (_tami-1)*14, y: player.y - player.size*0.5 - 6,
+              vx: Math.cos(_taAng)*220, vy: Math.sin(_taAng)*220, life: 4.5 });
+          }
+          playLaserSound();
+        } else if (idx === 1) {
+          // LASER — wide beam 2 seconds
+          _laserActive = true; _laserTimer = 2.0;
+          triggerScreenShake(4, 0.3);
+          playLaserSound();
+        } else {
+          // SHIELD — 5 second invincibility
+          _invincible = true; _invincibleTimer = 5.0;
+          triggerScreenShake(2, 0.12);
+          playPowerupSound();
         }
       }
 
@@ -9980,6 +10013,65 @@
           fireCd = currentFireRate;
         }
 
+        // Ability cooldowns
+        for (var _aCI = 0; _aCI < 3; _aCI++) { if (_abCDs[_aCI] > 0) _abCDs[_aCI] = Math.max(0, _abCDs[_aCI] - dt); }
+
+        // Laser beam — damage all targets in column
+        if (_laserActive) {
+          _laserTimer -= dt;
+          if (_laserTimer <= 0) { _laserActive = false; _laserTimer = 0; }
+          else {
+            for (var _lti = targets.length - 1; _lti >= 0; _lti--) {
+              var _lt = targets[_lti];
+              if (Math.abs(_lt.x - player.x) < 22 + _lt.size * 0.5 && _lt.y < player.y) {
+                _lt.health -= dt * 10;
+                if (_lt.health <= 0) {
+                  spawnExplosion(_lt.x, _lt.y, '#aaddff', 12);
+                  score += 15; targets.splice(_lti, 1); updateScoreEl();
+                }
+              }
+            }
+          }
+        }
+
+        // Homing missiles
+        for (var _msi = _missiles.length - 1; _msi >= 0; _msi--) {
+          var _ms = _missiles[_msi];
+          _ms.life -= dt;
+          if (_ms.life <= 0 || _ms.y < -40) { _missiles.splice(_msi, 1); continue; }
+          // Seek nearest target
+          var _nearD = 9999, _nearI = -1;
+          for (var _mti = 0; _mti < targets.length; _mti++) {
+            var _mt = targets[_mti];
+            var _mdx = _mt.x - _ms.x, _mdy = _mt.y - _ms.y;
+            var _md = Math.sqrt(_mdx*_mdx+_mdy*_mdy);
+            if (_md < _nearD) { _nearD = _md; _nearI = _mti; }
+          }
+          if (_nearI >= 0) {
+            var _mt2 = targets[_nearI];
+            var _d2 = Math.sqrt(Math.pow(_mt2.x-_ms.x,2)+Math.pow(_mt2.y-_ms.y,2));
+            if (_d2 > 0) {
+              _ms.vx += (_mt2.x-_ms.x)/_d2 * 4 * 200 * dt;
+              _ms.vy += (_mt2.y-_ms.y)/_d2 * 4 * 200 * dt;
+              var _spd = Math.sqrt(_ms.vx*_ms.vx+_ms.vy*_ms.vy);
+              if (_spd > 340) { _ms.vx=_ms.vx/_spd*340; _ms.vy=_ms.vy/_spd*340; }
+            }
+          }
+          _ms.x += _ms.vx * dt; _ms.y += _ms.vy * dt;
+          // Hit check
+          for (var _mci = targets.length - 1; _mci >= 0; _mci--) {
+            var _mct = targets[_mci];
+            var _mcd = Math.sqrt(Math.pow(_mct.x-_ms.x,2)+Math.pow(_mct.y-_ms.y,2));
+            if (_mcd < _mct.size*0.5+10) {
+              spawnExplosion(_ms.x, _ms.y, '#ff8800', 16);
+              triggerScreenShake(3, 0.15);
+              _mct.health -= 3;
+              if (_mct.health <= 0) { score += 25; targets.splice(_mci, 1); updateScoreEl(); }
+              _missiles.splice(_msi, 1); break;
+            }
+          }
+        }
+
         // Spawn power-ups
         powerupSpawnAcc += dt;
         if (powerupSpawnAcc >= powerupSpawnEvery && score > 30) {
@@ -10556,167 +10648,205 @@
 
       function drawAsteroid(tg) {
         var r = tg.size * 0.5;
-        var tier = _shipTiers[Math.min((tg.maxHealth || 1) - 1, _shipTiers.length - 1)];
+        var tierIdx = Math.min(Math.max(0,(tg.maxHealth||1)-1), _shipTiers.length-1);
+        var tier = _shipTiers[tierIdx];
         var hull = tier[0], accent = tier[1], glowClr = tier[2];
         var now = Date.now();
-        var pulse  = Math.sin(now * 0.004 + tg.wobble) * 0.5 + 0.5;
-        var flick  = Math.sin(now * 0.013 + tg.wobble * 1.7) * 0.25 + 0.75;
+        var pulse = Math.sin(now * 0.004 + tg.wobble) * 0.5 + 0.5;
+        var flap  = Math.sin(now * 0.007 + tg.wobble);
         ctx.save();
         ctx.translate(tg.x, tg.y);
+        ctx.shadowColor = glowClr; ctx.shadowBlur = 10 + pulse * 5;
 
-        // ── ENGINE FLAME TRAILS (top — trailing behind as ship flies down) ──
-        var engX = r * 0.48, engY = -r * 0.38;
-        var trailLen = r * (1.1 + flick * 0.7);
-        for (var es = -1; es <= 1; es += 2) {
-          var ex = es * engX;
-          var tg2 = ctx.createLinearGradient(ex, engY, ex, engY - trailLen);
-          tg2.addColorStop(0, 'rgba(255,210,80,0.95)');
-          tg2.addColorStop(0.25, 'rgba(255,100,20,0.6)');
-          tg2.addColorStop(0.6, 'rgba(180,30,0,0.2)');
-          tg2.addColorStop(1, 'rgba(60,5,0,0)');
-          ctx.fillStyle = tg2;
-          var fw = r * 0.14 * flick;
-          ctx.beginPath();
-          ctx.moveTo(ex - fw, engY); ctx.lineTo(ex + fw, engY);
-          ctx.lineTo(ex + r * 0.025, engY - trailLen);
-          ctx.lineTo(ex - r * 0.025, engY - trailLen);
-          ctx.fill();
-        }
-
-        // ── WINGS (wide angular swept-back panels) ──
-        ctx.shadowColor = glowClr; ctx.shadowBlur = 5;
-        for (var ws = -1; ws <= 1; ws += 2) {
-          var wGrad = ctx.createLinearGradient(ws * r * 0.2, 0, ws * r * 1.15, -r * 0.4);
-          wGrad.addColorStop(0, hull);
-          wGrad.addColorStop(0.55, hull + 'bb');
-          wGrad.addColorStop(1, '#04040e');
-          ctx.fillStyle = wGrad;
-          ctx.strokeStyle = accent + '66';
-          ctx.lineWidth = Math.max(0.5, r * 0.035);
-          ctx.beginPath();
-          ctx.moveTo(ws * r * 0.22, r * 0.12);   // wing root at nose side
-          ctx.lineTo(ws * r * 1.12, -r * 0.32);  // wing tip
-          ctx.lineTo(ws * r * 0.95, -r * 0.58);  // wing tip rear
-          ctx.lineTo(ws * r * 0.18, -r * 0.22);  // wing root rear
-          ctx.closePath();
-          ctx.fill(); ctx.stroke();
-
-          // Wing underside (darker face for depth)
-          ctx.fillStyle = 'rgba(0,0,0,0.28)';
-          ctx.beginPath();
-          ctx.moveTo(ws * r * 0.22, r * 0.12);
-          ctx.lineTo(ws * r * 1.12, -r * 0.32);
-          ctx.lineTo(ws * r * 0.95, -r * 0.58);
-          ctx.lineTo(ws * r * 0.18, -r * 0.22);
-          ctx.closePath(); ctx.fill();
-
-          // Wing panel line
-          ctx.strokeStyle = 'rgba(255,255,255,0.13)';
-          ctx.lineWidth = Math.max(0.4, r * 0.03);
-          ctx.beginPath();
-          ctx.moveTo(ws * r * 0.35, -r * 0.02);
-          ctx.lineTo(ws * r * 0.92, -r * 0.38);
-          ctx.stroke();
-        }
-        ctx.shadowBlur = 0;
-
-        // ── MAIN BODY (elongated fighter fuselage, nose points DOWN) ──
-        var bodyGrad = ctx.createLinearGradient(-r * 0.28, -r * 0.65, r * 0.1, r * 0.85);
-        bodyGrad.addColorStop(0,    '#0e0e1c');
-        bodyGrad.addColorStop(0.22, hull);
-        bodyGrad.addColorStop(0.48, accent);
-        bodyGrad.addColorStop(0.7,  hull);
-        bodyGrad.addColorStop(1,    '#26263a');
-        ctx.shadowColor = glowClr; ctx.shadowBlur = 14;
-        ctx.fillStyle = bodyGrad;
-        ctx.strokeStyle = accent;
-        ctx.lineWidth = Math.max(1, r * 0.055);
-        ctx.beginPath();
-        ctx.moveTo(0,          r * 0.97);    // nose tip DOWN
-        ctx.lineTo(r * 0.26,   r * 0.42);
-        ctx.lineTo(r * 0.31,   r * 0.0);
-        ctx.lineTo(r * 0.22,  -r * 0.52);
-        ctx.lineTo(0,          -r * 0.68);   // tail center
-        ctx.lineTo(-r * 0.22, -r * 0.52);
-        ctx.lineTo(-r * 0.31,  r * 0.0);
-        ctx.lineTo(-r * 0.26,  r * 0.42);
-        ctx.closePath();
-        ctx.fill(); ctx.stroke();
-        ctx.shadowBlur = 0;
-
-        // ── CENTER METALLIC STRIPE ──
-        var strGrad = ctx.createLinearGradient(-r * 0.07, 0, r * 0.07, 0);
-        strGrad.addColorStop(0, 'rgba(255,255,255,0)');
-        strGrad.addColorStop(0.5, 'rgba(255,255,255,0.2)');
-        strGrad.addColorStop(1, 'rgba(255,255,255,0)');
-        ctx.fillStyle = strGrad;
-        ctx.fillRect(-r * 0.07, -r * 0.62, r * 0.14, r * 1.52);
-
-        // ── PANEL LINES ──
-        ctx.strokeStyle = 'rgba(255,255,255,0.14)';
-        ctx.lineWidth = Math.max(0.4, r * 0.03);
-        ctx.beginPath(); ctx.moveTo(-r * 0.26, r * 0.08); ctx.lineTo(r * 0.26, r * 0.08); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(-r * 0.2, -r * 0.3); ctx.lineTo(r * 0.2, -r * 0.3); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(r * 0.04, r * 0.25); ctx.lineTo(r * 0.27, -r * 0.2); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(-r * 0.04, r * 0.25); ctx.lineTo(-r * 0.27, -r * 0.2); ctx.stroke();
-
-        // ── COCKPIT (dark dome near nose, just above tip) ──
-        ctx.shadowColor = '#aaccff'; ctx.shadowBlur = 7;
-        var cpGrad = ctx.createRadialGradient(-r * 0.05, r * 0.54, 0, 0, r * 0.56, r * 0.13);
-        cpGrad.addColorStop(0, 'rgba(180,210,255,0.92)');
-        cpGrad.addColorStop(0.45, 'rgba(15,30,90,0.88)');
-        cpGrad.addColorStop(1,  'rgba(4,4,18,0.95)');
-        ctx.fillStyle = cpGrad;
-        ctx.beginPath(); ctx.ellipse(0, r * 0.55, r * 0.13, r * 0.1, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.strokeStyle = 'rgba(160,200,255,0.45)';
-        ctx.lineWidth = Math.max(0.4, r * 0.03); ctx.stroke();
-        ctx.shadowBlur = 0;
-        // specular dot
-        ctx.fillStyle = 'rgba(255,255,255,0.85)';
-        ctx.beginPath(); ctx.arc(-r * 0.04, r * 0.51, r * 0.025, 0, Math.PI * 2); ctx.fill();
-
-        // ── ENGINE PODS (glowing circles, on wing roots at top) ──
-        for (var epS = -1; epS <= 1; epS += 2) {
-          var epX = epS * r * 0.5, epY = -r * 0.37, epR = r * 0.155;
-          // outer halo
-          ctx.shadowColor = accent; ctx.shadowBlur = 16 + pulse * 10;
-          var halo = ctx.createRadialGradient(epX, epY, 0, epX, epY, epR * 2.5);
-          halo.addColorStop(0, glowClr);
-          halo.addColorStop(0.45, glowClr.replace('0.7)', '0.2)'));
-          halo.addColorStop(1, 'rgba(0,0,0,0)');
-          ctx.fillStyle = halo;
-          ctx.beginPath(); ctx.arc(epX, epY, epR * 2.5, 0, Math.PI * 2); ctx.fill();
-          // pod casing
+        if (tierIdx === 0) {
+          // ── TIER 1: RED SCARAB — compact oval, claw wings, eye dots ──
+          // Claws (behind body)
+          for (var _cs = -1; _cs <= 1; _cs += 2) {
+            var _cwG = ctx.createLinearGradient(_cs*r*0.15, 0, _cs*r*0.9, -r*0.4);
+            _cwG.addColorStop(0, hull); _cwG.addColorStop(1, '#1a0000');
+            ctx.fillStyle = _cwG; ctx.strokeStyle = accent; ctx.lineWidth = Math.max(0.8,r*0.055);
+            ctx.beginPath();
+            ctx.moveTo(_cs*r*0.15, r*0.15);
+            ctx.quadraticCurveTo(_cs*r*0.8, r*0.05 + flap*r*0.08, _cs*r*0.88, -r*0.38);
+            ctx.quadraticCurveTo(_cs*r*0.72, -r*0.18, _cs*r*0.12, -r*0.1);
+            ctx.closePath(); ctx.fill(); ctx.stroke();
+          }
+          // Body oval
+          var _bG = ctx.createRadialGradient(0, -r*0.1, 0, 0, 0, r*0.52);
+          _bG.addColorStop(0, accent); _bG.addColorStop(0.5, hull); _bG.addColorStop(1, '#180000');
+          ctx.fillStyle = _bG; ctx.strokeStyle = accent; ctx.lineWidth = Math.max(1,r*0.065);
+          ctx.beginPath(); ctx.ellipse(0, 0, r*0.36, r*0.55, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke();
           ctx.shadowBlur = 0;
-          ctx.fillStyle = '#0d0d1a';
-          ctx.strokeStyle = accent; ctx.lineWidth = Math.max(0.8, r * 0.05);
-          ctx.beginPath(); ctx.arc(epX, epY, epR, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-          // glowing core
-          ctx.shadowColor = accent; ctx.shadowBlur = 8 + pulse * 6;
-          var core = ctx.createRadialGradient(epX, epY, 0, epX, epY, epR * 0.8);
-          core.addColorStop(0, '#ffffff');
-          core.addColorStop(0.3, accent);
-          core.addColorStop(0.8, hull);
-          core.addColorStop(1, '#0a0a18');
-          ctx.fillStyle = core;
-          ctx.beginPath(); ctx.arc(epX, epY, epR * 0.8, 0, Math.PI * 2); ctx.fill();
+          // Shell line
+          ctx.strokeStyle = 'rgba(255,200,200,0.2)'; ctx.lineWidth = Math.max(0.5,r*0.04);
+          ctx.beginPath(); ctx.moveTo(-r*0.28, -r*0.04); ctx.lineTo(r*0.28, -r*0.04); ctx.stroke();
+          // Glowing eyes (head faces DOWN toward player)
+          for (var _es = -1; _es <= 1; _es += 2) {
+            ctx.shadowColor = '#ff8888'; ctx.shadowBlur = 8;
+            ctx.fillStyle = '#ffaaaa';
+            ctx.beginPath(); ctx.arc(_es*r*0.14, r*0.3, r*0.075, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#ffffff'; ctx.shadowBlur = 0;
+            ctx.beginPath(); ctx.arc(_es*r*0.14, r*0.28, r*0.035, 0, Math.PI*2); ctx.fill();
+          }
+
+        } else if (tierIdx === 1) {
+          // ── TIER 2: GREEN BUTTERFLY — wide bezier wings, spots, antennae ──
+          for (var _bs = -1; _bs <= 1; _bs += 2) {
+            var _bfG = ctx.createRadialGradient(_bs*r*0.45, -r*0.05, 0, _bs*r*0.45, -r*0.05, r*0.95);
+            _bfG.addColorStop(0, accent); _bfG.addColorStop(0.55, hull); _bfG.addColorStop(1, '#001508');
+            ctx.fillStyle = _bfG; ctx.strokeStyle = accent+'88'; ctx.lineWidth = Math.max(0.6,r*0.04);
+            ctx.beginPath();
+            ctx.moveTo(0, -r*0.18);
+            ctx.bezierCurveTo(_bs*r*0.5, -r*0.65+flap*r*0.06, _bs*r*1.05, -r*0.3+flap*r*0.06, _bs*r*1.0, r*0.18);
+            ctx.bezierCurveTo(_bs*r*0.85, r*0.52, _bs*r*0.35, r*0.28, 0, r*0.18);
+            ctx.closePath(); ctx.fill(); ctx.stroke();
+            // Wing spots
+            ctx.shadowColor = '#ffffff'; ctx.shadowBlur = 5;
+            ctx.fillStyle = 'rgba(255,255,255,0.4)';
+            ctx.beginPath(); ctx.arc(_bs*r*0.6, -r*0.12, r*0.1, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(_bs*r*0.76, r*0.18, r*0.07, 0, Math.PI*2); ctx.fill();
+            ctx.shadowBlur = 0;
+          }
+          // Slim body
+          var _bbG = ctx.createLinearGradient(0, -r*0.5, 0, r*0.5);
+          _bbG.addColorStop(0, '#001808'); _bbG.addColorStop(0.35, hull); _bbG.addColorStop(0.65, accent); _bbG.addColorStop(1, '#001808');
+          ctx.fillStyle = _bbG; ctx.strokeStyle = accent; ctx.lineWidth = Math.max(0.8,r*0.05);
+          ctx.beginPath(); ctx.ellipse(0, 0, r*0.2, r*0.5, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke();
           ctx.shadowBlur = 0;
-          // bright center dot
-          ctx.fillStyle = 'rgba(255,255,255,' + (0.65 + pulse * 0.35) + ')';
-          ctx.beginPath(); ctx.arc(epX, epY, epR * 0.3, 0, Math.PI * 2); ctx.fill();
+          // Eyes + antennae pointing toward player (down)
+          for (var _bes = -1; _bes <= 1; _bes += 2) {
+            ctx.shadowColor = accent; ctx.shadowBlur = 6;
+            ctx.fillStyle = '#aaffcc';
+            ctx.beginPath(); ctx.arc(_bes*r*0.1, r*0.3, r*0.07, 0, Math.PI*2); ctx.fill();
+            ctx.shadowBlur = 0;
+            ctx.strokeStyle = accent+'bb'; ctx.lineWidth = Math.max(0.6,r*0.035);
+            ctx.beginPath(); ctx.moveTo(_bes*r*0.1, r*0.4); ctx.lineTo(_bes*r*0.22, r*0.76); ctx.stroke();
+            ctx.fillStyle = accent;
+            ctx.beginPath(); ctx.arc(_bes*r*0.22, r*0.76, r*0.05, 0, Math.PI*2); ctx.fill();
+          }
+
+        } else if (tierIdx === 2) {
+          // ── TIER 3: ORANGE MOTH — triangular wings, bright glowing core ──
+          for (var _ms2 = -1; _ms2 <= 1; _ms2 += 2) {
+            var _mG = ctx.createLinearGradient(0, 0, _ms2*r*1.05, -r*0.1);
+            _mG.addColorStop(0, accent); _mG.addColorStop(0.5, hull); _mG.addColorStop(1, '#1a0800');
+            ctx.fillStyle = _mG; ctx.strokeStyle = accent+'99'; ctx.lineWidth = Math.max(0.8,r*0.05);
+            ctx.beginPath();
+            ctx.moveTo(_ms2*r*0.18, r*0.12);
+            ctx.lineTo(_ms2*r*1.08, -r*0.08 + flap*r*0.05);
+            ctx.lineTo(_ms2*r*0.82, -r*0.52);
+            ctx.lineTo(_ms2*r*0.15, -r*0.22);
+            ctx.closePath(); ctx.fill(); ctx.stroke();
+            // Inner stripe
+            ctx.strokeStyle = 'rgba(255,200,80,0.28)'; ctx.lineWidth = Math.max(0.4,r*0.03);
+            ctx.beginPath(); ctx.moveTo(_ms2*r*0.28, r*0.0); ctx.lineTo(_ms2*r*0.88, -r*0.1); ctx.stroke();
+          }
+          // Glowing body core
+          var _mcG = ctx.createRadialGradient(0, 0, 0, 0, 0, r*0.48);
+          _mcG.addColorStop(0, '#ffffff'); _mcG.addColorStop(0.18, '#ffffaa');
+          _mcG.addColorStop(0.5, accent); _mcG.addColorStop(0.85, hull); _mcG.addColorStop(1, '#1a0800');
+          ctx.fillStyle = _mcG; ctx.shadowColor = accent; ctx.shadowBlur = 16+pulse*6;
+          ctx.beginPath(); ctx.ellipse(0, 0, r*0.28, r*0.52, 0, 0, Math.PI*2); ctx.fill();
+          ctx.shadowBlur = 0;
+          for (var _mes = -1; _mes <= 1; _mes += 2) {
+            ctx.shadowColor = '#ffcc44'; ctx.shadowBlur = 8;
+            ctx.fillStyle = '#ffee88';
+            ctx.beginPath(); ctx.arc(_mes*r*0.12, r*0.28, r*0.08, 0, Math.PI*2); ctx.fill();
+            ctx.shadowBlur = 0;
+          }
+
+        } else if (tierIdx === 3) {
+          // ── TIER 4: PURPLE BEETLE — armored elytra, thick body, horn ──
+          for (var _ees = -1; _ees <= 1; _ees += 2) {
+            var _eG = ctx.createLinearGradient(_ees*r*0.1, -r*0.42, _ees*r*0.8, r*0.3);
+            _eG.addColorStop(0, accent); _eG.addColorStop(0.45, hull); _eG.addColorStop(1, '#08020f');
+            ctx.fillStyle = _eG; ctx.strokeStyle = accent; ctx.lineWidth = Math.max(1,r*0.065);
+            ctx.beginPath();
+            ctx.moveTo(_ees*r*0.16, -r*0.44);
+            ctx.lineTo(_ees*r*0.8, -r*0.2);
+            ctx.lineTo(_ees*r*0.84, r*0.18);
+            ctx.lineTo(_ees*r*0.62, r*0.46);
+            ctx.lineTo(_ees*r*0.14, r*0.52);
+            ctx.closePath(); ctx.fill(); ctx.stroke();
+            // Armor ridge
+            ctx.strokeStyle = 'rgba(200,140,255,0.22)'; ctx.lineWidth = Math.max(0.4,r*0.035);
+            ctx.beginPath(); ctx.moveTo(_ees*r*0.35, -r*0.33); ctx.lineTo(_ees*r*0.68, r*0.25); ctx.stroke();
+          }
+          // Heavy body
+          var _ebG = ctx.createRadialGradient(0, 0, 0, 0, 0, r*0.38);
+          _ebG.addColorStop(0, accent); _ebG.addColorStop(0.5, hull); _ebG.addColorStop(1, '#08020f');
+          ctx.fillStyle = _ebG; ctx.strokeStyle = accent+'cc'; ctx.lineWidth = Math.max(1,r*0.065);
+          ctx.beginPath(); ctx.ellipse(0, 0, r*0.3, r*0.56, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+          ctx.shadowBlur = 0;
+          // Horn (faces down toward player)
+          ctx.strokeStyle = accent; ctx.lineWidth = Math.max(1.2,r*0.08); ctx.shadowColor = accent; ctx.shadowBlur = 6;
+          ctx.beginPath(); ctx.moveTo(0, r*0.5); ctx.lineTo(0, r*0.92); ctx.stroke(); ctx.shadowBlur = 0;
+          for (var _bes2 = -1; _bes2 <= 1; _bes2 += 2) {
+            ctx.shadowColor = '#dd88ff'; ctx.shadowBlur = 8;
+            ctx.fillStyle = '#ee99ff';
+            ctx.beginPath(); ctx.arc(_bes2*r*0.13, r*0.34, r*0.09, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#ffffff'; ctx.shadowBlur = 0;
+            ctx.beginPath(); ctx.arc(_bes2*r*0.1, r*0.31, r*0.04, 0, Math.PI*2); ctx.fill();
+          }
+
+        } else {
+          // ── TIER 5+: GOLD DRAGON — multi-layer wings, ornate, glowing core ──
+          // Rear wing layer
+          for (var _d2s = -1; _d2s <= 1; _d2s += 2) {
+            ctx.fillStyle = hull+'77'; ctx.strokeStyle = accent+'44'; ctx.lineWidth = Math.max(0.5,r*0.035);
+            ctx.beginPath();
+            ctx.moveTo(_d2s*r*0.15, -r*0.18);
+            ctx.bezierCurveTo(_d2s*r*0.7, -r*0.72+flap*r*0.08, _d2s*r*1.22, -r*0.38, _d2s*r*1.12, r*0.18);
+            ctx.bezierCurveTo(_d2s*r*0.82, r*0.52, _d2s*r*0.28, r*0.18, 0, r*0.0);
+            ctx.closePath(); ctx.fill(); ctx.stroke();
+          }
+          // Front wing layer
+          for (var _d1s = -1; _d1s <= 1; _d1s += 2) {
+            var _dG = ctx.createRadialGradient(_d1s*r*0.4, -r*0.08, 0, _d1s*r*0.4, -r*0.08, r*0.88);
+            _dG.addColorStop(0, '#ffffff'); _dG.addColorStop(0.2, accent); _dG.addColorStop(0.7, hull); _dG.addColorStop(1, '#1a1000');
+            ctx.fillStyle = _dG; ctx.strokeStyle = accent; ctx.lineWidth = Math.max(0.8,r*0.052);
+            ctx.beginPath();
+            ctx.moveTo(_d1s*r*0.18, r*0.08);
+            ctx.bezierCurveTo(_d1s*r*0.6, -r*0.52+flap*r*0.08, _d1s*r*1.02, -r*0.22, _d1s*r*0.92, r*0.12);
+            ctx.bezierCurveTo(_d1s*r*0.65, r*0.42, _d1s*r*0.22, r*0.28, _d1s*r*0.16, r*0.1);
+            ctx.closePath(); ctx.fill(); ctx.stroke();
+          }
+          // Ornate body
+          var _dBG = ctx.createRadialGradient(0, -r*0.08, 0, 0, 0, r*0.44);
+          _dBG.addColorStop(0, '#ffffff'); _dBG.addColorStop(0.15, accent); _dBG.addColorStop(0.5, hull); _dBG.addColorStop(1, '#110e00');
+          ctx.fillStyle = _dBG; ctx.strokeStyle = accent; ctx.lineWidth = Math.max(1.2,r*0.07);
+          ctx.beginPath(); ctx.ellipse(0, 0, r*0.33, r*0.6, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+          ctx.shadowBlur = 0;
+          // Scale lines
+          ctx.strokeStyle = 'rgba(255,220,60,0.2)'; ctx.lineWidth = Math.max(0.4,r*0.03);
+          for (var _sci = -1; _sci <= 1; _sci += 0.5) { ctx.beginPath(); ctx.moveTo(-r*0.24, _sci*r*0.2); ctx.lineTo(r*0.24, _sci*r*0.2); ctx.stroke(); }
+          // Glowing core
+          ctx.shadowColor = '#ffffff'; ctx.shadowBlur = 12+pulse*8;
+          var _dcG = ctx.createRadialGradient(0, 0, 0, 0, 0, r*0.22);
+          _dcG.addColorStop(0, '#ffffff'); _dcG.addColorStop(0.4, accent); _dcG.addColorStop(1, hull);
+          ctx.fillStyle = _dcG; ctx.beginPath(); ctx.arc(0, 0, r*0.22, 0, Math.PI*2); ctx.fill();
+          ctx.shadowBlur = 0;
+          for (var _des = -1; _des <= 1; _des += 2) {
+            ctx.shadowColor = accent; ctx.shadowBlur = 10;
+            ctx.fillStyle = '#ffffcc';
+            ctx.beginPath(); ctx.arc(_des*r*0.15, r*0.38, r*0.09, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#ffffff'; ctx.shadowBlur = 0;
+            ctx.beginPath(); ctx.arc(_des*r*0.12, r*0.35, r*0.04, 0, Math.PI*2); ctx.fill();
+            // Horns
+            ctx.strokeStyle = accent; ctx.lineWidth = Math.max(1,r*0.062); ctx.shadowColor = accent; ctx.shadowBlur = 5;
+            ctx.beginPath(); ctx.moveTo(_des*r*0.11, r*0.48); ctx.lineTo(_des*r*0.21, r*0.82); ctx.stroke();
+            ctx.shadowBlur = 0;
+          }
         }
 
-        // ── THIN 2px HP BAR ──
+        // ── 2px HP BAR ──
         if (tg.maxHealth > 1) {
-          var barW = r * 1.65, barH = 2;
-          var barX = -barW * 0.5, barY = -r - 6;
-          ctx.fillStyle = 'rgba(0,0,0,0.65)';
-          ctx.fillRect(barX, barY, barW, barH);
-          var hpFrac = Math.max(0, tg.health / tg.maxHealth);
-          ctx.fillStyle = hpFrac > 0.5 ? accent : (hpFrac > 0.25 ? '#ffcc00' : '#ff3333');
-          ctx.fillRect(barX, barY, barW * hpFrac, barH);
+          var _bW = r*1.6, _bH = 2, _bX = -_bW*0.5, _bY = -r - 6;
+          ctx.fillStyle = 'rgba(0,0,0,0.65)'; ctx.fillRect(_bX, _bY, _bW, _bH);
+          var _hpF = Math.max(0, tg.health/tg.maxHealth);
+          ctx.fillStyle = _hpF > 0.5 ? accent : (_hpF > 0.25 ? '#ffcc00' : '#ff3333');
+          ctx.fillRect(_bX, _bY, _bW*_hpF, _bH);
         }
-
         ctx.restore();
       }
 
@@ -11293,27 +11423,14 @@
             ctx.fillStyle = '#ffffff'; ctx.shadowBlur = 4;
             ctx.fillRect(bu.x - 0.5, bu.y - 7, 1, 10);
           } else {
-            // Neon blue laser beams
-            var laserColor = activePowerup && activePowerup.type === 'spread' ? '#00d4ff' : '#00d4ff';
-            var glowColor = activePowerup && activePowerup.type === 'spread' ? '#0088ff' : '#0088ff';
-
-            // Outer glow layer
-            ctx.shadowColor = glowColor;
-            ctx.shadowBlur = 14;
-            ctx.fillStyle = 'rgba(0, 136, 255, 0.25)';
-            ctx.fillRect(bu.x - 4, bu.y - 12, 8, 16);
-
-            // Main beam
-            ctx.shadowColor = laserColor;
-            ctx.shadowBlur = 10;
-            ctx.fillStyle = laserColor;
-            ctx.fillRect(bu.x - 3, bu.y - 11, 6, 15);
-
-            // Inner bright core
-            ctx.fillStyle = '#ffffff';
-            ctx.shadowBlur = 6;
-            ctx.shadowColor = 'rgba(255,255,255,0.8)';
-            ctx.fillRect(bu.x - 1, bu.y - 10, 2, 13);
+            // Cyan teardrop laser bolt
+            ctx.shadowColor = '#22D3EE'; ctx.shadowBlur = 12;
+            ctx.fillStyle = 'rgba(34,211,238,0.28)';
+            ctx.beginPath(); ctx.ellipse(bu.x, bu.y - 6, 5, 11, 0, 0, Math.PI*2); ctx.fill();
+            ctx.shadowBlur = 8; ctx.fillStyle = '#67E8F9';
+            ctx.beginPath(); ctx.ellipse(bu.x, bu.y - 5, 3, 8, 0, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#ffffff'; ctx.shadowColor = 'rgba(255,255,255,0.9)'; ctx.shadowBlur = 5;
+            ctx.beginPath(); ctx.ellipse(bu.x, bu.y - 6, 1.2, 5, 0, 0, Math.PI*2); ctx.fill();
           }
           ctx.shadowBlur = 0;
           ctx.restore();
@@ -11339,6 +11456,35 @@
           ctx.fill();
           ctx.shadowBlur = 0;
           ctx.restore();
+        }
+
+        // Draw homing missiles
+        for (var _mdi = 0; _mdi < _missiles.length; _mdi++) {
+          var _md = _missiles[_mdi];
+          var _mdA = Math.atan2(_md.vy, _md.vx) + Math.PI*0.5;
+          ctx.save(); ctx.translate(_md.x, _md.y); ctx.rotate(_mdA);
+          var _mTG = ctx.createLinearGradient(0, 4, 0, 22);
+          _mTG.addColorStop(0, 'rgba(255,140,0,0.85)'); _mTG.addColorStop(1, 'rgba(255,40,0,0)');
+          ctx.fillStyle = _mTG; ctx.fillRect(-2.5, 4, 5, 18);
+          ctx.shadowColor = '#ff6600'; ctx.shadowBlur = 10;
+          ctx.fillStyle = '#ff5500'; ctx.fillRect(-2.5, -7, 5, 14);
+          ctx.fillStyle = '#ffcc44'; ctx.shadowBlur = 4; ctx.fillRect(-1, -7, 2, 9);
+          ctx.shadowBlur = 0; ctx.restore();
+        }
+
+        // Draw laser beam (ability)
+        if (_laserActive && !gameOver) {
+          var _lA = Math.min(1, _laserTimer * 2.5);
+          ctx.save(); ctx.globalAlpha = _lA * 0.88;
+          ctx.shadowColor = '#ffffff'; ctx.shadowBlur = 28;
+          var _lG = ctx.createLinearGradient(player.x - 22, 0, player.x + 22, 0);
+          _lG.addColorStop(0, 'rgba(100,220,255,0)');
+          _lG.addColorStop(0.35, 'rgba(160,240,255,0.9)');
+          _lG.addColorStop(0.5, '#ffffff');
+          _lG.addColorStop(0.65, 'rgba(160,240,255,0.9)');
+          _lG.addColorStop(1, 'rgba(100,220,255,0)');
+          ctx.fillStyle = _lG; ctx.fillRect(player.x - 22, 0, 44, player.y);
+          ctx.globalAlpha = 1; ctx.shadowBlur = 0; ctx.restore();
         }
 
         // Draw power-ups - canvas-drawn weapons
@@ -11580,6 +11726,45 @@
         ctx.shadowBlur = 0;
         ctx.restore();
 
+        // ── ABILITY BUTTONS (left side, 3 stacked circles) ──
+        if (!gameOver) {
+          var _abBX = 30, _abBR = 21;
+          var _abBYs = [GH*0.55, GH*0.68, GH*0.81];
+          var _abIcons = ['\u25b2','=','\u25ce'];
+          var _abLbls = ['MSL','LZR','SHD'];
+          for (var _abi = 0; _abi < 3; _abi++) {
+            var _abX = _abBX, _abY = _abBYs[_abi];
+            var _abCD = _abCDs[_abi], _abMX = _abMaxCDs[_abi];
+            var _abRdy = _abCD <= 0;
+            ctx.save();
+            if (_abRdy) { ctx.shadowColor = '#ff8800'; ctx.shadowBlur = 9; }
+            ctx.fillStyle = _abRdy ? 'rgba(18,10,4,0.88)' : 'rgba(8,5,2,0.92)';
+            ctx.strokeStyle = _abRdy ? '#ff8800' : '#442200';
+            ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.arc(_abX, _abY, _abBR, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+            ctx.shadowBlur = 0;
+            ctx.font = 'bold 14px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillStyle = _abRdy ? '#ffcc44' : '#553311';
+            ctx.fillText(_abIcons[_abi], _abX, _abY - 5);
+            ctx.font = 'bold 7px sans-serif';
+            ctx.fillStyle = _abRdy ? '#ffaa22' : '#442211';
+            ctx.fillText(_abLbls[_abi], _abX, _abY + 8);
+            if (!_abRdy) {
+              var _abFr = _abCD / _abMX;
+              ctx.fillStyle = 'rgba(0,0,0,' + (_abFr * 0.55) + ')';
+              ctx.beginPath(); ctx.arc(_abX, _abY, _abBR, 0, Math.PI*2); ctx.fill();
+              ctx.strokeStyle = '#ff8800'; ctx.lineWidth = 2;
+              ctx.beginPath();
+              ctx.arc(_abX, _abY, _abBR-2, -Math.PI*0.5, -Math.PI*0.5 + (1-_abFr)*Math.PI*2);
+              ctx.stroke();
+              ctx.fillStyle = '#ffaa44'; ctx.font = 'bold 10px sans-serif';
+              ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+              ctx.fillText(Math.ceil(_abCD)+'s', _abX, _abY);
+            }
+            ctx.restore();
+          }
+        }
+
         // Draw level completion transition text — centered, unmissable
         if (levelTransition) {
           var transProgress = 1 - (levelTransitionTimer / 2.0);
@@ -11774,15 +11959,26 @@
         var touchPlayerStartX = 0, touchPlayerStartY = 0;
         c.addEventListener('touchstart', function(ev) {
           if (document.body.getAttribute('data-active-view') !== 'wishrunner') return;
-          touchActive = true;
           rect = c.getBoundingClientRect();
           var touch = ev.touches[0];
-          var sx = GW / rect.width;
+          var _tsx = GW / rect.width, _tsy = GH / rect.height;
+          var _tgx = (touch.clientX - rect.left) * _tsx;
+          var _tgy = (touch.clientY - rect.top) * _tsy;
+          // Check ability buttons first
+          var _abBYs2 = [GH*0.55, GH*0.68, GH*0.81];
+          for (var _abTi = 0; _abTi < 3; _abTi++) {
+            var _abDx = _tgx - 30, _abDy = _tgy - _abBYs2[_abTi];
+            if (Math.sqrt(_abDx*_abDx+_abDy*_abDy) <= 24) {
+              triggerAbility(_abTi);
+              return;
+            }
+          }
+          // Normal drag — move player
+          touchActive = true;
           touchStartClientX = touch.clientX;
           touchStartClientY = touch.clientY;
-          // Position ship 60 game units above finger so it's always visible
-          touchPlayerStartX = (touch.clientX - rect.left) * sx;
-          touchPlayerStartY = (touch.clientY - rect.top) * (GH / rect.height) - 60;
+          touchPlayerStartX = _tgx;
+          touchPlayerStartY = _tgy - 60;
         }, { passive: true });
         c.addEventListener('touchmove', function(ev) {
           if (!touchActive || !rect) return;
