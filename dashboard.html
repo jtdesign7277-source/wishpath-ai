@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-19-v327-bigger-bullets';
+    var APP_VERSION = '2026-04-19-v328-crypto-ws-fix';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -17046,6 +17046,8 @@
       heartbeatTimer: null,
       lastMessageTime: 0,
       symbolLastUpdate: {},
+      _dirtyStocks: false,
+      _dirtyCrypto: false,
 
       async fetchCredentials() {
         return await getAlpacaCreds();
@@ -17177,12 +17179,13 @@
       },
 
       debouncedRender(symbol) {
+        if (MAG7.some(function(s) { return s.symbol === symbol; })) this._dirtyStocks = true;
+        if (CRYPTO.some(function(c) { return c.symbol === symbol; })) this._dirtyCrypto = true;
         if (this.renderDebounce) clearTimeout(this.renderDebounce);
+        var self = this;
         this.renderDebounce = setTimeout(function() {
-          var isStock = MAG7.some(function(s) { return s.symbol === symbol; });
-          var isCrypto = CRYPTO.some(function(c) { return c.symbol === symbol; });
-          if (isStock) renderMarketCards();
-          if (isCrypto) renderCryptoCards();
+          if (self._dirtyStocks) { renderMarketCards(); self._dirtyStocks = false; }
+          if (self._dirtyCrypto) { renderCryptoCards(); self._dirtyCrypto = false; }
           refreshFMStockList();
           var ts = document.getElementById('marketsUpdatedTime');
           var fmTs = document.getElementById('fmMarketsUpdatedTime');
