@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-19-v310-paywall-zindex-fix';
+    var APP_VERSION = '2026-04-19-v311-paywall-autoplay-sound';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -11829,11 +11829,26 @@
       var btn = document.getElementById('paywallUnmute');
       if (!vid) return;
       _hidePaywallReplay();
-      vid.muted = true;
       try { vid.currentTime = 0; } catch (e) {}
+      // Try with sound first — works if we're inside a user gesture (send-message click, CTA, etc.)
+      vid.muted = false;
+      vid.volume = 1.0;
       var p = vid.play();
-      if (p && p.catch) p.catch(function(){});
-      if (btn) { btn.classList.remove('hide'); btn.innerHTML = '&#x1F50A; Tap to unmute'; }
+      if (p && p.then) {
+        p.then(function() {
+          // Played with sound — hide unmute pill, show mute toggle instead
+          if (btn) { btn.classList.remove('hide'); btn.innerHTML = '&#x1F507; Mute'; }
+        }).catch(function() {
+          // Autoplay with sound blocked — fall back to muted, show unmute pill
+          vid.muted = true;
+          var p2 = vid.play();
+          if (p2 && p2.catch) p2.catch(function(){});
+          if (btn) { btn.classList.remove('hide'); btn.innerHTML = '&#x1F50A; Tap to unmute'; }
+        });
+      } else if (btn) {
+        btn.classList.remove('hide');
+        btn.innerHTML = '&#x1F507; Mute';
+      }
     }
     function stopPaywallVideo() {
       var vid = document.getElementById('paywallVideo');
