@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-19-v315-desktop-lifecoach-rebuild';
+    var APP_VERSION = '2026-04-19-v316-prices-seamless-charts';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -1896,7 +1896,7 @@
       .home-market-sym { font-size: 14px; font-weight: 600; color: #fff; line-height: 1.25; }
       .home-market-name { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 85px; font-weight: 400; }
       .home-market-spark { flex: 1; height: 28px; max-width: 120px; min-width: 50px; }
-      .home-market-right { flex-shrink: 0; text-align: right; }
+      .home-market-right { flex-shrink: 0; text-align: right; display: flex; flex-direction: row; align-items: center; gap: 8px; }
       .home-market-pct {
         font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; padding: 5px 10px; border-radius: 4px; display: inline-block; line-height: 1; min-width: 62px; text-align: center;
       }
@@ -2427,9 +2427,11 @@
     .stock-name { font-size: 11px; color: rgba(255,255,255,0.35); margin-bottom: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 85px; font-weight: 400; }
     .stock-card-right { display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; }
     .stock-spark-wrap { flex: 1; height: 28px; max-width: 120px; min-width: 50px; }
+    .stock-right-group { display: flex; flex-direction: row; align-items: center; gap: 8px; flex-shrink: 0; }
     .stock-pct-badge { font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; text-align: center; min-width: 62px; flex-shrink: 0; padding: 5px 10px; border-radius: 4px; display: inline-block; line-height: 1; }
     .stock-pct-badge.up { background: rgba(34,197,94,0.18); color: #22C55E; }
     .stock-pct-badge.dn { background: rgba(239,68,68,0.18); color: #EF4444; }
+    .stock-price-val { font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.6); font-variant-numeric: tabular-nums; min-width: 50px; text-align: right; }
     .stock-price { display: none; }
     .stock-change { display: none; }
     .stock-change.up { color: var(--kraken-green); }
@@ -14387,6 +14389,7 @@
         var isUp = chg >= 0;
         var chgStr = (isUp ? '+' : '') + chg.toFixed(2) + '%';
         var spark = buildSparkSVG(q.bars, isUp);
+        var priceStr = q.price ? ('$' + formatNum(q.price)) : '--';
         return '<div class="home-market-card" onclick="hideMobileHome();openFMTab(\'fmMarkets\');">' +
           '<div class="home-market-left">' +
             '<div class="home-market-sym">' + sym + '</div>' +
@@ -14395,6 +14398,7 @@
           spark +
           '<div class="home-market-right">' +
             '<div class="home-market-pct ' + (isUp ? 'up' : 'dn') + '">' + chgStr + '</div>' +
+            '<div class="stock-price-val">' + priceStr + '</div>' +
           '</div>' +
         '</div>';
       }).join('');
@@ -16672,15 +16676,16 @@
       if (!q) return '<div class="stock-card" onclick="openTickerChart(\'' + chartSym + '\')">' +
         '<div class="stock-card-info"><div class="stock-symbol">' + displaySym + '</div><div class="stock-name">' + name + '</div></div>' +
         '<div class="stock-spark-wrap"></div>' +
-        '<div class="stock-pct-badge dn">--</div></div>';
+        '<div class="stock-right-group"><div class="stock-pct-badge dn">--</div><div class="stock-price-val">--</div></div></div>';
       var isUp = (q.changePercent || 0) >= 0;
       var pct = (isUp ? '+' : '') + formatNum(q.changePercent) + '%';
+      var price = q.price ? ('$' + formatNum(q.price)) : '--';
       var bars = _sparkBarsCache[sym];
       var spark = _buildSparkSVG(bars, isUp);
       return '<div class="stock-card" onclick="openTickerChart(\'' + chartSym + '\')">' +
         '<div class="stock-card-info"><div class="stock-symbol">' + displaySym + '</div><div class="stock-name">' + name + '</div></div>' +
         spark +
-        '<div class="stock-pct-badge ' + (isUp ? 'up' : 'dn') + '">' + pct + '</div></div>';
+        '<div class="stock-right-group"><div class="stock-pct-badge ' + (isUp ? 'up' : 'dn') + '">' + pct + '</div><div class="stock-price-val">' + price + '</div></div></div>';
     }
     function renderMarketCards() {
       var mag7Html = MAG7.map(function(stock) {
