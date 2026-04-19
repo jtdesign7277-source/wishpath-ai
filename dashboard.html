@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-19-v304-robinhood-markets';
+    var APP_VERSION = '2026-04-19-v305-rh-pixel-perfect';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -1868,25 +1868,23 @@
       .home-markets-row { display: flex; flex-direction: column; margin-bottom: 24px; }
       .home-markets-row::-webkit-scrollbar { display: none; }
       .home-market-card {
-        display: flex; align-items: center; justify-content: space-between;
-        padding: 14px 0; border-bottom: 1px solid rgba(255,255,255,0.06);
+        display: flex; align-items: center;
+        padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.08);
         cursor: pointer; -webkit-tap-highlight-color: transparent;
-        transition: opacity 0.15s ease;
+        transition: opacity 0.15s ease; gap: 0;
       }
       .home-market-card:last-child { border-bottom: none; }
       .home-market-card:active { opacity: 0.6; }
-      .home-market-left { flex: 1; min-width: 0; }
-      .home-market-sym { font-size: 15px; font-weight: 700; color: #fff; letter-spacing: 0.2px; }
-      .home-market-name { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
-      .home-market-spark { width: 64px; height: 32px; flex-shrink: 0; margin: 0 16px; }
-      .home-market-right { flex-shrink: 0; text-align: right; }
-      .home-market-badge {
-        display: inline-block; padding: 5px 10px; border-radius: 6px;
-        font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums;
-        min-width: 64px; text-align: center;
+      .home-market-left { width: 90px; flex-shrink: 0; }
+      .home-market-sym { font-size: 14px; font-weight: 600; color: #fff; line-height: 1.25; }
+      .home-market-name { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 85px; font-weight: 400; }
+      .home-market-spark { flex: 1; height: 28px; max-width: 120px; min-width: 50px; }
+      .home-market-right { flex-shrink: 0; text-align: right; min-width: 58px; }
+      .home-market-pct {
+        font-size: 13px; font-weight: 500; font-variant-numeric: tabular-nums;
       }
-      .home-market-badge.up { background: rgba(34,197,94,0.18); color: #22C55E; }
-      .home-market-badge.dn { background: rgba(239,68,68,0.18); color: #EF4444; }
+      .home-market-pct.up { color: #22C55E; }
+      .home-market-pct.dn { color: #EF4444; }
       .home-market-loading { color: rgba(255,255,255,0.2); font-size: 11px; padding: 20px 0; text-align: center; }
       .mobile-recent-card { min-width: 155px; background: #181225; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 16px; scroll-snap-align: start; cursor: pointer; flex-shrink: 0; box-shadow: 8px 8px 16px rgba(0,0,0,0.6), -4px -4px 12px rgba(255,255,255,0.03); transition: all 0.3s ease; }
       .mobile-recent-card:active { border-color: rgba(113,50,245,0.2); box-shadow: 4px 4px 8px rgba(0,0,0,0.5), -2px -2px 6px rgba(255,255,255,0.02); transform: scale(0.97); }
@@ -2400,23 +2398,23 @@
     .fm-search-icon-btn { background: none; border: none; padding: 6px; color: var(--text-dim); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; border-radius: 6px; }
     .fm-search-icon-btn:hover { color: var(--accent); }
     @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-    .stock-grid { display: flex; flex-direction: column; gap: 0; margin-bottom: 20px; border-radius: 0; overflow: hidden; border: none; }
-    .stock-card { background: transparent; border-bottom: 1px solid rgba(255,255,255,0.06); padding: 13px 0; display: flex; flex-direction: row; align-items: center; gap: 12px; transition: opacity 0.15s ease; position: relative; overflow: hidden; cursor: pointer; }
+    .stock-grid { display: flex; flex-direction: column; gap: 0; margin-bottom: 16px; border-radius: 0; overflow: visible; border: none; }
+    .stock-card { background: transparent; border-bottom: 1px solid rgba(255,255,255,0.08); padding: 12px 0; display: flex; flex-direction: row; align-items: center; gap: 0; transition: opacity 0.15s ease; position: relative; overflow: visible; cursor: pointer; }
     .stock-card:last-child { border-bottom: none; }
     .stock-card:active { opacity: 0.6; }
     .stock-card:hover { opacity: 0.85; }
     .stock-card::before { display: none; }
-    .stock-card .ticker-logo, .stock-card .ticker-logo-fallback { width: 28px !important; height: 28px !important; margin-bottom: 0 !important; flex-shrink: 0; }
-    .stock-card-info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-    .stock-symbol { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 0; line-height: 1.2; }
-    .stock-name { font-size: 12px; color: rgba(255,255,255,0.4); margin-bottom: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
+    .stock-card .ticker-logo, .stock-card .ticker-logo-fallback { display: none !important; }
+    .stock-card-info { width: 90px; flex-shrink: 0; display: flex; flex-direction: column; }
+    .stock-symbol { font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 1px; line-height: 1.25; letter-spacing: 0.01em; }
+    .stock-name { font-size: 11px; color: rgba(255,255,255,0.35); margin-bottom: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 85px; font-weight: 400; }
     .stock-card-right { display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; }
-    .stock-spark-wrap { width: 64px; height: 32px; flex-shrink: 0; }
-    .stock-pct-badge { display: inline-block; padding: 5px 10px; border-radius: 6px; font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; min-width: 64px; text-align: center; }
-    .stock-pct-badge.up { background: rgba(34,197,94,0.18); color: #22C55E; }
-    .stock-pct-badge.dn { background: rgba(239,68,68,0.18); color: #EF4444; }
-    .stock-price { font-size: 0.88rem; font-weight: 700; color: #fff; margin-bottom: 0; font-variant-numeric: tabular-nums; line-height: 1.2; display: none; }
-    .stock-change { font-size: 0.7rem; font-weight: 600; font-variant-numeric: tabular-nums; display: none; }
+    .stock-spark-wrap { flex: 1; height: 28px; max-width: 120px; min-width: 50px; }
+    .stock-pct-text { font-size: 13px; font-weight: 500; font-variant-numeric: tabular-nums; text-align: right; min-width: 58px; flex-shrink: 0; }
+    .stock-pct-text.up { color: #22C55E; }
+    .stock-pct-text.dn { color: #EF4444; }
+    .stock-price { display: none; }
+    .stock-change { display: none; }
     .stock-change.up { color: var(--kraken-green); }
     .stock-change.down { color: var(--kraken-red); }
     .stock-change.flat { color: var(--text-dim); }
@@ -3156,9 +3154,9 @@
       .home-header-row { margin-bottom: 0; gap: 8px; }
       .home-tabs { overflow: visible; }
       .home-tab { padding: 14px 8px; margin: 0; font-size: 15px; }
-      .stock-grid { display: flex; flex-direction: column; gap: 0; padding: 0 16px; margin-bottom: 20px; border: none; border-radius: 0; }
-      #mobileStockGrid, #mobileWatchlistGrid, #mobileCryptoGrid { display: flex; flex-direction: column; gap: 0; padding: 0 16px; margin-bottom: 20px; }
-      .stock-card { padding: 13px 0; }
+      .stock-grid { display: flex; flex-direction: column; gap: 0; padding: 0; margin-bottom: 16px; border: none; border-radius: 0; }
+      #mobileStockGrid, #mobileWatchlistGrid, #mobileCryptoGrid { display: flex; flex-direction: column; gap: 0; padding: 0; margin-bottom: 16px; }
+      .stock-card { padding: 12px 0; }
       .portfolio-summary { grid-template-columns: repeat(2, 1fr); gap: 10px; }
       .portfolio-stat-value { font-size: 18px !important; }
       .portfolio-hero-value { font-size: 32px; }
@@ -14174,7 +14172,7 @@
           '</div>' +
           spark +
           '<div class="home-market-right">' +
-            '<div class="home-market-badge ' + (isUp ? 'up' : 'dn') + '">' + chgStr + '</div>' +
+            '<div class="home-market-pct ' + (isUp ? 'up' : 'dn') + '">' + chgStr + '</div>' +
           '</div>' +
         '</div>';
       }).join('');
@@ -16406,16 +16404,13 @@
         console.error('Markets fetch error:', e);
       }
 
-      // Fetch sparkline bars (non-blocking)
+      // Fetch sparkline bars then render
       try {
         var _mqUrl = 'https://mszilrexlupzthauoaxb.supabase.co/functions/v1/market-quotes';
-        fetch(_mqUrl + '?symbols=' + encodeURIComponent(allSymbols.join(',')) + '&bars=1')
-          .then(function(r) { return r.json(); })
-          .then(function(j) {
-            if (j.data) j.data.forEach(function(d) { if (d.bars && d.bars.length) _sparkBarsCache[d.symbol] = d.bars; });
-            renderMarketCards();
-          }).catch(function(){});
-      } catch(e) {}
+        var barsRes = await fetch(_mqUrl + '?symbols=' + encodeURIComponent(allSymbols.join(',')) + '&bars=1');
+        var barsJson = await barsRes.json();
+        if (barsJson.data) barsJson.data.forEach(function(d) { if (d.bars && d.bars.length) _sparkBarsCache[d.symbol] = d.bars; });
+      } catch(e) { console.warn('Bars fetch error:', e); }
 
       renderMarketCards();
       if (document.getElementById('mobileStockGrid')) renderMobileMarkets();
@@ -16455,14 +16450,15 @@
       if (!q) return '<div class="stock-card" onclick="openTickerChart(\'' + chartSym + '\')">' +
         '<div class="stock-card-info"><div class="stock-symbol">' + displaySym + '</div><div class="stock-name">' + name + '</div></div>' +
         '<div class="stock-spark-wrap"></div>' +
-        '<div class="stock-pct-badge dn">--</div></div>';
+        '<div class="stock-pct-text dn">--</div></div>';
       var isUp = (q.changePercent || 0) >= 0;
       var pct = (isUp ? '+' : '') + formatNum(q.changePercent) + '%';
-      var spark = _buildSparkSVG(_sparkBarsCache[sym], isUp);
+      var bars = _sparkBarsCache[sym];
+      var spark = _buildSparkSVG(bars, isUp);
       return '<div class="stock-card" onclick="openTickerChart(\'' + chartSym + '\')">' +
         '<div class="stock-card-info"><div class="stock-symbol">' + displaySym + '</div><div class="stock-name">' + name + '</div></div>' +
         spark +
-        '<div class="stock-pct-badge ' + (isUp ? 'up' : 'dn') + '">' + pct + '</div></div>';
+        '<div class="stock-pct-text ' + (isUp ? 'up' : 'dn') + '">' + pct + '</div></div>';
     }
     function renderMarketCards() {
       var mag7Html = MAG7.map(function(stock) {
