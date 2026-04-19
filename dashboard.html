@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-19-v314-desktop-lifecoach-sidepanel';
+    var APP_VERSION = '2026-04-19-v315-desktop-lifecoach-rebuild';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -4647,28 +4647,82 @@
       .mobile-fm-menu,
       .wp-bottom-tabs { display: none !important; }
 
-      /* ── Desktop Life Coach View Polishing ── */
+      /* ── Desktop Life Coach: two-pane layout (list + thread) ── */
       #lifecoachView {
-        display: grid;
-        grid-template-columns: 240px 1fr;
-        height: 100%;
-        gap: 0;
+        display: flex !important;
+        flex-direction: row;
+        height: calc(100vh - 60px);
+        padding: 0 !important;
+        background: var(--bg, #0a0a0a);
+        overflow: hidden;
       }
-      #lifecoachView .lc-chat-list {
+      /* Left pane: chat list — always visible on desktop, even when mobile JS toggles .hidden */
+      #lifecoachView .lc-chat-list,
+      #lifecoachView .lc-chat-list.hidden {
         position: relative !important;
         inset: auto !important;
+        display: flex !important;
+        flex-direction: column;
+        width: 320px;
+        flex-shrink: 0;
+        border-right: 1px solid rgba(255,255,255,0.08);
+        background: rgba(20,20,24,0.6);
         z-index: 1;
-        max-width: none;
-        border-right: 1px solid var(--border);
       }
+      /* Right pane: chat thread — always visible on desktop, override mobile inline display:none */
       #lifecoachView .lc-fullscreen {
         position: relative !important;
         inset: auto !important;
-        max-width: none;
         display: flex !important;
+        flex: 1;
+        min-width: 0;
+        background: var(--bg, #0a0a0a);
       }
-      #lifecoachView .lc-messages { padding: 20px; }
-      #lifecoachView .lc-input-bar { padding: 16px 20px; }
+      /* Hide mobile back buttons — no need to navigate between panels on desktop */
+      #lifecoachView .lc-list-back-btn,
+      #lifecoachView .lc-back-btn {
+        display: none !important;
+      }
+      /* Clean up topbars for desktop — left-align titles since back arrows are gone */
+      #lifecoachView .lc-list-topbar,
+      #lifecoachView .lc-topbar {
+        padding: 18px 22px;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+      }
+      #lifecoachView .lc-list-topbar-title,
+      #lifecoachView .lc-topbar-title {
+        text-align: left;
+        font-size: 1rem;
+        letter-spacing: 0.01em;
+      }
+      /* Chat list items: desktop hover, breathing room */
+      #lifecoachView .lc-chat-item {
+        padding: 14px 20px;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        transition: background 0.15s ease;
+      }
+      #lifecoachView .lc-chat-item:first-child { border-top: none; }
+      #lifecoachView .lc-chat-item:hover { background: rgba(113,50,245,0.08); }
+      #lifecoachView .lc-chat-item.active { background: rgba(113,50,245,0.15); }
+      #lifecoachView .lc-chat-item-chevron { display: none; }
+      #lifecoachView .lc-chat-item-title { font-size: 0.95rem; }
+      #lifecoachView .lc-chat-item-time { font-size: 0.72rem; }
+      /* Messages: centered column, comfortable desktop reading width */
+      #lifecoachView .lc-messages {
+        padding: 28px 32px;
+        max-width: 920px;
+        margin: 0 auto;
+        width: 100%;
+      }
+      #lifecoachView .lc-empty-state { padding: 60px 40px; }
+      /* Input bar: align with centered messages column */
+      #lifecoachView .lc-input-bar {
+        padding: 16px 32px 24px;
+      }
+      #lifecoachView .lc-input-wrap {
+        max-width: 920px;
+        margin: 0 auto;
+      }
     }
 
     /* ── Premium Glassmorphic AI Response Titles ── */
