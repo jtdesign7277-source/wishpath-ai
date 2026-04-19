@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-18-v303-fix-markets-single-fetch';
+    var APP_VERSION = '2026-04-19-v304-robinhood-markets';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -1861,27 +1861,33 @@
       .mobile-recents-row { display: flex; gap: 12px; overflow-x: auto; -webkit-overflow-scrolling: touch; scroll-snap-type: x mandatory; padding-bottom: 8px; margin-bottom: 24px; }
       .mobile-recents-row::-webkit-scrollbar { display: none; }
       /* ── Markets Snapshot (Home) ── */
-      .home-markets-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+      .home-markets-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
       .home-markets-header .mobile-sec-label { margin-bottom: 0; }
       .home-markets-see-all { font-size: 12px; color: rgba(113,50,245,0.85); font-weight: 600; cursor: pointer; -webkit-tap-highlight-color: transparent; }
       .home-markets-see-all:active { opacity: 0.6; }
-      .home-markets-row { display: flex; gap: 10px; overflow-x: auto; -webkit-overflow-scrolling: touch; scroll-snap-type: x mandatory; padding-bottom: 12px; margin-bottom: 24px; }
+      .home-markets-row { display: flex; flex-direction: column; margin-bottom: 24px; }
       .home-markets-row::-webkit-scrollbar { display: none; }
       .home-market-card {
-        min-width: 130px; max-width: 130px; flex-shrink: 0;
-        background: #181225; border: 1px solid rgba(255,255,255,0.08);
-        border-radius: 14px; padding: 14px 12px; scroll-snap-align: start;
-        cursor: pointer; transition: all 0.2s ease;
-        box-shadow: 6px 6px 14px rgba(0,0,0,0.5), -3px -3px 10px rgba(255,255,255,0.02);
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 14px 0; border-bottom: 1px solid rgba(255,255,255,0.06);
+        cursor: pointer; -webkit-tap-highlight-color: transparent;
+        transition: opacity 0.15s ease;
       }
-      .home-market-card:active { transform: scale(0.96); border-color: rgba(113,50,245,0.25); }
-      .home-market-sym { font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.9); margin-bottom: 2px; }
-      .home-market-name { font-size: 10px; color: rgba(255,255,255,0.35); margin-bottom: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .home-market-price { font-size: 15px; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; margin-bottom: 4px; }
-      .home-market-change { font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums; }
-      .home-market-change.up { color: #22C55E; }
-      .home-market-change.dn { color: #EF4444; }
-      .home-market-loading { color: rgba(255,255,255,0.2); font-size: 11px; }
+      .home-market-card:last-child { border-bottom: none; }
+      .home-market-card:active { opacity: 0.6; }
+      .home-market-left { flex: 1; min-width: 0; }
+      .home-market-sym { font-size: 15px; font-weight: 700; color: #fff; letter-spacing: 0.2px; }
+      .home-market-name { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
+      .home-market-spark { width: 64px; height: 32px; flex-shrink: 0; margin: 0 16px; }
+      .home-market-right { flex-shrink: 0; text-align: right; }
+      .home-market-badge {
+        display: inline-block; padding: 5px 10px; border-radius: 6px;
+        font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums;
+        min-width: 64px; text-align: center;
+      }
+      .home-market-badge.up { background: rgba(34,197,94,0.18); color: #22C55E; }
+      .home-market-badge.dn { background: rgba(239,68,68,0.18); color: #EF4444; }
+      .home-market-loading { color: rgba(255,255,255,0.2); font-size: 11px; padding: 20px 0; text-align: center; }
       .mobile-recent-card { min-width: 155px; background: #181225; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 16px; scroll-snap-align: start; cursor: pointer; flex-shrink: 0; box-shadow: 8px 8px 16px rgba(0,0,0,0.6), -4px -4px 12px rgba(255,255,255,0.03); transition: all 0.3s ease; }
       .mobile-recent-card:active { border-color: rgba(113,50,245,0.2); box-shadow: 4px 4px 8px rgba(0,0,0,0.5), -2px -2px 6px rgba(255,255,255,0.02); transform: scale(0.97); }
       .mobile-recent-icon { font-size: 22px; margin-bottom: 8px; }
@@ -6277,7 +6283,7 @@
           <span class="home-markets-see-all" onclick="hideMobileHome();openFMTab('fmMarkets');">See All →</span>
         </div>
         <div class="home-markets-row" id="homeMarketsRow">
-          <div class="home-market-card"><div class="home-market-loading">Loading prices...</div></div>
+          <div class="home-market-loading">Loading prices...</div>
         </div>
       </div>
     </div>
@@ -14128,54 +14134,63 @@
       { symbol: 'ETH/USD', name: 'Ethereum', display: 'ETH' },
       { symbol: 'SOL/USD', name: 'Solana', display: 'SOL' }
     ];
+    function buildSparkSVG(bars, isUp) {
+      if (!bars || bars.length < 2) return '';
+      var w = 64, h = 32, pad = 2;
+      var min = Math.min.apply(null, bars), max = Math.max.apply(null, bars);
+      var range = max - min || 1;
+      var pts = [];
+      for (var i = 0; i < bars.length; i++) {
+        var x = pad + (i / (bars.length - 1)) * (w - pad * 2);
+        var y = pad + (1 - (bars[i] - min) / range) * (h - pad * 2);
+        pts.push(x.toFixed(1) + ',' + y.toFixed(1));
+      }
+      var color = isUp ? '#22C55E' : '#EF4444';
+      return '<svg class="home-market-spark" viewBox="0 0 ' + w + ' ' + h + '" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+        '<polyline points="' + pts.join(' ') + '" stroke="' + color + '" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>' +
+        '</svg>';
+    }
     function renderHomeMarkets(data) {
       var row = document.getElementById('homeMarketsRow');
       if (!row) return;
       if (!data || !data.length) {
-        row.innerHTML = '<div class="home-market-card"><div class="home-market-loading">Loading prices...</div></div>';
+        row.innerHTML = '<div class="home-market-loading">Loading prices...</div>';
         return;
       }
       row.innerHTML = data.map(function(q) {
         var ticker = _homeMarketsTickers.find(function(t) { return t.symbol === q.symbol; });
         var sym = (ticker && ticker.display) || q.symbol;
         var name = (ticker && ticker.name) || q.symbol;
-        var price = q.price || 0;
         var chg = q.changePercent || 0;
-        var chgDollar = q.change || 0;
         var isUp = chg >= 0;
-        var priceStr = price >= 1000 ? price.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}) : price.toFixed(2);
         var chgStr = (isUp ? '+' : '') + chg.toFixed(2) + '%';
+        var spark = buildSparkSVG(q.bars, isUp);
         return '<div class="home-market-card" onclick="hideMobileHome();openFMTab(\'fmMarkets\');">' +
-          '<div class="home-market-sym">' + sym + '</div>' +
-          '<div class="home-market-name">' + name + '</div>' +
-          '<div class="home-market-price">$' + priceStr + '</div>' +
-          '<div class="home-market-change ' + (isUp ? 'up' : 'dn') + '">' + chgStr + '</div>' +
+          '<div class="home-market-left">' +
+            '<div class="home-market-sym">' + sym + '</div>' +
+            '<div class="home-market-name">' + name + '</div>' +
+          '</div>' +
+          spark +
+          '<div class="home-market-right">' +
+            '<div class="home-market-badge ' + (isUp ? 'up' : 'dn') + '">' + chgStr + '</div>' +
+          '</div>' +
         '</div>';
       }).join('');
     }
     function fetchHomeMarkets() {
-      // Hardcode URL — SUPABASE_FN may not be defined yet at call time
       var _MQ = 'https://mszilrexlupzthauoaxb.supabase.co/functions/v1/market-quotes';
       var allSymbols = _homeMarketsTickers.map(function(t) { return t.symbol; });
-      console.log('[HomeMarkets] Fetching:', allSymbols.join(','));
-      fetch(_MQ + '?symbols=' + encodeURIComponent(allSymbols.join(',')))
-        .then(function(r) {
-          console.log('[HomeMarkets] Response status:', r.status);
-          return r.json();
-        })
+      fetch(_MQ + '?symbols=' + encodeURIComponent(allSymbols.join(',')) + '&bars=1')
+        .then(function(r) { return r.json(); })
         .then(function(j) {
-          console.log('[HomeMarkets] Data received:', j.data ? j.data.length + ' items' : 'no data', j);
           if (j.data && j.data.length) {
             var ordered = [];
             _homeMarketsTickers.forEach(function(t) {
               var match = j.data.find(function(r) { return r.symbol === t.symbol; });
               if (match) ordered.push(match);
             });
-            console.log('[HomeMarkets] Ordered:', ordered.length, 'matched of', _homeMarketsTickers.length);
             _homeMarketsData = ordered;
             renderHomeMarkets(ordered);
-          } else {
-            console.warn('[HomeMarkets] Empty data, keeping loading state');
           }
         })
         .catch(function(e) { console.error('[HomeMarkets] Fetch error:', e); });
