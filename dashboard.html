@@ -2400,19 +2400,23 @@
     .fm-search-icon-btn { background: none; border: none; padding: 6px; color: var(--text-dim); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; border-radius: 6px; }
     .fm-search-icon-btn:hover { color: var(--accent); }
     @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-    .stock-grid { display: flex; flex-direction: column; gap: 0; margin-bottom: 20px; border-radius: 14px; overflow: hidden; border: 1px solid rgba(104,107,130,0.2); }
-    .stock-card { background: rgba(24,18,37,0.6); border-bottom: 1px solid rgba(104,107,130,0.15); padding: 10px 12px; display: flex; flex-direction: row; align-items: center; gap: 10px; transition: background 0.15s ease; position: relative; overflow: hidden; cursor: pointer; }
+    .stock-grid { display: flex; flex-direction: column; gap: 0; margin-bottom: 20px; border-radius: 0; overflow: hidden; border: none; }
+    .stock-card { background: transparent; border-bottom: 1px solid rgba(255,255,255,0.06); padding: 13px 0; display: flex; flex-direction: row; align-items: center; gap: 12px; transition: opacity 0.15s ease; position: relative; overflow: hidden; cursor: pointer; }
     .stock-card:last-child { border-bottom: none; }
-    .stock-card:active { background: rgba(113,50,245,0.08); }
-    .stock-card:hover { background: rgba(255,255,255,0.03); }
+    .stock-card:active { opacity: 0.6; }
+    .stock-card:hover { opacity: 0.85; }
     .stock-card::before { display: none; }
     .stock-card .ticker-logo, .stock-card .ticker-logo-fallback { width: 28px !important; height: 28px !important; margin-bottom: 0 !important; flex-shrink: 0; }
     .stock-card-info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-    .stock-symbol { font-size: 0.82rem; font-weight: 700; color: var(--text); margin-bottom: 0; line-height: 1.2; }
-    .stock-name { font-size: 0.65rem; color: var(--text-dim); margin-bottom: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .stock-symbol { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 0; line-height: 1.2; }
+    .stock-name { font-size: 12px; color: rgba(255,255,255,0.4); margin-bottom: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
     .stock-card-right { display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; }
-    .stock-price { font-size: 0.88rem; font-weight: 700; color: #fff; margin-bottom: 0; font-variant-numeric: tabular-nums; line-height: 1.2; }
-    .stock-change { font-size: 0.7rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .stock-spark-wrap { width: 64px; height: 32px; flex-shrink: 0; }
+    .stock-pct-badge { display: inline-block; padding: 5px 10px; border-radius: 6px; font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; min-width: 64px; text-align: center; }
+    .stock-pct-badge.up { background: rgba(34,197,94,0.18); color: #22C55E; }
+    .stock-pct-badge.dn { background: rgba(239,68,68,0.18); color: #EF4444; }
+    .stock-price { font-size: 0.88rem; font-weight: 700; color: #fff; margin-bottom: 0; font-variant-numeric: tabular-nums; line-height: 1.2; display: none; }
+    .stock-change { font-size: 0.7rem; font-weight: 600; font-variant-numeric: tabular-nums; display: none; }
     .stock-change.up { color: var(--kraken-green); }
     .stock-change.down { color: var(--kraken-red); }
     .stock-change.flat { color: var(--text-dim); }
@@ -2757,8 +2761,7 @@
     .wl-logo-fallback { width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: #fff; }
     .ticker-logo { border-radius: 8px; object-fit: contain; flex-shrink: 0; }
     .ticker-logo-fallback { border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: none; }
-    .stock-card .ticker-logo, .stock-card .ticker-logo-fallback { width: 32px; height: 32px; margin-bottom: 8px; }
-    .stock-card { display: flex; flex-direction: column; align-items: flex-start; }
+    .stock-card .ticker-logo, .stock-card .ticker-logo-fallback { width: 28px; height: 28px; margin-bottom: 0; flex-shrink: 0; }
     .logo-attribution { font-size: 0.65rem; color: var(--text-dim); text-align: center; margin-top: 12px; padding: 4px 0; }
     .logo-attribution a { color: var(--accent); text-decoration: none; opacity: 0.7; }
     .logo-attribution a:hover { opacity: 1; }
@@ -3153,10 +3156,9 @@
       .home-header-row { margin-bottom: 0; gap: 8px; }
       .home-tabs { overflow: visible; }
       .home-tab { padding: 14px 8px; margin: 0; font-size: 15px; }
-      .stock-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 0 16px; margin-bottom: 20px; }
-      #mobileStockGrid, #mobileWatchlistGrid, #mobileCryptoGrid { display: grid; grid-template-columns: 1fr; gap: 12px; padding: 0 16px; margin-bottom: 20px; }
-      .stock-card { padding: 12px; }
-      .stock-price { font-size: 1rem; }
+      .stock-grid { display: flex; flex-direction: column; gap: 0; padding: 0 16px; margin-bottom: 20px; border: none; border-radius: 0; }
+      #mobileStockGrid, #mobileWatchlistGrid, #mobileCryptoGrid { display: flex; flex-direction: column; gap: 0; padding: 0 16px; margin-bottom: 20px; }
+      .stock-card { padding: 13px 0; }
       .portfolio-summary { grid-template-columns: repeat(2, 1fr); gap: 10px; }
       .portfolio-stat-value { font-size: 18px !important; }
       .portfolio-hero-value { font-size: 32px; }
@@ -16404,6 +16406,17 @@
         console.error('Markets fetch error:', e);
       }
 
+      // Fetch sparkline bars (non-blocking)
+      try {
+        var _mqUrl = 'https://mszilrexlupzthauoaxb.supabase.co/functions/v1/market-quotes';
+        fetch(_mqUrl + '?symbols=' + encodeURIComponent(allSymbols.join(',')) + '&bars=1')
+          .then(function(r) { return r.json(); })
+          .then(function(j) {
+            if (j.data) j.data.forEach(function(d) { if (d.bars && d.bars.length) _sparkBarsCache[d.symbol] = d.bars; });
+            renderMarketCards();
+          }).catch(function(){});
+      } catch(e) {}
+
       renderMarketCards();
       if (document.getElementById('mobileStockGrid')) renderMobileMarkets();
 
@@ -16422,31 +16435,44 @@
       wpCache.showUpdating('wpUpdatingFmMarkets', false);
     }
 
+    var _sparkBarsCache = {};
+    function _buildSparkSVG(bars, isUp) {
+      if (!bars || bars.length < 2) return '<div class="stock-spark-wrap"></div>';
+      var w = 64, h = 32, pad = 2;
+      var mn = Math.min.apply(null, bars), mx = Math.max.apply(null, bars);
+      var rng = mx - mn || 1;
+      var pts = [];
+      for (var i = 0; i < bars.length; i++) {
+        var x = pad + (i / (bars.length - 1)) * (w - pad * 2);
+        var y = pad + (1 - (bars[i] - mn) / rng) * (h - pad * 2);
+        pts.push(x.toFixed(1) + ',' + y.toFixed(1));
+      }
+      var clr = isUp ? '#22C55E' : '#EF4444';
+      return '<div class="stock-spark-wrap"><svg viewBox="0 0 ' + w + ' ' + h + '" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;">' +
+        '<polyline points="' + pts.join(' ') + '" stroke="' + clr + '" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></div>';
+    }
+    function _buildRHRow(sym, displaySym, name, chartSym, q) {
+      if (!q) return '<div class="stock-card" onclick="openTickerChart(\'' + chartSym + '\')">' +
+        '<div class="stock-card-info"><div class="stock-symbol">' + displaySym + '</div><div class="stock-name">' + name + '</div></div>' +
+        '<div class="stock-spark-wrap"></div>' +
+        '<div class="stock-pct-badge dn">--</div></div>';
+      var isUp = (q.changePercent || 0) >= 0;
+      var pct = (isUp ? '+' : '') + formatNum(q.changePercent) + '%';
+      var spark = _buildSparkSVG(_sparkBarsCache[sym], isUp);
+      return '<div class="stock-card" onclick="openTickerChart(\'' + chartSym + '\')">' +
+        '<div class="stock-card-info"><div class="stock-symbol">' + displaySym + '</div><div class="stock-name">' + name + '</div></div>' +
+        spark +
+        '<div class="stock-pct-badge ' + (isUp ? 'up' : 'dn') + '">' + pct + '</div></div>';
+    }
     function renderMarketCards() {
       var mag7Html = MAG7.map(function(stock) {
-        var logo = buildTickerLogoHtml(stock.symbol, 32);
         var q = marketsCache[stock.symbol];
-        if (!q) return '<div class="stock-card" onclick="openTickerChart(\'' + stock.symbol + '\')" style="cursor:pointer;">' + logo + '<div class="stock-symbol">' + stock.symbol + '</div><div class="stock-name">' + stock.name + '</div><div class="stock-price" style="color:var(--text-dim);">--</div><div class="stock-change flat">Loading...</div></div>';
-        var changeClass = q.change > 0 ? 'up' : q.change < 0 ? 'down' : 'flat';
-        var arrow = q.change > 0 ? '&#x25B2;' : q.change < 0 ? '&#x25BC;' : '';
-        var sign = q.change > 0 ? '+' : '';
-        var liveClass = q._live ? ' crypto-live' : '';
-        var liveDot = q._live ? '<div class="crypto-live-dot"></div>' : '';
-        return '<div class="stock-card' + liveClass + '" onclick="openTickerChart(\'' + stock.symbol + '\')" style="cursor:pointer;">' + logo + '<div class="stock-symbol">' + stock.symbol + '</div><div class="stock-name">' + stock.name + '</div>' +
-          '<div class="stock-price">$' + formatNum(q.price) + '</div>' +
-          '<div class="stock-change ' + changeClass + '">' + arrow + ' ' + sign + formatNum(q.change) + ' (' + sign + formatNum(q.changePercent) + '%)</div>' + liveDot + '</div>';
+        return _buildRHRow(stock.symbol, stock.symbol, stock.name, stock.symbol, q);
       }).join('');
 
       var cryptoHtml = CRYPTO.map(function(coin) {
-        var logo = buildTickerLogoHtml(coin.display, 32);
         var q = marketsCache[coin.symbol];
-        if (!q) return '<div class="stock-card" onclick="openTickerChart(\'' + coin.display + '\')" style="cursor:pointer;">' + logo + '<div class="stock-symbol">' + coin.display + '</div><div class="stock-name">' + coin.name + '</div><div class="stock-price" style="color:var(--text-dim);">--</div><div class="stock-change flat">Loading...</div></div>';
-        var changeClass = q.change > 0 ? 'up' : q.change < 0 ? 'down' : 'flat';
-        var arrow = q.change > 0 ? '&#x25B2;' : q.change < 0 ? '&#x25BC;' : '';
-        var sign = q.change > 0 ? '+' : '';
-        return '<div class="stock-card" onclick="openTickerChart(\'' + coin.display + '\')" style="cursor:pointer;">' + logo + '<div class="stock-symbol">' + coin.display + '</div><div class="stock-name">' + coin.name + '</div>' +
-          '<div class="stock-price">$' + formatNum(q.price) + '</div>' +
-          '<div class="stock-change ' + changeClass + '">' + arrow + ' ' + sign + formatNum(q.change) + ' (' + sign + formatNum(q.changePercent) + '%)</div></div>';
+        return _buildRHRow(coin.symbol, coin.display, coin.name, coin.display, q);
       }).join('');
 
       // Populate Home Markets tab (card grid)
