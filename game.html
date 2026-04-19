@@ -186,7 +186,8 @@ let runStartTime=0;
 
 // Ship — bigger, more combative
 const SHIP_W=68,SHIP_H=38;
-const TOUCH_Y_OFFSET=-140; // Ship renders above finger so player can see it
+// Ship offset: proportional to screen so ship is always well above finger
+function getTouchOffset(){return -Math.max(160, H*0.25);}
 const ship={y:0,vy:0,targetY:0,bankAngle:0,flamePhase:0,trail:[]};
 const SHIP_SPEED=300;
 
@@ -2302,23 +2303,30 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden&&state===ST
 // INSTANT restart — GD "one more try" addiction. Tap anywhere after brief death anim.
 function handleTap(){if(state===STATE.MENU){startGame();return;}if(state===STATE.DEAD&&deathTimer>0.45){startGame();return;}}
 
+// Helper: convert touch event to canvas coordinates
+function touchToCanvas(touch,rect){
+  const isP=window.innerWidth<window.innerHeight&&window.innerWidth<900;
+  const tx=isP?(rect.bottom-touch.clientY):(touch.clientX-rect.left);
+  const ty=isP?(rect.right-touch.clientX):(touch.clientY-rect.top);
+  return {
+    x:tx*(W/(isP?rect.height:rect.width)),
+    y:ty*(H/(isP?rect.width:rect.height))
+  };
+}
+
 canvas.addEventListener('touchstart',(e)=>{
   e.preventDefault();
   if(state!==STATE.PLAYING){handleTap();return;}
   const touch=e.touches[0],rect=canvas.getBoundingClientRect();
-  const isP=window.innerWidth<window.innerHeight&&window.innerWidth<900;
-  const tx=isP?(rect.bottom-touch.clientY):(touch.clientX-rect.left);
-  const ty=isP?(rect.right-touch.clientX):(touch.clientY-rect.top);
-  const canvasX=tx*(W/(isP?rect.height:rect.width));
-  const canvasY=ty*(H/(isP?rect.width:rect.height));
+  const c=touchToCanvas(touch,rect);
 
   // Pause button (top-right corner)
-  if(canvasX>W-80&&canvasY<60){isPaused=!isPaused;return;}
+  if(c.x>W-80&&c.y<60){isPaused=!isPaused;return;}
 
   if(isPaused)return;
 
   // Check if touching NUKE button (bottom-right)
-  if(nukeCharges>0&&!nukeActive&&Math.abs(canvasX-(W-65))<40&&Math.abs(canvasY-(H-75))<40){
+  if(nukeCharges>0&&!nukeActive&&Math.abs(c.x-(W-65))<40&&Math.abs(c.y-(H-75))<40){
     nukeCharges--;nukeActive=true;nukeTimer=NUKE_DURATION;nukeFlashPhase=0;
     playNukeSound();
     shakeDur=1.0;shakeX=rand(-15,15);shakeY=rand(-15,15);
@@ -2331,22 +2339,20 @@ canvas.addEventListener('touchstart',(e)=>{
     return;
   }
   // Check if touching A button area
-  if((rocketBoostReady||rocketBoostActive)&&canvasX>W-120&&canvasY>H-110){
+  if((rocketBoostReady||rocketBoostActive)&&c.x>W-120&&c.y>H-110){
     aButtonPressed=true;return;
   }
   isDragging=true;
-  dragStartY=isP?(rect.right-touch.clientX):(touch.clientY-rect.top);
-  dragShipStartY=ship.y;
+  // ABSOLUTE positioning: ship jumps to finger position + offset (above finger)
+  ship.targetY=clamp(c.y+getTouchOffset(),25,H-25);
 },{passive:false});
 
 canvas.addEventListener('touchmove',(e)=>{
   e.preventDefault();if(!isDragging||state!==STATE.PLAYING||isPaused)return;
   const touch=e.touches[0],rect=canvas.getBoundingClientRect();
-  const isP=window.innerWidth<window.innerHeight&&window.innerWidth<900;
-  const currentY=isP?(rect.right-touch.clientX):(touch.clientY-rect.top);
-  const scale=isP?(H/rect.width):(H/rect.height);
-  const rawTarget=dragShipStartY+(currentY-dragStartY)*scale;
-  ship.targetY=clamp(rawTarget+TOUCH_Y_OFFSET,25,H-25);
+  const c=touchToCanvas(touch,rect);
+  // ABSOLUTE positioning: ship always stays above finger
+  ship.targetY=clamp(c.y+getTouchOffset(),25,H-25);
 },{passive:false});
 
 canvas.addEventListener('touchend',(e)=>{e.preventDefault();isDragging=false;aButtonPressed=false;},{passive:false});
