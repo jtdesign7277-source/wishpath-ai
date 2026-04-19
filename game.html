@@ -90,14 +90,34 @@ function playHitSound(){
 function playExplosionSound(){
   try{
     const ac=getAudioCtx();if(ac.state==='suspended')ac.resume();
-    const bufSize=ac.sampleRate*0.3;const buf=ac.createBuffer(1,bufSize,ac.sampleRate);
-    const data=buf.getChannelData(0);for(let i=0;i<bufSize;i++)data[i]=(Math.random()*2-1)*Math.pow(1-i/bufSize,2);
+    const t=ac.currentTime;
+    // Layer 1: deep bass thump
+    const osc=ac.createOscillator();const og=ac.createGain();
+    osc.type='sine';osc.frequency.setValueAtTime(120,t);
+    osc.frequency.exponentialRampToValueAtTime(30,t+0.4);
+    og.gain.setValueAtTime(0.25,t);og.gain.linearRampToValueAtTime(0.3,t+0.02);
+    og.gain.exponentialRampToValueAtTime(0.001,t+0.5);
+    osc.connect(og);og.connect(ac.destination);
+    osc.start(t);osc.stop(t+0.55);
+    // Layer 2: noise burst (the boom)
+    const bufSize=Math.floor(ac.sampleRate*0.6);const buf=ac.createBuffer(1,bufSize,ac.sampleRate);
+    const data=buf.getChannelData(0);
+    for(let i=0;i<bufSize;i++){const env=Math.pow(1-i/bufSize,3);data[i]=(Math.random()*2-1)*env;}
     const src=ac.createBufferSource();src.buffer=buf;
-    const gain=ac.createGain();gain.gain.setValueAtTime(0.15,ac.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.3);
-    const filter=ac.createBiquadFilter();filter.type='lowpass';filter.frequency.value=800;
-    src.connect(filter);filter.connect(gain);gain.connect(ac.destination);
-    src.start(ac.currentTime);
+    const ng=ac.createGain();ng.gain.setValueAtTime(0.01,t);
+    ng.gain.linearRampToValueAtTime(0.22,t+0.01);
+    ng.gain.exponentialRampToValueAtTime(0.001,t+0.55);
+    const lp=ac.createBiquadFilter();lp.type='lowpass';
+    lp.frequency.setValueAtTime(2400,t);lp.frequency.exponentialRampToValueAtTime(300,t+0.4);
+    src.connect(lp);lp.connect(ng);ng.connect(ac.destination);src.start(t);
+    // Layer 3: mid crackle
+    const o2=ac.createOscillator();const g2=ac.createGain();
+    o2.type='sawtooth';o2.frequency.setValueAtTime(200,t);
+    o2.frequency.exponentialRampToValueAtTime(50,t+0.3);
+    g2.gain.setValueAtTime(0.08,t);g2.gain.exponentialRampToValueAtTime(0.001,t+0.35);
+    const bp=ac.createBiquadFilter();bp.type='bandpass';bp.frequency.value=400;bp.Q.value=2;
+    o2.connect(bp);bp.connect(g2);g2.connect(ac.destination);
+    o2.start(t);o2.stop(t+0.4);
   }catch(e){}
 }
 function playNukeSound(){
