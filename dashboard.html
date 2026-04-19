@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-19-v306-rh-pill-badges';
+    var APP_VERSION = '2026-04-19-v308-nova-paywall-video';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -1146,6 +1146,17 @@
     .paywall-cta { display: inline-block; padding: 16px 40px; background: var(--accent); color: var(--bg); border-radius: 16px; font-weight: 700; font-size: 1rem; text-decoration: none; box-shadow: 0 8px 32px rgba(113,50,245,0.3), 0 0 24px rgba(113,50,245,0.15); transition: all 0.3s ease; }
     .paywall-cta:hover { box-shadow: 0 12px 40px rgba(113,50,245,0.4), 0 0 32px rgba(113,50,245,0.2); transform: translateY(-1px); }
     .paywall-close { margin-top: 16px; background: none; border: none; color: var(--text-dim); font-size: 0.82rem; cursor: pointer; }
+
+    /* Nova paywall video */
+    .paywall-video-wrap { position: relative; width: 200px; aspect-ratio: 9/16; margin: 0 auto 18px; border-radius: 18px; overflow: hidden; background: #0a0a0f; box-shadow: 0 12px 44px rgba(113,50,245,0.38), 0 0 32px rgba(113,50,245,0.18), inset 0 0 0 1px rgba(255,255,255,0.06); display: none; }
+    .paywall-video-wrap.ready { display: block; }
+    .paywall-video-wrap video { width: 100%; height: 100%; object-fit: cover; display: block; background: #0a0a0f; }
+    .paywall-unmute { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.55); border: 1px solid rgba(255,255,255,0.22); color: #fff; font-size: 0.7rem; font-weight: 600; padding: 6px 10px; border-radius: 99px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); transition: all 0.2s ease; line-height: 1; }
+    .paywall-unmute:hover { background: rgba(0,0,0,0.72); transform: translateY(-1px); }
+    .paywall-unmute.hide { display: none; }
+    @media (max-width: 480px) {
+      .paywall-video-wrap { width: 176px; margin-bottom: 14px; }
+    }
 
     /* Mobile */
     /* Mobile toggle — uses sidebar panel icon, not hamburger */
@@ -2715,9 +2726,9 @@
     .portfolio-coach-chip:hover { background: var(--kraken-purple-tint); color: var(--kraken-purple); border-color: rgba(113,50,245,0.3); }
 
     /* ── Chart Containers ── */
-    .chart-container { background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 16px; margin: 16px 0; box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.05); transition: all 0.3s ease; }
-    /* Portfolio-specific chart override — Kraken surface */
-    #portfolioChartContainer, #fmPortfolioChartContainer { background: var(--kraken-surface1); border: 1px solid var(--kraken-border); box-shadow: rgba(16,24,40,0.04) 0px 1px 4px 0px; }
+    .chart-container { background: transparent; border: none; border-radius: 0; padding: 8px 0; margin: 8px 0; box-shadow: none; transition: all 0.3s ease; }
+    /* Portfolio-specific chart override — seamless */
+    #portfolioChartContainer, #fmPortfolioChartContainer { background: transparent; border: none; box-shadow: none; }
     .portfolio-coach-section .msg.ai { background: linear-gradient(135deg, rgba(42,42,52,0.6) 0%, rgba(30,20,50,0.4) 50%, rgba(42,42,52,0.3) 100%); border: 1px solid rgba(113,50,245,0.12); border-radius: 16px 16px 16px 4px; color: rgba(255,255,255,0.9); box-shadow: 0 2px 12px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04); }
     .portfolio-coach-section .msg.user { background: linear-gradient(135deg, rgba(113,50,245,0.3) 0%, rgba(80,30,200,0.18) 50%, rgba(113,50,245,0.12) 100%); border: 1px solid rgba(113,50,245,0.3); color: rgba(255,255,255,0.95); box-shadow: 0 4px 16px rgba(113,50,245,0.15), inset 0 1px 0 rgba(255,255,255,0.06); }
     .portfolio-coach-section .msg.ai .thinking-label { color: rgba(255,255,255,0.5); }
@@ -4704,7 +4715,11 @@
   <!-- Paywall Modal -->
   <div class="paywall-overlay" id="paywallOverlay">
     <div class="paywall-modal">
-      <div style="font-size:2.5rem;margin-bottom:12px;">&#x1FA84;</div>
+      <div class="paywall-video-wrap" id="paywallVideoWrap" aria-hidden="true">
+        <video id="paywallVideo" playsinline webkit-playsinline muted preload="metadata" loop></video>
+        <button type="button" class="paywall-unmute hide" id="paywallUnmute" aria-label="Unmute Nova">&#x1F50A; Tap to unmute</button>
+      </div>
+      <div id="paywallEmoji" style="font-size:2.5rem;margin-bottom:12px;">&#x1FA84;</div>
       <h2>Unlock WishPath Pro</h2>
       <p>You've used your 3 free AI coach messages. Upgrade to Pro for unlimited access to everything.</p>
       <div class="paywall-price">$19.99<span style="font-size:1rem;font-weight:400;opacity:0.7;">/mo</span></div>
@@ -4717,7 +4732,7 @@
         <div>&#x2705; All data saved forever</div>
       </div>
       <a class="paywall-cta" href="https://buy.stripe.com/00w4gB2OP7ZT8tm0a41ck08" target="_blank">Upgrade to Pro</a>
-      <div><button class="paywall-close" onclick="document.getElementById('paywallOverlay').classList.remove('active')">Maybe later</button></div>
+      <div><button class="paywall-close" onclick="dismissPaywall()">Maybe later</button></div>
     </div>
   </div>
 
@@ -11759,10 +11774,52 @@
 
     window.addEventListener('load', updateWishMomentum);
 
+    // ── Nova paywall video (pre-fetch on load, play when modal opens) ──
+    var _paywallVideo = null;
+    async function loadPaywallVideo() {
+      try {
+        if (typeof getSupabase !== 'function') return;
+        var sb = getSupabase();
+        var res = await sb.from('avatar_videos')
+          .select('video_url, poster_url, duration_seconds, script')
+          .eq('kind', 'paywall').eq('active', true).limit(1).maybeSingle();
+        if (res && res.data && res.data.video_url) {
+          _paywallVideo = res.data;
+          var vid = document.getElementById('paywallVideo');
+          var wrap = document.getElementById('paywallVideoWrap');
+          var emoji = document.getElementById('paywallEmoji');
+          if (vid && wrap) {
+            vid.src = _paywallVideo.video_url;
+            if (_paywallVideo.poster_url) vid.poster = _paywallVideo.poster_url;
+            wrap.classList.add('ready');
+            if (emoji) emoji.style.display = 'none';
+          }
+        }
+      } catch (e) { /* silent — paywall still works with emoji fallback */ }
+    }
+    window.addEventListener('load', loadPaywallVideo);
+
+    function playPaywallVideo() {
+      if (!_paywallVideo) return;
+      var vid = document.getElementById('paywallVideo');
+      var btn = document.getElementById('paywallUnmute');
+      if (!vid) return;
+      vid.muted = true;
+      try { vid.currentTime = 0; } catch (e) {}
+      var p = vid.play();
+      if (p && p.catch) p.catch(function(){});
+      if (btn) { btn.classList.remove('hide'); btn.innerHTML = '&#x1F50A; Tap to unmute'; }
+    }
+    function stopPaywallVideo() {
+      var vid = document.getElementById('paywallVideo');
+      if (vid && !vid.paused) { try { vid.pause(); } catch (e) {} }
+    }
+
     function checkAgentLimit() {
       if (userIsPro) return true;
       if (agentMessagesUsed >= FREE_MESSAGE_LIMIT) {
         document.getElementById('paywallOverlay').classList.add('active');
+        playPaywallVideo();
         return false;
       }
       return true;
@@ -11771,16 +11828,35 @@
     function openUpgradeModal() {
       if (userIsPro) return;
       document.getElementById('paywallOverlay').classList.add('active');
+      playPaywallVideo();
     }
     function dismissPaywall() {
       var el = document.getElementById('paywallOverlay');
       if (el) el.classList.remove('active');
+      stopPaywallVideo();
     }
     // Click outside modal → dismiss
     (function() {
       var ov = document.getElementById('paywallOverlay');
       if (ov) ov.addEventListener('click', function(e) {
         if (e.target === ov) dismissPaywall();
+      });
+      // Unmute toggle (delegated — element exists from initial render)
+      var btn = document.getElementById('paywallUnmute');
+      if (btn) btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var vid = document.getElementById('paywallVideo');
+        if (!vid) return;
+        if (vid.muted) {
+          vid.muted = false;
+          try { vid.currentTime = 0; } catch (err) {}
+          var p = vid.play();
+          if (p && p.catch) p.catch(function(){});
+          btn.innerHTML = '&#x1F507; Mute';
+        } else {
+          vid.muted = true;
+          btn.innerHTML = '&#x1F50A; Tap to unmute';
+        }
       });
     })();
 
@@ -15963,7 +16039,7 @@
       if (typeof Highcharts === 'undefined') return;
       Highcharts.setOptions({
         colors: ['#22c55e','#3b82f6','#f59e0b','#ef4444','#a78bfa','#06b6d4','#ec4899','#f97316','#84cc16','#8b5cf6','#14b8a6','#e879f9'],
-        chart: { backgroundColor: '#161b22', style: { fontFamily: 'Inter, system-ui, sans-serif' }, borderRadius: 8, animation: { duration: 800, easing: 'easeOutQuart' } },
+        chart: { backgroundColor: 'transparent', style: { fontFamily: 'Inter, system-ui, sans-serif' }, borderRadius: 0, animation: { duration: 800, easing: 'easeOutQuart' } },
         title: { style: { color: '#e6edf3', fontSize: '14px', fontWeight: '700' } },
         subtitle: { style: { color: '#8b949e', fontSize: '12px' } },
         xAxis: { gridLineColor: 'rgba(48,54,61,0.5)', lineColor: '#30363d', tickColor: '#30363d', labels: { style: { color: '#8b949e', fontSize: '11px' } }, title: { style: { color: '#8b949e' } } },
@@ -17604,9 +17680,9 @@
       }).filter(function(d) { return d.y > 0; });
       if (pieData.length < 2) return;
       renderHighchart(cid, {
-        chart: { type: 'pie', height: 280 },
-        title: { text: 'Portfolio Allocation' },
-        subtitle: { text: 'Chart Studio' },
+        chart: { type: 'pie', height: 280, backgroundColor: 'transparent' },
+        title: { text: 'Portfolio Allocation', style: { color: '#fff' } },
+        subtitle: { text: 'Chart Studio', style: { color: 'rgba(255,255,255,0.4)' } },
         series: [{ name: 'Value', data: pieData, innerSize: '55%' }],
         tooltip: { pointFormat: '<b>${point.y:,.2f}</b> ({point.percentage:.1f}%)' }
       });
