@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-19-v311-paywall-autoplay-sound';
+    var APP_VERSION = '2026-04-19-v312-profile-autocreate-fallback';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -8007,10 +8007,22 @@
         var sb = getSupabase();
         var user = await getUser();
         if (!user) return;
-        var { data } = await sb.from('user_profiles').select('is_pro, agent_messages_used').eq('id', user.id).single();
+        var { data } = await sb.from('user_profiles').select('is_pro, agent_messages_used').eq('id', user.id).maybeSingle();
         if (data) {
           userIsPro = data.is_pro || false;
           agentMessagesUsed = data.agent_messages_used || 0;
+        } else {
+          // No profile row exists (legacy user or trigger race) — auto-create with defaults.
+          await sb.from('user_profiles').insert({
+            id: user.id,
+            display_name: (user.email || '').split('@')[0] || 'user',
+            plan: 'free',
+            wishes_remaining: 0,
+            is_pro: false,
+            agent_messages_used: 0
+          });
+          userIsPro = false;
+          agentMessagesUsed = 0;
         }
       } catch(e) {}
     }
