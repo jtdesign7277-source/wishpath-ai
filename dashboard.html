@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-19-v324-level-music';
+    var APP_VERSION = '2026-04-19-v325-alpaca-ws';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -2445,6 +2445,15 @@
     .stock-change.up { color: var(--kraken-green); }
     .stock-change.down { color: var(--kraken-red); }
     .stock-change.flat { color: var(--text-dim); }
+    .ws-status-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; vertical-align: middle; margin-left: 3px; }
+    .ws-status-dot.live { background: #22c55e; animation: cryptoPulse 2s ease-in-out infinite; }
+    .ws-status-dot.stale { background: #eab308; }
+    .ws-status-dot.overnight { background: #60a5fa; animation: cryptoPulse 3s ease-in-out infinite; }
+    .ws-status-dot.unavailable { background: rgba(255,255,255,0.2); }
+    @keyframes priceFlashUp { 0%,100% { color: inherit; } 20%,50% { color: #22c55e; } }
+    @keyframes priceFlashDown { 0%,100% { color: inherit; } 20%,50% { color: #ef4444; } }
+    .price-flash-up { animation: priceFlashUp 0.7s ease-out; }
+    .price-flash-down { animation: priceFlashDown 0.7s ease-out; }
     /* Browse & Add dropdown */
     .markets-browse-btn { display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; background: rgba(113,50,245,0.12); border: 1px solid rgba(113,50,245,0.25); border-radius: 10px; color: rgb(175,140,255); font-size: 0.78rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.15s ease; }
     .markets-browse-btn:active { background: rgba(113,50,245,0.2); transform: scale(0.97); }
@@ -16974,6 +16983,21 @@
       }
     }
 
+    function getMarketSession() {
+      var now = new Date();
+      var et = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+      var dow = et.getDay(); // 0=Sun, 6=Sat
+      var mins = et.getHours() * 60 + et.getMinutes();
+      if (dow === 6) return 'CLOSED';
+      if (dow === 0) return mins >= 1200 ? 'OVERNIGHT' : 'CLOSED'; // Sun 8 PM ET
+      // Mon-Fri
+      if (mins < 240) return 'OVERNIGHT';    // 12:00 AM – 4:00 AM ET
+      if (mins < 570) return 'PRE_MARKET';   // 4:00 AM – 9:30 AM ET
+      if (mins < 960) return 'REGULAR';      // 9:30 AM – 4:00 PM ET
+      if (mins < 1200) return 'AFTER_HOURS'; // 4:00 PM – 8:00 PM ET
+      return 'OVERNIGHT';                    // 8:00 PM – midnight ET
+    }
+
     async function fetchAlpacaQuotes(symbols) {
       // Use market-quotes edge function (Alpaca proxy) — avoids CORS and Twelve Data rate limits
       var stocks = symbols.filter(function(s) { return s.indexOf('/') === -1; });
@@ -17019,6 +17043,9 @@
       reconnectDelay: 1000,
       maxReconnectDelay: 30000,
       renderDebounce: null,
+      heartbeatTimer: null,
+      lastMessageTime: 0,
+      symbolLastUpdate: {},
 
       async fetchCredentials() {
         return await getAlpacaCreds();
@@ -17041,9 +17068,10 @@
           this.stockSocket = new WebSocket(this.credentials.stocksUrl);
           this.stockSocket.onopen = function() {
             console.log('[Alpaca Stocks] Connected, authenticating...');
+            self.startHeartbeat();
             self.stockSocket.send(JSON.stringify({ action: 'auth', key: self.credentials.key, secret: self.credentials.secret }));
           };
-          this.stockSocket.onmessage = function(event) { self.handleStockMessage(JSON.parse(event.data)); };
+          this.stockSocket.onmessage = function(event) { self.resetHeartbeat(); self.handleStockMessage(JSON.parse(event.data)); };
           this.stockSocket.onclose = function(e) {
             console.warn('[Alpaca Stocks] Disconnected:', e.code, e.reason);
             self.stockConnected = false;
@@ -17061,9 +17089,10 @@
           this.cryptoSocket = new WebSocket(this.credentials.cryptoUrl);
           this.cryptoSocket.onopen = function() {
             console.log('[Alpaca Crypto] Connected, authenticating...');
+            self.startHeartbeat();
             self.cryptoSocket.send(JSON.stringify({ action: 'auth', key: self.credentials.key, secret: self.credentials.secret }));
           };
-          this.cryptoSocket.onmessage = function(event) { self.handleCryptoMessage(JSON.parse(event.data)); };
+          this.cryptoSocket.onmessage = function(event) { self.resetHeartbeat(); self.handleCryptoMessage(JSON.parse(event.data)); };
           this.cryptoSocket.onclose = function(e) {
             console.warn('[Alpaca Crypto] Disconnected:', e.code, e.reason);
             self.cryptoConnected = false;
@@ -17079,11 +17108,16 @@
         if (!Array.isArray(messages)) messages = [messages];
         messages.forEach(function(msg) {
           if (msg.T === 'success' && msg.msg === 'authenticated') {
-            console.log('[Alpaca Stocks] Authenticated — subscribing to MAG7');
+            console.log('[Alpaca Stocks] Authenticated — subscribing MAG7 + watchlists');
             self.stockConnected = true;
             self.connected = true;
             self.reconnectDelay = 1000;
             var symbols = MAG7.map(function(s) { return s.symbol; });
+            if (typeof watchlists !== 'undefined') {
+              watchlists.forEach(function(wl) {
+                (wl.symbols || []).forEach(function(s) { if (symbols.indexOf(s) === -1) symbols.push(s); });
+              });
+            }
             self.stockSocket.send(JSON.stringify({ action: 'subscribe', trades: symbols }));
           } else if (msg.T === 'error') {
             console.error('[Alpaca Stocks] Error:', msg.code, msg.msg);
@@ -17127,6 +17161,7 @@
           previousClose: prevClose,
           _live: true
         };
+        this.symbolLastUpdate[symbol] = Date.now();
         this.debouncedRender(symbol);
       },
 
@@ -17137,14 +17172,63 @@
           var isCrypto = CRYPTO.some(function(c) { return c.symbol === symbol; });
           if (isStock) renderMarketCards();
           if (isCrypto) renderCryptoCards();
-          // Update FM stock list prices in-place (no blink)
           refreshFMStockList();
           var ts = document.getElementById('marketsUpdatedTime');
           var fmTs = document.getElementById('fmMarketsUpdatedTime');
-          var timeStr = 'Live via Alpaca \u2022 ' + new Date().toLocaleTimeString();
+          var session = getMarketSession();
+          var sessionLabel = { REGULAR: ' \u00b7 Regular', AFTER_HOURS: ' \u00b7 After Hours', PRE_MARKET: ' \u00b7 Pre-Market', OVERNIGHT: ' \u00b7 Overnight', CLOSED: '' }[session] || '';
+          var timeStr = 'Live via Alpaca' + sessionLabel + ' \u00b7 ' + new Date().toLocaleTimeString();
           if (ts) ts.textContent = timeStr;
           if (fmTs) fmTs.textContent = timeStr;
         }, 150);
+      },
+
+      startHeartbeat() {
+        var self = this;
+        self.lastMessageTime = Date.now();
+        if (self.heartbeatTimer) clearInterval(self.heartbeatTimer);
+        self.heartbeatTimer = setInterval(function() {
+          if (Date.now() - self.lastMessageTime > 30000) {
+            console.warn('[Alpaca] Heartbeat timeout — forcing reconnect');
+            if (self.stockSocket && self.stockSocket.readyState === WebSocket.OPEN) self.stockSocket.close();
+            if (self.cryptoSocket && self.cryptoSocket.readyState === WebSocket.OPEN) self.cryptoSocket.close();
+          }
+        }, 15000);
+      },
+
+      resetHeartbeat() {
+        this.lastMessageTime = Date.now();
+      },
+
+      getSymbolStatus(symbol) {
+        var lastUpdate = this.symbolLastUpdate[symbol];
+        if (!lastUpdate) return 'unavailable';
+        var session = getMarketSession();
+        if (session === 'CLOSED') return 'unavailable';
+        if (session === 'OVERNIGHT') return 'overnight';
+        if (Date.now() - lastUpdate > 60000) return 'stale';
+        return 'live';
+      },
+
+      getRelativeTime(ts) {
+        if (!ts) return '';
+        var age = Math.floor((Date.now() - ts) / 1000);
+        if (age < 5) return 'just now';
+        if (age < 60) return age + 's ago';
+        var mins = Math.floor(age / 60);
+        return mins < 60 ? mins + 'm ago' : Math.floor(mins / 60) + 'h ago';
+      },
+
+      subscribeSymbols(symbols) {
+        if (!symbols || !symbols.length) return;
+        var stocks = symbols.filter(function(s) { return s.indexOf('/') === -1; });
+        var cryptos = symbols.filter(function(s) { return s.indexOf('/') !== -1; });
+        if (stocks.length && this.stockSocket && this.stockSocket.readyState === WebSocket.OPEN && this.stockConnected) {
+          this.stockSocket.send(JSON.stringify({ action: 'subscribe', trades: stocks }));
+        }
+        if (cryptos.length && this.cryptoSocket && this.cryptoSocket.readyState === WebSocket.OPEN && this.cryptoConnected) {
+          this.cryptoSocket.send(JSON.stringify({ action: 'subscribe', trades: cryptos }));
+        }
       },
 
       scheduleReconnect(type) {
@@ -17158,6 +17242,7 @@
       },
 
       disconnect() {
+        if (this.heartbeatTimer) { clearInterval(this.heartbeatTimer); this.heartbeatTimer = null; }
         if (this.stockSocket) { try { this.stockSocket.close(); } catch(e) {} }
         if (this.cryptoSocket) { try { this.cryptoSocket.close(); } catch(e) {} }
         this.stockConnected = false;
@@ -17237,10 +17322,12 @@
         '<polyline points="' + pts.join(' ') + '" stroke="' + clr + '" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></div>';
     }
     function _buildRHRow(sym, displaySym, name, chartSym, q) {
+      var status = alpacaWS.getSymbolStatus(sym);
+      var dot = '<span class="ws-status-dot ' + status + '" data-sym-status="' + sym + '"></span>';
       if (!q) return '<div class="stock-card" onclick="openTickerChart(\'' + chartSym + '\')">' +
         '<div class="stock-card-info"><div class="stock-symbol">' + displaySym + '</div><div class="stock-name">' + name + '</div></div>' +
         '<div class="stock-spark-wrap"></div>' +
-        '<div class="stock-right-group"><div class="stock-pct-badge dn">--</div><div class="stock-price-val">--</div></div></div>';
+        '<div class="stock-right-group"><div class="stock-pct-badge dn">--</div><div class="stock-price-val">--</div>' + dot + '</div></div>';
       var isUp = (q.changePercent || 0) >= 0;
       var pct = (isUp ? '+' : '') + formatNum(q.changePercent) + '%';
       var price = q.price ? ('$' + formatNum(q.price)) : '--';
@@ -17249,7 +17336,7 @@
       return '<div class="stock-card" onclick="openTickerChart(\'' + chartSym + '\')">' +
         '<div class="stock-card-info"><div class="stock-symbol">' + displaySym + '</div><div class="stock-name">' + name + '</div></div>' +
         spark +
-        '<div class="stock-right-group"><div class="stock-pct-badge ' + (isUp ? 'up' : 'dn') + '">' + pct + '</div><div class="stock-price-val">' + price + '</div></div></div>';
+        '<div class="stock-right-group"><div class="stock-pct-badge ' + (isUp ? 'up' : 'dn') + '">' + pct + '</div><div class="stock-price-val">' + price + '</div>' + dot + '</div></div>';
     }
     function renderMarketCards() {
       var mag7Html = MAG7.map(function(stock) {
@@ -17281,6 +17368,7 @@
           var sign = q && q.change > 0 ? '+' : '';
           var changeText = q ? sign + formatNum(q.change) + ' (' + sign + formatNum(q.changePercent) + '%)' : '';
           var changeColor = changeClass === 'up' ? '#22c55e' : changeClass === 'down' ? '#ef4444' : 'rgba(255,255,255,0.4)';
+          var fmStatus = alpacaWS.getSymbolStatus(row.quoteKey);
           listHtml += '<div data-fm-row="' + row.quoteKey + '" onclick="openTickerChart(\'' + row.chartSym + '\')" style="display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.06);cursor:pointer;">'
             + '<div style="flex-shrink:0;width:36px;height:36px;margin-right:12px;display:flex;align-items:center;justify-content:center;">' + logo + '</div>'
             + '<div style="flex:1;min-width:0;">'
@@ -17288,7 +17376,7 @@
             + '<div style="font-size:12px;color:rgba(255,255,255,0.45);margin-top:1px;">' + row.name + '</div>'
             + '</div>'
             + '<div style="text-align:right;">'
-            + '<div data-fm-price="' + row.quoteKey + '" style="font-size:15px;font-weight:600;color:#fff;">' + price + '</div>'
+            + '<div style="display:flex;align-items:center;justify-content:flex-end;gap:5px;"><span data-fm-price="' + row.quoteKey + '" style="font-size:15px;font-weight:600;color:#fff;font-variant-numeric:tabular-nums;">' + price + '</span><span data-fm-status="' + row.quoteKey + '" class="ws-status-dot ' + fmStatus + '"></span></div>'
             + '<div data-fm-change="' + row.quoteKey + '" style="font-size:12px;color:' + changeColor + ';margin-top:1px;">' + changeText + '</div>'
             + '</div>'
             + '</div>';
@@ -19801,6 +19889,14 @@
         }
       } catch(e) { console.error('Load watchlists error:', e); }
       renderSidebarWatchlists();
+      // Subscribe watchlist symbols to live Alpaca stream
+      if (watchlists.length) {
+        var wlSyms = [];
+        watchlists.forEach(function(wl) {
+          (wl.symbols || []).forEach(function(s) { if (wlSyms.indexOf(s) === -1) wlSyms.push(s); });
+        });
+        if (wlSyms.length) alpacaWS.subscribeSymbols(wlSyms);
+      }
       if (window.innerWidth <= 768 && document.getElementById('mobileHome') && document.getElementById('mobileHome').classList.contains('active')) {
         setTimeout(function() { fetchMarketNews(); }, 0);
       }
@@ -21571,7 +21667,6 @@
     function refreshFMStockList() {
       var fmStockList = document.getElementById('fmStockList');
       if (!fmStockList) return;
-      // If rows haven't been built yet (no data-fm-row children), skip
       if (!fmStockList.querySelector('[data-fm-row]')) return;
       var fmRows = _getFMRows();
       fmRows.forEach(function(row) {
@@ -21579,16 +21674,47 @@
         if (!q) return;
         var priceEl = fmStockList.querySelector('[data-fm-price="' + row.quoteKey + '"]');
         var changeEl = fmStockList.querySelector('[data-fm-change="' + row.quoteKey + '"]');
-        if (priceEl) priceEl.textContent = '$' + formatNum(q.price);
+        var statusEl = fmStockList.querySelector('[data-fm-status="' + row.quoteKey + '"]');
+        if (priceEl) {
+          var newPrice = '$' + formatNum(q.price);
+          if (priceEl.textContent !== newPrice) {
+            if (q._live) {
+              var flashClass = q.change >= 0 ? 'price-flash-up' : 'price-flash-down';
+              priceEl.classList.remove('price-flash-up', 'price-flash-down');
+              void priceEl.offsetWidth;
+              priceEl.classList.add(flashClass);
+            }
+            priceEl.textContent = newPrice;
+          }
+        }
         if (changeEl) {
           var sign = q.change > 0 ? '+' : '';
           changeEl.textContent = sign + formatNum(q.change) + ' (' + sign + formatNum(q.changePercent) + '%)';
           changeEl.style.color = q.change > 0 ? '#22c55e' : q.change < 0 ? '#ef4444' : 'rgba(255,255,255,0.4)';
         }
+        if (statusEl) statusEl.className = 'ws-status-dot ' + alpacaWS.getSymbolStatus(row.quoteKey);
       });
     }
 
     setInterval(refreshCryptoPrices, 10000);
+
+    // ── Stale status dot refresh — updates dot colors every 5s without rebuilding cards ──
+    setInterval(function() {
+      var fmList = document.getElementById('fmStockList');
+      if (fmList) {
+        fmList.querySelectorAll('[data-fm-status]').forEach(function(dot) {
+          var sym = dot.getAttribute('data-fm-status');
+          if (sym) dot.className = 'ws-status-dot ' + alpacaWS.getSymbolStatus(sym);
+        });
+      }
+      [document.getElementById('mag7Grid'), document.getElementById('cryptoGrid')].forEach(function(grid) {
+        if (!grid) return;
+        grid.querySelectorAll('[data-sym-status]').forEach(function(dot) {
+          var sym = dot.getAttribute('data-sym-status');
+          if (sym) dot.className = 'ws-status-dot ' + alpacaWS.getSymbolStatus(sym);
+        });
+      });
+    }, 5000);
 
     // ── Initialize Alpaca WebSocket after initial data load ──
     (function() {
