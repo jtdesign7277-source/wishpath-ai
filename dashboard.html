@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-19-v325-alpaca-ws';
+    var APP_VERSION = '2026-04-19-v326-ws-instant-price';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -17162,6 +17162,17 @@
           _live: true
         };
         this.symbolLastUpdate[symbol] = Date.now();
+        // Immediate targeted DOM update — visible within one frame, before debounced full render
+        var _priceStr = '$' + formatNum(price);
+        var _flashClass = change >= 0 ? 'price-flash-up' : 'price-flash-down';
+        [document.querySelector('[data-sym-price="' + symbol + '"]'),
+         document.querySelector('[data-fm-price="' + symbol + '"]')].forEach(function(el) {
+          if (!el) return;
+          el.classList.remove('price-flash-up', 'price-flash-down');
+          void el.offsetWidth;
+          el.classList.add(_flashClass);
+          el.textContent = _priceStr;
+        });
         this.debouncedRender(symbol);
       },
 
@@ -17180,7 +17191,7 @@
           var timeStr = 'Live via Alpaca' + sessionLabel + ' \u00b7 ' + new Date().toLocaleTimeString();
           if (ts) ts.textContent = timeStr;
           if (fmTs) fmTs.textContent = timeStr;
-        }, 150);
+        }, 30);
       },
 
       startHeartbeat() {
@@ -17336,7 +17347,7 @@
       return '<div class="stock-card" onclick="openTickerChart(\'' + chartSym + '\')">' +
         '<div class="stock-card-info"><div class="stock-symbol">' + displaySym + '</div><div class="stock-name">' + name + '</div></div>' +
         spark +
-        '<div class="stock-right-group"><div class="stock-pct-badge ' + (isUp ? 'up' : 'dn') + '">' + pct + '</div><div class="stock-price-val">' + price + '</div>' + dot + '</div></div>';
+        '<div class="stock-right-group"><div class="stock-pct-badge ' + (isUp ? 'up' : 'dn') + '">' + pct + '</div><div class="stock-price-val" data-sym-price="' + sym + '">' + price + '</div>' + dot + '</div></div>';
     }
     function renderMarketCards() {
       var mag7Html = MAG7.map(function(stock) {
@@ -21645,7 +21656,7 @@
         var arrow = q.change > 0 ? '&#x25B2;' : q.change < 0 ? '&#x25BC;' : '';
         var sign = q.change > 0 ? '+' : '';
         return '<div class="stock-card crypto-live" onclick="openTickerChart(\'' + coin.display + '\')" style="cursor:pointer;">' + logo + '<div class="stock-symbol">' + coin.display + '</div><div class="stock-name">' + coin.name + '</div>' +
-          '<div class="stock-price">$' + formatNum(q.price) + '</div>' +
+          '<div class="stock-price" data-sym-price="' + coin.symbol + '">$' + formatNum(q.price) + '</div>' +
           '<div class="stock-change ' + changeClass + '">' + arrow + ' ' + sign + formatNum(q.change) + ' (' + sign + formatNum(q.changePercent) + '%)</div>' +
           '<div class="crypto-live-dot"></div></div>';
       }).join('');
