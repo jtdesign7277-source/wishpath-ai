@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-19-v308-nova-paywall-video';
+    var APP_VERSION = '2026-04-19-v309-nova-paywall-replay';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -1154,8 +1154,14 @@
     .paywall-unmute { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.55); border: 1px solid rgba(255,255,255,0.22); color: #fff; font-size: 0.7rem; font-weight: 600; padding: 6px 10px; border-radius: 99px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); transition: all 0.2s ease; line-height: 1; }
     .paywall-unmute:hover { background: rgba(0,0,0,0.72); transform: translateY(-1px); }
     .paywall-unmute.hide { display: none; }
+    .paywall-replay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.50); backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); cursor: pointer; opacity: 0; pointer-events: none; transition: opacity 0.25s ease; }
+    .paywall-replay.show { opacity: 1; pointer-events: auto; }
+    .paywall-replay-btn { width: 64px; height: 64px; border-radius: 50%; background: rgba(255,255,255,0.96); color: #7132f5; border: none; font-size: 26px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 8px 28px rgba(0,0,0,0.55), 0 0 0 4px rgba(113,50,245,0.25); transition: transform 0.2s ease; padding-left: 4px; }
+    .paywall-replay-btn:hover { transform: scale(1.08); }
+    .paywall-replay-label { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); font-size: 0.68rem; color: #fff; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); padding: 5px 12px; border-radius: 99px; white-space: nowrap; font-weight: 600; pointer-events: none; }
     @media (max-width: 480px) {
       .paywall-video-wrap { width: 176px; margin-bottom: 14px; }
+      .paywall-replay-btn { width: 56px; height: 56px; font-size: 22px; }
     }
 
     /* Mobile */
@@ -4716,8 +4722,12 @@
   <div class="paywall-overlay" id="paywallOverlay">
     <div class="paywall-modal">
       <div class="paywall-video-wrap" id="paywallVideoWrap" aria-hidden="true">
-        <video id="paywallVideo" playsinline webkit-playsinline muted preload="metadata" loop></video>
+        <video id="paywallVideo" playsinline webkit-playsinline muted preload="metadata"></video>
         <button type="button" class="paywall-unmute hide" id="paywallUnmute" aria-label="Unmute Nova">&#x1F50A; Tap to unmute</button>
+        <div class="paywall-replay" id="paywallReplay" role="button" tabindex="0" aria-label="Replay video">
+          <div class="paywall-replay-btn" aria-hidden="true">&#x25B6;</div>
+          <div class="paywall-replay-label" id="paywallReplayLabel">Tap to replay</div>
+        </div>
       </div>
       <div id="paywallEmoji" style="font-size:2.5rem;margin-bottom:12px;">&#x1FA84;</div>
       <h2>Unlock WishPath Pro</h2>
@@ -11799,11 +11809,26 @@
     }
     window.addEventListener('load', loadPaywallVideo);
 
+    function _showPaywallReplay() {
+      var overlay = document.getElementById('paywallReplay');
+      var unmute = document.getElementById('paywallUnmute');
+      var label = document.getElementById('paywallReplayLabel');
+      var vid = document.getElementById('paywallVideo');
+      if (overlay) overlay.classList.add('show');
+      if (unmute) unmute.classList.add('hide');
+      if (label && vid) label.textContent = vid.muted ? 'Tap to replay with sound' : 'Tap to replay';
+    }
+    function _hidePaywallReplay() {
+      var overlay = document.getElementById('paywallReplay');
+      if (overlay) overlay.classList.remove('show');
+    }
+
     function playPaywallVideo() {
       if (!_paywallVideo) return;
       var vid = document.getElementById('paywallVideo');
       var btn = document.getElementById('paywallUnmute');
       if (!vid) return;
+      _hidePaywallReplay();
       vid.muted = true;
       try { vid.currentTime = 0; } catch (e) {}
       var p = vid.play();
@@ -11857,6 +11882,23 @@
           vid.muted = true;
           btn.innerHTML = '&#x1F50A; Tap to unmute';
         }
+      });
+      // Show replay overlay when video finishes
+      var pv = document.getElementById('paywallVideo');
+      if (pv) pv.addEventListener('ended', _showPaywallReplay);
+      // Replay button — restart from 0, unmute if currently muted
+      var replay = document.getElementById('paywallReplay');
+      if (replay) replay.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var v = document.getElementById('paywallVideo');
+        var um = document.getElementById('paywallUnmute');
+        if (!v) return;
+        if (v.muted) v.muted = false;
+        try { v.currentTime = 0; } catch (err) {}
+        var p = v.play();
+        if (p && p.catch) p.catch(function(){});
+        if (um) { um.classList.remove('hide'); um.innerHTML = '&#x1F507; Mute'; }
+        _hidePaywallReplay();
       });
     })();
 
