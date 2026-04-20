@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-20-v326-html-ability-btns';
+    var APP_VERSION = '2026-04-20-v327-sparklines-pause-btn';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -6060,11 +6060,15 @@
         <div id="wish-runner-game" class="wish-runner-container">
           <canvas id="wpWishRunnerCanvas" width="390" height="680" aria-label="Wish Runner game"></canvas>
           <!-- HTML Ability Buttons — real DOM elements so touch always works on mobile -->
-          <div id="wr-ability-btns" style="position:absolute;left:6px;top:50%;transform:translateY(-50%);display:none;flex-direction:column;gap:14px;z-index:20;pointer-events:auto;">
+          <div id="wr-ability-btns" style="position:absolute;left:6px;bottom:20px;top:auto;transform:none;display:none;flex-direction:column;gap:14px;z-index:20;pointer-events:auto;">
             <button id="wr-btn-nuke" style="width:60px;height:60px;border-radius:50%;border:2px solid #ff8800;background:rgba(18,10,4,0.92);color:#ffcc44;font-weight:bold;font-size:10px;line-height:1.2;touch-action:manipulation;-webkit-tap-highlight-color:transparent;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;outline:none;" type="button"><span style="font-size:15px;">☢️</span><span>NUKE</span></button>
             <button id="wr-btn-laser" style="width:60px;height:60px;border-radius:50%;border:2px solid #00ccff;background:rgba(4,10,18,0.92);color:#00ccff;font-weight:bold;font-size:10px;line-height:1.2;touch-action:manipulation;-webkit-tap-highlight-color:transparent;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;outline:none;" type="button"><span style="font-size:15px;">⚡</span><span>LASER</span></button>
             <button id="wr-btn-bomb" style="width:60px;height:60px;border-radius:50%;border:2px solid #ff4444;background:rgba(18,4,4,0.92);color:#ff4444;font-weight:bold;font-size:10px;line-height:1.2;touch-action:manipulation;-webkit-tap-highlight-color:transparent;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;outline:none;" type="button"><span style="font-size:15px;">💣</span><span>BOMB</span></button>
           </div>
+          <!-- Pause Button -->
+          <button id="wr-btn-pause" style="position:absolute;right:10px;bottom:20px;width:60px;height:60px;border-radius:50%;border:2px solid #888;background:rgba(10,10,18,0.92);color:#fff;font-size:22px;touch-action:manipulation;-webkit-tap-highlight-color:transparent;cursor:pointer;display:none;align-items:center;justify-content:center;z-index:20;pointer-events:auto;outline:none;" type="button">⏸️</button>
+          <!-- Pause Overlay -->
+          <div id="wr-pause-overlay" style="position:absolute;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:19;pointer-events:none;"><div style="color:#fff;font-size:36px;font-weight:bold;letter-spacing:4px;text-shadow:0 0 20px #fff;">PAUSED</div></div>
           <!-- Overlay icons -->
           <div class="wr-overlay-icon wr-back" onclick="showView('home')">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><polyline points="3 6 3 6 21 6"/><polyline points="3 18 3 18 21 18"/></svg>
@@ -9126,6 +9130,7 @@
       var GH = 680;
       var _wrRaf = null;
       var _wrRunning = false;
+      var _gamePaused = false;
       var _wrLastTs = 0;
       var canvas = null;
       var ctx = null;
@@ -12181,7 +12186,7 @@
         ctx.fillStyle = '#00ff44';
         ctx.shadowColor = '#00ff44';
         ctx.shadowBlur = 8;
-        ctx.fillText('LEVEL ' + currentLevel, 12, 28);
+        ctx.fillText('LEVEL ' + currentLevel, 12, 64);
         ctx.shadowBlur = 0;
         ctx.restore();
 
@@ -12293,7 +12298,7 @@
       }
 
       function loop(ts) {
-        if (!_wrRunning) return;
+        if (!_wrRunning || _gamePaused) return;
         if (!_wrLastTs) _wrLastTs = ts;
         var dt = Math.min(0.055, (ts - _wrLastTs) / 1000);
         _wrLastTs = ts;
@@ -12455,6 +12460,41 @@
           })(_wbi);
         }
 
+        // Wire pause button
+        var _wrPauseBtn = document.getElementById('wr-btn-pause');
+        if (_wrPauseBtn) {
+          _wrPauseBtn.style.display = 'flex';
+          var _newPauseBtn = _wrPauseBtn.cloneNode(true);
+          _wrPauseBtn.parentNode.replaceChild(_newPauseBtn, _wrPauseBtn);
+          _newPauseBtn.addEventListener('touchstart', function(ev) {
+            ev.preventDefault(); ev.stopPropagation();
+            _gamePaused = !_gamePaused;
+            var overlay = document.getElementById('wr-pause-overlay');
+            if (_gamePaused) {
+              _newPauseBtn.textContent = '▶️';
+              if (overlay) overlay.style.display = 'flex';
+            } else {
+              _newPauseBtn.textContent = '⏸️';
+              if (overlay) overlay.style.display = 'none';
+              _wrLastTs = 0;
+              _wrRaf = requestAnimationFrame(loop);
+            }
+          }, { passive: false });
+          _newPauseBtn.addEventListener('click', function(ev) {
+            _gamePaused = !_gamePaused;
+            var overlay = document.getElementById('wr-pause-overlay');
+            if (_gamePaused) {
+              _newPauseBtn.textContent = '▶️';
+              if (overlay) overlay.style.display = 'flex';
+            } else {
+              _newPauseBtn.textContent = '⏸️';
+              if (overlay) overlay.style.display = 'none';
+              _wrLastTs = 0;
+              _wrRaf = requestAnimationFrame(loop);
+            }
+          });
+        }
+
         window.addEventListener('keydown', onKeyDown);
         window.addEventListener('keyup', onKeyUp);
         window._wrResizeHandler = function() {
@@ -12469,9 +12509,14 @@
 
       window.stopWishRunnerGame = function() {
         _wrRunning = false;
+        _gamePaused = false;
         try { stopBgMusic(); } catch(e){}
         var _wrAbBtns = document.getElementById('wr-ability-btns');
         if (_wrAbBtns) _wrAbBtns.style.display = 'none';
+        var _wrPauseBtnEl = document.getElementById('wr-btn-pause');
+        if (_wrPauseBtnEl) { _wrPauseBtnEl.style.display = 'none'; _wrPauseBtnEl.textContent = '⏸️'; }
+        var _wrPauseOverlayEl = document.getElementById('wr-pause-overlay');
+        if (_wrPauseOverlayEl) _wrPauseOverlayEl.style.display = 'none';
         if (_wrRaf) cancelAnimationFrame(_wrRaf);
         _wrRaf = null;
         window.removeEventListener('keydown', onKeyDown);
@@ -15188,6 +15233,7 @@
     }
     function fetchHomeMarkets() {
       var _MQ = 'https://mszilrexlupzthauoaxb.supabase.co/functions/v1/market-quotes';
+      var _SP = 'https://mszilrexlupzthauoaxb.supabase.co/functions/v1/sparkline';
       var allSymbols = _homeMarketsTickers.map(function(t) { return t.symbol; });
       fetch(_MQ + '?symbols=' + encodeURIComponent(allSymbols.join(',')) + '&bars=1')
         .then(function(r) { return r.json(); })
@@ -15199,7 +15245,15 @@
               if (match) ordered.push(match);
             });
             _homeMarketsData = ordered;
+            // Render immediately with whatever bars we have, then enrich with real sparklines
             renderHomeMarkets(ordered);
+            var sparkFetches = ordered.map(function(q) {
+              return fetch(_SP + '?symbol=' + encodeURIComponent(q.symbol))
+                .then(function(r) { return r.json(); })
+                .then(function(s) { if (s.values && s.values.length) q.bars = s.values; })
+                .catch(function() {});
+            });
+            Promise.all(sparkFetches).then(function() { renderHomeMarkets(ordered); });
           }
         })
         .catch(function(e) { console.error('[HomeMarkets] Fetch error:', e); });
@@ -17489,13 +17543,18 @@
         console.error('Markets fetch error:', e);
       }
 
-      // Fetch sparkline bars then render
+      // Fetch sparkline bars from Twelve Data via sparkline endpoint
       try {
-        var _mqUrl = 'https://mszilrexlupzthauoaxb.supabase.co/functions/v1/market-quotes';
-        var barsRes = await fetch(_mqUrl + '?symbols=' + encodeURIComponent(allSymbols.join(',')) + '&bars=1');
-        var barsJson = await barsRes.json();
-        if (barsJson.data) barsJson.data.forEach(function(d) { if (d.bars && d.bars.length) _sparkBarsCache[d.symbol] = d.bars; });
-      } catch(e) { console.warn('Bars fetch error:', e); }
+        var _spUrl = 'https://mszilrexlupzthauoaxb.supabase.co/functions/v1/sparkline';
+        var _spFetches = allSymbols.map(async function(sym) {
+          try {
+            var r = await fetch(_spUrl + '?symbol=' + encodeURIComponent(sym));
+            var s = await r.json();
+            if (s.values && s.values.length) _sparkBarsCache[sym] = s.values;
+          } catch(e) {}
+        });
+        await Promise.all(_spFetches);
+      } catch(e) { console.warn('Sparkline fetch error:', e); }
 
       renderMarketCards();
       if (document.getElementById('mobileStockGrid')) renderMobileMarkets();
