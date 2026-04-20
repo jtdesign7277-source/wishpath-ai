@@ -155,6 +155,118 @@ function playNukeChargeSound(){
     osc.start(ac.currentTime);osc.stop(ac.currentTime+0.4);
   }catch(e){}
 }
+function playGrenadeFireSound(){
+  try{
+    const ac=getAudioCtx();if(ac.state==='suspended')ac.resume();
+    const osc=ac.createOscillator();const gain=ac.createGain();
+    osc.type='square';osc.frequency.setValueAtTime(180,ac.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(60,ac.currentTime+0.18);
+    gain.gain.setValueAtTime(0.15,ac.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.22);
+    osc.connect(gain);gain.connect(ac.destination);
+    osc.start(ac.currentTime);osc.stop(ac.currentTime+0.25);
+  }catch(e){}
+}
+function playLaserBeamSound(){
+  try{
+    const ac=getAudioCtx();if(ac.state==='suspended')ac.resume();
+    // Screaming descending sweep
+    const osc=ac.createOscillator();const gain=ac.createGain();
+    osc.type='sawtooth';osc.frequency.setValueAtTime(1800,ac.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(200,ac.currentTime+0.8);
+    gain.gain.setValueAtTime(0.12,ac.currentTime);
+    gain.gain.linearRampToValueAtTime(0.18,ac.currentTime+0.05);
+    gain.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.85);
+    const bp=ac.createBiquadFilter();bp.type='bandpass';bp.frequency.value=1200;bp.Q.value=4;
+    osc.connect(bp);bp.connect(gain);gain.connect(ac.destination);
+    osc.start(ac.currentTime);osc.stop(ac.currentTime+0.9);
+  }catch(e){}
+}
+
+// Grenade fire — spawns 3 grenades in a spread, one charge consumed
+function fireGrenade(){
+  if(grenadeCharges<=0)return false;
+  grenadeCharges--;
+  const bx=SHIP_X+cameraX+SHIP_W, by=ship.y;
+  const spread=[{dy:-14,vy:-110},{dy:0,vy:0},{dy:14,vy:110}];
+  for(const s of spread){
+    grenades.push({x:bx,y:by+s.dy,vx:GRENADE_SPEED,vy:s.vy,r:12,life:1.6,rot:0,dead:false});
+  }
+  playGrenadeFireSound();
+  shakeDur=Math.max(shakeDur,0.2);
+  spawnOrbBurst(bx-cameraX,by,['#84CC16','#FDE047','#FFF'],18,6);
+  addFloatingText(W/2,H/2-40,'💣 GRENADE BARRAGE!','#84CC16',20);
+  return true;
+}
+
+// Explode a single grenade — splash damage in radius
+function explodeGrenade(g){
+  if(g.dead)return;
+  g.dead=true;
+  const gx=g.x-cameraX, gy=g.y;
+  // Visual burst
+  for(let i=0;i<60;i++){const a=rand(0,Math.PI*2),spd=rand(3,14);
+    spawnP(gx,gy,['#FDE047','#FF4500','#FFF','#84CC16','#F97316'][randInt(0,4)],Math.cos(a)*spd,Math.sin(a)*spd,rand(0.3,0.9),rand(3,10),0.02);}
+  shakeDur=Math.max(shakeDur,0.3);
+  screenFlash=Math.max(screenFlash,0.25);screenFlashColor='#F97316';
+  playExplosionSound&&playExplosionSound();
+  // Splash damage to all enemies within radius
+  for(const e of enemies){
+    if(e.dead||e.shieldOn)continue;
+    const ex=e.x-cameraX;
+    const dx=ex-gx, dy=e.y-gy, d=Math.sqrt(dx*dx+dy*dy);
+    if(d<GRENADE_SPLASH_R){
+      const dmg=d<60?5:d<100?3:2;
+      e.hp-=dmg;
+      if(e.hp<=0){
+        e.dead=true;
+        const pts=e.type.pts*comboMultiplier;score+=pts;
+        comboMultiplier=Math.min(comboMultiplier+1,8);comboTimer=2;
+        spawnOrbBurst(ex,e.y,[e.type.color,'#FDE047','#FFF'],40,8);
+        addFloatingText(ex,e.y-26,'💥 +'+pts.toLocaleString(),'#84CC16',16);
+      } else {
+        spawnOrbBurst(ex,e.y,['#FDE047','#FFF'],12,3);
+      }
+    }
+  }
+  // Also damage enemy lasers and homing missiles in radius (clears the board a bit)
+  for(const el of enemyLasers){
+    if(el.dead)continue;
+    const dx=(el.x-cameraX)-gx, dy=el.y-gy;
+    if(dx*dx+dy*dy<GRENADE_SPLASH_R*GRENADE_SPLASH_R)el.dead=true;
+  }
+  for(const m of homingMissiles){
+    if(m.dead)continue;
+    const dx=(m.x-cameraX)-gx, dy=m.y-gy;
+    if(dx*dx+dy*dy<GRENADE_SPLASH_R*GRENADE_SPLASH_R)m.dead=true;
+  }
+}
+
+// Laser fire — activates giant horizontal beam for LASER_DURATION
+function fireLaser(){
+  if(laserCharges<=0||laserActive)return false;
+  laserCharges--;
+  laserActive=true;laserTimer=LASER_DURATION;laserPhase=0;
+  playLaserBeamSound();
+  shakeDur=Math.max(shakeDur,0.4);
+  screenFlash=Math.max(screenFlash,0.35);screenFlashColor='#22D3EE';
+  addFloatingText(W/2,H/2-40,'⚡ MEGA LASER!','#22D3EE',22);
+  return true;
+}
+
+// Nuke fire — extracted for reuse by both touch and mouse handlers
+function fireNuke(){
+  if(nukeCharges<=0||nukeActive)return false;
+  nukeCharges--;nukeActive=true;nukeTimer=NUKE_DURATION;nukeFlashPhase=0;
+  playNukeSound();
+  shakeDur=Math.max(shakeDur,1.0);shakeX=rand(-15,15);shakeY=rand(-15,15);
+  screenFlash=Math.max(screenFlash,0.8);screenFlashColor='#FF4400';
+  const cx=W/2,cy=H/2;
+  for(let i=0;i<200;i++){const a=rand(0,Math.PI*2),spd=rand(4,25);
+    spawnP(cx,cy,['#FF4500','#FDE047','#FFF','#FF8800','#FF2200'][randInt(0,4)],Math.cos(a)*spd,Math.sin(a)*spd,rand(0.5,1.5),rand(3,12),0.02);}
+  addFloatingText(W/2,H/2-40,'☢ NUCLEAR BLAST! ☢','#FDE047',26);
+  return true;
+}
 // Get laser colors for current level theme
 function getLaserColors(){
   const theme=getTheme();
@@ -306,6 +418,26 @@ let nukeTimer=0; // explosion duration
 let nukeFlashPhase=0; // visual flash
 let nukeBtnPulse=0; // button glow animation
 const NUKE_DURATION=1.5; // seconds of explosion
+
+// GRENADE LAUNCHER — giant grenades in spread pattern, splash damage
+const GRENADE_THRESHOLDS=[400,1000,2000,3500,5500];
+let grenadeCharges=0;
+let grenadeLastScore=0;
+let grenadeBtnPulse=0;
+let grenades=[]; // {x,y,vx,vy,r,life,trailColor,exploded}
+const GRENADE_SPEED=620;
+const GRENADE_SPLASH_R=130;
+
+// LASER BEAM — horizontal kill-everything beam for ~0.8s
+const LASER_THRESHOLDS=[1500,4000,7000];
+let laserCharges=0;
+let laserLastScore=0;
+let laserBtnPulse=0;
+let laserActive=false;
+let laserTimer=0;
+let laserPhase=0;
+const LASER_DURATION=0.85;
+const LASER_HEIGHT=96;
 
 // ─── DEEP SPACE STARFIELD (multi-layer parallax) ──────────────
 const STAR_LAYERS=[
@@ -1394,6 +1526,8 @@ function startGame(){
   shakeX=0;shakeY=0;shakeDur=0;screenFlash=0;deathTimer=0;blueDiamondHudFlash=0;rocketBoostHudFlash=0;
   comboMultiplier=1;comboTimer=0;
   nukeCharges=0;nukeLastScore=0;nukeActive=false;nukeTimer=0;nukeBtnPulse=0;
+  grenadeCharges=0;grenadeLastScore=0;grenades=[];grenadeBtnPulse=0;
+  laserCharges=0;laserLastScore=0;laserActive=false;laserTimer=0;laserPhase=0;laserBtnPulse=0;
   currentBoss=null;bossActive=false;bossWarningTimer=0;nextBossLevel=5;homingMissiles=[];
   aButtonPressed=false;useMouseFollow=false;patternWallsLeft=0;
   runStartTime=performance.now();generateWalls();
@@ -1448,6 +1582,92 @@ function update(dt){
         const pts=e.type.pts*2*comboMultiplier;score+=pts;
         spawnOrbBurst(ex,e.y,['#FF4500','#FDE047','#FFF','#FF2EC4','#22D3EE'],80,14);
         addFloatingText(ex,e.y-30,'☢ +'+pts.toLocaleString(),'#FDE047',18);
+      }
+    }
+  }
+
+  // GRENADE CHARGE — check score thresholds
+  for(let i=0;i<GRENADE_THRESHOLDS.length;i++){
+    if(score>=GRENADE_THRESHOLDS[i]&&grenadeLastScore<GRENADE_THRESHOLDS[i]){
+      grenadeCharges=Math.min(grenadeCharges+1,5);
+      grenadeLastScore=GRENADE_THRESHOLDS[i];
+      grenadeBtnPulse=1.5;
+      playNukeChargeSound();
+      addFloatingText(W-70,H-240,'💣 GRENADE!','#84CC16',14);
+    }
+  }
+  if(grenadeBtnPulse>0)grenadeBtnPulse-=dt;
+
+  // GRENADE PROJECTILES — physics, collisions, splash
+  for(const g of grenades){
+    if(g.dead)continue;
+    g.x+=g.vx*dt; g.y+=g.vy*dt; g.vy+=520*dt; g.life-=dt; g.rot+=dt*6;
+    // Trail smoke
+    if(Math.random()<0.7){
+      persistentSmoke.push({x:g.x-cameraX,y:g.y,size:rand(4,7),maxSize:rand(14,22),life:rand(0.3,0.6),maxLife:0.6,vx:rand(-1,1),vy:rand(-1,-0.2),dark:false});
+    }
+    // Off-screen or timed out
+    if(g.x-cameraX>W+40||g.y>H+40||g.life<=0){explodeGrenade(g);continue;}
+    // Hit enemy
+    for(const e of enemies){
+      if(e.dead||e.shieldOn)continue;
+      const ex=e.x-cameraX,gx=g.x-cameraX;
+      if(Math.abs(gx-ex)<e.type.w*0.5+g.r&&Math.abs(g.y-e.y)<e.type.h*0.5+g.r){
+        explodeGrenade(g); break;
+      }
+    }
+    // Hit boss
+    if(!g.dead&&bossActive&&currentBoss&&!currentBoss.dead){
+      const b=currentBoss,gx=g.x-cameraX;
+      if(Math.abs(gx-b.screenX)<b.w*0.55+g.r&&Math.abs(g.y-b.y)<b.h*0.55+g.r){
+        b.hp-=5; b.hitFlash=1.0;
+        spawnBurst(b.screenX,b.y,'#84CC16',20,6,0.4,6);
+        if(b.hp<=0)killBoss();
+        explodeGrenade(g);
+      }
+    }
+  }
+  grenades=grenades.filter(g=>!g.dead);
+
+  // LASER CHARGE — check score thresholds
+  for(let i=0;i<LASER_THRESHOLDS.length;i++){
+    if(score>=LASER_THRESHOLDS[i]&&laserLastScore<LASER_THRESHOLDS[i]){
+      laserCharges=Math.min(laserCharges+1,3);
+      laserLastScore=LASER_THRESHOLDS[i];
+      laserBtnPulse=1.5;
+      playNukeChargeSound();
+      addFloatingText(W-70,H-150,'⚡ LASER READY!','#22D3EE',14);
+    }
+  }
+  if(laserBtnPulse>0)laserBtnPulse-=dt;
+
+  // LASER BEAM — while active, kill all enemies in the beam band
+  if(laserActive){
+    laserTimer-=dt; laserPhase+=dt*18;
+    if(laserTimer<=0){laserActive=false;laserTimer=0;}
+    const beamTop=ship.y-LASER_HEIGHT*0.5, beamBot=ship.y+LASER_HEIGHT*0.5;
+    for(const e of enemies){
+      if(e.dead||e.shieldOn)continue;
+      if(e.y+e.type.h*0.5>beamTop&&e.y-e.type.h*0.5<beamBot){
+        const ex=e.x-cameraX;
+        if(ex<SHIP_X)continue; // only kill enemies in front of the ship
+        e.dead=true;
+        const pts=e.type.pts*comboMultiplier;score+=pts;
+        spawnOrbBurst(ex,e.y,['#22D3EE','#67E8F9','#FFF','#A855F7'],50,9);
+        addFloatingText(ex,e.y-24,'⚡ +'+pts.toLocaleString(),'#22D3EE',16);
+      }
+    }
+    // Shoot down homing missiles in the beam too
+    for(const m of homingMissiles){
+      if(m.dead)continue;
+      if(m.y>beamTop&&m.y<beamBot&&(m.x-cameraX)>SHIP_X){m.dead=true;spawnBurst(m.x-cameraX,m.y,'#22D3EE',14,4,0.25,3);}
+    }
+    // Hit boss steadily while beam is on
+    if(bossActive&&currentBoss&&!currentBoss.dead){
+      const b=currentBoss;
+      if(b.y+b.h*0.5>beamTop&&b.y-b.h*0.5<beamBot){
+        b.hp-=dt*8; b.hitFlash=Math.max(b.hitFlash||0,0.6);
+        if(b.hp<=0)killBoss();
       }
     }
   }
@@ -2019,81 +2239,171 @@ function drawHUD(){
     }
   }
 
-  // ═══ NUKE BUTTON — bottom right, shaded when empty, glows when charged ═══
-  {
-    const nbX=W-65,nbY=H-75;
-    const charged=nukeCharges>0;
-    const now2=performance.now();
-    const breathe2=charged?(0.95+Math.sin(now2*0.005)*0.05):1;
-
+  // ═══ GRENADES IN-FLIGHT — render each grenade ═══
+  for(const g of grenades){
+    if(g.dead)continue;
+    const gsx=g.x-cameraX, gsy=g.y;
     ctx.save();
-    ctx.translate(nbX,nbY);
-    ctx.scale(breathe2,breathe2);
+    ctx.translate(gsx,gsy);
+    ctx.rotate(g.rot);
+    // Outer glow
+    ctx.shadowColor='#FDE047';ctx.shadowBlur=16;
+    // Grenade body
+    const gg=ctx.createRadialGradient(-3,-3,2,0,0,g.r);
+    gg.addColorStop(0,'#84CC16');gg.addColorStop(0.6,'#3F6212');gg.addColorStop(1,'#111');
+    ctx.fillStyle=gg;ctx.beginPath();ctx.arc(0,0,g.r,0,Math.PI*2);ctx.fill();
+    ctx.shadowBlur=0;
+    // Ignition ring — red blinking
+    const blink=(performance.now()*0.02)%1<0.5;
+    ctx.strokeStyle=blink?'#EF4444':'#FDE047';ctx.lineWidth=2;
+    ctx.beginPath();ctx.arc(0,0,g.r-2,0,Math.PI*2);ctx.stroke();
+    // Top fuse cap
+    ctx.fillStyle='#71717A';ctx.fillRect(-3,-g.r-4,6,4);
+    ctx.fillStyle=blink?'#FDE047':'#F97316';ctx.beginPath();ctx.arc(0,-g.r-5,2,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+  }
 
+  // ═══ LASER BEAM — giant horizontal beam when active ═══
+  if(laserActive){
+    const lp=laserTimer/LASER_DURATION; // 1 → 0
+    const beamOrigin=SHIP_X+18;
+    const beamW=W-beamOrigin+40;
+    const pulse=0.85+Math.sin(laserPhase)*0.15;
+    const alpha=Math.min(1,lp*2.5); // fade in/out
+    // Outer wide halo
+    const haloH=LASER_HEIGHT*1.8*pulse;
+    const halo=ctx.createLinearGradient(beamOrigin,0,beamOrigin+beamW,0);
+    halo.addColorStop(0,'rgba(34,211,238,'+(alpha*0.5)+')');
+    halo.addColorStop(1,'rgba(34,211,238,0)');
+    ctx.fillStyle=halo;ctx.fillRect(beamOrigin,ship.y-haloH/2,beamW,haloH);
+    // Mid cyan beam
+    const midH=LASER_HEIGHT*pulse;
+    const mid=ctx.createLinearGradient(beamOrigin,ship.y-midH/2,beamOrigin,ship.y+midH/2);
+    mid.addColorStop(0,'rgba(34,211,238,0)');
+    mid.addColorStop(0.5,'rgba(103,232,249,'+(alpha*0.9)+')');
+    mid.addColorStop(1,'rgba(34,211,238,0)');
+    ctx.fillStyle=mid;ctx.fillRect(beamOrigin,ship.y-midH/2,beamW,midH);
+    // Hot white core
+    const coreH=LASER_HEIGHT*0.35*pulse;
+    ctx.shadowColor='#22D3EE';ctx.shadowBlur=30;
+    const core=ctx.createLinearGradient(beamOrigin,ship.y-coreH/2,beamOrigin,ship.y+coreH/2);
+    core.addColorStop(0,'rgba(255,255,255,0)');
+    core.addColorStop(0.5,'rgba(255,255,255,'+alpha+')');
+    core.addColorStop(1,'rgba(255,255,255,0)');
+    ctx.fillStyle=core;ctx.fillRect(beamOrigin,ship.y-coreH/2,beamW,coreH);
+    ctx.shadowBlur=0;
+    // Sparks along the beam
+    if(Math.random()<0.8){
+      const sx=beamOrigin+Math.random()*beamW;
+      const sy=ship.y+rand(-LASER_HEIGHT*0.5,LASER_HEIGHT*0.5);
+      spawnP(sx,sy,'#FFF',rand(-2,2),rand(-4,4),0.3,rand(2,4),0.01);
+    }
+    // Origin flash at ship
+    const flashR=30+Math.sin(laserPhase*2)*8;
+    const fg=ctx.createRadialGradient(beamOrigin,ship.y,2,beamOrigin,ship.y,flashR);
+    fg.addColorStop(0,'rgba(255,255,255,'+alpha+')');
+    fg.addColorStop(0.5,'rgba(103,232,249,'+(alpha*0.6)+')');
+    fg.addColorStop(1,'rgba(34,211,238,0)');
+    ctx.fillStyle=fg;ctx.beginPath();ctx.arc(beamOrigin,ship.y,flashR,0,Math.PI*2);ctx.fill();
+  }
+
+  // ═══ WEAPON BUTTON STACK (right side: GRENADE / LASER / NUKE bottom-up) ═══
+  // Single reusable renderer — returns {x,y,r} so input handlers can hit-test
+  function drawWeaponBtn(opts){
+    const {x,y,r,charged,pulse,glowColor,ringColor,fillDark,fillBright,glyph,glyphColor,maxCharges,charges,label,labelColor}=opts;
+    const now2=performance.now();
+    const breathe=charged?(0.95+Math.sin(now2*0.005)*0.05):1;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(breathe,breathe);
     if(charged){
-      // Radioactive glow aura
-      const aR=42+Math.sin(now2*0.004)*6;
-      const nukeGlow=ctx.createRadialGradient(0,0,15,0,0,aR);
-      nukeGlow.addColorStop(0,'rgba(253,224,71,0)');
-      nukeGlow.addColorStop(0.4,'rgba(253,224,71,0.15)');
-      nukeGlow.addColorStop(0.7,'rgba(239,68,68,0.1)');
-      nukeGlow.addColorStop(1,'rgba(0,0,0,0)');
-      ctx.fillStyle=nukeGlow;ctx.beginPath();ctx.arc(0,0,aR,0,Math.PI*2);ctx.fill();
-
-      // Outer ring — pulsing danger
-      const ringHue=nukeBtnPulse>0?60:0;
-      ctx.shadowColor=nukeBtnPulse>0?'#FDE047':'#EF4444';
-      ctx.shadowBlur=nukeBtnPulse>0?25:14;
-      ctx.strokeStyle=nukeBtnPulse>0?'#FDE047':`hsl(${ringHue},100%,55%)`;
-      ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(0,0,33,0,Math.PI*2);ctx.stroke();ctx.shadowBlur=0;
+      // Glow aura
+      const aR=r+12+Math.sin(now2*0.004)*6;
+      const gg=ctx.createRadialGradient(0,0,r*0.45,0,0,aR);
+      gg.addColorStop(0,glowColor+'00');
+      gg.addColorStop(0.4,glowColor+'26');
+      gg.addColorStop(1,glowColor+'00');
+      ctx.fillStyle=gg;ctx.beginPath();ctx.arc(0,0,aR,0,Math.PI*2);ctx.fill();
+      // Ring
+      ctx.shadowColor=pulse>0?'#FDE047':ringColor;
+      ctx.shadowBlur=pulse>0?25:14;
+      ctx.strokeStyle=pulse>0?'#FDE047':ringColor;
+      ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.stroke();
+      ctx.shadowBlur=0;
     } else {
-      // Shaded/dimmed ring
       ctx.strokeStyle='rgba(255,255,255,0.1)';ctx.lineWidth=2;
-      ctx.beginPath();ctx.arc(0,0,33,0,Math.PI*2);ctx.stroke();
+      ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.stroke();
     }
-
     // Inner fill
-    const nbBg=ctx.createRadialGradient(0,-6,4,0,4,30);
-    if(charged){
-      nbBg.addColorStop(0,'#2A1A00');nbBg.addColorStop(1,'#1A0800');
-    } else {
-      nbBg.addColorStop(0,'#111');nbBg.addColorStop(1,'#080808');
-    }
-    ctx.fillStyle=nbBg;ctx.beginPath();ctx.arc(0,0,30,0,Math.PI*2);ctx.fill();
-
-    // ☢ Radiation symbol
-    if(charged){
-      ctx.shadowColor='#FDE047';ctx.shadowBlur=8;
-      ctx.fillStyle='#FDE047';
-    } else {
-      ctx.fillStyle='rgba(255,255,255,0.15)';
-    }
+    const bg=ctx.createRadialGradient(0,-6,4,0,4,r);
+    if(charged){bg.addColorStop(0,fillBright[0]);bg.addColorStop(1,fillBright[1]);}
+    else{bg.addColorStop(0,fillDark[0]);bg.addColorStop(1,fillDark[1]);}
+    ctx.fillStyle=bg;ctx.beginPath();ctx.arc(0,0,r-3,0,Math.PI*2);ctx.fill();
+    // Glyph
+    if(charged){ctx.shadowColor=glyphColor;ctx.shadowBlur=8;ctx.fillStyle=glyphColor;}
+    else{ctx.fillStyle='rgba(255,255,255,0.18)';}
     ctx.font='bold 22px Arial';ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillText('☢',0,1);ctx.shadowBlur=0;
-
-    // Charge count pips (1-3 dots)
-    for(let ci=0;ci<3;ci++){
-      const cx2=-10+ci*10,cy2=18;
-      if(ci<nukeCharges){
-        ctx.fillStyle=ci===0?'#22C55E':ci===1?'#FDE047':'#EF4444';
-        ctx.shadowColor=ctx.fillStyle;ctx.shadowBlur=6;
+    ctx.fillText(glyph,0,1);ctx.shadowBlur=0;
+    // Charge pips
+    for(let ci=0;ci<maxCharges;ci++){
+      const step=8, total=(maxCharges-1)*step;
+      const cx2=-total/2+ci*step, cy2=r-12;
+      if(ci<charges){
+        ctx.fillStyle=glyphColor;ctx.shadowColor=glyphColor;ctx.shadowBlur=5;
       } else {
         ctx.fillStyle='rgba(255,255,255,0.1)';ctx.shadowBlur=0;
       }
-      ctx.beginPath();ctx.arc(cx2,cy2,3,0,Math.PI*2);ctx.fill();
+      ctx.beginPath();ctx.arc(cx2,cy2,2.5,0,Math.PI*2);ctx.fill();
     }
     ctx.shadowBlur=0;
-
     ctx.restore();
-
-    // Label
-    ctx.font=arcadeFont(6);ctx.textAlign='center';
-    if(charged){
-      ctx.fillStyle='#FDE047';ctx.fillText('NUKE x'+nukeCharges,nbX,nbY+48);
-    } else {
-      ctx.fillStyle='rgba(255,255,255,0.2)';ctx.fillText('NUKE',nbX,nbY+48);
-    }
+    // Label below
+    ctx.font=arcadeFont(6);ctx.textAlign='center';ctx.textBaseline='alphabetic';
+    ctx.fillStyle=charged?labelColor:'rgba(255,255,255,0.2)';
+    ctx.fillText(label+(charged?' x'+charges:''),x,y+r+16);
+    return {x,y,r};
   }
+
+  // Stack bottom-up so NUKE stays in its historical spot
+  const _btnX=W-65, _btnR=30, _btnStep=90;
+  const _nukeY=H-75;
+  const _laserY=_nukeY-_btnStep;
+  const _grenY=_laserY-_btnStep;
+
+  // Cache button geometry for input handlers (recomputed each frame)
+  window.__wrWeaponBtns=[
+    {key:'grenade', x:_btnX, y:_grenY, r:_btnR+8},
+    {key:'laser',   x:_btnX, y:_laserY, r:_btnR+8},
+    {key:'nuke',    x:_btnX, y:_nukeY, r:_btnR+8},
+  ];
+
+  drawWeaponBtn({
+    x:_grenY===_grenY?_btnX:_btnX, y:_grenY, r:_btnR,
+    charged:grenadeCharges>0, pulse:grenadeBtnPulse,
+    glowColor:'rgba(132,204,22,', ringColor:'#84CC16',
+    fillDark:['#111','#080808'], fillBright:['#1C2A0A','#0A1400'],
+    glyph:'💣', glyphColor:'#84CC16',
+    maxCharges:5, charges:grenadeCharges,
+    label:'GRENADE', labelColor:'#84CC16',
+  });
+  drawWeaponBtn({
+    x:_btnX, y:_laserY, r:_btnR,
+    charged:laserCharges>0, pulse:laserBtnPulse,
+    glowColor:'rgba(34,211,238,', ringColor:'#22D3EE',
+    fillDark:['#111','#080808'], fillBright:['#042F3D','#011419'],
+    glyph:'⚡', glyphColor:'#22D3EE',
+    maxCharges:3, charges:laserCharges,
+    label:'LASER', labelColor:'#22D3EE',
+  });
+  drawWeaponBtn({
+    x:_btnX, y:_nukeY, r:_btnR,
+    charged:nukeCharges>0, pulse:nukeBtnPulse,
+    glowColor:'rgba(253,224,71,', ringColor:'#EF4444',
+    fillDark:['#111','#080808'], fillBright:['#2A1A00','#1A0800'],
+    glyph:'☢', glyphColor:'#FDE047',
+    maxCharges:3, charges:nukeCharges,
+    label:'NUKE', labelColor:'#FDE047',
+  });
 
   // Nuke explosion overlay
   if(nukeActive){
@@ -2796,6 +3106,20 @@ function touchToCanvas(touch,rect){
   };
 }
 
+// Hit-test all weapon buttons. Returns true if a button was fired.
+function tryFireWeaponAt(px,py){
+  const btns=window.__wrWeaponBtns||[];
+  for(const b of btns){
+    const dx=px-b.x, dy=py-b.y;
+    if(dx*dx+dy*dy<b.r*b.r){
+      if(b.key==='nuke')    return fireNuke();
+      if(b.key==='grenade') return fireGrenade();
+      if(b.key==='laser')   return fireLaser();
+    }
+  }
+  return false;
+}
+
 canvas.addEventListener('touchstart',(e)=>{
   e.preventDefault();
   if(state!==STATE.PLAYING){handleTap();return;}
@@ -2807,19 +3131,9 @@ canvas.addEventListener('touchstart',(e)=>{
 
   if(isPaused)return;
 
-  // Check if touching NUKE button (bottom-right)
-  if(nukeCharges>0&&!nukeActive&&Math.abs(c.x-(W-65))<40&&Math.abs(c.y-(H-75))<40){
-    nukeCharges--;nukeActive=true;nukeTimer=NUKE_DURATION;nukeFlashPhase=0;
-    playNukeSound();
-    shakeDur=1.0;shakeX=rand(-15,15);shakeY=rand(-15,15);
-    screenFlash=0.8;screenFlashColor='#FF4400';
-    // Massive particle burst from center
-    const cx=W/2,cy=H/2;
-    for(let i=0;i<200;i++){const a=rand(0,Math.PI*2),spd=rand(4,25);
-      spawnP(cx,cy,['#FF4500','#FDE047','#FFF','#FF8800','#FF2200'][randInt(0,4)],Math.cos(a)*spd,Math.sin(a)*spd,rand(0.5,1.5),rand(3,12),0.02);}
-    addFloatingText(W/2,H/2-40,'☢ NUCLEAR BLAST! ☢','#FDE047',26);
-    return;
-  }
+  // Weapon buttons — grenade, laser, nuke (right-side stack)
+  if(tryFireWeaponAt(c.x,c.y))return;
+
   // Check if touching A button area
   if((rocketBoostReady||rocketBoostActive)&&c.x>W-120&&c.y>H-110){
     aButtonPressed=true;return;
@@ -2841,7 +3155,22 @@ canvas.addEventListener('touchend',(e)=>{e.preventDefault();isDragging=false;aBu
 
 canvas.addEventListener('mousedown',(e)=>{
   if(state!==STATE.PLAYING){handleTap();return;}
-  isDragging=true;const rect=canvas.getBoundingClientRect();
+  const rect=canvas.getBoundingClientRect();
+  // Convert mouse coords to canvas coords (matches touch rotation logic)
+  const isP=window.innerWidth<window.innerHeight&&window.innerWidth<900;
+  const mx=isP?(rect.bottom-e.clientY):(e.clientX-rect.left);
+  const my=isP?(rect.right-e.clientX):(e.clientY-rect.top);
+  const cx=mx*(W/(isP?rect.height:rect.width));
+  const cy=my*(H/(isP?rect.width:rect.height));
+
+  // Pause button
+  if(cx>W-80&&cy<60){isPaused=!isPaused;return;}
+  if(isPaused)return;
+
+  // Weapon buttons — grenade, laser, nuke
+  if(tryFireWeaponAt(cx,cy))return;
+
+  isDragging=true;
   dragStartY=(e.clientY-rect.top);
   dragShipStartY=ship.targetY;
 });
