@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-19-v325-alpaca-ws';
+    var APP_VERSION = '2026-04-20-v326-html-ability-btns';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -6059,6 +6059,12 @@
         </div>
         <div id="wish-runner-game" class="wish-runner-container">
           <canvas id="wpWishRunnerCanvas" width="390" height="680" aria-label="Wish Runner game"></canvas>
+          <!-- HTML Ability Buttons — real DOM elements so touch always works on mobile -->
+          <div id="wr-ability-btns" style="position:absolute;left:6px;top:50%;transform:translateY(-50%);display:none;flex-direction:column;gap:14px;z-index:20;pointer-events:auto;">
+            <button id="wr-btn-nuke" style="width:60px;height:60px;border-radius:50%;border:2px solid #ff8800;background:rgba(18,10,4,0.92);color:#ffcc44;font-weight:bold;font-size:10px;line-height:1.2;touch-action:manipulation;-webkit-tap-highlight-color:transparent;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;outline:none;" type="button"><span style="font-size:15px;">☢️</span><span>NUKE</span></button>
+            <button id="wr-btn-laser" style="width:60px;height:60px;border-radius:50%;border:2px solid #00ccff;background:rgba(4,10,18,0.92);color:#00ccff;font-weight:bold;font-size:10px;line-height:1.2;touch-action:manipulation;-webkit-tap-highlight-color:transparent;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;outline:none;" type="button"><span style="font-size:15px;">⚡</span><span>LASER</span></button>
+            <button id="wr-btn-bomb" style="width:60px;height:60px;border-radius:50%;border:2px solid #ff4444;background:rgba(18,4,4,0.92);color:#ff4444;font-weight:bold;font-size:10px;line-height:1.2;touch-action:manipulation;-webkit-tap-highlight-color:transparent;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;outline:none;" type="button"><span style="font-size:15px;">💣</span><span>BOMB</span></button>
+          </div>
           <!-- Overlay icons -->
           <div class="wr-overlay-icon wr-back" onclick="showView('home')">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><polyline points="3 6 3 6 21 6"/><polyline points="3 18 3 18 21 18"/></svg>
@@ -8631,6 +8637,33 @@
         } catch(e) {}
       }
 
+      // Nuke — deep nuclear boom with rumble
+      function playNukeSound() {
+        try {
+          var ctx = _gameCtx();
+          if (!ctx || ctx.state === 'suspended') return;
+          var t = ctx.currentTime;
+          // Sub bass thud
+          var o1 = ctx.createOscillator(), g1 = ctx.createGain();
+          o1.type = 'sine'; o1.frequency.setValueAtTime(60, t); o1.frequency.exponentialRampToValueAtTime(20, t + 0.8);
+          g1.gain.setValueAtTime(0.4, t); g1.gain.exponentialRampToValueAtTime(0.001, t + 0.9);
+          o1.connect(g1); g1.connect(ctx.destination); o1.start(t); o1.stop(t + 1.0);
+          // Mid crunch
+          var o2 = ctx.createOscillator(), g2 = ctx.createGain();
+          o2.type = 'sawtooth'; o2.frequency.setValueAtTime(180, t); o2.frequency.exponentialRampToValueAtTime(40, t + 0.5);
+          g2.gain.setValueAtTime(0.2, t); g2.gain.exponentialRampToValueAtTime(0.001, t + 0.6);
+          o2.connect(g2); g2.connect(ctx.destination); o2.start(t); o2.stop(t + 0.7);
+          // White noise burst
+          var bufSize = Math.floor(ctx.sampleRate * 0.25);
+          var nb = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+          var nd = nb.getChannelData(0);
+          for (var ni = 0; ni < bufSize; ni++) nd[ni] = (Math.random() * 2 - 1);
+          var ns = ctx.createBufferSource(), ng = ctx.createGain();
+          ns.buffer = nb; ng.gain.setValueAtTime(0.35, t); ng.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+          ns.connect(ng); ng.connect(ctx.destination); ns.start(t); ns.stop(t + 0.4);
+        } catch(e) {}
+      }
+
       // Power-up collect — bright ascending chime
       function playPowerupSound() {
         try {
@@ -9125,6 +9158,9 @@
       var _laserActive = false;
       var _laserTimer  = 0;
       var _missiles    = [];
+      var _nukeFlash = 0;
+      var _starburstActive = false, _starburstTimer = 0;
+      var _homingBombs = [];
 
       // Power-ups
       var powerups = [];
@@ -9374,6 +9410,7 @@
         _weaponLevel = 0;
         _abCDs = [0, 0, 0];
         _laserActive = false; _laserTimer = 0; _missiles = [];
+        _nukeFlash = 0; _starburstActive = false; _starburstTimer = 0; _homingBombs = [];
         _formationTimer = 0;
         _deathFlash = 0;
         window._upgrades = [];
@@ -9585,23 +9622,69 @@
         if (_abCDs[idx] > 0 || gameOver) return;
         _abCDs[idx] = _abMaxCDs[idx];
         if (idx === 0) {
-          // MISSILE — 3 homing missiles
-          for (var _tami = 0; _tami < 3; _tami++) {
-            var _taAng = -Math.PI * 0.5 + (_tami - 1) * 0.35;
-            _missiles.push({ x: player.x + (_tami-1)*14, y: player.y - player.size*0.5 - 6,
-              vx: Math.cos(_taAng)*220, vy: Math.sin(_taAng)*220, life: 4.5 });
+          // NUKE — destroy everything on screen instantly
+          _nukeFlash = 1.0;
+          triggerScreenShake(14, 0.7);
+          playNukeSound();
+          // Kill all targets
+          for (var _nti = targets.length - 1; _nti >= 0; _nti--) {
+            var _nt = targets[_nti];
+            spawnExplosion(_nt.x, _nt.y, '#FF6600', 30);
+            spawnExplosion(_nt.x + (Math.random()-0.5)*40, _nt.y + (Math.random()-0.5)*40, '#FFCC00', 20);
+            score += (_nt.hp || 1) * 10;
           }
-          playLaserSound();
+          targets = [];
+          enemyBullets = [];
+          // Kill boss if active
+          if (activeBoss) {
+            spawnExplosion(activeBoss.x, activeBoss.y, '#FF4400', 60);
+            spawnExplosion(activeBoss.x - 40, activeBoss.y, '#FFCC00', 35);
+            spawnExplosion(activeBoss.x + 40, activeBoss.y, '#FFFFFF', 25);
+            activeBoss = null;
+          }
+          updateScoreEl();
         } else if (idx === 1) {
-          // LASER — wide beam 2 seconds
-          _laserActive = true; _laserTimer = 2.0;
-          triggerScreenShake(4, 0.3);
+          // LASER STARBURST — 8 beams radiating outward, instant kill everything they touch
+          _starburstActive = true; _starburstTimer = 1.5;
+          triggerScreenShake(8, 0.5);
           playLaserSound();
+          // Instantly kill all targets (beams cover full screen)
+          for (var _sti = targets.length - 1; _sti >= 0; _sti--) {
+            var _st = targets[_sti];
+            spawnExplosion(_st.x, _st.y, '#00EEFF', 20);
+            score += (_st.hp || 1) * 10;
+          }
+          targets = [];
+          enemyBullets = [];
+          if (activeBoss) {
+            activeBoss.hp -= 999;
+            spawnExplosion(activeBoss.x, activeBoss.y, '#00EEFF', 40);
+            triggerScreenShake(10, 0.5);
+          }
+          updateScoreEl();
         } else {
-          // SHIELD — 5 second invincibility
-          _invincible = true; _invincibleTimer = 5.0;
-          triggerScreenShake(2, 0.12);
-          playPowerupSound();
+          // BOMB — 12 homing bombs scatter from player
+          triggerScreenShake(5, 0.3);
+          playExplosionSound(false);
+          var _bombTargets = targets.slice(0, 12);
+          for (var _bi = 0; _bi < 12; _bi++) {
+            var _bang = (_bi / 12) * Math.PI * 2;
+            var _btx, _bty;
+            if (_bi < _bombTargets.length) {
+              _btx = _bombTargets[_bi].x; _bty = _bombTargets[_bi].y;
+            } else {
+              _btx = Math.random() * GW; _bty = Math.random() * GH * 0.6;
+            }
+            _homingBombs.push({
+              x: player.x + Math.cos(_bang) * 20,
+              y: player.y + Math.sin(_bang) * 20,
+              vx: Math.cos(_bang) * 180,
+              vy: Math.sin(_bang) * 180 - 80,
+              tx: _btx, ty: _bty,
+              life: 3.5,
+              trail: []
+            });
+          }
         }
       }
 
@@ -10240,6 +10323,88 @@
 
         // Ability cooldowns
         for (var _aCI = 0; _aCI < 3; _aCI++) { if (_abCDs[_aCI] > 0) _abCDs[_aCI] = Math.max(0, _abCDs[_aCI] - dt); }
+
+        // Nuke flash decay
+        if (_nukeFlash > 0) _nukeFlash = Math.max(0, _nukeFlash - dt * 2.5);
+
+        // Starburst timer
+        if (_starburstActive) { _starburstTimer -= dt; if (_starburstTimer <= 0) { _starburstActive = false; _starburstTimer = 0; } }
+
+        // Homing bombs update
+        for (var _hbi = _homingBombs.length - 1; _hbi >= 0; _hbi--) {
+          var _hb = _homingBombs[_hbi];
+          _hb.life -= dt;
+          if (_hb.life <= 0) { _homingBombs.splice(_hbi, 1); continue; }
+          // Home toward target
+          var _hdx = _hb.tx - _hb.x, _hdy = _hb.ty - _hb.y;
+          var _hd = Math.sqrt(_hdx*_hdx + _hdy*_hdy) || 1;
+          var _hspd = 320;
+          _hb.vx += (_hdx / _hd) * _hspd * dt * 4;
+          _hb.vy += (_hdy / _hd) * _hspd * dt * 4;
+          var _hv = Math.sqrt(_hb.vx*_hb.vx + _hb.vy*_hb.vy) || 1;
+          if (_hv > _hspd) { _hb.vx = (_hb.vx / _hv) * _hspd; _hb.vy = (_hb.vy / _hv) * _hspd; }
+          _hb.x += _hb.vx * dt; _hb.y += _hb.vy * dt;
+          // Trail
+          _hb.trail.push({ x: _hb.x, y: _hb.y, life: 0.25 });
+          if (_hb.trail.length > 18) _hb.trail.shift();
+          for (var _hti = _hb.trail.length - 1; _hti >= 0; _hti--) {
+            _hb.trail[_hti].life -= dt;
+            if (_hb.trail[_hti].life <= 0) _hb.trail.splice(_hti, 1);
+          }
+          // Check impact: near target or close to any enemy
+          var _hit = false;
+          if (_hd < 28) _hit = true;
+          if (!_hit) {
+            for (var _hei = 0; _hei < targets.length; _hei++) {
+              var _het = targets[_hei];
+              var _hed = Math.sqrt((_hb.x-_het.x)*(_hb.x-_het.x)+(_hb.y-_het.y)*(_hb.y-_het.y));
+              if (_hed < 55) { _hit = true; break; }
+            }
+          }
+          if (_hit) {
+            // Explode — damage all enemies in 70px radius
+            spawnExplosion(_hb.x, _hb.y, '#FF4400', 25);
+            spawnExplosion(_hb.x, _hb.y, '#FF9900', 15);
+            triggerScreenShake(4, 0.15);
+            playExplosionSound(true);
+            for (var _hdi = targets.length - 1; _hdi >= 0; _hdi--) {
+              var _hdt = targets[_hdi];
+              var _hdd = Math.sqrt((_hb.x-_hdt.x)*(_hb.x-_hdt.x)+(_hb.y-_hdt.y)*(_hb.y-_hdt.y));
+              if (_hdd < 70) {
+                _hdt.hp -= 999;
+                if (_hdt.hp <= 0) {
+                  spawnExplosion(_hdt.x, _hdt.y, '#FF6600', 20);
+                  score += 50;
+                  targets.splice(_hdi, 1);
+                }
+              }
+            }
+            if (activeBoss) {
+              var _hbd = Math.sqrt((_hb.x-activeBoss.x)*(_hb.x-activeBoss.x)+(_hb.y-activeBoss.y)*(_hb.y-activeBoss.y));
+              if (_hbd < activeBoss.size + 70) activeBoss.hp -= 999;
+            }
+            updateScoreEl();
+            _homingBombs.splice(_hbi, 1);
+          }
+        }
+
+        // Update HTML ability button visuals
+        (function() {
+          var _bIds = ['wr-btn-nuke','wr-btn-laser','wr-btn-bomb'];
+          var _bLabels = [['☢️','NUKE'],['⚡','LASER'],['💣','BOMB']];
+          for (var _bui = 0; _bui < 3; _bui++) {
+            var _bb = document.getElementById(_bIds[_bui]);
+            if (!_bb) continue;
+            var _bcd = _abCDs[_bui], _bmx = _abMaxCDs[_bui];
+            if (_bcd > 0) {
+              _bb.style.opacity = '0.35';
+              _bb.innerHTML = '<span style="font-size:18px;line-height:1;">' + Math.ceil(_bcd) + 's</span>';
+            } else {
+              _bb.style.opacity = '1';
+              _bb.innerHTML = '<span style="font-size:15px;">' + _bLabels[_bui][0] + '</span><span>' + _bLabels[_bui][1] + '</span>';
+            }
+          }
+        })();
 
         // Laser beam — damage all targets in column
         if (_laserActive) {
@@ -11712,6 +11877,75 @@
           ctx.globalAlpha = 1; ctx.shadowBlur = 0; ctx.restore();
         }
 
+        // Draw starburst (LASER ability) — 8 beams radiating from player
+        if (_starburstActive && !gameOver) {
+          var _sbA = Math.min(1, _starburstTimer * 2.2);
+          ctx.save();
+          ctx.globalAlpha = _sbA * 0.92;
+          ctx.shadowColor = '#00EEFF'; ctx.shadowBlur = 32;
+          for (var _sbi = 0; _sbi < 8; _sbi++) {
+            var _sbAng = (_sbi / 8) * Math.PI * 2;
+            var _sbLen = Math.max(GW, GH) * 1.5;
+            var _sbCx = Math.cos(_sbAng), _sbCy = Math.sin(_sbAng);
+            var _sbGx1 = player.x - _sbCy * 6, _sbGy1 = player.y + _sbCx * 6;
+            var _sbGx2 = player.x + _sbCy * 6, _sbGy2 = player.y - _sbCx * 6;
+            var _sbLg = ctx.createLinearGradient(_sbGx1, _sbGy1, _sbGx2, _sbGy2);
+            _sbLg.addColorStop(0, 'rgba(0,238,255,0)');
+            _sbLg.addColorStop(0.4, 'rgba(180,255,255,0.9)');
+            _sbLg.addColorStop(0.5, '#ffffff');
+            _sbLg.addColorStop(0.6, 'rgba(180,255,255,0.9)');
+            _sbLg.addColorStop(1, 'rgba(0,238,255,0)');
+            ctx.fillStyle = _sbLg;
+            ctx.beginPath();
+            ctx.moveTo(player.x - _sbCy * 5, player.y + _sbCx * 5);
+            ctx.lineTo(player.x + _sbCx * _sbLen, player.y + _sbCy * _sbLen);
+            ctx.lineTo(player.x + _sbCy * 5, player.y - _sbCx * 5);
+            ctx.closePath();
+            ctx.fill();
+          }
+          // Bright core flash
+          ctx.globalAlpha = _sbA * 0.7;
+          var _sbCore = ctx.createRadialGradient(player.x, player.y, 0, player.x, player.y, 60);
+          _sbCore.addColorStop(0, '#ffffff');
+          _sbCore.addColorStop(0.3, 'rgba(0,238,255,0.7)');
+          _sbCore.addColorStop(1, 'rgba(0,238,255,0)');
+          ctx.fillStyle = _sbCore;
+          ctx.beginPath(); ctx.arc(player.x, player.y, 60, 0, Math.PI*2); ctx.fill();
+          ctx.globalAlpha = 1; ctx.shadowBlur = 0; ctx.restore();
+        }
+
+        // Draw homing bombs and trails
+        for (var _hbdi = 0; _hbdi < _homingBombs.length; _hbdi++) {
+          var _hbd2 = _homingBombs[_hbdi];
+          ctx.save();
+          // Trail
+          for (var _hbti = 0; _hbti < _hbd2.trail.length; _hbti++) {
+            var _hbtp = _hbd2.trail[_hbti];
+            var _hbta = _hbtp.life / 0.25;
+            ctx.globalAlpha = _hbta * 0.7;
+            ctx.fillStyle = _hbti % 2 === 0 ? '#FF6600' : '#FF2200';
+            var _hbts = 3 + _hbta * 4;
+            ctx.beginPath(); ctx.arc(_hbtp.x, _hbtp.y, _hbts, 0, Math.PI*2); ctx.fill();
+          }
+          // Bomb body
+          ctx.globalAlpha = 1;
+          ctx.shadowColor = '#FF4400'; ctx.shadowBlur = 12;
+          ctx.fillStyle = '#FF2200';
+          ctx.beginPath(); ctx.arc(_hbd2.x, _hbd2.y, 5, 0, Math.PI*2); ctx.fill();
+          ctx.fillStyle = '#FFCC44';
+          ctx.beginPath(); ctx.arc(_hbd2.x - 1, _hbd2.y - 1, 2.5, 0, Math.PI*2); ctx.fill();
+          ctx.shadowBlur = 0; ctx.restore();
+        }
+
+        // Draw nuke flash overlay
+        if (_nukeFlash > 0) {
+          ctx.save();
+          ctx.globalAlpha = _nukeFlash * 0.85;
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(0, 0, GW, GH);
+          ctx.restore();
+        }
+
         // Draw power-ups - canvas-drawn weapons
         for (var pui = 0; pui < powerups.length; pui++) {
           var pw = powerups[pui];
@@ -11951,44 +12185,6 @@
         ctx.shadowBlur = 0;
         ctx.restore();
 
-        // ── ABILITY BUTTONS (left side, 3 stacked circles) ──
-        if (!gameOver) {
-          var _abBX = 30, _abBR = 21;
-          var _abBYs = [GH*0.55, GH*0.68, GH*0.81];
-          var _abIcons = ['\u25b2','=','\u25ce'];
-          var _abLbls = ['MSL','LZR','SHD'];
-          for (var _abi = 0; _abi < 3; _abi++) {
-            var _abX = _abBX, _abY = _abBYs[_abi];
-            var _abCD = _abCDs[_abi], _abMX = _abMaxCDs[_abi];
-            var _abRdy = _abCD <= 0;
-            ctx.save();
-            if (_abRdy) { ctx.shadowColor = '#ff8800'; ctx.shadowBlur = 9; }
-            ctx.fillStyle = _abRdy ? 'rgba(18,10,4,0.88)' : 'rgba(8,5,2,0.92)';
-            ctx.strokeStyle = _abRdy ? '#ff8800' : '#442200';
-            ctx.lineWidth = 2;
-            ctx.beginPath(); ctx.arc(_abX, _abY, _abBR, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-            ctx.shadowBlur = 0;
-            ctx.font = 'bold 14px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-            ctx.fillStyle = _abRdy ? '#ffcc44' : '#553311';
-            ctx.fillText(_abIcons[_abi], _abX, _abY - 5);
-            ctx.font = 'bold 7px sans-serif';
-            ctx.fillStyle = _abRdy ? '#ffaa22' : '#442211';
-            ctx.fillText(_abLbls[_abi], _abX, _abY + 8);
-            if (!_abRdy) {
-              var _abFr = _abCD / _abMX;
-              ctx.fillStyle = 'rgba(0,0,0,' + (_abFr * 0.55) + ')';
-              ctx.beginPath(); ctx.arc(_abX, _abY, _abBR, 0, Math.PI*2); ctx.fill();
-              ctx.strokeStyle = '#ff8800'; ctx.lineWidth = 2;
-              ctx.beginPath();
-              ctx.arc(_abX, _abY, _abBR-2, -Math.PI*0.5, -Math.PI*0.5 + (1-_abFr)*Math.PI*2);
-              ctx.stroke();
-              ctx.fillStyle = '#ffaa44'; ctx.font = 'bold 10px sans-serif';
-              ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-              ctx.fillText(Math.ceil(_abCD)+'s', _abX, _abY);
-            }
-            ctx.restore();
-          }
-        }
 
         // Draw level completion transition text — centered, unmissable
         if (levelTransition) {
@@ -12189,15 +12385,6 @@
           var _tsx = GW / rect.width, _tsy = GH / rect.height;
           var _tgx = (touch.clientX - rect.left) * _tsx;
           var _tgy = (touch.clientY - rect.top) * _tsy;
-          // Check ability buttons first
-          var _abBYs2 = [GH*0.55, GH*0.68, GH*0.81];
-          for (var _abTi = 0; _abTi < 3; _abTi++) {
-            var _abDx = _tgx - 30, _abDy = _tgy - _abBYs2[_abTi];
-            if (Math.sqrt(_abDx*_abDx+_abDy*_abDy) <= 24) {
-              triggerAbility(_abTi);
-              return;
-            }
-          }
           // Normal drag — move player
           touchActive = true;
           touchStartClientX = touch.clientX;
@@ -12247,6 +12434,27 @@
         bindJoystick();
         bindFire();
         bindCanvasTouch();
+
+        // Wire HTML ability buttons
+        var _wrAbilityBtns = document.getElementById('wr-ability-btns');
+        if (_wrAbilityBtns) { _wrAbilityBtns.style.display = 'flex'; }
+        var _wrBtnIds = ['wr-btn-nuke','wr-btn-laser','wr-btn-bomb'];
+        for (var _wbi = 0; _wbi < 3; _wbi++) {
+          (function(_idx) {
+            var _btn = document.getElementById(_wrBtnIds[_idx]);
+            if (!_btn) return;
+            // Remove old listeners by cloning
+            var _newBtn = _btn.cloneNode(true);
+            _btn.parentNode.replaceChild(_newBtn, _btn);
+            function _handleAbility(ev) {
+              if (ev) { ev.preventDefault(); ev.stopPropagation(); }
+              triggerAbility(_idx);
+            }
+            _newBtn.addEventListener('touchstart', _handleAbility, { passive: false });
+            _newBtn.addEventListener('click', _handleAbility);
+          })(_wbi);
+        }
+
         window.addEventListener('keydown', onKeyDown);
         window.addEventListener('keyup', onKeyUp);
         window._wrResizeHandler = function() {
@@ -12262,6 +12470,8 @@
       window.stopWishRunnerGame = function() {
         _wrRunning = false;
         try { stopBgMusic(); } catch(e){}
+        var _wrAbBtns = document.getElementById('wr-ability-btns');
+        if (_wrAbBtns) _wrAbBtns.style.display = 'none';
         if (_wrRaf) cancelAnimationFrame(_wrRaf);
         _wrRaf = null;
         window.removeEventListener('keydown', onKeyDown);
