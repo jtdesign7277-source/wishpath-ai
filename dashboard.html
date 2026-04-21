@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-21-v335-enemies-only';
+    var APP_VERSION = '2026-04-21-v336-live-sparklines';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -1903,7 +1903,9 @@
       .home-market-left { width: 90px; flex-shrink: 0; }
       .home-market-sym { font-size: 14px; font-weight: 600; color: #fff; line-height: 1.25; }
       .home-market-name { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 85px; font-weight: 400; }
-      .home-market-spark { flex: 1; height: 28px; max-width: 120px; min-width: 50px; }
+      .home-market-spark { flex: 1; height: 28px; max-width: 120px; min-width: 50px; transition: opacity 0.3s ease; }
+      @keyframes sparkPulse { 0% { opacity: 0.6; } 100% { opacity: 1; } }
+      .home-market-spark.spark-fresh { animation: sparkPulse 0.4s ease-out; }
       .home-market-right { flex-shrink: 0; text-align: right; display: flex; flex-direction: row; align-items: center; gap: 8px; }
       .home-market-pct {
         font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; padding: 5px 10px; border-radius: 4px; display: inline-block; line-height: 1; min-width: 62px; text-align: center;
@@ -15374,7 +15376,7 @@
       var color = isUp ? '#22C55E' : '#EF4444';
       var hgId = 'hg' + Math.random().toString(36).substr(2,4);
       var fillPts = '0,' + h + ' ' + pts.join(' ') + ' ' + w + ',' + h;
-      return '<svg class="home-market-spark" viewBox="0 0 ' + w + ' ' + h + '" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+      return '<svg class="home-market-spark spark-fresh" viewBox="0 0 ' + w + ' ' + h + '" fill="none" xmlns="http://www.w3.org/2000/svg">' +
         '<defs><linearGradient id="' + hgId + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="' + color + '" stop-opacity="0.3"/><stop offset="100%" stop-color="' + color + '" stop-opacity="0"/></linearGradient></defs>' +
         '<polygon points="' + fillPts + '" fill="url(#' + hgId + ')"/>' +
         '<polyline points="' + pts.join(' ') + '" stroke="' + color + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>' +
@@ -15394,7 +15396,10 @@
         var chg = q.changePercent || 0;
         var isUp = chg >= 0;
         var chgStr = (isUp ? '+' : '') + chg.toFixed(2) + '%';
-        var spark = buildSparkSVG(q.bars, isUp);
+        // Append live price as latest data point so sparkline visibly ticks
+        var liveBars = q.bars && q.bars.length ? q.bars.slice() : [];
+        if (q.price && liveBars.length) liveBars.push(q.price);
+        var spark = buildSparkSVG(liveBars, isUp);
         var priceStr = q.price ? ('$' + formatNum(q.price)) : '--';
         return '<div class="home-market-card" onclick="hideMobileHome();openFMTab(\'fmMarkets\');">' +
           '<div class="home-market-left">' +
@@ -15409,10 +15414,12 @@
         '</div>';
       }).join('');
     }
+    var _homeSparkLastFull = 0; // timestamp of last full sparkline bars fetch
     function fetchHomeMarkets() {
       var _MQ = 'https://mszilrexlupzthauoaxb.supabase.co/functions/v1/market-quotes';
       var _SP = 'https://mszilrexlupzthauoaxb.supabase.co/functions/v1/sparkline';
       var allSymbols = _homeMarketsTickers.map(function(t) { return t.symbol; });
+      var needFullBars = (Date.now() - _homeSparkLastFull) > 300000; // refresh bars every 5 min
       fetch(_MQ + '?symbols=' + encodeURIComponent(allSymbols.join(',')) + '&bars=1')
         .then(function(r) { return r.json(); })
         .then(function(j) {
@@ -15420,18 +15427,28 @@
             var ordered = [];
             _homeMarketsTickers.forEach(function(t) {
               var match = j.data.find(function(r) { return r.symbol === t.symbol; });
-              if (match) ordered.push(match);
+              if (match) {
+                // Preserve existing bars if we have them and not doing full refresh
+                if (!needFullBars && _homeMarketsData) {
+                  var prev = _homeMarketsData.find(function(p) { return p.symbol === match.symbol; });
+                  if (prev && prev.bars && prev.bars.length) match.bars = prev.bars;
+                }
+                ordered.push(match);
+              }
             });
             _homeMarketsData = ordered;
-            // Render immediately with whatever bars we have, then enrich with real sparklines
             renderHomeMarkets(ordered);
-            var sparkFetches = ordered.map(function(q) {
-              return fetch(_SP + '?symbol=' + encodeURIComponent(q.symbol))
-                .then(function(r) { return r.json(); })
-                .then(function(s) { if (s.values && s.values.length) q.bars = s.values; })
-                .catch(function() {});
-            });
-            Promise.all(sparkFetches).then(function() { renderHomeMarkets(ordered); });
+            // Only fetch sparkline bars every 5 minutes, not every 15s
+            if (needFullBars) {
+              _homeSparkLastFull = Date.now();
+              var sparkFetches = ordered.map(function(q) {
+                return fetch(_SP + '?symbol=' + encodeURIComponent(q.symbol))
+                  .then(function(r) { return r.json(); })
+                  .then(function(s) { if (s.values && s.values.length) q.bars = s.values; })
+                  .catch(function() {});
+              });
+              Promise.all(sparkFetches).then(function() { renderHomeMarkets(ordered); });
+            }
           }
         })
         .catch(function(e) { console.error('[HomeMarkets] Fetch error:', e); });
@@ -20950,7 +20967,7 @@
     // Fetch home markets on page load so they're ready
     window.addEventListener('load', function() { setTimeout(fetchHomeMarkets, 800); });
     // Refresh home market prices every 60s
-    setInterval(function() { if (document.getElementById('mobileHome') && document.getElementById('mobileHome').classList.contains('active')) fetchHomeMarkets(); }, 60000);
+    setInterval(function() { if (document.getElementById('mobileHome') && document.getElementById('mobileHome').classList.contains('active')) fetchHomeMarkets(); }, 15000);
 
     // ════════════════════════════════
     // ── TRADINGVIEW WIDGETS
