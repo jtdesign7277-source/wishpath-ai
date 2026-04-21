@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-20-v327-sparklines-pause-btn';
+    var APP_VERSION = '2026-04-20-v328-visible-sparklines';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -15198,8 +15198,12 @@
         pts.push(x.toFixed(1) + ',' + y.toFixed(1));
       }
       var color = isUp ? '#22C55E' : '#EF4444';
+      var hgId = 'hg' + Math.random().toString(36).substr(2,4);
+      var fillPts = '0,' + h + ' ' + pts.join(' ') + ' ' + w + ',' + h;
       return '<svg class="home-market-spark" viewBox="0 0 ' + w + ' ' + h + '" fill="none" xmlns="http://www.w3.org/2000/svg">' +
-        '<polyline points="' + pts.join(' ') + '" stroke="' + color + '" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>' +
+        '<defs><linearGradient id="' + hgId + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="' + color + '" stop-opacity="0.3"/><stop offset="100%" stop-color="' + color + '" stop-opacity="0"/></linearGradient></defs>' +
+        '<polygon points="' + fillPts + '" fill="url(#' + hgId + ')"/>' +
+        '<polyline points="' + pts.join(' ') + '" stroke="' + color + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>' +
         '</svg>';
     }
     function renderHomeMarkets(data) {
@@ -17543,14 +17547,21 @@
         console.error('Markets fetch error:', e);
       }
 
-      // Fetch sparkline bars from Twelve Data via sparkline endpoint
+      // Fetch sparkline bars — Alpaca hourly bars first (reliable), then Twelve Data 15min (richer)
+      try {
+        var _mqUrl = 'https://mszilrexlupzthauoaxb.supabase.co/functions/v1/market-quotes';
+        var barsRes = await fetch(_mqUrl + '?symbols=' + encodeURIComponent(allSymbols.join(',')) + '&bars=1');
+        var barsJson = await barsRes.json();
+        if (barsJson.data) barsJson.data.forEach(function(d) { if (d.bars && d.bars.length) _sparkBarsCache[d.symbol] = d.bars; });
+      } catch(e) { console.warn('Alpaca bars fetch error:', e); }
+      // Enhance with Twelve Data 15min sparklines (higher res, but may be empty on weekends)
       try {
         var _spUrl = 'https://mszilrexlupzthauoaxb.supabase.co/functions/v1/sparkline';
         var _spFetches = allSymbols.map(async function(sym) {
           try {
             var r = await fetch(_spUrl + '?symbol=' + encodeURIComponent(sym));
             var s = await r.json();
-            if (s.values && s.values.length) _sparkBarsCache[sym] = s.values;
+            if (s.values && s.values.length > 5) _sparkBarsCache[sym] = s.values;
           } catch(e) {}
         });
         await Promise.all(_spFetches);
@@ -17587,8 +17598,13 @@
         pts.push(x.toFixed(1) + ',' + y.toFixed(1));
       }
       var clr = isUp ? '#22C55E' : '#EF4444';
+      var fillClr = isUp ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)';
+      var gradId = 'sg' + Math.random().toString(36).substr(2,4);
+      var fillPts = '0,' + h + ' ' + pts.join(' ') + ' ' + w + ',' + h;
       return '<div class="stock-spark-wrap"><svg viewBox="0 0 ' + w + ' ' + h + '" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;">' +
-        '<polyline points="' + pts.join(' ') + '" stroke="' + clr + '" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></div>';
+        '<defs><linearGradient id="' + gradId + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="' + clr + '" stop-opacity="0.3"/><stop offset="100%" stop-color="' + clr + '" stop-opacity="0"/></linearGradient></defs>' +
+        '<polygon points="' + fillPts + '" fill="url(#' + gradId + ')"/>' +
+        '<polyline points="' + pts.join(' ') + '" stroke="' + clr + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></div>';
     }
     function _buildRHRow(sym, displaySym, name, chartSym, q) {
       var status = alpacaWS.getSymbolStatus(sym);
