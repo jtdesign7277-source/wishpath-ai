@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-21-v332-military-vehicles';
+    var APP_VERSION = '2026-04-21-v333-game-exit-fix';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -6070,10 +6070,10 @@
           <!-- Pause Overlay -->
           <div id="wr-pause-overlay" style="position:absolute;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:19;pointer-events:none;"><div style="color:#fff;font-size:36px;font-weight:bold;letter-spacing:4px;text-shadow:0 0 20px #fff;">PAUSED</div></div>
           <!-- Overlay icons -->
-          <div class="wr-overlay-icon wr-back" onclick="showView('home')">
+          <div class="wr-overlay-icon wr-back" onclick="if(window.innerWidth<=768){showMobileHome();}else{showView('home');}">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><polyline points="3 6 3 6 21 6"/><polyline points="3 18 3 18 21 18"/></svg>
           </div>
-          <div class="wr-overlay-icon wr-search" onclick="showView('home')">
+          <div class="wr-overlay-icon wr-search" onclick="if(window.innerWidth<=768){showMobileHome();}else{showView('home');}">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           </div>
           <div class="game-controls">
@@ -6106,7 +6106,7 @@
               <div id="wp-wr-leaderboard-you" style="margin-top:8px;padding:8px 12px;border-radius:10px;background:rgba(74,222,128,0.12);border:1px solid rgba(74,222,128,0.25);font-size:12px;font-weight:600;color:#4ade80;text-align:center;display:none;"></div>
             </div>
             <button type="button" class="wish-runner-restart-btn" onclick="restartWishRunnerGame()">PLAY AGAIN</button>
-            <button type="button" style="margin-top:8px;padding:10px 40px;border-radius:12px;font-weight:700;font-size:13px;border:2px solid rgba(255,255,255,0.2);cursor:pointer;color:rgba(255,255,255,0.7);background:transparent;text-transform:uppercase;letter-spacing:0.1em;" onclick="document.getElementById('wp-wish-runner-gameover').hidden=true;showView('home');">END GAME</button>
+            <button type="button" style="margin-top:8px;padding:10px 40px;border-radius:12px;font-weight:700;font-size:13px;border:2px solid rgba(255,255,255,0.2);cursor:pointer;color:rgba(255,255,255,0.7);background:transparent;text-transform:uppercase;letter-spacing:0.1em;" onclick="document.getElementById('wp-wish-runner-gameover').hidden=true;if(window.innerWidth<=768){showMobileHome();}else{showView('home');}">END GAME</button>
           </div>
         </div>
       </div>
