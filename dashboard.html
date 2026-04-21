@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-21-v334-visual-upgrade';
+    var APP_VERSION = '2026-04-21-v335-enemies-only';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -9547,23 +9547,8 @@
       })();
 
       function spawnBackgroundPlanets() {
+        // Removed — no static decorative planets; only active enemy aircraft.
         backgroundPlanets = [];
-        for (var i = 0; i < 5; i++) {
-          var bpSize = 60 + Math.random() * 120;
-          var bpColorIdx = Math.floor(Math.random() * PLANET_COLORS.length);
-          var hasRing = Math.random() > 0.5;
-          backgroundPlanets.push({
-            x: Math.random() * GW,
-            y: (Math.random() * GH * 1.5) - GH * 0.5,
-            size: bpSize,
-            colorIdx: bpColorIdx,
-            rotation: Math.random() * Math.PI * 2,
-            rotSpeed: (Math.random() - 0.5) * 0.8,
-            speed: 20 + Math.random() * 40,
-            hasRing: hasRing,
-            wobble: Math.random() * Math.PI * 2
-          });
-        }
       }
 
       function updateBackgroundPlanets(dt) {
@@ -9695,58 +9680,28 @@
 
       function spawnTarget() {
         var margin = 34;
-        var typeRoll = Math.random();
-        var type, sz, hp, isEnemyShip = false;
+        var type, sz, hp, isEnemyShip = true;
 
-        // Level-aware spawning
+        // All levels: ONLY enemy aircraft — no asteroids, no debris, no comets.
+        // Level 1 = easy fighters, Level 2 = fighters, Level 3+ = mix of fighters + bombers.
         if (currentLevel === 1) {
-          // Level 1: Only asteroids, debris, comets (no enemies)
-          if (typeRoll < 0.4) {
-            type = 'asteroid';
-            sz = 65 + Math.random() * 70;
-            hp = Math.floor(Math.random() * 7) + 5;
-          } else if (typeRoll < 0.7) {
-            type = 'debris';
-            sz = 45 + Math.random() * 40;
-            hp = Math.floor(Math.random() * 4) + 3;
-          } else {
-            type = 'comet';
-            sz = 55 + Math.random() * 40;
-            hp = Math.floor(Math.random() * 3) + 2;
-          }
+          type = 'enemy-fighter';
+          sz = 64 + Math.random() * 14;
+          hp = 1 + Math.floor(Math.random() * 2);
         } else if (currentLevel === 2) {
-          // Level 2: Enemy fighters only (no asteroids)
-          isEnemyShip = true;
           type = 'enemy-fighter';
           sz = 68 + Math.random() * 14;
           hp = 2 + Math.floor(Math.random() * 2);
         } else {
-          // Level 3+: Mix of asteroids and enemies, increasing difficulty
-          var mixRoll = Math.random();
-          if (mixRoll < 0.5) {
-            // Enemy fighters
-            isEnemyShip = true;
-            var shipType = Math.random();
-            if (shipType < 0.7) {
-              type = 'enemy-fighter';
-              sz = 68 + Math.random() * 14;
-              hp = 2 + Math.floor(Math.random() * 2);
-            } else {
-              type = 'enemy-bomber';
-              sz = 88 + Math.random() * 16;
-              hp = 4 + Math.floor(Math.random() * 3);
-            }
+          var shipType = Math.random();
+          if (shipType < 0.65) {
+            type = 'enemy-fighter';
+            sz = 68 + Math.random() * 14;
+            hp = 2 + Math.floor(Math.random() * 2);
           } else {
-            // Asteroids/debris
-            if (typeRoll < 0.6) {
-              type = 'asteroid';
-              sz = 65 + Math.random() * 70;
-              hp = Math.floor(Math.random() * 7) + 5;
-            } else {
-              type = 'debris';
-              sz = 45 + Math.random() * 40;
-              hp = Math.floor(Math.random() * 4) + 3;
-            }
+            type = 'enemy-bomber';
+            sz = 88 + Math.random() * 16;
+            hp = 4 + Math.floor(Math.random() * 3);
           }
         }
 
@@ -11807,14 +11762,10 @@
         // Draw background planets (far background, dim)
         drawBackgroundPlanets();
 
-        // Draw targets as space objects
+        // Draw targets — enemy aircraft only, no static space debris/planets/asteroids/comets.
         for (var ti = 0; ti < targets.length; ti++) {
           var tg = targets[ti];
           if (tg.isEnemyShip) drawEnemyShip(tg);
-          else if (tg.type === 'planet') drawPlanet(tg);
-          else if (tg.type === 'asteroid') drawAsteroid(tg);
-          else if (tg.type === 'comet') drawComet(tg);
-          else drawDebris(tg);
         }
 
         // Draw ship (hide when dead)
