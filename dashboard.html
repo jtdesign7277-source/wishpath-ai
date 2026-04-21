@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-21-v331-enemy-spaceship-redesign';
+    var APP_VERSION = '2026-04-21-v332-military-vehicles';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -9718,7 +9718,7 @@
           // Level 2: Enemy fighters only (no asteroids)
           isEnemyShip = true;
           type = 'enemy-fighter';
-          sz = 28 + Math.random() * 12;
+          sz = 42 + Math.random() * 10;
           hp = 2 + Math.floor(Math.random() * 2);
         } else {
           // Level 3+: Mix of asteroids and enemies, increasing difficulty
@@ -9729,11 +9729,11 @@
             var shipType = Math.random();
             if (shipType < 0.7) {
               type = 'enemy-fighter';
-              sz = 28 + Math.random() * 12;
+              sz = 42 + Math.random() * 10;
               hp = 2 + Math.floor(Math.random() * 2);
             } else {
               type = 'enemy-bomber';
-              sz = 38 + Math.random() * 14;
+              sz = 52 + Math.random() * 12;
               hp = 4 + Math.floor(Math.random() * 3);
             }
           } else {
@@ -9785,10 +9785,10 @@
         var fType = formationType || ['grid', 'v-shape', 'diamond', 'line'][Math.floor(Math.random() * 4)];
         var positions = [];
         var spacing = 42;
-        var sz = 30;
+        var sz = 42;
         var hp = 2 + Math.floor(currentLevel * 0.5);
         var eType = Math.random() > 0.4 ? 'enemy-fighter' : 'enemy-bomber';
-        if (eType === 'enemy-bomber') { sz = 38; hp += 2; }
+        if (eType === 'enemy-bomber') { sz = 52; hp += 2; }
 
         if (fType === 'grid') {
           // 3-4 rows x 4-6 columns
@@ -10858,127 +10858,285 @@
         var isBomber  = tg.type === 'enemy-bomber';
         ctx.save();
         ctx.translate(tg.x, tg.y);
-        // No rotation — spaceships fly nose-down, not tumbling
 
-        // Engine exhaust trails — two nacelle plumes, always upward (behind ship)
-        var flicker = Math.sin(Date.now() * 0.009 + tg.x) * 0.18 + 0.82;
-        var trailLen = r * (1.5 + flicker * 0.5);
-        for (var ns = -1; ns <= 1; ns += 2) {
-          var nX = ns * r * 0.33;
-          var nY = -r * 0.44;
-          var nGrad = ctx.createLinearGradient(nX, nY, nX, nY - trailLen);
-          nGrad.addColorStop(0,   isBomber ? 'rgba(200,80,255,0.9)'  : 'rgba(255,130,0,0.9)');
-          nGrad.addColorStop(0.4, isBomber ? 'rgba(140,40,200,0.45)' : 'rgba(255,65,0,0.45)');
-          nGrad.addColorStop(1,   'rgba(40,10,0,0)');
-          ctx.fillStyle = nGrad;
+        if (isFighter) {
+          // ======= MILITARY FIGHTER JET =======
+          // Nose points DOWN toward player, tail UP. Top-down silhouette.
+          var jDark = '#121a08';
+          var jMid  = '#2d4a18';
+          var jHi   = '#4a7228';
+          var jEdge = '#6a9a3a';
+
+          // Engine exhaust trail behind tail
+          var fk = Math.sin(Date.now() * 0.011 + tg.x) * 0.2 + 0.8;
+          var exG = ctx.createLinearGradient(0, -r*0.88, 0, -r*0.88 - r*fk*1.4);
+          exG.addColorStop(0,   'rgba(255,160,20,0.9)');
+          exG.addColorStop(0.4, 'rgba(255,80,0,0.5)');
+          exG.addColorStop(1,   'rgba(255,40,0,0)');
+          ctx.fillStyle = exG;
           ctx.beginPath();
-          ctx.moveTo(nX - r * 0.1, nY);
-          ctx.lineTo(nX + r * 0.1, nY);
-          ctx.lineTo(nX + r * 0.035, nY - trailLen);
-          ctx.lineTo(nX - r * 0.035, nY - trailLen);
+          ctx.moveTo(-r*0.08, -r*0.82);
+          ctx.lineTo( r*0.08, -r*0.82);
+          ctx.lineTo( r*0.02, -r*0.88 - r*fk*1.4);
+          ctx.lineTo(-r*0.02, -r*0.88 - r*fk*1.4);
           ctx.fill();
-        }
 
-        // Color palette: fighter=crimson, bomber=dark purple/maroon
-        var hullDark = isBomber ? '#330022' : '#220000';
-        var hullMid  = isBomber ? '#7700aa' : '#bb1100';
-        var hullHi   = isBomber ? '#cc44ff' : '#ff3322';
-        var engClr   = isBomber ? '#cc55ff' : '#ff5500';
+          // Delta wings — large swept triangles from mid-fuselage to far tips
+          ctx.strokeStyle = jEdge;
+          ctx.lineWidth = 1;
+          ctx.shadowColor = '#88ff44';
+          ctx.shadowBlur = 5;
+          for (var ws = -1; ws <= 1; ws += 2) {
+            ctx.fillStyle = jMid;
+            ctx.beginPath();
+            ctx.moveTo(ws*r*0.15,  r*0.2);    // leading edge root (near nose)
+            ctx.lineTo(ws*r*0.92, -r*0.35);   // wingtip
+            ctx.lineTo(ws*r*0.55, -r*0.82);   // trailing tip
+            ctx.lineTo(ws*r*0.15, -r*0.55);   // trailing root
+            ctx.closePath();
+            ctx.fill(); ctx.stroke();
+            // Wing panel highlight
+            ctx.fillStyle = jHi;
+            ctx.beginPath();
+            ctx.moveTo(ws*r*0.18,  r*0.1);
+            ctx.lineTo(ws*r*0.7,  -r*0.3);
+            ctx.lineTo(ws*r*0.45, -r*0.6);
+            ctx.lineTo(ws*r*0.18, -r*0.45);
+            ctx.closePath();
+            ctx.fill();
+          }
 
-        ctx.strokeStyle = hullHi;
-        ctx.lineWidth = 1;
-
-        // Wing strakes — forward-swept, angling out from mid-hull
-        ctx.shadowColor = hullHi;
-        ctx.shadowBlur = 8;
-        ctx.fillStyle = hullMid;
-        for (var ws = -1; ws <= 1; ws += 2) {
+          // Fuselage — narrow pointed dart body
+          ctx.fillStyle = jMid;
+          ctx.shadowBlur = 8;
           ctx.beginPath();
-          ctx.moveTo(ws * r * 0.26,  r * 0.12);   // inner front
-          ctx.lineTo(ws * r * 0.9,  -r * 0.22);   // outer wing tip
-          ctx.lineTo(ws * r * 0.82, -r * 0.58);   // outer wing back
-          ctx.lineTo(ws * r * 0.44, -r * 0.05);   // inner wing back
+          ctx.moveTo(0,        r*0.98);   // nose tip (toward player)
+          ctx.lineTo(-r*0.12,  r*0.6);
+          ctx.lineTo(-r*0.2,   r*0.15);
+          ctx.lineTo(-r*0.18, -r*0.55);
+          ctx.lineTo(-r*0.1,  -r*0.92);   // tail left
+          ctx.lineTo( r*0.1,  -r*0.92);   // tail right
+          ctx.lineTo( r*0.18, -r*0.55);
+          ctx.lineTo( r*0.2,   r*0.15);
+          ctx.lineTo( r*0.12,  r*0.6);
+          ctx.closePath();
+          ctx.fill(); ctx.stroke();
+
+          // Fuselage center stripe (darker panel)
+          ctx.fillStyle = jDark;
+          ctx.shadowBlur = 0;
+          ctx.beginPath();
+          ctx.moveTo(0,        r*0.9);
+          ctx.lineTo(-r*0.08,  r*0.55);
+          ctx.lineTo(-r*0.12,  r*0.1);
+          ctx.lineTo(-r*0.1,  -r*0.88);
+          ctx.lineTo( r*0.1,  -r*0.88);
+          ctx.lineTo( r*0.12,  r*0.1);
+          ctx.lineTo( r*0.08,  r*0.55);
           ctx.closePath();
           ctx.fill();
-          ctx.stroke();
-        }
 
-        // Main hull — angular wedge, pointed nose at +y (toward player below)
-        ctx.fillStyle = hullMid;
-        ctx.shadowBlur = 10;
-        ctx.beginPath();
-        ctx.moveTo( 0,          r * 0.9);   // nose tip
-        ctx.lineTo(-r * 0.2,   r * 0.42);   // nose shoulder left
-        ctx.lineTo(-r * 0.44,  r * 0.02);   // waist left
-        ctx.lineTo(-r * 0.38, -r * 0.56);   // top shoulder left
-        ctx.lineTo( r * 0.38, -r * 0.56);   // top shoulder right
-        ctx.lineTo( r * 0.44,  r * 0.02);   // waist right
-        ctx.lineTo( r * 0.2,   r * 0.42);   // nose shoulder right
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-
-        // Dark hull belly panel
-        ctx.fillStyle = hullDark;
-        ctx.shadowBlur = 0;
-        ctx.beginPath();
-        ctx.moveTo( 0,          r * 0.82);
-        ctx.lineTo(-r * 0.14,  r * 0.38);
-        ctx.lineTo(-r * 0.28,  r * 0.0);
-        ctx.lineTo(-r * 0.22, -r * 0.5);
-        ctx.lineTo( r * 0.22, -r * 0.5);
-        ctx.lineTo( r * 0.28,  r * 0.0);
-        ctx.lineTo( r * 0.14,  r * 0.38);
-        ctx.closePath();
-        ctx.fill();
-
-        // Center ridge highlight strip
-        ctx.fillStyle = hullHi;
-        ctx.shadowColor = hullHi;
-        ctx.shadowBlur = 5;
-        ctx.beginPath();
-        ctx.moveTo( 0,          r * 0.8);
-        ctx.lineTo(-r * 0.1,   r * 0.34);
-        ctx.lineTo(-r * 0.11, -r * 0.48);
-        ctx.lineTo( r * 0.11, -r * 0.48);
-        ctx.lineTo( r * 0.1,   r * 0.34);
-        ctx.closePath();
-        ctx.fill();
-
-        // Nose weapon tip — hot red glow aimed at player
-        ctx.shadowColor = '#ff0000';
-        ctx.shadowBlur = 12;
-        ctx.fillStyle = '#ff1100';
-        ctx.beginPath();
-        ctx.arc(0, r * 0.84, r * 0.07, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Engine nacelles with glow (at back/top of ship)
-        for (var en = -1; en <= 1; en += 2) {
-          var eX = en * r * 0.33, eY = -r * 0.44;
+          // Cockpit canopy — glassy teardrop behind nose
+          ctx.fillStyle = '#7bbfee';
+          ctx.globalAlpha = 0.9;
+          ctx.shadowColor = '#aaddff';
+          ctx.shadowBlur = 6;
+          ctx.beginPath();
+          ctx.ellipse(0, r*0.48, r*0.08, r*0.17, 0, 0, Math.PI*2);
+          ctx.fill();
+          ctx.globalAlpha = 1;
           ctx.shadowBlur = 0;
-          ctx.fillStyle = '#0a0000';
-          ctx.beginPath();
-          ctx.ellipse(eX, eY, r * 0.13, r * 0.16, 0, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.shadowColor = engClr;
+
+          // Tail fins — small delta stabs at top
+          ctx.fillStyle = jDark;
+          ctx.strokeStyle = jEdge;
+          for (var tf = -1; tf <= 1; tf += 2) {
+            ctx.beginPath();
+            ctx.moveTo(tf*r*0.1,  -r*0.6);
+            ctx.lineTo(tf*r*0.3,  -r*0.76);
+            ctx.lineTo(tf*r*0.22, -r*0.94);
+            ctx.lineTo(tf*r*0.1,  -r*0.9);
+            ctx.closePath();
+            ctx.fill(); ctx.stroke();
+          }
+
+          // Engine glow at tail
+          ctx.shadowColor = '#ff7700';
           ctx.shadowBlur = 16;
-          var eGrad = ctx.createRadialGradient(eX, eY, 0, eX, eY, r * 0.12);
-          eGrad.addColorStop(0,   '#ffffff');
-          eGrad.addColorStop(0.3, engClr);
-          eGrad.addColorStop(1,   'rgba(200,80,0,0)');
-          ctx.fillStyle = eGrad;
+          var eG = ctx.createRadialGradient(0, -r*0.86, 0, 0, -r*0.86, r*0.13);
+          eG.addColorStop(0,   '#ffffff');
+          eG.addColorStop(0.35,'#ff9900');
+          eG.addColorStop(1,   'rgba(255,80,0,0)');
+          ctx.fillStyle = eG;
           ctx.beginPath();
-          ctx.ellipse(eX, eY, r * 0.09, r * 0.09, 0, 0, Math.PI * 2);
+          ctx.ellipse(0, -r*0.86, r*0.1, r*0.1, 0, 0, Math.PI*2);
           ctx.fill();
+          ctx.shadowBlur = 0;
+
+          // Gun barrel tip at nose — red hot
+          ctx.shadowColor = '#ff2200';
+          ctx.shadowBlur = 10;
+          ctx.fillStyle = '#ff1100';
+          ctx.beginPath();
+          ctx.arc(0, r*0.94, r*0.055, 0, Math.PI*2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+
+        } else {
+          // ======= ATTACK HELICOPTER =======
+          // Nose points DOWN toward player, tail boom UP, rotor on top.
+          var hDark = '#0d0d05';
+          var hMid  = '#252510';
+          var hHi   = '#3e3e1a';
+          var hEdge = '#5a5a28';
+
+          // Spinning main rotor above helicopter body
+          var rotA = Date.now() * 0.007;
+          ctx.shadowColor = '#aaaaaa';
+          ctx.shadowBlur = 3;
+          // Rotor hub
+          ctx.fillStyle = '#1a1a08';
+          ctx.beginPath();
+          ctx.arc(0, -r*0.52, r*0.1, 0, Math.PI*2);
+          ctx.fill();
+          // Two rotor blades
+          ctx.strokeStyle = '#4a4a22';
+          ctx.lineWidth = r*0.09;
+          ctx.lineCap = 'round';
+          for (var rb = 0; rb < 2; rb++) {
+            var ba = rotA + rb * Math.PI;
+            var bx1 = Math.cos(ba)*r*0.12, by1 = -r*0.52 + Math.sin(ba)*r*0.12;
+            var bx2 = Math.cos(ba)*r*0.88, by2 = -r*0.52 + Math.sin(ba)*r*0.88;
+            ctx.beginPath();
+            ctx.moveTo(bx1, by1);
+            ctx.lineTo(bx2, by2);
+            ctx.stroke();
+          }
+          ctx.lineCap = 'butt';
+          ctx.lineWidth = 1;
+          ctx.shadowBlur = 0;
+
+          // Tail boom — narrow rod from body top upward
+          ctx.fillStyle = hMid;
+          ctx.strokeStyle = hEdge;
+          ctx.beginPath();
+          ctx.moveTo(-r*0.09, -r*0.28);
+          ctx.lineTo( r*0.09, -r*0.28);
+          ctx.lineTo( r*0.06, -r*0.5);
+          ctx.lineTo(-r*0.06, -r*0.5);
+          ctx.closePath();
+          ctx.fill(); ctx.stroke();
+
+          // Tail rotor — small propeller at tail tip
+          var trA = Date.now() * 0.012;
+          ctx.strokeStyle = '#333315';
+          ctx.lineWidth = r*0.06;
+          ctx.lineCap = 'round';
+          for (var tr = 0; tr < 2; tr++) {
+            var tra = trA + tr * Math.PI;
+            ctx.beginPath();
+            ctx.moveTo(Math.cos(tra)*r*0.04, -r*0.52 + Math.sin(tra)*r*0.04);
+            ctx.lineTo(Math.cos(tra)*r*0.22, -r*0.52 + Math.sin(tra)*r*0.22);
+            ctx.stroke();
+          }
+          ctx.lineCap = 'butt';
+          ctx.lineWidth = 1;
+
+          // Main fuselage — boxy armored body
+          ctx.fillStyle = hMid;
+          ctx.strokeStyle = hEdge;
+          ctx.shadowColor = '#aaff44';
+          ctx.shadowBlur = 6;
+          ctx.beginPath();
+          ctx.moveTo(-r*0.42,  r*0.55);   // bottom-left
+          ctx.lineTo( r*0.42,  r*0.55);   // bottom-right
+          ctx.lineTo( r*0.46,  r*0.1);    // right side
+          ctx.lineTo( r*0.38, -r*0.25);   // upper right
+          ctx.lineTo(-r*0.38, -r*0.25);   // upper left
+          ctx.lineTo(-r*0.46,  r*0.1);    // left side
+          ctx.closePath();
+          ctx.fill(); ctx.stroke();
+
+          // Armored front panel (darker rectangle)
+          ctx.fillStyle = hDark;
+          ctx.shadowBlur = 0;
+          ctx.beginPath();
+          ctx.moveTo(-r*0.3, r*0.55);
+          ctx.lineTo( r*0.3, r*0.55);
+          ctx.lineTo( r*0.28, r*0.15);
+          ctx.lineTo(-r*0.28, r*0.15);
+          ctx.closePath();
+          ctx.fill();
+
+          // Nose — rounded chin pointing toward player
+          ctx.fillStyle = hDark;
+          ctx.beginPath();
+          ctx.moveTo(-r*0.32, r*0.55);
+          ctx.quadraticCurveTo(-r*0.3, r*0.9, 0, r*0.92);
+          ctx.quadraticCurveTo( r*0.3, r*0.9, r*0.32, r*0.55);
+          ctx.closePath();
+          ctx.fill();
+
+          // Cockpit windows — two glassy eyes
+          ctx.globalAlpha = 0.85;
+          ctx.fillStyle = '#55bbdd';
+          ctx.shadowColor = '#88ddff';
+          ctx.shadowBlur = 5;
+          ctx.beginPath();
+          ctx.ellipse(-r*0.14, r*0.48, r*0.1, r*0.07, -0.2, 0, Math.PI*2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.ellipse( r*0.14, r*0.48, r*0.1, r*0.07,  0.2, 0, Math.PI*2);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+          ctx.shadowBlur = 0;
+
+          // Side weapon pylons + missile pods
+          ctx.strokeStyle = hEdge;
+          for (var wp = -1; wp <= 1; wp += 2) {
+            // Pylon arm
+            ctx.fillStyle = hDark;
+            ctx.beginPath();
+            var px = wp > 0 ? r*0.42 : -r*0.62;
+            ctx.fillRect(px, r*0.1, r*0.2, r*0.1);
+            // Missile pod
+            ctx.fillStyle = '#1e1e0a';
+            var mx = wp > 0 ? r*0.6 : -r*0.82;
+            ctx.beginPath();
+            ctx.moveTo(mx,         r*0.06);
+            ctx.lineTo(mx+wp*r*0.22, r*0.08);
+            ctx.lineTo(mx+wp*r*0.22, r*0.22);
+            ctx.lineTo(mx,         r*0.24);
+            ctx.closePath();
+            ctx.fill(); ctx.stroke();
+            // Missile tip glow
+            ctx.shadowColor = '#ff4400';
+            ctx.shadowBlur = 6;
+            ctx.fillStyle = '#ff2200';
+            ctx.beginPath();
+            ctx.arc(mx + wp*r*0.22, r*0.15, r*0.04, 0, Math.PI*2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+          }
+
+          // Exhaust heat shimmer near tail
+          var hfk = Math.sin(Date.now()*0.009 + tg.x)*0.15 + 0.85;
+          ctx.shadowColor = '#ff6600';
+          ctx.shadowBlur = 8;
+          var hxG = ctx.createRadialGradient(0, -r*0.15, 0, 0, -r*0.15, r*0.25*hfk);
+          hxG.addColorStop(0, 'rgba(255,130,0,0.5)');
+          hxG.addColorStop(1, 'rgba(255,60,0,0)');
+          ctx.fillStyle = hxG;
+          ctx.beginPath();
+          ctx.arc(0, -r*0.15, r*0.25*hfk, 0, Math.PI*2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
         }
 
-        ctx.shadowBlur = 0;
-
-        // HP bar — always upright above ship
+        // HP bar
         if (tg.maxHealth > 1) {
-          var barW = r * 1.5, barH = 2;
-          var barX = -barW * 0.5, barY = -r - 5;
+          var barW = r * 1.6, barH = 2;
+          var barX = -barW * 0.5, barY = -r - 6;
           ctx.fillStyle = 'rgba(0,0,0,0.6)';
           ctx.fillRect(barX, barY, barW, barH);
           var hpFrac = Math.max(0, tg.health / tg.maxHealth);
