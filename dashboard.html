@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-21-v329-enemy-bullet-visibility';
+    var APP_VERSION = '2026-04-21-v330-enemy-bullets-straight-down';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -10069,15 +10069,13 @@
             boss.fireTimer -= dt;
             if (boss.fireTimer <= 0) {
               boss.fireTimer = 0.6 - Math.min(0.3, currentLevel * 0.03);
-              var bAimX = player.x - boss.x, bAimY = player.y - boss.y;
-              var bDist = Math.sqrt(bAimX * bAimX + bAimY * bAimY) || 1;
               var bSpd = 220;
-              enemyBullets.push({ x: boss.x, y: boss.y + boss.size * 0.4, vx: (bAimX / bDist) * bSpd, vy: (bAimY / bDist) * bSpd, life: 3, color: '#ff4400', size: 7 });
-              // Spread shots at higher levels
+              enemyBullets.push({ x: boss.x, y: boss.y + boss.size * 0.4, vx: 0, vy: bSpd, life: 3, color: '#ff4400', size: 7 });
+              // Spread shots at higher levels — fan around straight down
               if (currentLevel >= 2) {
                 var spreadAngle = 0.3;
                 for (var ss = -1; ss <= 1; ss += 2) {
-                  var sa = Math.atan2(bAimY, bAimX) + ss * spreadAngle;
+                  var sa = Math.PI * 0.5 + ss * spreadAngle;
                   enemyBullets.push({ x: boss.x + ss * 20, y: boss.y + boss.size * 0.35, vx: Math.cos(sa) * bSpd * 0.9, vy: Math.sin(sa) * bSpd * 0.9, life: 2.5, color: '#ff8800', size: 6 });
                 }
               }
@@ -10612,20 +10610,14 @@
           if (!activeBoss) {
             t.fireCounter -= dt;
             if (t.fireCounter <= 0) {
-              var toBulletX = player.x - t.x;
-              var toBulletY = player.y - t.y;
-              var bulletDist = Math.sqrt(toBulletX * toBulletX + toBulletY * toBulletY);
-              if (bulletDist > 0) {
-                var bSpd = t.isEnemyShip ? 220 : 160;
-                var bClr = t.isEnemyShip ? '#00ff88' : '#ff4400';
-                var bSz  = t.isEnemyShip ? 6 : 5;
-                enemyBullets.push({
-                  x: t.x, y: t.y + t.size * 0.4,
-                  vx: (toBulletX / bulletDist) * bSpd,
-                  vy: (toBulletY / bulletDist) * bSpd,
-                  life: 3.0, color: bClr, size: bSz
-                });
-              }
+              var bSpd = t.isEnemyShip ? 220 : 160;
+              var bClr = t.isEnemyShip ? '#00ff88' : '#ff4400';
+              var bSz  = t.isEnemyShip ? 6 : 5;
+              enemyBullets.push({
+                x: t.x, y: t.y + t.size * 0.4,
+                vx: 0, vy: bSpd,
+                life: 3.0, color: bClr, size: bSz
+              });
               t.fireCounter = 2.0 + Math.random() * 1.5;
             }
           }
