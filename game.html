@@ -58,9 +58,19 @@ function easeOutCubic(t){return 1-Math.pow(1-t,3)}
 function arcadeFont(sz){return `${sz}px 'Press Start 2P', monospace`}
 function hexToRgba(hex,a){const c=hex.replace('#','');return `rgba(${parseInt(c.slice(0,2),16)},${parseInt(c.slice(2,4),16)},${parseInt(c.slice(4,6),16)},${a})`}
 
-// ─── AUDIO ENGINE (Web Audio API — laser SFX) ─────────────────
-let audioCtx=null;
-function getAudioCtx(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();return audioCtx;}
+// ─── AUDIO ENGINE (Web Audio API — SFX + procedural music) ────
+// SFX bus (guns/explosions) + Music bus (background) routed through master.
+// Gun SFX gain is intentionally low so the music stays out front.
+let audioCtx=null,masterGain=null,sfxGain=null,musicBus=null;
+function getAudioCtx(){
+  if(!audioCtx){
+    audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+    masterGain=audioCtx.createGain();masterGain.gain.value=1.0;masterGain.connect(audioCtx.destination);
+    sfxGain=audioCtx.createGain();sfxGain.gain.value=0.35;sfxGain.connect(masterGain); // duck SFX
+    musicBus=audioCtx.createGain();musicBus.gain.value=0.85;musicBus.connect(masterGain); // push music
+  }
+  return audioCtx;
+}
 function playLaserSound(pitch){
   try{
     const ac=getAudioCtx();if(ac.state==='suspended')ac.resume();
@@ -69,9 +79,9 @@ function playLaserSound(pitch){
     osc.frequency.exponentialRampToValueAtTime(200+pitch*80,ac.currentTime+0.08);
     filter.type='lowpass';filter.frequency.setValueAtTime(3000,ac.currentTime);
     filter.frequency.exponentialRampToValueAtTime(400,ac.currentTime+0.1);
-    gain.gain.setValueAtTime(0.08,ac.currentTime);
+    gain.gain.setValueAtTime(0.06,ac.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.1);
-    osc.connect(filter);filter.connect(gain);gain.connect(ac.destination);
+    osc.connect(filter);filter.connect(gain);gain.connect(sfxGain);
     osc.start(ac.currentTime);osc.stop(ac.currentTime+0.12);
   }catch(e){}
 }
@@ -81,9 +91,9 @@ function playHitSound(){
     const osc=ac.createOscillator();const gain=ac.createGain();
     osc.type='square';osc.frequency.setValueAtTime(150,ac.currentTime);
     osc.frequency.exponentialRampToValueAtTime(40,ac.currentTime+0.15);
-    gain.gain.setValueAtTime(0.1,ac.currentTime);
+    gain.gain.setValueAtTime(0.08,ac.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.15);
-    osc.connect(gain);gain.connect(ac.destination);
+    osc.connect(gain);gain.connect(sfxGain);
     osc.start(ac.currentTime);osc.stop(ac.currentTime+0.18);
   }catch(e){}
 }
@@ -95,9 +105,9 @@ function playExplosionSound(){
     const osc=ac.createOscillator();const og=ac.createGain();
     osc.type='sine';osc.frequency.setValueAtTime(120,t);
     osc.frequency.exponentialRampToValueAtTime(30,t+0.4);
-    og.gain.setValueAtTime(0.25,t);og.gain.linearRampToValueAtTime(0.3,t+0.02);
+    og.gain.setValueAtTime(0.22,t);og.gain.linearRampToValueAtTime(0.26,t+0.02);
     og.gain.exponentialRampToValueAtTime(0.001,t+0.5);
-    osc.connect(og);og.connect(ac.destination);
+    osc.connect(og);og.connect(sfxGain);
     osc.start(t);osc.stop(t+0.55);
     // Layer 2: noise burst (the boom)
     const bufSize=Math.floor(ac.sampleRate*0.6);const buf=ac.createBuffer(1,bufSize,ac.sampleRate);
@@ -105,18 +115,18 @@ function playExplosionSound(){
     for(let i=0;i<bufSize;i++){const env=Math.pow(1-i/bufSize,3);data[i]=(Math.random()*2-1)*env;}
     const src=ac.createBufferSource();src.buffer=buf;
     const ng=ac.createGain();ng.gain.setValueAtTime(0.01,t);
-    ng.gain.linearRampToValueAtTime(0.22,t+0.01);
+    ng.gain.linearRampToValueAtTime(0.18,t+0.01);
     ng.gain.exponentialRampToValueAtTime(0.001,t+0.55);
     const lp=ac.createBiquadFilter();lp.type='lowpass';
     lp.frequency.setValueAtTime(2400,t);lp.frequency.exponentialRampToValueAtTime(300,t+0.4);
-    src.connect(lp);lp.connect(ng);ng.connect(ac.destination);src.start(t);
+    src.connect(lp);lp.connect(ng);ng.connect(sfxGain);src.start(t);
     // Layer 3: mid crackle
     const o2=ac.createOscillator();const g2=ac.createGain();
     o2.type='sawtooth';o2.frequency.setValueAtTime(200,t);
     o2.frequency.exponentialRampToValueAtTime(50,t+0.3);
-    g2.gain.setValueAtTime(0.08,t);g2.gain.exponentialRampToValueAtTime(0.001,t+0.35);
+    g2.gain.setValueAtTime(0.06,t);g2.gain.exponentialRampToValueAtTime(0.001,t+0.35);
     const bp=ac.createBiquadFilter();bp.type='bandpass';bp.frequency.value=400;bp.Q.value=2;
-    o2.connect(bp);bp.connect(g2);g2.connect(ac.destination);
+    o2.connect(bp);bp.connect(g2);g2.connect(sfxGain);
     o2.start(t);o2.stop(t+0.4);
   }catch(e){}
 }
@@ -127,20 +137,20 @@ function playNukeSound(){
     const osc=ac.createOscillator();const gain=ac.createGain();
     osc.type='sawtooth';osc.frequency.setValueAtTime(60,ac.currentTime);
     osc.frequency.exponentialRampToValueAtTime(20,ac.currentTime+1.2);
-    gain.gain.setValueAtTime(0.2,ac.currentTime);
-    gain.gain.linearRampToValueAtTime(0.25,ac.currentTime+0.1);
+    gain.gain.setValueAtTime(0.16,ac.currentTime);
+    gain.gain.linearRampToValueAtTime(0.2,ac.currentTime+0.1);
     gain.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+1.5);
     const filter=ac.createBiquadFilter();filter.type='lowpass';filter.frequency.value=200;
-    osc.connect(filter);filter.connect(gain);gain.connect(ac.destination);
+    osc.connect(filter);filter.connect(gain);gain.connect(sfxGain);
     osc.start(ac.currentTime);osc.stop(ac.currentTime+1.6);
     // White noise blast
     const bufSize=ac.sampleRate*0.8;const buf=ac.createBuffer(1,bufSize,ac.sampleRate);
     const data=buf.getChannelData(0);for(let i=0;i<bufSize;i++)data[i]=(Math.random()*2-1)*Math.pow(1-i/bufSize,1.5);
     const src=ac.createBufferSource();src.buffer=buf;
     const g2=ac.createGain();g2.gain.setValueAtTime(0.01,ac.currentTime);
-    g2.gain.linearRampToValueAtTime(0.2,ac.currentTime+0.05);
+    g2.gain.linearRampToValueAtTime(0.16,ac.currentTime+0.05);
     g2.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.8);
-    src.connect(g2);g2.connect(ac.destination);src.start(ac.currentTime);
+    src.connect(g2);g2.connect(sfxGain);src.start(ac.currentTime);
   }catch(e){}
 }
 function playNukeChargeSound(){
@@ -149,9 +159,9 @@ function playNukeChargeSound(){
     const osc=ac.createOscillator();const gain=ac.createGain();
     osc.type='sine';osc.frequency.setValueAtTime(400,ac.currentTime);
     osc.frequency.exponentialRampToValueAtTime(1200,ac.currentTime+0.25);
-    gain.gain.setValueAtTime(0.12,ac.currentTime);
+    gain.gain.setValueAtTime(0.08,ac.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.35);
-    osc.connect(gain);gain.connect(ac.destination);
+    osc.connect(gain);gain.connect(sfxGain);
     osc.start(ac.currentTime);osc.stop(ac.currentTime+0.4);
   }catch(e){}
 }
@@ -161,9 +171,9 @@ function playGrenadeFireSound(){
     const osc=ac.createOscillator();const gain=ac.createGain();
     osc.type='square';osc.frequency.setValueAtTime(180,ac.currentTime);
     osc.frequency.exponentialRampToValueAtTime(60,ac.currentTime+0.18);
-    gain.gain.setValueAtTime(0.15,ac.currentTime);
+    gain.gain.setValueAtTime(0.1,ac.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.22);
-    osc.connect(gain);gain.connect(ac.destination);
+    osc.connect(gain);gain.connect(sfxGain);
     osc.start(ac.currentTime);osc.stop(ac.currentTime+0.25);
   }catch(e){}
 }
@@ -174,13 +184,138 @@ function playLaserBeamSound(){
     const osc=ac.createOscillator();const gain=ac.createGain();
     osc.type='sawtooth';osc.frequency.setValueAtTime(1800,ac.currentTime);
     osc.frequency.exponentialRampToValueAtTime(200,ac.currentTime+0.8);
-    gain.gain.setValueAtTime(0.12,ac.currentTime);
-    gain.gain.linearRampToValueAtTime(0.18,ac.currentTime+0.05);
+    gain.gain.setValueAtTime(0.08,ac.currentTime);
+    gain.gain.linearRampToValueAtTime(0.12,ac.currentTime+0.05);
     gain.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.85);
     const bp=ac.createBiquadFilter();bp.type='bandpass';bp.frequency.value=1200;bp.Q.value=4;
-    osc.connect(bp);bp.connect(gain);gain.connect(ac.destination);
+    osc.connect(bp);bp.connect(gain);gain.connect(sfxGain);
     osc.start(ac.currentTime);osc.stop(ac.currentTime+0.9);
   }catch(e){}
+}
+
+// ─── BACKGROUND MUSIC (procedural synthwave loop) ─────────────
+// 4-bar Am — F — C — G progression at 112 BPM. Bass + arpeggio
+// + sustained pad + four-on-the-floor kick + offbeat hat. Loud
+// enough to sit in front of the gun SFX.
+const NOTE={
+  A1:55,    E2:82.41,  F2:87.31,   G2:98,     A2:110,
+  C3:130.81,D3:146.83, E3:164.81,  F3:174.61, G3:196,
+  A3:220,   B3:246.94, C4:261.63,  D4:293.66, E4:329.63,
+  F4:349.23,G4:392,    A4:440,     B4:493.88, C5:523.25,
+  D5:587.33,E5:659.25, G5:783.99,  A5:880
+};
+const MUSIC_BPM=112;
+const STEP_SEC=60/MUSIC_BPM/2; // eighth-note step
+// 32-step loop = 4 bars of 8 eighths. Chord per bar: Am, F, C, G.
+const MUSIC_BASS=[ // root-fifth pumping bass
+  'A2','A2','E3','A2','A2','E3','A2','E3',
+  'F2','F2','C3','F2','F2','C3','F2','C3',
+  'C3','C3','G3','C3','C3','G3','C3','G3',
+  'G2','G2','D3','G2','G2','D3','G2','D3'
+];
+const MUSIC_LEAD=[ // arpeggios over each chord
+  'A4','C5','E5','C5','A4','E5','C5','E5',
+  'F4','A4','C5','A4','F4','C5','A4','C5',
+  'C5','E5','G5','E5','C5','G5','E5','G5',
+  'G4','B4','D5','B4','G4','D5','B4','D5'
+];
+const MUSIC_PAD=[ // one chord per bar (8 steps)
+  ['A3','C4','E4'],
+  ['F3','A3','C4'],
+  ['C4','E4','G4'],
+  ['G3','B3','D4']
+];
+
+let musicRunning=false,musicStep=0,musicTimerId=null,padNodes=null;
+
+function _mNote(type,freq,start,dur,peak,filtFreq,filtQ,dest){
+  const ac=audioCtx;
+  const osc=ac.createOscillator();osc.type=type;osc.frequency.value=freq;
+  const g=ac.createGain();
+  const f=ac.createBiquadFilter();f.type='lowpass';f.frequency.value=filtFreq;f.Q.value=filtQ||1;
+  g.gain.setValueAtTime(0.0001,start);
+  g.gain.exponentialRampToValueAtTime(peak,start+0.008);
+  g.gain.exponentialRampToValueAtTime(0.0001,start+dur);
+  osc.connect(f);f.connect(g);g.connect(dest);
+  osc.start(start);osc.stop(start+dur+0.05);
+}
+function _mKick(start,dest){
+  const ac=audioCtx;
+  const osc=ac.createOscillator();osc.type='sine';
+  osc.frequency.setValueAtTime(140,start);
+  osc.frequency.exponentialRampToValueAtTime(45,start+0.12);
+  const g=ac.createGain();
+  g.gain.setValueAtTime(0.0001,start);
+  g.gain.exponentialRampToValueAtTime(0.55,start+0.005);
+  g.gain.exponentialRampToValueAtTime(0.0001,start+0.18);
+  osc.connect(g);g.connect(dest);
+  osc.start(start);osc.stop(start+0.22);
+}
+function _mHat(start,dest){
+  const ac=audioCtx;
+  const len=Math.floor(ac.sampleRate*0.04);
+  const buf=ac.createBuffer(1,len,ac.sampleRate);
+  const d=buf.getChannelData(0);
+  for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,3);
+  const src=ac.createBufferSource();src.buffer=buf;
+  const hp=ac.createBiquadFilter();hp.type='highpass';hp.frequency.value=7000;
+  const g=ac.createGain();g.gain.value=0.18;
+  src.connect(hp);hp.connect(g);g.connect(dest);
+  src.start(start);
+}
+function _mPad(barIndex,start,dur,dest){
+  const ac=audioCtx;
+  const chord=MUSIC_PAD[barIndex];
+  const g=ac.createGain();
+  const f=ac.createBiquadFilter();f.type='lowpass';f.frequency.value=1400;
+  g.gain.setValueAtTime(0.0001,start);
+  g.gain.exponentialRampToValueAtTime(0.18,start+0.4);
+  g.gain.linearRampToValueAtTime(0.14,start+dur-0.4);
+  g.gain.exponentialRampToValueAtTime(0.0001,start+dur);
+  const oscs=[];
+  for(const n of chord){
+    const o=ac.createOscillator();o.type='triangle';o.frequency.value=NOTE[n];
+    o.connect(f);o.start(start);o.stop(start+dur+0.05);oscs.push(o);
+    // detuned voice for richness
+    const o2=ac.createOscillator();o2.type='sine';o2.frequency.value=NOTE[n]*1.005;
+    o2.connect(f);o2.start(start);o2.stop(start+dur+0.05);oscs.push(o2);
+  }
+  f.connect(g);g.connect(dest);
+}
+
+function startMusic(){
+  if(musicRunning)return;
+  const ac=getAudioCtx();if(ac.state==='suspended')ac.resume();
+  musicRunning=true;musicStep=0;
+  // Per-instrument sub-busses for nice mix
+  const bassBus=ac.createGain();bassBus.gain.value=0.6;bassBus.connect(musicBus);
+  const leadBus=ac.createGain();leadBus.gain.value=0.32;leadBus.connect(musicBus);
+  const padBus =ac.createGain();padBus.gain.value =0.5; padBus.connect(musicBus);
+  const drumBus=ac.createGain();drumBus.gain.value=0.55;drumBus.connect(musicBus);
+  const tick=()=>{
+    if(!musicRunning)return;
+    const s=musicStep%32;
+    const t0=ac.currentTime+0.02;
+    // Drums — kick on every beat (every 2 steps), hat on offbeat eighths
+    if(s%2===0)_mKick(t0,drumBus);
+    if(s%2===1)_mHat(t0,drumBus);
+    // Bass — every step
+    _mNote('sawtooth',NOTE[MUSIC_BASS[s]],t0,STEP_SEC*0.85,0.45,650,4,bassBus);
+    // Lead — every step, brighter filter
+    _mNote('square',NOTE[MUSIC_LEAD[s]],t0,STEP_SEC*0.7,0.22,2400,2,leadBus);
+    // Pad — one chord per bar (8 steps)
+    if(s%8===0){
+      const bar=Math.floor(s/8);
+      _mPad(bar,t0,STEP_SEC*8,padBus);
+    }
+    musicStep++;
+    musicTimerId=setTimeout(tick,STEP_SEC*1000);
+  };
+  tick();
+}
+function stopMusic(){
+  musicRunning=false;
+  if(musicTimerId){clearTimeout(musicTimerId);musicTimerId=null;}
 }
 
 // Grenade fire — spawns 3 grenades in a spread, one charge consumed
@@ -1531,6 +1666,7 @@ function startGame(){
   currentBoss=null;bossActive=false;bossWarningTimer=0;nextBossLevel=5;homingMissiles=[];
   aButtonPressed=false;useMouseFollow=false;patternWallsLeft=0;
   runStartTime=performance.now();generateWalls();
+  startMusic();
 }
 
 function update(dt){
