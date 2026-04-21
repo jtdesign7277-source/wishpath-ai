@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-21-v330-enemy-bullets-straight-down';
+    var APP_VERSION = '2026-04-21-v331-enemy-spaceship-redesign';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -9753,7 +9753,7 @@
         var colorIdx = Math.floor(Math.random() * PLANET_COLORS.length);
         var asteroidColor = ASTEROID_COLORS[Math.floor(Math.random() * ASTEROID_COLORS.length)];
         var rotation = Math.random() * Math.PI * 2;
-        var rotSpeed = (Math.random() - 0.5) * 2.5;
+        var rotSpeed = isEnemyShip ? 0 : (Math.random() - 0.5) * 2.5;
 
         var xPos = margin + Math.random() * (GW - margin * 2);
         var enemyColor = isEnemyShip ? (type === 'enemy-fighter' ? '#ff6644' : '#ff8800') : null;
@@ -9840,7 +9840,7 @@
             colorIdx: Math.floor(Math.random() * PLANET_COLORS.length),
             asteroidColor: null,
             rotation: 0,
-            rotSpeed: (Math.random() - 0.5) * 1.5,
+            rotSpeed: 0,
             wobble: 0,
             isEnemyShip: true,
             enemyColor: eType === 'enemy-fighter' ? '#ff6644' : '#ff8800',
@@ -10854,102 +10854,128 @@
 
       function drawEnemyShip(tg) {
         var r = tg.size * 0.5;
-        var isGreen = tg.type === 'enemy-fighter';
-        var isPower = tg.type === 'enemy-bomber';
+        var isFighter = tg.type === 'enemy-fighter';
+        var isBomber  = tg.type === 'enemy-bomber';
         ctx.save();
         ctx.translate(tg.x, tg.y);
+        // No rotation — spaceships fly nose-down, not tumbling
 
-        // Fire trails (drawn behind, no rotation)
-        var flicker = Math.sin(Date.now() * 0.008 + tg.x) * 0.15 + 0.85;
-        var trailLen = r * (1.6 + flicker * 0.4);
-        // Center trail
-        var tGrad = ctx.createLinearGradient(0, -r * 0.3, 0, -r * 0.3 - trailLen);
-        tGrad.addColorStop(0, isGreen ? 'rgba(255,140,0,0.9)' : 'rgba(255,100,0,0.9)');
-        tGrad.addColorStop(0.4, isGreen ? 'rgba(255,80,0,0.5)' : 'rgba(200,50,0,0.5)');
-        tGrad.addColorStop(1, 'rgba(80,20,0,0)');
-        ctx.fillStyle = tGrad;
-        ctx.beginPath();
-        ctx.moveTo(-r * 0.15, -r * 0.3);
-        ctx.lineTo(r * 0.15, -r * 0.3);
-        ctx.lineTo(r * 0.04, -r * 0.3 - trailLen);
-        ctx.lineTo(-r * 0.04, -r * 0.3 - trailLen);
-        ctx.fill();
-        // Side trails
-        for (var side = -1; side <= 1; side += 2) {
-          var sGrad = ctx.createLinearGradient(side * r * 0.35, -r * 0.15, side * r * 0.35, -r * 0.15 - trailLen * 0.7);
-          sGrad.addColorStop(0, 'rgba(255,120,20,0.7)');
-          sGrad.addColorStop(0.5, 'rgba(200,60,0,0.3)');
-          sGrad.addColorStop(1, 'rgba(60,10,0,0)');
-          ctx.fillStyle = sGrad;
+        // Engine exhaust trails — two nacelle plumes, always upward (behind ship)
+        var flicker = Math.sin(Date.now() * 0.009 + tg.x) * 0.18 + 0.82;
+        var trailLen = r * (1.5 + flicker * 0.5);
+        for (var ns = -1; ns <= 1; ns += 2) {
+          var nX = ns * r * 0.33;
+          var nY = -r * 0.44;
+          var nGrad = ctx.createLinearGradient(nX, nY, nX, nY - trailLen);
+          nGrad.addColorStop(0,   isBomber ? 'rgba(200,80,255,0.9)'  : 'rgba(255,130,0,0.9)');
+          nGrad.addColorStop(0.4, isBomber ? 'rgba(140,40,200,0.45)' : 'rgba(255,65,0,0.45)');
+          nGrad.addColorStop(1,   'rgba(40,10,0,0)');
+          ctx.fillStyle = nGrad;
           ctx.beginPath();
-          ctx.moveTo(side * r * 0.28, -r * 0.15);
-          ctx.lineTo(side * r * 0.42, -r * 0.15);
-          ctx.lineTo(side * r * 0.36, -r * 0.15 - trailLen * 0.7);
-          ctx.lineTo(side * r * 0.32, -r * 0.15 - trailLen * 0.7);
+          ctx.moveTo(nX - r * 0.1, nY);
+          ctx.lineTo(nX + r * 0.1, nY);
+          ctx.lineTo(nX + r * 0.035, nY - trailLen);
+          ctx.lineTo(nX - r * 0.035, nY - trailLen);
           ctx.fill();
         }
 
-        ctx.rotate(tg.rotation);
+        // Color palette: fighter=crimson, bomber=dark purple/maroon
+        var hullDark = isBomber ? '#330022' : '#220000';
+        var hullMid  = isBomber ? '#7700aa' : '#bb1100';
+        var hullHi   = isBomber ? '#cc44ff' : '#ff3322';
+        var engClr   = isBomber ? '#cc55ff' : '#ff5500';
 
-        // Try to use PNG sprite, fallback to canvas creature
-        var enemyVariants = [_wrSprites.enemyBall, _wrSprites.enemyBlue, _wrSprites.enemyGreen, _wrSprites.enemyPurple, _wrSprites.enemyRed];
-        var spEnemy = isPower ? _wrSprites.enemyPurple : (isGreen ? _wrSprites.enemyGreen : enemyVariants[Math.abs((tg.health || 0)) % enemyVariants.length]);
-        if (!spEnemy) spEnemy = _wrSprites.enemyBall;
-        if (spEnemy && spEnemy.complete && spEnemy.naturalWidth > 0) {
-          var drawSz = r * 2.2;
-          ctx.drawImage(spEnemy, -drawSz / 2, -drawSz / 2, drawSz, drawSz);
-        } else {
-          // Fallback: ornate star creature
-          var color1 = isGreen ? '#cc5500' : '#ff8800';
-          var color2 = isGreen ? '#4a2a10' : '#2a1a0a';
-          ctx.shadowColor = color1;
-          ctx.shadowBlur = 14;
-          // Outer star points
-          ctx.fillStyle = color2;
-          ctx.strokeStyle = color1;
-          ctx.lineWidth = 1;
+        ctx.strokeStyle = hullHi;
+        ctx.lineWidth = 1;
+
+        // Wing strakes — forward-swept, angling out from mid-hull
+        ctx.shadowColor = hullHi;
+        ctx.shadowBlur = 8;
+        ctx.fillStyle = hullMid;
+        for (var ws = -1; ws <= 1; ws += 2) {
           ctx.beginPath();
-          for (var i = 0; i < 8; i++) {
-            var a = (i / 8) * Math.PI * 2 - Math.PI / 2;
-            var outerR = (i % 2 === 0) ? r : r * 0.45;
-            if (i === 0) ctx.moveTo(Math.cos(a) * outerR, Math.sin(a) * outerR);
-            else ctx.lineTo(Math.cos(a) * outerR, Math.sin(a) * outerR);
-          }
+          ctx.moveTo(ws * r * 0.26,  r * 0.12);   // inner front
+          ctx.lineTo(ws * r * 0.9,  -r * 0.22);   // outer wing tip
+          ctx.lineTo(ws * r * 0.82, -r * 0.58);   // outer wing back
+          ctx.lineTo(ws * r * 0.44, -r * 0.05);   // inner wing back
           ctx.closePath();
           ctx.fill();
           ctx.stroke();
+        }
+
+        // Main hull — angular wedge, pointed nose at +y (toward player below)
+        ctx.fillStyle = hullMid;
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.moveTo( 0,          r * 0.9);   // nose tip
+        ctx.lineTo(-r * 0.2,   r * 0.42);   // nose shoulder left
+        ctx.lineTo(-r * 0.44,  r * 0.02);   // waist left
+        ctx.lineTo(-r * 0.38, -r * 0.56);   // top shoulder left
+        ctx.lineTo( r * 0.38, -r * 0.56);   // top shoulder right
+        ctx.lineTo( r * 0.44,  r * 0.02);   // waist right
+        ctx.lineTo( r * 0.2,   r * 0.42);   // nose shoulder right
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Dark hull belly panel
+        ctx.fillStyle = hullDark;
+        ctx.shadowBlur = 0;
+        ctx.beginPath();
+        ctx.moveTo( 0,          r * 0.82);
+        ctx.lineTo(-r * 0.14,  r * 0.38);
+        ctx.lineTo(-r * 0.28,  r * 0.0);
+        ctx.lineTo(-r * 0.22, -r * 0.5);
+        ctx.lineTo( r * 0.22, -r * 0.5);
+        ctx.lineTo( r * 0.28,  r * 0.0);
+        ctx.lineTo( r * 0.14,  r * 0.38);
+        ctx.closePath();
+        ctx.fill();
+
+        // Center ridge highlight strip
+        ctx.fillStyle = hullHi;
+        ctx.shadowColor = hullHi;
+        ctx.shadowBlur = 5;
+        ctx.beginPath();
+        ctx.moveTo( 0,          r * 0.8);
+        ctx.lineTo(-r * 0.1,   r * 0.34);
+        ctx.lineTo(-r * 0.11, -r * 0.48);
+        ctx.lineTo( r * 0.11, -r * 0.48);
+        ctx.lineTo( r * 0.1,   r * 0.34);
+        ctx.closePath();
+        ctx.fill();
+
+        // Nose weapon tip — hot red glow aimed at player
+        ctx.shadowColor = '#ff0000';
+        ctx.shadowBlur = 12;
+        ctx.fillStyle = '#ff1100';
+        ctx.beginPath();
+        ctx.arc(0, r * 0.84, r * 0.07, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Engine nacelles with glow (at back/top of ship)
+        for (var en = -1; en <= 1; en += 2) {
+          var eX = en * r * 0.33, eY = -r * 0.44;
           ctx.shadowBlur = 0;
-          // Inner star
-          ctx.fillStyle = isGreen ? '#5a3010' : '#4a2a10';
+          ctx.fillStyle = '#0a0000';
           ctx.beginPath();
-          for (var i = 0; i < 8; i++) {
-            var a = (i / 8) * Math.PI * 2 - Math.PI / 2;
-            var innerR = (i % 2 === 0) ? r * 0.7 : r * 0.3;
-            if (i === 0) ctx.moveTo(Math.cos(a) * innerR, Math.sin(a) * innerR);
-            else ctx.lineTo(Math.cos(a) * innerR, Math.sin(a) * innerR);
-          }
-          ctx.closePath();
+          ctx.ellipse(eX, eY, r * 0.13, r * 0.16, 0, 0, Math.PI * 2);
           ctx.fill();
-          // Glowing energy core
-          var coreGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, r * 0.35);
-          coreGrad.addColorStop(0, '#ffffff');
-          coreGrad.addColorStop(0.3, '#ffdd44');
-          coreGrad.addColorStop(0.7, '#ff8800');
-          coreGrad.addColorStop(1, '#441100');
-          ctx.fillStyle = coreGrad;
+          ctx.shadowColor = engClr;
+          ctx.shadowBlur = 16;
+          var eGrad = ctx.createRadialGradient(eX, eY, 0, eX, eY, r * 0.12);
+          eGrad.addColorStop(0,   '#ffffff');
+          eGrad.addColorStop(0.3, engClr);
+          eGrad.addColorStop(1,   'rgba(200,80,0,0)');
+          ctx.fillStyle = eGrad;
           ctx.beginPath();
-          ctx.arc(0, 0, r * 0.35, 0, Math.PI * 2);
-          ctx.fill();
-          // Core highlight
-          ctx.fillStyle = 'rgba(255,255,255,0.7)';
-          ctx.beginPath();
-          ctx.arc(-r * 0.08, -r * 0.08, r * 0.1, 0, Math.PI * 2);
+          ctx.ellipse(eX, eY, r * 0.09, r * 0.09, 0, 0, Math.PI * 2);
           ctx.fill();
         }
 
         ctx.shadowBlur = 0;
 
-        // Thin 2px HP bar — no number
+        // HP bar — always upright above ship
         if (tg.maxHealth > 1) {
           var barW = r * 1.5, barH = 2;
           var barX = -barW * 0.5, barY = -r - 5;
