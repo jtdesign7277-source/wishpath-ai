@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-21-v339-crypto-no-extended-hours';
+    var APP_VERSION = '2026-04-21-v340-extended-hours-value';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -15419,10 +15419,12 @@
         if (q.price && liveBars.length) liveBars.push(q.price);
         var spark = buildSparkSVG(liveBars, isUp);
         var priceStr = q.price ? ('$' + formatNum(q.price)) : '--';
-        var extChg = q.extendedChangePercent != null ? q.extendedChangePercent : null;
+        var extBase = q.previousClose || q.prevClose || q.close || 0;
+        var extChg = (q.price && extBase) ? ((q.price - extBase) / extBase * 100) : null;
         var extStr = extChg != null ? ((extChg >= 0 ? '+' : '') + extChg.toFixed(2) + '%') : '--';
+        var extColor = extChg != null ? (extChg >= 0 ? '#00c853' : '#ff1744') : 'rgba(255,255,255,0.38)';
         var isCrypto = ticker && ticker.crypto;
-        var extRow = (showExt && !isCrypto) ? '<div class="home-market-extended">' + extIcon + ' ' + extStr + '</div>' : '';
+        var extRow = (showExt && !isCrypto) ? '<div class="home-market-extended">' + extIcon + ' <span style="color:' + extColor + '">' + extStr + '</span></div>' : '';
         return '<div class="home-market-card" onclick="hideMobileHome();openFMTab(\'fmMarkets\');">' +
           '<div class="home-market-left">' +
             '<div class="home-market-sym">' + sym + '</div>' +
