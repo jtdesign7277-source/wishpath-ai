@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-21-v336-live-sparklines';
+    var APP_VERSION = '2026-04-21-v338-yahoo-ticker-layout';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -1906,12 +1906,15 @@
       .home-market-spark { flex: 1; height: 28px; max-width: 120px; min-width: 50px; transition: opacity 0.3s ease; }
       @keyframes sparkPulse { 0% { opacity: 0.6; } 100% { opacity: 1; } }
       .home-market-spark.spark-fresh { animation: sparkPulse 0.4s ease-out; }
-      .home-market-right { flex-shrink: 0; text-align: right; display: flex; flex-direction: row; align-items: center; gap: 8px; }
+      .home-market-right { flex-shrink: 0; text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
       .home-market-pct {
-        font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; padding: 5px 10px; border-radius: 4px; display: inline-block; line-height: 1; min-width: 62px; text-align: center;
+        font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; padding: 2px 8px; border-radius: 4px; display: inline-block; line-height: 1.4; text-align: center;
       }
       .home-market-pct.up { background: rgba(34,197,94,0.18); color: #22C55E; }
       .home-market-pct.dn { background: rgba(239,68,68,0.18); color: #EF4444; }
+      .home-market-ext { font-size: 11px; color: rgba(255,255,255,0.5); font-variant-numeric: tabular-nums; }
+      .home-market-ext.up { color: #22C55E; }
+      .home-market-ext.dn { color: #EF4444; }
       .home-market-loading { color: rgba(255,255,255,0.2); font-size: 11px; padding: 20px 0; text-align: center; }
       .mobile-recent-card { min-width: 155px; background: #181225; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 16px; scroll-snap-align: start; cursor: pointer; flex-shrink: 0; box-shadow: 8px 8px 16px rgba(0,0,0,0.6), -4px -4px 12px rgba(255,255,255,0.03); transition: all 0.3s ease; }
       .mobile-recent-card:active { border-color: rgba(113,50,245,0.2); box-shadow: 4px 4px 8px rgba(0,0,0,0.5), -2px -2px 6px rgba(255,255,255,0.02); transform: scale(0.97); }
@@ -2441,7 +2444,7 @@
     .stock-pct-badge { font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; text-align: center; min-width: 62px; flex-shrink: 0; padding: 5px 10px; border-radius: 4px; display: inline-block; line-height: 1; }
     .stock-pct-badge.up { background: rgba(34,197,94,0.18); color: #22C55E; }
     .stock-pct-badge.dn { background: rgba(239,68,68,0.18); color: #EF4444; }
-    .stock-price-val { font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.6); font-variant-numeric: tabular-nums; min-width: 50px; text-align: right; }
+    .stock-price-val { font-size: 15px; font-weight: 600; color: rgba(255,255,255,0.95); font-variant-numeric: tabular-nums; text-align: right; }
     .stock-price { display: none; }
     .stock-change { display: none; }
     .stock-change.up { color: var(--kraken-green); }
@@ -15389,6 +15392,15 @@
         row.innerHTML = '<div class="home-market-loading">Loading prices...</div>';
         return;
       }
+      // Determine market session in ET
+      var _now = new Date();
+      var _et = new Date(_now.toLocaleString('en-US', {timeZone: 'America/New_York'}));
+      var _etMins = _et.getHours() * 60 + _et.getMinutes();
+      var _isWeekend = _et.getDay() === 0 || _et.getDay() === 6;
+      var _isPreMarket = !_isWeekend && _etMins >= 240 && _etMins < 570;
+      var _isAfterHours = _isWeekend || _etMins >= 960 || _etMins < 240;
+      var _showExt = _isPreMarket || _isAfterHours;
+      var _sessionIcon = _isPreMarket ? '☀️' : '🌙';
       row.innerHTML = data.map(function(q) {
         var ticker = _homeMarketsTickers.find(function(t) { return t.symbol === q.symbol; });
         var sym = (ticker && ticker.display) || q.symbol;
@@ -15401,6 +15413,21 @@
         if (q.price && liveBars.length) liveBars.push(q.price);
         var spark = buildSparkSVG(liveBars, isUp);
         var priceStr = q.price ? ('$' + formatNum(q.price)) : '--';
+        // After-hours / pre-market row
+        var extHtml = '';
+        if (_showExt) {
+          var extChg = q.afterHoursChange || q.extendedHoursChange || null;
+          var extStr, extCls;
+          if (extChg !== null && extChg !== undefined) {
+            var extUp = extChg >= 0;
+            extStr = _sessionIcon + ' ' + (extUp ? '+' : '') + extChg.toFixed(2) + '%';
+            extCls = extUp ? 'up' : 'dn';
+          } else {
+            extStr = _sessionIcon + ' --';
+            extCls = '';
+          }
+          extHtml = '<div class="home-market-ext ' + extCls + '">' + extStr + '</div>';
+        }
         return '<div class="home-market-card" onclick="hideMobileHome();openFMTab(\'fmMarkets\');">' +
           '<div class="home-market-left">' +
             '<div class="home-market-sym">' + sym + '</div>' +
@@ -15408,8 +15435,9 @@
           '</div>' +
           spark +
           '<div class="home-market-right">' +
-            '<div class="home-market-pct ' + (isUp ? 'up' : 'dn') + '">' + chgStr + '</div>' +
             '<div class="stock-price-val">' + priceStr + '</div>' +
+            '<div class="home-market-pct ' + (isUp ? 'up' : 'dn') + '">' + chgStr + '</div>' +
+            extHtml +
           '</div>' +
         '</div>';
       }).join('');
