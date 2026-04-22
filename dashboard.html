@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-21-v336-live-sparklines';
+    var APP_VERSION = '2026-04-21-v337-boss-killable-loud-music';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -8540,7 +8540,7 @@
             osc.type = 'sawtooth';
             osc.frequency.setValueAtTime(1400, t);
             osc.frequency.exponentialRampToValueAtTime(600, t + 0.05);
-            gain.gain.setValueAtTime(0.18, t);
+            gain.gain.setValueAtTime(0.09, t);
             gain.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
             osc.connect(gain); gain.connect(ctx.destination);
             osc.start(t); osc.stop(t + 0.07);
@@ -8550,7 +8550,7 @@
             osc2.type = 'sawtooth';
             osc2.frequency.setValueAtTime(1450, t);
             osc2.frequency.exponentialRampToValueAtTime(580, t + 0.05);
-            g2.gain.setValueAtTime(0.14, t);
+            g2.gain.setValueAtTime(0.07, t);
             g2.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
             osc2.connect(g2); g2.connect(ctx.destination);
             osc2.start(t); osc2.stop(t + 0.07);
@@ -8562,7 +8562,7 @@
             osc.type = 'triangle';
             osc.frequency.setValueAtTime(2200, t);
             osc.frequency.exponentialRampToValueAtTime(800, t + 0.025);
-            gain.gain.setValueAtTime(0.22, t);
+            gain.gain.setValueAtTime(0.11, t);
             gain.gain.exponentialRampToValueAtTime(0.001, t + 0.03);
             osc.connect(gain); gain.connect(ctx.destination);
             osc.start(t); osc.stop(t + 0.04);
@@ -8574,7 +8574,7 @@
             osc.type = 'sine';
             osc.frequency.setValueAtTime(200, t);
             osc.frequency.exponentialRampToValueAtTime(50, t + 0.15);
-            gain.gain.setValueAtTime(0.45, t);
+            gain.gain.setValueAtTime(0.22, t);
             gain.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
             osc.connect(gain); gain.connect(ctx.destination);
             osc.start(t); osc.stop(t + 0.2);
@@ -8586,7 +8586,7 @@
             var ns = ctx.createBufferSource();
             var ng = ctx.createGain();
             ns.buffer = nBuf;
-            ng.gain.setValueAtTime(0.3, t);
+            ng.gain.setValueAtTime(0.15, t);
             ng.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
             ns.connect(ng); ng.connect(ctx.destination);
             ns.start(t); ns.stop(t + 0.1);
@@ -8598,7 +8598,7 @@
             osc.type = 'square';
             osc.frequency.setValueAtTime(880, t);
             osc.frequency.exponentialRampToValueAtTime(220, t + 0.06);
-            gain.gain.setValueAtTime(0.22, t);
+            gain.gain.setValueAtTime(0.11, t);
             gain.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
             osc.connect(gain); gain.connect(ctx.destination);
             osc.start(t); osc.stop(t + 0.08);
@@ -8890,7 +8890,7 @@
 
           if (lvl === 1) {
             // ── L1: Dark Synthwave (130 BPM, A minor — moody, pulsing) ──
-            _bgMusicGain.gain.linearRampToValueAtTime(0.13, ctx.currentTime + 0.8);
+            _bgMusicGain.gain.linearRampToValueAtTime(0.52, ctx.currentTime + 0.8);
             // Deep pulsing synth bass (sine + saw layer)
             var bs1 = [55,0,0,0, 55,0,0,0, 65.4,0,0,0, 65.4,0,0,0,
                        55,0,0,0, 55,0,0,0, 73.4,0,0,0, 82.4,0,0,0];
@@ -8907,7 +8907,7 @@
                         329.6,0,0,0, 440,0,0,0, 329.6,0,261.6,0, 220,0,0,0];
             _schedSeq(ctx, _bgMusicGain, arp1, 130, 'triangle', 0.085, t);
             // Warm synthwave pad (Am — A C E)
-            _padChord(ctx, _bgMusicGain, [110, 130.8, 164.8, 220, 261.6], 0.026);
+            _padChord(ctx, _bgMusicGain, [110, 130.8, 164.8, 220, 261.6], 0.104);
             // Slow LFO breath
             var lfo1 = ctx.createOscillator(); lfo1.type = 'sine'; lfo1.frequency.value = 0.18;
             var lg1 = ctx.createGain(); lg1.gain.value = 0.012;
@@ -8915,7 +8915,7 @@
 
           } else if (lvl === 2) {
             // ── L2: Chiptune Arcade (140 BPM, C major — upbeat 8-bit!) ──
-            _bgMusicGain.gain.linearRampToValueAtTime(0.14, ctx.currentTime + 0.5);
+            _bgMusicGain.gain.linearRampToValueAtTime(0.56, ctx.currentTime + 0.5);
             // Bouncy 4-on-floor kick
             _schedKick(ctx, _bgMusicGain, [1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0], 140, t);
             // Crisp snare: 2 & 4
@@ -8933,11 +8933,11 @@
                         0,0,523.3,0, 0,0,392,0, 0,0,329.6,0, 0,0,392,0];
             _schedSeq(ctx, _bgMusicGain, mel2, 140, 'triangle', 0.050, t);
             // Bright major pad (C E G)
-            _padChord(ctx, _bgMusicGain, [130.8, 164.8, 196, 261.6, 329.6], 0.020);
+            _padChord(ctx, _bgMusicGain, [130.8, 164.8, 196, 261.6, 329.6], 0.080);
 
           } else if (lvl === 3) {
             // ── L3: Drum & Bass (160 BPM, half-time feel — intense rolling) ──
-            _bgMusicGain.gain.linearRampToValueAtTime(0.15, ctx.currentTime + 0.4);
+            _bgMusicGain.gain.linearRampToValueAtTime(0.60, ctx.currentTime + 0.4);
             // Half-time kick (big slow hits, very DnB)
             _schedKick(ctx, _bgMusicGain, [1,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,
                                            1,0,0,0, 1,0,0,0, 0,0,0,0, 0,0,0,0], 160, t);
@@ -8963,11 +8963,11 @@
                         220,196,220,261.6, 293.7,261.6,220,196,
                         220,0,329.6,0, 392,0,440,0, 392,0,329.6,0, 220,0,0,0];
             _schedSeq(ctx, _bgMusicGain, arp3, 160, 'triangle', 0.038, t);
-            _padChord(ctx, _bgMusicGain, [55, 130.8, 155.6, 220], 0.016);
+            _padChord(ctx, _bgMusicGain, [55, 130.8, 155.6, 220], 0.064);
 
           } else if (lvl === 4) {
             // ── L4: Cyberpunk Techno (145 BPM, D Phrygian — dark industrial) ──
-            _bgMusicGain.gain.linearRampToValueAtTime(0.17, ctx.currentTime + 0.4);
+            _bgMusicGain.gain.linearRampToValueAtTime(0.68, ctx.currentTime + 0.4);
             // Punchy industrial kick (harder punch, higher start frequency)
             var _schedKickHard = function(kst, kdest, ksteps, kbpm, kat) {
               var ksd = 60/kbpm/4, kll = ksteps.length * ksd;
@@ -9034,11 +9034,11 @@
                         311.1,0,0,0, 0,0,0,0, 261.6,0,0,0, 0,0,0,0];
             _schedSeq(ctx, _bgMusicGain, stb4, 145, 'square', 0.050, t);
             // Dark industrial pad (Dm + flat-2 tension)
-            _padChord(ctx, _bgMusicGain, [73.4, 87.3, 110, 155.6, 220], 0.018);
+            _padChord(ctx, _bgMusicGain, [73.4, 87.3, 110, 155.6, 220], 0.072);
 
           } else {
             // ── L5+: Epic Boss Battle (120 BPM, A minor — cinematic, dramatic) ──
-            _bgMusicGain.gain.linearRampToValueAtTime(0.18, ctx.currentTime + 0.6);
+            _bgMusicGain.gain.linearRampToValueAtTime(0.72, ctx.currentTime + 0.6);
             // Slow heavy kicks with syncopated fills (dramatic!)
             _schedKick(ctx, _bgMusicGain, [1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0,
                                            1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1], 120, t);
@@ -9066,7 +9066,7 @@
             _schedSeq(ctx, _bgMusicGain, fill5, 120, 'sawtooth', 0.050, t);
             _schedDetune(ctx, _bgMusicGain, fill5, 120, 'sawtooth', 0.030, t, 7);
             // Rich epic pad (Am chord, full voicing)
-            _padChord(ctx, _bgMusicGain, [55, 110, 130.8, 164.8, 220, 261.6], 0.030);
+            _padChord(ctx, _bgMusicGain, [55, 110, 130.8, 164.8, 220, 261.6], 0.120);
             // Slow tension LFO
             var lfo5 = ctx.createOscillator(); lfo5.type = 'sine'; lfo5.frequency.value = 0.22;
             var lg5 = ctx.createGain(); lg5.gain.value = 0.010;
@@ -9468,7 +9468,7 @@
         'Quantum Beast', 'Shadow Leviathan'
       ];
       function spawnBoss(level) {
-        var hp = 30 + level * 20;
+        var hp = 15 + level * 8;
         var bossIdx = (level - 1) % BOSS_NAMES.length;
         activeBoss = {
           x: GW * 0.5,
@@ -10047,7 +10047,7 @@
             var b = bullets[bi];
             var bdx = b.x - boss.x, bdy = b.y - boss.y;
             if (Math.sqrt(bdx * bdx + bdy * bdy) < boss.size * 0.45) {
-              boss.health -= 1;
+              boss.health -= 3;
               spawnExplosion(b.x, b.y, '#ffaa00', 4);
               bullets.splice(bi, 1);
               if (boss.health <= 0) {
