@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-21-v340-extended-hours-value';
+    var APP_VERSION = '2026-04-22-v341-fix-premarket-afterhours-icons';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -15382,21 +15382,8 @@
         '<polyline points="' + pts.join(' ') + '" stroke="' + color + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>' +
         '</svg>';
     }
-    function getMarketSession() {
-      var now = new Date();
-      // Convert to ET (UTC-4 EDT / UTC-5 EST) — approximate via offset
-      var utcH = now.getUTCHours(), utcM = now.getUTCMinutes();
-      // Determine EST vs EDT: EDT = 2nd Sun Mar → 1st Sun Nov
-      var y = now.getUTCFullYear();
-      var edtStart = new Date(Date.UTC(y, 2, 8 - (new Date(Date.UTC(y,2,1)).getUTCDay() + 6) % 7, 6)); // 2nd Sun Mar 02:00 ET
-      var edtEnd   = new Date(Date.UTC(y, 10, 1 + (7 - new Date(Date.UTC(y,10,1)).getUTCDay()) % 7, 6)); // 1st Sun Nov 02:00 ET
-      var offset = (now >= edtStart && now < edtEnd) ? 4 : 5;
-      var etH = (utcH - offset + 24) % 24, etM = utcM;
-      var etMins = etH * 60 + etM;
-      if (etMins < 9 * 60 + 30) return 'pre';
-      if (etMins < 16 * 60) return 'open';
-      return 'after';
-    }
+    // NOTE: getMarketSession() is defined once below (around line 17470) — do NOT duplicate here.
+    // It returns 'PRE_MARKET', 'REGULAR', 'AFTER_HOURS', 'OVERNIGHT', or 'CLOSED'.
     function renderHomeMarkets(data) {
       var row = document.getElementById('homeMarketsRow');
       if (!row) return;
@@ -15405,8 +15392,12 @@
         return;
       }
       var session = getMarketSession();
-      var extIcon = session === 'pre' ? '☀️' : '🌙';
-      var showExt = session !== 'open';
+      // Yahoo Finance style: ☀️ pre-market, 🌙 after-hours/overnight, hidden during regular
+      var isPre = session === 'PRE_MARKET';
+      var isAfter = session === 'AFTER_HOURS';
+      var isOvernight = session === 'OVERNIGHT';
+      var showExt = (isPre || isAfter || isOvernight) ? true : false;
+      var extIcon = isPre ? '☀️' : '🌙';
       row.innerHTML = data.map(function(q) {
         var ticker = _homeMarketsTickers.find(function(t) { return t.symbol === q.symbol; });
         var sym = (ticker && ticker.display) || q.symbol;
@@ -15419,7 +15410,20 @@
         if (q.price && liveBars.length) liveBars.push(q.price);
         var spark = buildSparkSVG(liveBars, isUp);
         var priceStr = q.price ? ('$' + formatNum(q.price)) : '--';
-        var extBase = q.previousClose || q.prevClose || q.close || 0;
+        // Extended hours % calculation:
+        // Pre-market: change from YESTERDAY's close (previousClose) to current pre-market price
+        // After-hours: change from TODAY's close to current after-hours price
+        //   - q.close or q.dailyBar?.c = today's regular session close (from Alpaca dailyBar)
+        //   - q.previousClose = yesterday's close — WRONG base for after-hours
+        var extBase = 0;
+        if (isPre) {
+          // Pre-market base = yesterday's close
+          extBase = q.previousClose || q.prevClose || 0;
+        } else if (isAfter || isOvernight) {
+          // After-hours base = today's close (dailyBar.c from Alpaca)
+          // Try q.close first (today's 4 PM close), fall back to previousClose if unavailable
+          extBase = q.close || q.previousClose || q.prevClose || 0;
+        }
         var extChg = (q.price && extBase) ? ((q.price - extBase) / extBase * 100) : null;
         var extStr = extChg != null ? ((extChg >= 0 ? '+' : '') + extChg.toFixed(2) + '%') : '--';
         var extColor = extChg != null ? (extChg >= 0 ? '#00c853' : '#ff1744') : 'rgba(255,255,255,0.38)';
