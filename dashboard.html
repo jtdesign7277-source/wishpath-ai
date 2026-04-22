@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-21-v338-yahoo-ticker-layout';
+    var APP_VERSION = '2026-04-21-v339-crypto-no-extended-hours';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -15358,9 +15358,9 @@
       { symbol: 'NVDA', name: 'NVIDIA' },
       { symbol: 'META', name: 'Meta' },
       { symbol: 'TSLA', name: 'Tesla' },
-      { symbol: 'BTC/USD', name: 'Bitcoin', display: 'BTC' },
-      { symbol: 'ETH/USD', name: 'Ethereum', display: 'ETH' },
-      { symbol: 'SOL/USD', name: 'Solana', display: 'SOL' }
+      { symbol: 'BTC/USD', name: 'Bitcoin', display: 'BTC', crypto: true },
+      { symbol: 'ETH/USD', name: 'Ethereum', display: 'ETH', crypto: true },
+      { symbol: 'SOL/USD', name: 'Solana', display: 'SOL', crypto: true }
     ];
     function buildSparkSVG(bars, isUp) {
       if (!bars || bars.length < 2) return '';
@@ -15421,7 +15421,8 @@
         var priceStr = q.price ? ('$' + formatNum(q.price)) : '--';
         var extChg = q.extendedChangePercent != null ? q.extendedChangePercent : null;
         var extStr = extChg != null ? ((extChg >= 0 ? '+' : '') + extChg.toFixed(2) + '%') : '--';
-        var extRow = showExt ? '<div class="home-market-extended">' + extIcon + ' ' + extStr + '</div>' : '';
+        var isCrypto = ticker && ticker.crypto;
+        var extRow = (showExt && !isCrypto) ? '<div class="home-market-extended">' + extIcon + ' ' + extStr + '</div>' : '';
         return '<div class="home-market-card" onclick="hideMobileHome();openFMTab(\'fmMarkets\');">' +
           '<div class="home-market-left">' +
             '<div class="home-market-sym">' + sym + '</div>' +
