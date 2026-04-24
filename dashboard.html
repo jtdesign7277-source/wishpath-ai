@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-22-v341-fix-premarket-afterhours-icons';
+    var APP_VERSION = '2026-04-24-v354-drag-reorder-tickers';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -581,18 +581,22 @@
     }
     .notes-new-btn {
       background: none;
-      border: none;
+      border: 1px solid rgba(255,255,255,0.1);
       color: rgba(255,255,255,0.6);
       cursor: pointer;
-      padding: 8px;
+      padding: 0;
+      width: 32px;
+      height: 32px;
       display: flex;
       align-items: center;
       justify-content: center;
       -webkit-tap-highlight-color: transparent;
-      border-radius: 10px;
+      border-radius: 8px;
       transition: all 0.15s ease;
+      flex-shrink: 0;
     }
-    .notes-new-btn:active { background: rgba(255,255,255,0.06); color: #fff; }
+    .notes-new-btn:hover { background: rgba(255,255,255,0.08); color: #fff; border-color: rgba(255,255,255,0.18); }
+    .notes-new-btn:active { background: rgba(255,255,255,0.12); color: #fff; transform: scale(0.95); }
     .notes-scroll {
       flex: 1;
       overflow-y: auto;
@@ -723,13 +727,20 @@
       cursor: pointer;
       font-size: 1.1rem;
       line-height: 1;
-      padding: 8px;
+      padding: 6px;
       margin: 0;
+      width: 34px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       -webkit-tap-highlight-color: transparent;
-      border-radius: 10px;
+      border-radius: 8px;
       font-weight: 400;
+      transition: background 0.15s ease;
     }
-    .note-detail-toolbar .back-btn:active { background: rgba(255,255,255,0.06); }
+    .note-detail-toolbar .back-btn:hover { background: rgba(255,255,255,0.06); }
+    .note-detail-toolbar .back-btn:active { background: rgba(255,255,255,0.1); }
     .notes-editor.note-detail-view .notes-editor-more-btn {
       background: none;
       border: none;
@@ -1890,28 +1901,55 @@
       .home-markets-header .mobile-sec-label { margin-bottom: 0; }
       .home-markets-see-all { font-size: 12px; color: rgba(113,50,245,0.85); font-weight: 600; cursor: pointer; -webkit-tap-highlight-color: transparent; }
       .home-markets-see-all:active { opacity: 0.6; }
-      .home-markets-row { display: flex; flex-direction: column; margin-bottom: 24px; }
+      .home-markets-row { display: flex; flex-direction: column; margin-bottom: 16px; }
       .home-markets-row::-webkit-scrollbar { display: none; }
       .home-market-card {
         display: flex; align-items: center;
-        padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.08);
+        padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.08);
         cursor: pointer; -webkit-tap-highlight-color: transparent;
-        transition: opacity 0.15s ease; gap: 0;
+        transition: opacity 0.15s ease, transform 0.2s ease, background 0.2s ease; gap: 8px;
+        position: relative;
       }
       .home-market-card:last-child { border-bottom: none; }
       .home-market-card:active { opacity: 0.6; }
-      .home-market-left { width: 90px; flex-shrink: 0; }
-      .home-market-sym { font-size: 14px; font-weight: 600; color: #fff; line-height: 1.25; }
-      .home-market-name { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 85px; font-weight: 400; }
-      .home-market-spark { flex: 1; height: 28px; max-width: 120px; min-width: 50px; transition: opacity 0.3s ease; }
+      .home-market-card.hm-dragging { opacity: 0.4; background: rgba(113,50,245,0.08); }
+      .home-market-card.hm-drag-over { border-top: 2px solid rgba(113,50,245,0.7); }
+      .home-market-drag-handle {
+        display: flex; align-items: center; justify-content: center;
+        width: 24px; flex-shrink: 0; cursor: grab; color: rgba(255,255,255,0.2);
+        font-size: 14px; touch-action: none; user-select: none; -webkit-user-select: none;
+      }
+      .home-market-drag-handle:active { color: rgba(113,50,245,0.7); cursor: grabbing; }
+      .home-market-left { width: 80px; flex-shrink: 0; }
+      .home-market-sym { font-size: 16px; font-weight: 700; color: #fff; line-height: 1.25; letter-spacing: 0.01em; }
+      .home-market-name { font-size: 11.5px; color: rgba(255,255,255,0.4); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 78px; font-weight: 400; }
+      .home-market-spark { flex: 1; height: 38px; max-width: 160px; min-width: 60px; transition: opacity 0.3s ease; }
       @keyframes sparkPulse { 0% { opacity: 0.6; } 100% { opacity: 1; } }
       .home-market-spark.spark-fresh { animation: sparkPulse 0.4s ease-out; }
-      .home-market-right { flex-shrink: 0; text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
-      .home-market-price { font-size: 15px; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; line-height: 1.1; }
-      .home-market-change-pill { font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums; padding: 3px 8px; border-radius: 20px; display: inline-block; line-height: 1.2; }
+      .home-market-right { flex-shrink: 0; text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; min-width: 110px; }
+      .home-market-price { font-size: 17px; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; line-height: 1.1; white-space: nowrap; }
+      .home-market-change-pill { font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; padding: 3px 9px; border-radius: 20px; display: inline-block; line-height: 1.2; }
       .home-market-change-pill.up { background: rgba(34,197,94,0.22); color: #22C55E; }
       .home-market-change-pill.dn { background: rgba(239,68,68,0.22); color: #EF4444; }
-      .home-market-extended { font-size: 10px; color: rgba(255,255,255,0.38); font-variant-numeric: tabular-nums; line-height: 1.2; }
+      .home-market-extended { font-size: 11px; color: rgba(255,255,255,0.38); font-variant-numeric: tabular-nums; line-height: 1.2; }
+      /* ── Home Markets Search Bar ── */
+      .home-markets-search-wrap { position: relative; margin-bottom: 4px; }
+      .home-markets-search { width: 100%; padding: 10px 14px 10px 36px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.10); border-radius: 10px; color: #fff; font-size: 14px; outline: none; transition: border-color 0.2s, background 0.2s; -webkit-appearance: none; }
+      .home-markets-search::placeholder { color: rgba(255,255,255,0.3); }
+      .home-markets-search:focus { border-color: rgba(113,50,245,0.6); background: rgba(255,255,255,0.06); }
+      .home-markets-search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; pointer-events: none; color: rgba(255,255,255,0.3); }
+      .home-markets-ac-dropdown { position: absolute; left: 0; right: 0; top: calc(100% + 4px); max-height: 240px; overflow-y: auto; background: #1a1a2e; border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.7); z-index: 9999; display: none; }
+      .home-markets-ac-item { display: flex; align-items: center; gap: 8px; padding: 10px 12px; cursor: pointer; transition: background 0.12s; }
+      .home-markets-ac-item:hover, .home-markets-ac-item.active { background: rgba(255,255,255,0.06); }
+      .home-markets-ac-item:first-child { border-radius: 12px 12px 0 0; }
+      .home-markets-ac-item:last-child { border-radius: 0 0 12px 12px; }
+      .home-markets-ac-sym { font-weight: 700; color: #fff; font-size: 14px; min-width: 52px; }
+      .home-markets-ac-name { color: rgba(255,255,255,0.5); font-size: 13px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .home-markets-ac-type { font-size: 10px; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; font-weight: 600; background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.4); }
+      /* ── Home Market Delete Button ── */
+      .home-market-delete { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: none; background: transparent; color: rgba(255,255,255,0.2); cursor: pointer; border-radius: 6px; transition: color 0.15s, background 0.15s; flex-shrink: 0; -webkit-tap-highlight-color: transparent; font-size: 15px; padding: 0; margin-left: 4px; }
+      .home-market-delete:hover { color: #EF4444; background: rgba(239,68,68,0.12); }
+      .home-market-delete:active { opacity: 0.6; }
       .home-market-loading { color: rgba(255,255,255,0.2); font-size: 11px; padding: 20px 0; text-align: center; }
       .mobile-recent-card { min-width: 155px; background: #181225; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 16px; scroll-snap-align: start; cursor: pointer; flex-shrink: 0; box-shadow: 8px 8px 16px rgba(0,0,0,0.6), -4px -4px 12px rgba(255,255,255,0.03); transition: all 0.3s ease; }
       .mobile-recent-card:active { border-color: rgba(113,50,245,0.2); box-shadow: 4px 4px 8px rgba(0,0,0,0.5), -2px -2px 6px rgba(255,255,255,0.02); transform: scale(0.97); }
@@ -2236,7 +2274,7 @@
       .fm-widget-nav { display: none !important; }
       /* Fixed back button — bottom-left on fullscreen widget tabs, away from TradingView search bar */
       .fm-fs-back-btn {
-        display: none; position: fixed; bottom: calc(6px + env(safe-area-inset-bottom)); left: 14px; z-index: 10003;
+        display: none !important; position: fixed; bottom: calc(6px + env(safe-area-inset-bottom)); left: 14px; z-index: 10003;
         width: 40px; height: 40px; border-radius: 12px;
         background: rgba(0,0,0,0.6); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
         border: 1px solid rgba(255,255,255,0.12);
@@ -2246,7 +2284,7 @@
         box-shadow: 0 4px 16px rgba(0,0,0,0.4);
       }
       .fm-fs-back-btn:active { background: rgba(255,255,255,0.12); transform: scale(0.92); }
-      body.fm-widget-active .fm-fs-back-btn { display: flex; }
+      body.fm-widget-active .fm-fs-back-btn { display: flex !important; }
 
       /* ── Unified dark color scheme — matches premium header tones ── */
       body, .app-container, .main-content, .view, .coach-layout, .coach-left, .coach-right-wrapper {
@@ -2902,6 +2940,58 @@
       box-shadow: none !important;
       background: transparent !important;
     }
+    /* Hide TradingView copyright/branding overlay (tiny black square with white outline) */
+    #fmMainTVChart .tradingview-widget-copyright,
+    #fmMainTVChart .tradingview-widget-container__widget > a,
+    #fmMainTVChart .tradingview-widget-container__widget > div:not([class]) {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
+      overflow: hidden !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+    }
+    /* Fullscreen chart mode */
+    #fmMainChartWrap.fm-chart-fullscreen {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      max-width: 100vw !important;
+      z-index: 999999 !important;
+      background: #0a0612 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border-radius: 0 !important;
+    }
+    #fmMainChartWrap.fm-chart-fullscreen #fmMainTVChart {
+      height: 100vh !important;
+      padding: 0 !important;
+    }
+    #fmMainChartWrap .fm-chart-fs-close {
+      display: none;
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      z-index: 1000000;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.7);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #fff;
+      font-size: 20px;
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    #fmMainChartWrap.fm-chart-fullscreen .fm-chart-fs-close {
+      display: flex;
+    }
     #fmMarketsContent #fmTimeRangeBar.time-tabs {
       display: flex !important;
       gap: 8px;
@@ -3331,18 +3421,22 @@
       }
       .lc-list-new-btn {
         background: none;
-        border: none;
+        border: 1px solid rgba(255,255,255,0.1);
         color: rgba(255,255,255,0.6);
         cursor: pointer;
-        padding: 8px;
+        padding: 0;
+        width: 32px;
+        height: 32px;
         display: flex;
         align-items: center;
         justify-content: center;
         -webkit-tap-highlight-color: transparent;
-        border-radius: 10px;
+        border-radius: 8px;
         transition: all 0.15s ease;
+        flex-shrink: 0;
       }
-      .lc-list-new-btn:active { background: rgba(255,255,255,0.06); color: #fff; }
+      .lc-list-new-btn:hover { background: rgba(255,255,255,0.08); color: #fff; border-color: rgba(255,255,255,0.18); }
+      .lc-list-new-btn:active { background: rgba(255,255,255,0.12); color: #fff; transform: scale(0.95); }
       .lc-chat-list-scroll {
         flex: 1;
         overflow-y: auto;
@@ -3423,7 +3517,7 @@
         flex-shrink: 0;
         border-bottom: 1px solid rgba(255,255,255,0.06);
       }
-      .lc-back-btn, .lc-new-btn {
+      .lc-back-btn {
         background: none;
         border: none;
         color: rgba(255,255,255,0.6);
@@ -3436,11 +3530,34 @@
         border-radius: 10px;
         transition: all 0.15s ease;
       }
-      .lc-back-btn:active, .lc-new-btn:active { background: rgba(255,255,255,0.06); color: #fff; }
+      .lc-back-btn:active { background: rgba(255,255,255,0.06); color: #fff; }
+      .lc-new-btn {
+        background: none;
+        border: 1px solid rgba(255,255,255,0.1);
+        color: rgba(255,255,255,0.6);
+        cursor: pointer;
+        padding: 0;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-tap-highlight-color: transparent;
+        border-radius: 8px;
+        transition: all 0.15s ease;
+        flex-shrink: 0;
+      }
+      .lc-new-btn:hover { background: rgba(255,255,255,0.08); color: #fff; border-color: rgba(255,255,255,0.18); }
+      .lc-new-btn:active { background: rgba(255,255,255,0.12); color: #fff; transform: scale(0.95); }
       .lc-topbar-title {
         font-size: 0.95rem;
         font-weight: 600;
         color: rgba(255,255,255,0.85);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        flex: 1;
+        min-width: 0;
       }
       .lc-empty-state {
         flex: 1;
@@ -3604,20 +3721,10 @@
         align-items: center;
         gap: 8px;
         padding: 12px 16px calc(12px + env(safe-area-inset-bottom)) 16px;
-        border-top: none;
+        border-top: 1px solid rgba(255,255,255,0.08);
         flex-shrink: 0;
-        background: transparent;
+        background: #0f0f1e;
         position: relative;
-      }
-      .lc-input-bar::before {
-        content: '';
-        position: absolute;
-        bottom: 0; left: 0; right: 0;
-        height: calc(100% + 32px);
-        pointer-events: none;
-        background: linear-gradient(to bottom, transparent 0%, var(--kraken-bg, #0B0611) 32px);
-        pointer-events: none;
-        z-index: -1;
       }
       .lc-input-plus {
         background: none;
@@ -3757,10 +3864,10 @@
       .lc-send-btn {
         width: 34px;
         height: 34px;
-        border-radius: 0;
-        background: none;
+        border-radius: 50%;
+        background: rgba(113,50,245,0.15);
         color: #c4b5fd;
-        border: none;
+        border: 1px solid rgba(113,50,245,0.3);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -3768,11 +3875,12 @@
         flex-shrink: 0;
         -webkit-tap-highlight-color: transparent;
         box-shadow: none;
-        transition: opacity 0.15s ease, transform 0.1s ease;
+        transition: background 0.15s ease, opacity 0.15s ease, transform 0.1s ease;
         position: relative;
         z-index: 2;
         margin: 4px 6px 4px 0;
       }
+      .lc-send-btn:hover { background: rgba(113,50,245,0.25); }
       .lc-send-btn:active { opacity: 0.6; transform: scale(0.9); }
       .lc-send-btn svg { stroke: #c4b5fd; width: 18px; height: 18px; stroke-width: 2.5; }
 
@@ -3782,7 +3890,7 @@
       .fm-widget-container .chart-fs-btn { display: none !important; }
       /* Header back button for FM widget tabs — same line as title + search btn */
       .fm-header-back-btn {
-        display: none;
+        display: none !important;
         flex-shrink: 0;
         z-index: 5;
         width: 32px;
@@ -3798,7 +3906,7 @@
         -webkit-tap-highlight-color: transparent;
       }
       .fm-header-back-btn:active { background: rgba(113,50,245,0.2); }
-      body[data-active-view="fm"] .fm-header-back-btn.visible { display: flex; }
+      body[data-active-view="fm"] .fm-header-back-btn.visible { display: flex !important; }
       /* Non-fm-widget chart containers keep the overlay btn */
       .chart-container .chart-fs-btn {
         position: absolute;
@@ -4745,6 +4853,60 @@
         max-width: 920px;
         margin: 0 auto;
       }
+      /* Desktop: Life Coach left pane minimum width */
+      #lifecoachView .lc-chat-list,
+      #lifecoachView .lc-chat-list.hidden {
+        min-width: 280px;
+        width: 320px;
+      }
+      /* Desktop: Notes two-pane layout */
+      #notesView {
+        display: flex !important;
+        flex-direction: row;
+        height: calc(100vh - 60px);
+        overflow: hidden;
+      }
+      #notesView .notes-list,
+      #notesView .notes-list.hidden {
+        position: relative !important;
+        inset: auto !important;
+        display: flex !important;
+        flex-direction: column;
+        width: 320px;
+        min-width: 280px;
+        flex-shrink: 0;
+        border-right: 1px solid rgba(255,255,255,0.08);
+        background: rgba(20,20,24,0.6);
+      }
+      #notesView .notes-editor.note-detail-view {
+        position: relative !important;
+        inset: auto !important;
+        display: flex !important;
+        flex: 1;
+        min-width: 0;
+        min-height: auto;
+        z-index: auto;
+      }
+      #notesView .notes-editor.note-detail-view:not(.active) {
+        display: flex !important;
+      }
+      /* Desktop: hide mobile back buttons in notes */
+      #notesView .notes-back-btn {
+        display: none !important;
+      }
+      #notesView .note-detail-toolbar .back-btn {
+        display: none !important;
+      }
+      /* Desktop: notes topbar left-align */
+      #notesView .notes-topbar {
+        padding: 18px 22px;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+      }
+      #notesView .notes-topbar-title {
+        text-align: left;
+        font-size: 1rem;
+        letter-spacing: 0.01em;
+      }
     }
 
     /* ── Premium Glassmorphic AI Response Titles ── */
@@ -4852,7 +5014,9 @@
     </svg>
   </button>
   <!-- Fixed back button for fullscreen TradingView tabs -->
-  <button class="fm-fs-back-btn" id="fmFsBackBtn" onclick="exitChartView()">&#x2190;</button>
+  <button class="fm-fs-back-btn" id="fmFsBackBtn" onclick="exitChartView()" aria-label="Back to Markets" title="Back to Markets">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+  </button>
   <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleMobileSidebar()"></div>
   <div class="mobile-fm-menu-backdrop" id="mobileFMTabsBackdrop" onclick="closeMobileFMMenu()"></div>
   <div class="mobile-fm-menu" id="mobileFMTabsMenu" aria-label="Financial Markets sections">
@@ -5030,7 +5194,9 @@
       <button class="header-hamburger" onclick="toggleMobileSidebar()" aria-label="Open menu" style="background:none;border:none;color:rgba(255,255,255,0.7);cursor:pointer;padding:6px;display:none;z-index:10;flex-shrink:0;min-width:44px;min-height:44px;align-items:center;justify-content:center;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="22" height="22"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
-      <button class="fm-header-back-btn" id="fmHeaderBackBtn" onclick="exitChartView()" aria-label="Back to Markets">&#x2190;</button>
+      <button class="fm-header-back-btn" id="fmHeaderBackBtn" onclick="exitChartView()" aria-label="Back to Markets" title="Back to Markets">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </button>
       <h1 id="viewTitle">Home</h1>
       <span id="wpUpdatingPill" class="wp-updating-pill" style="display:none;" aria-live="polite"></span>
       <!-- Daily Streak Counter -->
@@ -5287,7 +5453,8 @@
               </div>
             </div>
           </div>
-          <div id="fmMainChartWrap">
+          <div id="fmMainChartWrap" style="position:relative;">
+            <button class="fm-chart-fs-close" onclick="toggleChartFullscreen(false)" aria-label="Exit fullscreen">&#x2715;</button>
             <div id="fmMainTVChart"></div>
           </div>
           <!-- Time range buttons -->
@@ -5748,8 +5915,8 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
             </button>
             <span class="notes-topbar-title">Notes</span>
-            <button class="notes-new-btn" onclick="startNewNote()">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <button class="notes-new-btn" onclick="startNewNote()" aria-label="New note" title="New note">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             </button>
           </div>
           <div class="notes-scroll" id="notesListScroll">
@@ -5763,8 +5930,10 @@
         <!-- Notes Editor — Apple Notes–style detail (date → title → body, flat dark) -->
         <div class="notes-editor note-detail-view" id="notesEditor">
           <header class="note-detail-toolbar">
-            <button type="button" class="back-btn" onclick="closeNoteDetail()" aria-label="Back">←</button>
-            <button type="button" class="notes-editor-more-btn" id="notesEditorMoreBtn" onclick="toggleNoteMenu(event)" aria-label="More">
+            <button type="button" class="back-btn" onclick="closeNoteDetail()" aria-label="Back" title="Back">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            </button>
+            <button type="button" class="notes-editor-more-btn" id="notesEditorMoreBtn" onclick="toggleNoteMenu(event)" aria-label="More" title="More options">
               <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
             </button>
           </header>
@@ -5781,7 +5950,7 @@
           <div class="lc-input-bar" id="notesAIBar" style="padding:8px 12px calc(8px + env(safe-area-inset-bottom)) 12px;">
             <div class="lc-input-wrap">
               <div class="lc-input" id="notesAIInput" contenteditable="true" role="textbox" data-placeholder="Chat with AI" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendNotesAIMsg();}"></div>
-              <button class="lc-send-btn" onclick="sendNotesAIMsg()">
+              <button class="lc-send-btn" onclick="sendNotesAIMsg()" aria-label="Send message" title="Send message">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
               </button>
             </div>
@@ -5865,8 +6034,8 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
             </button>
             <span class="lc-list-topbar-title">Chats</span>
-            <button class="lc-list-new-btn" onclick="startNewLCFromList()">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <button class="lc-list-new-btn" onclick="startNewLCFromList()" aria-label="New chat" title="New chat">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             </button>
           </div>
           <div class="lc-chat-list-scroll" id="lcChatListScroll">
@@ -5885,8 +6054,8 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
             </button>
             <span class="lc-topbar-title">Life Coach</span>
-            <button class="lc-new-btn" onclick="startNewLifeCoachChat()">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <button class="lc-new-btn" onclick="startNewLifeCoachChat()" aria-label="New chat" title="New chat">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             </button>
           </div>
           <!-- Empty state -->
@@ -5897,14 +6066,14 @@
           <!-- Messages -->
           <div class="lc-messages" id="lcMessages"></div>
           <!-- Scroll to bottom arrow -->
-          <button class="lc-scroll-bottom" id="lcScrollBottom" onclick="var m=document.getElementById('lcMessages');m.scrollTo({top:m.scrollHeight,behavior:'smooth'});">
+          <button class="lc-scroll-bottom" id="lcScrollBottom" onclick="var m=document.getElementById('lcMessages');m.scrollTo({top:m.scrollHeight,behavior:'smooth'});" aria-label="Scroll to bottom" title="Scroll to bottom">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
           </button>
           <!-- Input bar -->
           <div class="lc-input-bar">
             <div class="lc-input-wrap">
-              <div class="lc-input" id="lcInput" contenteditable="true" role="textbox" data-placeholder="Ask your life coach anything" enterkeyhint="send" inputmode="text" spellcheck="false" style="min-height:22px;max-height:120px;overflow-y:auto;" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendLifeCoachMsg();}"></div>
-              <button class="lc-send-btn" onclick="sendLifeCoachMsg()">
+              <div class="lc-input" id="lcInput" contenteditable="true" role="textbox" data-placeholder="Message your Life Coach..." enterkeyhint="send" inputmode="text" spellcheck="false" style="min-height:22px;max-height:120px;overflow-y:auto;" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendLifeCoachMsg();}"></div>
+              <button class="lc-send-btn" onclick="sendLifeCoachMsg()" aria-label="Send message" title="Send message">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
               </button>
             </div>
@@ -6415,6 +6584,11 @@
         <div class="home-markets-header">
           <div class="mobile-sec-label">Markets</div>
           <span class="home-markets-see-all" onclick="hideMobileHome();openFMTab('fmMarkets');">See All →</span>
+        </div>
+        <div class="home-markets-search-wrap">
+          <svg class="home-markets-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" class="home-markets-search" id="homeMarketsSearchInput" placeholder="Search ticker to add..." autocomplete="off" autocorrect="off" spellcheck="false">
+          <div class="home-markets-ac-dropdown" id="homeMarketsAcDropdown"></div>
         </div>
         <div class="home-markets-row" id="homeMarketsRow">
           <div class="home-market-loading">Loading prices...</div>
@@ -9137,7 +9311,7 @@
       var canvas = null;
       var ctx = null;
       var dpr = 1;
-      var player = { x: 195, y: 520, size: 28, speed: 5, targetY: 520, targetX: 195 };
+      var player = { x: 195, y: 520, size: 48, speed: 5, targetY: 520, targetX: 195 };
       var moveDx = 0;
       var moveDy = 0;
       var bullets = [];
@@ -9387,7 +9561,7 @@
         shipCollectibles = [];
         shipCollectSpawnAcc = 0;
         playerShipTier = 0;
-        player.size = 28;
+        player.size = 48;
         score = 0;
         gems = 0;
         gameOver = false;
@@ -9409,6 +9583,8 @@
         enemyBullets = [];
         explosionEffects = [];
         activeBoss = null;
+        _bossCooldownTimer = 0;
+        _bossKillCount = 0;
         _wingmanLevel = 0;
         _wingmanFireTimer = 0;
         _shieldActive = false;
@@ -9462,6 +9638,8 @@
 
       // Boss system
       var activeBoss = null;
+      var _bossCooldownTimer = 0; // seconds until next boss can spawn
+      var _bossKillCount = 0; // track total bosses killed
       var BOSS_NAMES = [
         'Three Eyes Frog', 'Void Sentinel', 'Neon Hydra', 'Star Devourer',
         'Plasma Kraken', 'Crystal Phantom', 'Iron Scorpion', 'Dark Nebula',
@@ -9685,25 +9863,57 @@
         var type, sz, hp, isEnemyShip = true;
 
         // All levels: ONLY enemy aircraft — no asteroids, no debris, no comets.
-        // Level 1 = easy fighters, Level 2 = fighters, Level 3+ = mix of fighters + bombers.
+        // Level 1 = easy fighters + occasional scouts
+        // Level 2 = fighters + scouts + zigzag drones
+        // Level 3+ = full mix: fighters, bombers, scouts, zigzag, tanks
         if (currentLevel === 1) {
-          type = 'enemy-fighter';
-          sz = 64 + Math.random() * 14;
-          hp = 1 + Math.floor(Math.random() * 2);
+          var roll = Math.random();
+          if (roll < 0.8) {
+            type = 'enemy-fighter';
+            sz = 64 + Math.random() * 14;
+            hp = 1 + Math.floor(Math.random() * 2);
+          } else {
+            type = 'enemy-scout';
+            sz = 42 + Math.random() * 10;
+            hp = 1;
+          }
         } else if (currentLevel === 2) {
-          type = 'enemy-fighter';
-          sz = 68 + Math.random() * 14;
-          hp = 2 + Math.floor(Math.random() * 2);
-        } else {
-          var shipType = Math.random();
-          if (shipType < 0.65) {
+          var roll = Math.random();
+          if (roll < 0.55) {
             type = 'enemy-fighter';
             sz = 68 + Math.random() * 14;
             hp = 2 + Math.floor(Math.random() * 2);
+          } else if (roll < 0.8) {
+            type = 'enemy-scout';
+            sz = 42 + Math.random() * 10;
+            hp = 1;
           } else {
+            type = 'enemy-zigzag';
+            sz = 56 + Math.random() * 12;
+            hp = 2;
+          }
+        } else {
+          var shipType = Math.random();
+          if (shipType < 0.35) {
+            type = 'enemy-fighter';
+            sz = 68 + Math.random() * 14;
+            hp = 2 + Math.floor(Math.random() * 2);
+          } else if (shipType < 0.55) {
             type = 'enemy-bomber';
             sz = 88 + Math.random() * 16;
             hp = 4 + Math.floor(Math.random() * 3);
+          } else if (shipType < 0.72) {
+            type = 'enemy-scout';
+            sz = 42 + Math.random() * 10;
+            hp = 1;
+          } else if (shipType < 0.88) {
+            type = 'enemy-zigzag';
+            sz = 56 + Math.random() * 12;
+            hp = 2 + Math.floor(Math.random() * 1);
+          } else {
+            type = 'enemy-tank';
+            sz = 96 + Math.random() * 18;
+            hp = 6 + Math.floor(Math.random() * 4) + Math.min(4, currentLevel);
           }
         }
 
@@ -9713,15 +9923,44 @@
         var rotSpeed = isEnemyShip ? 0 : (Math.random() - 0.5) * 2.5;
 
         var xPos = margin + Math.random() * (GW - margin * 2);
-        var enemyColor = isEnemyShip ? (type === 'enemy-fighter' ? '#ff6644' : '#ff8800') : null;
+        var enemyColor = isEnemyShip ? (
+          type === 'enemy-fighter' ? '#ff6644' :
+          type === 'enemy-bomber' ? '#ff8800' :
+          type === 'enemy-scout' ? '#00eeff' :
+          type === 'enemy-zigzag' ? '#dd44ff' :
+          type === 'enemy-tank' ? '#ff2222' : '#ff6644'
+        ) : null;
 
+        // Type-specific speed, movement, sine amplitude
+        var baseSpd = 85 + Math.random() * 50 + Math.min(55, score * 0.11);
+        var mvPat = Math.random() > 0.5 ? 'sine' : 'straight';
+        var sineAmp = 55;
+        var _hY = isEnemyShip ? GH * 0.08 + Math.random() * GH * 0.35 : null;
+        var _lT = isEnemyShip ? 14 + Math.random() * 8 : null;
+        var _fI = 2.0 + Math.random() * 1.5;
+        if (type === 'enemy-scout') {
+          baseSpd = 170 + Math.random() * 80;
+          mvPat = 'straight';
+          _hY = null; _lT = null;
+          _fI = 1.2 + Math.random() * 0.8;
+        } else if (type === 'enemy-zigzag') {
+          baseSpd = 60 + Math.random() * 30;
+          mvPat = 'sine';
+          sineAmp = 120 + Math.random() * 60;
+        } else if (type === 'enemy-tank') {
+          baseSpd = 40 + Math.random() * 20;
+          mvPat = 'straight';
+          _hY = GH * 0.10 + Math.random() * GH * 0.28;
+          _lT = 20 + Math.random() * 10;
+          _fI = 1.0 + Math.random() * 0.5;
+        }
         targets.push({
           x: xPos,
           y: -sz * 0.5 - 8,
           size: sz,
           health: hp,
           maxHealth: hp,
-          speed: 85 + Math.random() * 50 + Math.min(55, score * 0.11),
+          speed: baseSpd,
           type: type,
           colorIdx: colorIdx,
           asteroidColor: asteroidColor,
@@ -9730,11 +9969,13 @@
           wobble: Math.random() * Math.PI * 2,
           isEnemyShip: isEnemyShip,
           enemyColor: enemyColor,
-          movePattern: Math.random() > 0.5 ? 'sine' : 'straight',
+          movePattern: mvPat,
           patternPhase: Math.random() * Math.PI * 2,
+          sineAmplitude: sineAmp,
           fireCounter: Math.random() * 0.5,
-          holdY: isEnemyShip ? GH * 0.08 + Math.random() * GH * 0.18 : null,
-          lifeTimer: isEnemyShip ? 14 + Math.random() * 8 : null
+          fireInterval: _fI,
+          holdY: _hY,
+          lifeTimer: _lT
         });
 
         if (isEnemyShip) levelEnemiesKilled = Math.max(0, levelEnemiesKilled);
@@ -9808,7 +10049,7 @@
             fireCounter: 1.5 + Math.random() * 2,
             formationEnemy: true,
             sineAmplitude: 30 + Math.random() * 40,
-            holdY: GH * 0.06 + (p.yOff * 0.2) + Math.random() * 18,
+            holdY: GH * 0.10 + (p.yOff * 0.5) + Math.random() * 30,
             lifeTimer: 16 + Math.random() * 8
           });
           levelEnemiesTotal += 1;
@@ -10014,6 +10255,9 @@
 
         if (gameOver) return;
 
+        // === Boss cooldown timer ===
+        if (_bossCooldownTimer > 0) _bossCooldownTimer -= dt;
+
         // === Boss update ===
         if (activeBoss) {
           var boss = activeBoss;
@@ -10060,6 +10304,8 @@
                 triggerScreenShake(10, 0.6);
                 playExplosionSound(true);
                 activeBoss = null;
+                _bossKillCount += 1;
+                _bossCooldownTimer = 60 + Math.min(30, _bossKillCount * 10); // 60s base + 10s per kill, max 90s
                 levelTransition = true;
                 levelTransitionTimer = 2.5;
                 playLevelCompleteSound();
@@ -10494,7 +10740,7 @@
           if (Math.sqrt(scdx * scdx + scdy * scdy) < sc.size + player.size * 0.5) {
             playerShipTier = sc.tier;
             var tierDef = SHIP_TIERS[sc.tier];
-            player.size = 28 + (tierDef.sizeBoost || 0);
+            player.size = 48 + (tierDef.sizeBoost || 0);
             spawnExplosion(sc.x, sc.y, tierDef.accentColor, 30);
             playPowerupSound();
             shipCollectibles.splice(sci, 1);
@@ -10560,17 +10806,23 @@
         targetLoop: for (j = targets.length - 1; j >= 0; j--) {
           var t = targets[j];
           if (t.isEnemyShip) {
-            // Enemy ships hold position near top — enter screen then lock Y
-            if (!t.holdY) t.holdY = GH * 0.08 + Math.random() * GH * 0.18;
-            if (t.lifeTimer === undefined || t.lifeTimer === null) t.lifeTimer = 14 + Math.random() * 8;
-            t.lifeTimer -= dt;
-            if (t.y < t.holdY) {
-              t.y = Math.min(t.holdY, t.y + t.speed * dt);
-            } else if (t.lifeTimer <= 0) {
-              t.y -= t.speed * 0.7 * dt; // retreat upward after lifespan
+            if (t.type === 'enemy-scout') {
+              // Scouts dart straight through — no hold position
+              t.y += t.speed * dt;
+              if (t.y > GH + t.size) { targets.splice(j, 1); continue targetLoop; }
+            } else {
+              // Other enemy ships hold position near top — enter screen then lock Y
+              if (!t.holdY) t.holdY = GH * 0.08 + Math.random() * GH * 0.35;
+              if (t.lifeTimer === undefined || t.lifeTimer === null) t.lifeTimer = 14 + Math.random() * 8;
+              t.lifeTimer -= dt;
+              if (t.y < t.holdY) {
+                t.y = Math.min(t.holdY, t.y + t.speed * dt);
+              } else if (t.lifeTimer <= 0) {
+                t.y -= t.speed * 0.7 * dt; // retreat upward after lifespan
+              }
+              // Remove once retreated fully off top
+              if (t.y < -t.size * 2) { targets.splice(j, 1); continue targetLoop; }
             }
-            // Remove once retreated fully off top
-            if (t.y < -t.size * 2) { targets.splice(j, 1); continue targetLoop; }
           } else {
             t.y += t.speed * dt;
           }
@@ -10586,14 +10838,38 @@
             t.fireCounter -= dt;
             if (t.fireCounter <= 0) {
               var bSpd = t.isEnemyShip ? 220 : 160;
-              var bClr = t.isEnemyShip ? '#00ff88' : '#ff4400';
+              var bClr = t.isEnemyShip ? '#00aaff' : '#ff4400';
               var bSz  = t.isEnemyShip ? 6 : 5;
-              enemyBullets.push({
-                x: t.x, y: t.y + t.size * 0.4,
-                vx: 0, vy: bSpd,
-                life: 3.0, color: bClr, size: bSz
-              });
-              t.fireCounter = 2.0 + Math.random() * 1.5;
+
+              if (t.type === 'enemy-tank') {
+                // Tank fires a 3-bullet spread
+                bClr = '#ff2222';
+                bSz = 7;
+                for (var sp = -1; sp <= 1; sp++) {
+                  enemyBullets.push({
+                    x: t.x + sp * 15, y: t.y + t.size * 0.4,
+                    vx: sp * 55, vy: bSpd * 0.85,
+                    life: 3.0, color: bClr, size: bSz
+                  });
+                }
+              } else if (t.type === 'enemy-scout') {
+                // Scout fires quick small shots
+                bClr = '#00eeff';
+                bSz = 4;
+                bSpd = 280;
+                enemyBullets.push({
+                  x: t.x, y: t.y + t.size * 0.4,
+                  vx: 0, vy: bSpd,
+                  life: 2.0, color: bClr, size: bSz
+                });
+              } else {
+                enemyBullets.push({
+                  x: t.x, y: t.y + t.size * 0.4,
+                  vx: 0, vy: bSpd,
+                  life: 3.0, color: bClr, size: bSz
+                });
+              }
+              t.fireCounter = t.fireInterval || (2.0 + Math.random() * 1.5);
             }
           }
 
@@ -10691,13 +10967,13 @@
                 if (t.isEnemyShip) {
                   levelEnemiesKilled += 1;
                   var targetKillsForLevel = currentLevel === 1 ? 18 : (currentLevel === 2 ? 20 : 22);
-                  if (levelEnemiesKilled >= targetKillsForLevel && !activeBoss) {
+                  if (levelEnemiesKilled >= targetKillsForLevel && !activeBoss && _bossCooldownTimer <= 0) {
                     spawnBoss(currentLevel);
                   }
                 } else {
                   levelEnemiesKilled += 1;
                   var targetKillsForLevel = 18;
-                  if (currentLevel === 1 && levelEnemiesKilled >= targetKillsForLevel && !activeBoss) {
+                  if (currentLevel === 1 && levelEnemiesKilled >= targetKillsForLevel && !activeBoss && _bossCooldownTimer <= 0) {
                     spawnBoss(currentLevel);
                   }
                 }
@@ -10831,280 +11107,410 @@
         var r = tg.size * 0.5;
         var isFighter = tg.type === 'enemy-fighter';
         var isBomber  = tg.type === 'enemy-bomber';
+        var isScout   = tg.type === 'enemy-scout';
+        var isZigzag  = tg.type === 'enemy-zigzag';
+        var isTank    = tg.type === 'enemy-tank';
         ctx.save();
         ctx.translate(tg.x, tg.y);
 
-        if (isFighter) {
-          // ======= MILITARY FIGHTER JET =======
-          // Nose points DOWN toward player, tail UP. Top-down silhouette.
-          var jDark = '#121a08';
-          var jMid  = '#2d4a18';
-          var jHi   = '#4a7228';
-          var jEdge = '#6a9a3a';
+        if (isScout) {
+          // ======= SCOUT — small fast diamond/dart =======
+          var sDark = '#003344';
+          var sMid  = '#006688';
+          var sHi   = '#00aadd';
+          var sGlow = '#00eeff';
 
-          // Engine exhaust trail behind tail
-          var fk = Math.sin(Date.now() * 0.011 + tg.x) * 0.2 + 0.8;
-          var exG = ctx.createLinearGradient(0, -r*0.88, 0, -r*0.88 - r*fk*1.4);
-          exG.addColorStop(0,   'rgba(255,160,20,0.9)');
-          exG.addColorStop(0.4, 'rgba(255,80,0,0.5)');
-          exG.addColorStop(1,   'rgba(255,40,0,0)');
-          ctx.fillStyle = exG;
+          // Engine trail
+          var fk = Math.sin(Date.now() * 0.015 + tg.x) * 0.3 + 0.7;
+          ctx.shadowColor = sGlow;
+          ctx.shadowBlur = 12;
+          var trG = ctx.createLinearGradient(0, -r*0.5, 0, -r*0.5 - r*fk*2);
+          trG.addColorStop(0, 'rgba(0,238,255,0.9)');
+          trG.addColorStop(0.5, 'rgba(0,150,255,0.4)');
+          trG.addColorStop(1, 'rgba(0,100,200,0)');
+          ctx.fillStyle = trG;
           ctx.beginPath();
-          ctx.moveTo(-r*0.08, -r*0.82);
-          ctx.lineTo( r*0.08, -r*0.82);
-          ctx.lineTo( r*0.02, -r*0.88 - r*fk*1.4);
-          ctx.lineTo(-r*0.02, -r*0.88 - r*fk*1.4);
+          ctx.moveTo(-r*0.1, -r*0.4);
+          ctx.lineTo(r*0.1, -r*0.4);
+          ctx.lineTo(r*0.03, -r*0.5 - r*fk*2);
+          ctx.lineTo(-r*0.03, -r*0.5 - r*fk*2);
           ctx.fill();
 
-          // Delta wings — large swept triangles from mid-fuselage to far tips
-          ctx.strokeStyle = jEdge;
-          ctx.lineWidth = 1;
-          ctx.shadowColor = '#88ff44';
-          ctx.shadowBlur = 5;
-          for (var ws = -1; ws <= 1; ws += 2) {
-            ctx.fillStyle = jMid;
-            ctx.beginPath();
-            ctx.moveTo(ws*r*0.15,  r*0.2);    // leading edge root (near nose)
-            ctx.lineTo(ws*r*0.92, -r*0.35);   // wingtip
-            ctx.lineTo(ws*r*0.55, -r*0.82);   // trailing tip
-            ctx.lineTo(ws*r*0.15, -r*0.55);   // trailing root
-            ctx.closePath();
-            ctx.fill(); ctx.stroke();
-            // Wing panel highlight
-            ctx.fillStyle = jHi;
-            ctx.beginPath();
-            ctx.moveTo(ws*r*0.18,  r*0.1);
-            ctx.lineTo(ws*r*0.7,  -r*0.3);
-            ctx.lineTo(ws*r*0.45, -r*0.6);
-            ctx.lineTo(ws*r*0.18, -r*0.45);
-            ctx.closePath();
-            ctx.fill();
-          }
-
-          // Fuselage — narrow pointed dart body
-          ctx.fillStyle = jMid;
+          // Diamond body
           ctx.shadowBlur = 8;
+          ctx.fillStyle = sMid;
+          ctx.strokeStyle = sHi;
+          ctx.lineWidth = 1.5;
           ctx.beginPath();
-          ctx.moveTo(0,        r*0.98);   // nose tip (toward player)
-          ctx.lineTo(-r*0.12,  r*0.6);
-          ctx.lineTo(-r*0.2,   r*0.15);
-          ctx.lineTo(-r*0.18, -r*0.55);
-          ctx.lineTo(-r*0.1,  -r*0.92);   // tail left
-          ctx.lineTo( r*0.1,  -r*0.92);   // tail right
-          ctx.lineTo( r*0.18, -r*0.55);
-          ctx.lineTo( r*0.2,   r*0.15);
-          ctx.lineTo( r*0.12,  r*0.6);
+          ctx.moveTo(0, r*0.9);        // nose
+          ctx.lineTo(-r*0.5, 0);       // left
+          ctx.lineTo(0, -r*0.6);       // tail
+          ctx.lineTo(r*0.5, 0);        // right
           ctx.closePath();
           ctx.fill(); ctx.stroke();
 
-          // Fuselage center stripe (darker panel)
-          ctx.fillStyle = jDark;
-          ctx.shadowBlur = 0;
+          // Inner panel
+          ctx.fillStyle = sDark;
           ctx.beginPath();
-          ctx.moveTo(0,        r*0.9);
-          ctx.lineTo(-r*0.08,  r*0.55);
-          ctx.lineTo(-r*0.12,  r*0.1);
-          ctx.lineTo(-r*0.1,  -r*0.88);
-          ctx.lineTo( r*0.1,  -r*0.88);
-          ctx.lineTo( r*0.12,  r*0.1);
-          ctx.lineTo( r*0.08,  r*0.55);
+          ctx.moveTo(0, r*0.6);
+          ctx.lineTo(-r*0.25, 0);
+          ctx.lineTo(0, -r*0.35);
+          ctx.lineTo(r*0.25, 0);
           ctx.closePath();
           ctx.fill();
 
-          // Cockpit canopy — glassy teardrop behind nose
-          ctx.fillStyle = '#7bbfee';
-          ctx.globalAlpha = 0.9;
-          ctx.shadowColor = '#aaddff';
-          ctx.shadowBlur = 6;
+          // Cockpit dot
+          ctx.fillStyle = sGlow;
+          ctx.shadowColor = sGlow;
+          ctx.shadowBlur = 10;
           ctx.beginPath();
-          ctx.ellipse(0, r*0.48, r*0.08, r*0.17, 0, 0, Math.PI*2);
+          ctx.arc(0, r*0.2, r*0.1, 0, Math.PI*2);
           ctx.fill();
-          ctx.globalAlpha = 1;
           ctx.shadowBlur = 0;
 
-          // Tail fins — small delta stabs at top
-          ctx.fillStyle = jDark;
-          ctx.strokeStyle = jEdge;
-          for (var tf = -1; tf <= 1; tf += 2) {
+        } else if (isZigzag) {
+          // ======= ZIGZAG DRONE — hexagonal body =======
+          var zDark = '#220044';
+          var zMid  = '#6611aa';
+          var zHi   = '#aa44ff';
+          var zGlow = '#dd44ff';
+
+          // Pulsing glow
+          var pulse = Math.sin(Date.now() * 0.005 + tg.x) * 0.3 + 0.7;
+          ctx.shadowColor = zGlow;
+          ctx.shadowBlur = 14 * pulse;
+
+          // Hexagonal body
+          ctx.fillStyle = zMid;
+          ctx.strokeStyle = zHi;
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          for (var hi = 0; hi < 6; hi++) {
+            var ha = (hi / 6) * Math.PI * 2 - Math.PI / 6;
+            var hx = Math.cos(ha) * r * 0.6;
+            var hy = Math.sin(ha) * r * 0.6;
+            if (hi === 0) ctx.moveTo(hx, hy); else ctx.lineTo(hx, hy);
+          }
+          ctx.closePath();
+          ctx.fill(); ctx.stroke();
+
+          // Inner hexagon
+          ctx.fillStyle = zDark;
+          ctx.beginPath();
+          for (var hi = 0; hi < 6; hi++) {
+            var ha = (hi / 6) * Math.PI * 2 - Math.PI / 6;
+            var hx = Math.cos(ha) * r * 0.35;
+            var hy = Math.sin(ha) * r * 0.35;
+            if (hi === 0) ctx.moveTo(hx, hy); else ctx.lineTo(hx, hy);
+          }
+          ctx.closePath();
+          ctx.fill();
+
+          // Rotating energy ring
+          var rAngle = Date.now() * 0.004;
+          ctx.strokeStyle = zGlow;
+          ctx.lineWidth = 2;
+          ctx.globalAlpha = 0.6 * pulse;
+          ctx.beginPath();
+          ctx.arc(0, 0, r * 0.72, rAngle, rAngle + Math.PI * 1.2);
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+
+          // Center eye
+          ctx.fillStyle = zGlow;
+          ctx.shadowColor = zGlow;
+          ctx.shadowBlur = 12;
+          ctx.beginPath();
+          ctx.arc(0, 0, r*0.12, 0, Math.PI*2);
+          ctx.fill();
+
+          // Antenna spikes top and bottom
+          ctx.strokeStyle = zHi;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(0, -r*0.6);
+          ctx.lineTo(0, -r*0.85);
+          ctx.moveTo(0, r*0.6);
+          ctx.lineTo(0, r*0.85);
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+
+        } else if (isTank) {
+          // ======= TANK — big armored octagon with cannons =======
+          var tDark = '#330000';
+          var tMid  = '#881111';
+          var tHi   = '#cc2222';
+          var tGlow = '#ff4444';
+
+          // Heavy engine exhaust
+          var fk = Math.sin(Date.now() * 0.008 + tg.x) * 0.2 + 0.8;
+          ctx.shadowColor = tGlow;
+          ctx.shadowBlur = 10;
+          for (var ex = -1; ex <= 1; ex += 2) {
+            var exG = ctx.createLinearGradient(ex*r*0.25, -r*0.65, ex*r*0.25, -r*0.65 - r*fk*1.2);
+            exG.addColorStop(0, 'rgba(255,80,0,0.8)');
+            exG.addColorStop(0.5, 'rgba(255,40,0,0.3)');
+            exG.addColorStop(1, 'rgba(200,20,0,0)');
+            ctx.fillStyle = exG;
             ctx.beginPath();
-            ctx.moveTo(tf*r*0.1,  -r*0.6);
-            ctx.lineTo(tf*r*0.3,  -r*0.76);
-            ctx.lineTo(tf*r*0.22, -r*0.94);
-            ctx.lineTo(tf*r*0.1,  -r*0.9);
+            ctx.moveTo(ex*r*0.18, -r*0.6);
+            ctx.lineTo(ex*r*0.32, -r*0.6);
+            ctx.lineTo(ex*r*0.28, -r*0.65 - r*fk*1.2);
+            ctx.lineTo(ex*r*0.22, -r*0.65 - r*fk*1.2);
+            ctx.fill();
+          }
+
+          // Octagonal armored hull
+          ctx.fillStyle = tMid;
+          ctx.strokeStyle = tHi;
+          ctx.lineWidth = 2;
+          ctx.shadowBlur = 8;
+          ctx.beginPath();
+          for (var oi = 0; oi < 8; oi++) {
+            var oa = (oi / 8) * Math.PI * 2 - Math.PI / 8;
+            var ox = Math.cos(oa) * r * 0.7;
+            var oy = Math.sin(oa) * r * 0.65;
+            if (oi === 0) ctx.moveTo(ox, oy); else ctx.lineTo(ox, oy);
+          }
+          ctx.closePath();
+          ctx.fill(); ctx.stroke();
+
+          // Inner armor plate
+          ctx.fillStyle = tDark;
+          ctx.beginPath();
+          for (var oi = 0; oi < 8; oi++) {
+            var oa = (oi / 8) * Math.PI * 2 - Math.PI / 8;
+            var ox = Math.cos(oa) * r * 0.45;
+            var oy = Math.sin(oa) * r * 0.42;
+            if (oi === 0) ctx.moveTo(ox, oy); else ctx.lineTo(ox, oy);
+          }
+          ctx.closePath();
+          ctx.fill();
+
+          // Side cannons
+          ctx.fillStyle = '#551111';
+          ctx.strokeStyle = tHi;
+          ctx.lineWidth = 1.5;
+          for (var cn = -1; cn <= 1; cn += 2) {
+            ctx.beginPath();
+            ctx.rect(cn*r*0.55, r*0.1, cn*r*0.25, r*0.5);
+            ctx.fill(); ctx.stroke();
+            // Cannon tip glow
+            ctx.fillStyle = tGlow;
+            ctx.shadowColor = tGlow;
+            ctx.shadowBlur = 8;
+            ctx.beginPath();
+            ctx.arc(cn*r*0.68, r*0.6, r*0.06, 0, Math.PI*2);
+            ctx.fill();
+            ctx.fillStyle = '#551111';
+            ctx.shadowBlur = 0;
+          }
+
+          // Central turret
+          ctx.fillStyle = '#440000';
+          ctx.strokeStyle = tHi;
+          ctx.beginPath();
+          ctx.arc(0, 0, r*0.22, 0, Math.PI*2);
+          ctx.fill(); ctx.stroke();
+
+          // Turret barrel pointing down
+          ctx.fillStyle = '#660000';
+          ctx.beginPath();
+          ctx.rect(-r*0.05, 0, r*0.1, r*0.45);
+          ctx.fill();
+          ctx.fillStyle = tGlow;
+          ctx.shadowColor = tGlow;
+          ctx.shadowBlur = 8;
+          ctx.beginPath();
+          ctx.arc(0, r*0.45, r*0.06, 0, Math.PI*2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+
+          // Armor bolts
+          ctx.fillStyle = '#aa3333';
+          for (var bi = 0; bi < 8; bi++) {
+            var ba = (bi / 8) * Math.PI * 2;
+            ctx.beginPath();
+            ctx.arc(Math.cos(ba)*r*0.55, Math.sin(ba)*r*0.52, r*0.035, 0, Math.PI*2);
+            ctx.fill();
+          }
+
+        } else if (isFighter) {
+          // ======= ALIEN FIGHTER — menacing triangular UFO =======
+          var jDark = '#330808';
+          var jMid  = '#882211';
+          var jHi   = '#cc4422';
+          var jEdge = '#ff6644';
+
+          // Engine exhaust trail (alien plasma)
+          var fk = Math.sin(Date.now() * 0.011 + tg.x) * 0.3 + 0.7;
+          ctx.shadowColor = jEdge;
+          ctx.shadowBlur = 14;
+          for (var ex = -1; ex <= 1; ex++) {
+            var exG = ctx.createLinearGradient(ex*r*0.2, -r*0.5, ex*r*0.2, -r*0.5 - r*fk*1.6);
+            exG.addColorStop(0, 'rgba(255,100,60,0.9)');
+            exG.addColorStop(0.4, 'rgba(255,50,0,0.4)');
+            exG.addColorStop(1, 'rgba(200,30,0,0)');
+            ctx.fillStyle = exG;
+            ctx.beginPath();
+            ctx.moveTo(ex*r*0.13, -r*0.45);
+            ctx.lineTo(ex*r*0.27, -r*0.45);
+            ctx.lineTo(ex*r*0.22, -r*0.5 - r*fk*1.6);
+            ctx.lineTo(ex*r*0.18, -r*0.5 - r*fk*1.6);
+            ctx.fill();
+          }
+
+          // Spiked wings — angular alien prongs
+          ctx.strokeStyle = jHi;
+          ctx.lineWidth = 1.5;
+          ctx.shadowBlur = 8;
+          for (var ws = -1; ws <= 1; ws += 2) {
+            ctx.fillStyle = jMid;
+            ctx.beginPath();
+            ctx.moveTo(ws*r*0.12, r*0.1);
+            ctx.lineTo(ws*r*0.85, -r*0.15);
+            ctx.lineTo(ws*r*0.95, -r*0.35);
+            ctx.lineTo(ws*r*0.5, -r*0.25);
+            ctx.lineTo(ws*r*0.15, -r*0.4);
             ctx.closePath();
             ctx.fill(); ctx.stroke();
           }
 
-          // Engine glow at tail
-          ctx.shadowColor = '#ff7700';
-          ctx.shadowBlur = 16;
-          var eG = ctx.createRadialGradient(0, -r*0.86, 0, 0, -r*0.86, r*0.13);
-          eG.addColorStop(0,   '#ffffff');
-          eG.addColorStop(0.35,'#ff9900');
-          eG.addColorStop(1,   'rgba(255,80,0,0)');
-          ctx.fillStyle = eG;
-          ctx.beginPath();
-          ctx.ellipse(0, -r*0.86, r*0.1, r*0.1, 0, 0, Math.PI*2);
-          ctx.fill();
-          ctx.shadowBlur = 0;
-
-          // Gun barrel tip at nose — red hot
-          ctx.shadowColor = '#ff2200';
+          // Main body — inverted triangle alien hull
+          ctx.fillStyle = jMid;
+          ctx.shadowColor = jEdge;
           ctx.shadowBlur = 10;
-          ctx.fillStyle = '#ff1100';
           ctx.beginPath();
-          ctx.arc(0, r*0.94, r*0.055, 0, Math.PI*2);
+          ctx.moveTo(0, r*0.8);
+          ctx.lineTo(-r*0.35, r*0.1);
+          ctx.lineTo(-r*0.3, -r*0.45);
+          ctx.lineTo(0, -r*0.55);
+          ctx.lineTo(r*0.3, -r*0.45);
+          ctx.lineTo(r*0.35, r*0.1);
+          ctx.closePath();
+          ctx.fill(); ctx.stroke();
+
+          // Dark inner hull panel
+          ctx.fillStyle = jDark;
+          ctx.shadowBlur = 0;
+          ctx.beginPath();
+          ctx.moveTo(0, r*0.6);
+          ctx.lineTo(-r*0.2, r*0.05);
+          ctx.lineTo(-r*0.18, -r*0.35);
+          ctx.lineTo(0, -r*0.42);
+          ctx.lineTo(r*0.18, -r*0.35);
+          ctx.lineTo(r*0.2, r*0.05);
+          ctx.closePath();
+          ctx.fill();
+
+          // Alien cockpit eye — glowing red orb
+          var eyePulse = Math.sin(Date.now() * 0.006 + tg.x) * 0.3 + 0.7;
+          ctx.shadowColor = jEdge;
+          ctx.shadowBlur = 16 * eyePulse;
+          var eyeGrad = ctx.createRadialGradient(0, r*0.15, 0, 0, r*0.15, r*0.14);
+          eyeGrad.addColorStop(0, '#ffffff');
+          eyeGrad.addColorStop(0.3, jEdge);
+          eyeGrad.addColorStop(1, jDark);
+          ctx.fillStyle = eyeGrad;
+          ctx.beginPath();
+          ctx.arc(0, r*0.15, r*0.12, 0, Math.PI*2);
+          ctx.fill();
+
+          // Weapon tip glow at nose
+          ctx.shadowColor = '#ff2200';
+          ctx.shadowBlur = 12;
+          ctx.fillStyle = '#ff3300';
+          ctx.beginPath();
+          ctx.arc(0, r*0.78, r*0.05, 0, Math.PI*2);
           ctx.fill();
           ctx.shadowBlur = 0;
 
         } else {
-          // ======= ATTACK HELICOPTER =======
-          // Nose points DOWN toward player, tail boom UP, rotor on top.
-          var hDark = '#0d0d05';
-          var hMid  = '#252510';
-          var hHi   = '#3e3e1a';
-          var hEdge = '#5a5a28';
+          // ======= ALIEN BOMBER — large saucer with glowing ring =======
+          var hDark = '#1a0022';
+          var hMid  = '#442266';
+          var hHi   = '#7744aa';
+          var hEdge = '#ff8800';
 
-          // Spinning main rotor above helicopter body
-          var rotA = Date.now() * 0.007;
-          ctx.shadowColor = '#aaaaaa';
-          ctx.shadowBlur = 3;
-          // Rotor hub
-          ctx.fillStyle = '#1a1a08';
-          ctx.beginPath();
-          ctx.arc(0, -r*0.52, r*0.1, 0, Math.PI*2);
-          ctx.fill();
-          // Two rotor blades
-          ctx.strokeStyle = '#4a4a22';
-          ctx.lineWidth = r*0.09;
-          ctx.lineCap = 'round';
-          for (var rb = 0; rb < 2; rb++) {
-            var ba = rotA + rb * Math.PI;
-            var bx1 = Math.cos(ba)*r*0.12, by1 = -r*0.52 + Math.sin(ba)*r*0.12;
-            var bx2 = Math.cos(ba)*r*0.88, by2 = -r*0.52 + Math.sin(ba)*r*0.88;
+          // Pulsing energy field
+          var pulse = Math.sin(Date.now() * 0.004 + tg.x) * 0.25 + 0.75;
+
+          // Engine exhaust — twin plasma trails
+          var fk = Math.sin(Date.now() * 0.009 + tg.x) * 0.2 + 0.8;
+          ctx.shadowColor = hEdge;
+          ctx.shadowBlur = 10;
+          for (var ex = -1; ex <= 1; ex += 2) {
+            var exG = ctx.createLinearGradient(ex*r*0.25, -r*0.45, ex*r*0.25, -r*0.45 - r*fk*1.2);
+            exG.addColorStop(0, 'rgba(255,136,0,0.8)');
+            exG.addColorStop(0.5, 'rgba(200,60,180,0.3)');
+            exG.addColorStop(1, 'rgba(100,20,100,0)');
+            ctx.fillStyle = exG;
             ctx.beginPath();
-            ctx.moveTo(bx1, by1);
-            ctx.lineTo(bx2, by2);
-            ctx.stroke();
-          }
-          ctx.lineCap = 'butt';
-          ctx.lineWidth = 1;
-          ctx.shadowBlur = 0;
-
-          // Tail boom — narrow rod from body top upward
-          ctx.fillStyle = hMid;
-          ctx.strokeStyle = hEdge;
-          ctx.beginPath();
-          ctx.moveTo(-r*0.09, -r*0.28);
-          ctx.lineTo( r*0.09, -r*0.28);
-          ctx.lineTo( r*0.06, -r*0.5);
-          ctx.lineTo(-r*0.06, -r*0.5);
-          ctx.closePath();
-          ctx.fill(); ctx.stroke();
-
-          // Tail rotor — small propeller at tail tip
-          var trA = Date.now() * 0.012;
-          ctx.strokeStyle = '#333315';
-          ctx.lineWidth = r*0.06;
-          ctx.lineCap = 'round';
-          for (var tr = 0; tr < 2; tr++) {
-            var tra = trA + tr * Math.PI;
-            ctx.beginPath();
-            ctx.moveTo(Math.cos(tra)*r*0.04, -r*0.52 + Math.sin(tra)*r*0.04);
-            ctx.lineTo(Math.cos(tra)*r*0.22, -r*0.52 + Math.sin(tra)*r*0.22);
-            ctx.stroke();
-          }
-          ctx.lineCap = 'butt';
-          ctx.lineWidth = 1;
-
-          // Main fuselage — boxy armored body
-          ctx.fillStyle = hMid;
-          ctx.strokeStyle = hEdge;
-          ctx.shadowColor = '#aaff44';
-          ctx.shadowBlur = 6;
-          ctx.beginPath();
-          ctx.moveTo(-r*0.42,  r*0.55);   // bottom-left
-          ctx.lineTo( r*0.42,  r*0.55);   // bottom-right
-          ctx.lineTo( r*0.46,  r*0.1);    // right side
-          ctx.lineTo( r*0.38, -r*0.25);   // upper right
-          ctx.lineTo(-r*0.38, -r*0.25);   // upper left
-          ctx.lineTo(-r*0.46,  r*0.1);    // left side
-          ctx.closePath();
-          ctx.fill(); ctx.stroke();
-
-          // Armored front panel (darker rectangle)
-          ctx.fillStyle = hDark;
-          ctx.shadowBlur = 0;
-          ctx.beginPath();
-          ctx.moveTo(-r*0.3, r*0.55);
-          ctx.lineTo( r*0.3, r*0.55);
-          ctx.lineTo( r*0.28, r*0.15);
-          ctx.lineTo(-r*0.28, r*0.15);
-          ctx.closePath();
-          ctx.fill();
-
-          // Nose — rounded chin pointing toward player
-          ctx.fillStyle = hDark;
-          ctx.beginPath();
-          ctx.moveTo(-r*0.32, r*0.55);
-          ctx.quadraticCurveTo(-r*0.3, r*0.9, 0, r*0.92);
-          ctx.quadraticCurveTo( r*0.3, r*0.9, r*0.32, r*0.55);
-          ctx.closePath();
-          ctx.fill();
-
-          // Cockpit windows — two glassy eyes
-          ctx.globalAlpha = 0.85;
-          ctx.fillStyle = '#55bbdd';
-          ctx.shadowColor = '#88ddff';
-          ctx.shadowBlur = 5;
-          ctx.beginPath();
-          ctx.ellipse(-r*0.14, r*0.48, r*0.1, r*0.07, -0.2, 0, Math.PI*2);
-          ctx.fill();
-          ctx.beginPath();
-          ctx.ellipse( r*0.14, r*0.48, r*0.1, r*0.07,  0.2, 0, Math.PI*2);
-          ctx.fill();
-          ctx.globalAlpha = 1;
-          ctx.shadowBlur = 0;
-
-          // Side weapon pylons + missile pods
-          ctx.strokeStyle = hEdge;
-          for (var wp = -1; wp <= 1; wp += 2) {
-            // Pylon arm
-            ctx.fillStyle = hDark;
-            ctx.beginPath();
-            var px = wp > 0 ? r*0.42 : -r*0.62;
-            ctx.fillRect(px, r*0.1, r*0.2, r*0.1);
-            // Missile pod
-            ctx.fillStyle = '#1e1e0a';
-            var mx = wp > 0 ? r*0.6 : -r*0.82;
-            ctx.beginPath();
-            ctx.moveTo(mx,         r*0.06);
-            ctx.lineTo(mx+wp*r*0.22, r*0.08);
-            ctx.lineTo(mx+wp*r*0.22, r*0.22);
-            ctx.lineTo(mx,         r*0.24);
-            ctx.closePath();
-            ctx.fill(); ctx.stroke();
-            // Missile tip glow
-            ctx.shadowColor = '#ff4400';
-            ctx.shadowBlur = 6;
-            ctx.fillStyle = '#ff2200';
-            ctx.beginPath();
-            ctx.arc(mx + wp*r*0.22, r*0.15, r*0.04, 0, Math.PI*2);
+            ctx.moveTo(ex*r*0.18, -r*0.4);
+            ctx.lineTo(ex*r*0.32, -r*0.4);
+            ctx.lineTo(ex*r*0.28, -r*0.45 - r*fk*1.2);
+            ctx.lineTo(ex*r*0.22, -r*0.45 - r*fk*1.2);
             ctx.fill();
-            ctx.shadowBlur = 0;
           }
 
-          // Exhaust heat shimmer near tail
-          var hfk = Math.sin(Date.now()*0.009 + tg.x)*0.15 + 0.85;
-          ctx.shadowColor = '#ff6600';
-          ctx.shadowBlur = 8;
-          var hxG = ctx.createRadialGradient(0, -r*0.15, 0, 0, -r*0.15, r*0.25*hfk);
-          hxG.addColorStop(0, 'rgba(255,130,0,0.5)');
-          hxG.addColorStop(1, 'rgba(255,60,0,0)');
-          ctx.fillStyle = hxG;
+          // Outer saucer hull — wide elliptical body
+          ctx.fillStyle = hMid;
+          ctx.strokeStyle = hHi;
+          ctx.lineWidth = 2;
+          ctx.shadowColor = '#aa44ff';
+          ctx.shadowBlur = 12 * pulse;
           ctx.beginPath();
-          ctx.arc(0, -r*0.15, r*0.25*hfk, 0, Math.PI*2);
+          ctx.ellipse(0, 0, r*0.85, r*0.5, 0, 0, Math.PI*2);
+          ctx.fill(); ctx.stroke();
+
+          // Inner dark hull
+          ctx.fillStyle = hDark;
+          ctx.shadowBlur = 0;
+          ctx.beginPath();
+          ctx.ellipse(0, 0, r*0.6, r*0.32, 0, 0, Math.PI*2);
           ctx.fill();
+
+          // Rotating energy ring
+          var ringAngle = Date.now() * 0.003;
+          ctx.strokeStyle = hEdge;
+          ctx.lineWidth = 2.5;
+          ctx.globalAlpha = 0.7 * pulse;
+          ctx.beginPath();
+          ctx.ellipse(0, 0, r*0.75, r*0.42, 0, ringAngle, ringAngle + Math.PI * 1.4);
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+
+          // Dome on top — alien command bridge
+          var domeGrad = ctx.createRadialGradient(0, -r*0.08, 0, 0, -r*0.08, r*0.28);
+          domeGrad.addColorStop(0, '#9966cc');
+          domeGrad.addColorStop(0.6, hMid);
+          domeGrad.addColorStop(1, hDark);
+          ctx.fillStyle = domeGrad;
+          ctx.beginPath();
+          ctx.ellipse(0, -r*0.08, r*0.28, r*0.22, 0, 0, Math.PI*2);
+          ctx.fill();
+
+          // Central eye — menacing orange glow
+          ctx.shadowColor = hEdge;
+          ctx.shadowBlur = 14 * pulse;
+          var coreGrad = ctx.createRadialGradient(0, r*0.05, 0, 0, r*0.05, r*0.12);
+          coreGrad.addColorStop(0, '#ffffff');
+          coreGrad.addColorStop(0.35, hEdge);
+          coreGrad.addColorStop(1, '#441100');
+          ctx.fillStyle = coreGrad;
+          ctx.beginPath();
+          ctx.arc(0, r*0.05, r*0.1, 0, Math.PI*2);
+          ctx.fill();
+
+          // Side weapon pods — glowing orbs
+          for (var wp = -1; wp <= 1; wp += 2) {
+            ctx.shadowColor = '#ff4400';
+            ctx.shadowBlur = 8;
+            ctx.fillStyle = '#ff4400';
+            ctx.beginPath();
+            ctx.arc(wp*r*0.65, r*0.15, r*0.06, 0, Math.PI*2);
+            ctx.fill();
+          }
           ctx.shadowBlur = 0;
         }
 
@@ -11562,20 +11968,22 @@
       function drawShip() {
         ctx.save();
         ctx.translate(player.x, player.y);
-        var sz = player.size;
+        // Scale up: sz is base ~48, we want the ship to feel 60-70px tall
+        var sz = player.size * 1.35;
+        var now = Date.now();
 
-        // Shield aura (pulsing green ring for invincibility mode)
+        // --- Shield aura (pulsing ring) ---
         if (!gameOver) {
-          var pulseAlpha = 0.08 + Math.sin(Date.now() * 0.003) * 0.05;
+          var pulseAlpha = 0.08 + Math.sin(now * 0.003) * 0.05;
           var shieldColor = _invincible ? 'rgba(0, 255, 0, ' : 'rgba(0, 212, 255, ';
           ctx.strokeStyle = shieldColor + pulseAlpha + ')';
           ctx.lineWidth = 1.5;
           ctx.beginPath();
-          ctx.arc(0, 0, sz * 0.9, 0, Math.PI * 2);
+          ctx.arc(0, 0, sz * 0.82, 0, Math.PI * 2);
           ctx.stroke();
         }
 
-        // Invincibility rainbow flash overlay
+        // --- Invincibility rainbow flash ---
         if (_invincible) {
           var rainbowColors = ['#FF0000', '#FF7F00', '#FFFF00', '#00FF00', '#0000FF', '#4B0082', '#9400D3'];
           var rainbowIdx = Math.floor((_invincibleFlashCycle / 2) % rainbowColors.length);
@@ -11583,83 +11991,299 @@
           ctx.globalAlpha = rainbowAlpha;
           ctx.fillStyle = rainbowColors[rainbowIdx];
           ctx.beginPath();
-          ctx.arc(0, 0, sz * 0.85, 0, Math.PI * 2);
+          ctx.arc(0, 0, sz * 0.78, 0, Math.PI * 2);
           ctx.fill();
           ctx.globalAlpha = 1;
         }
 
-        // ===== PNG SPRITE PLAYER SHIP (with canvas fallback) =====
-        var spShip = _wrSprites.ship;
-        if (spShip && spShip.complete && spShip.naturalWidth > 0) {
-          // PNG is 88x132 (2:3 ratio). Scale to fit player size
-          var shipW = sz * 1.6;
-          var shipH = shipW * 1.5;
-          ctx.drawImage(spShip, -shipW / 2, -shipH / 2, shipW, shipH);
-        } else {
-          // Fallback: Canvas-drawn ship (legacy)
-          // Hull colors change based on ship tier
-          var _tier = SHIP_TIERS[playerShipTier];
-          var hullDark, hullMid, hullLight;
-          if (playerShipTier === 0) { hullDark = '#2a3a4a'; hullMid = '#5a7a8a'; hullLight = '#9abaaa'; }
-          else if (playerShipTier === 1) { hullDark = '#2a2a5a'; hullMid = '#5a5aaa'; hullLight = '#8a8add'; }
-          else if (playerShipTier === 2) { hullDark = '#4a1a3a'; hullMid = '#8a3a6a'; hullLight = '#cc5599'; }
-          else { hullDark = '#4a3a1a'; hullMid = '#8a7a2a'; hullLight = '#ddcc55'; }
-          var _tierCockpit = _tier.cockpitColor;
-          var _tierEngine = _tier.engineColor;
-          var _tierAccent = _tier.accentColor;
-          var hullGrad = ctx.createLinearGradient(-sz * 0.4, -sz * 0.7, sz * 0.4, sz * 0.5);
-          hullGrad.addColorStop(0, hullDark);
-          hullGrad.addColorStop(0.3, hullMid);
-          hullGrad.addColorStop(0.7, hullLight);
-          hullGrad.addColorStop(1, hullDark);
-          ctx.fillStyle = hullGrad;
-          ctx.shadowColor = 'rgba(100, 150, 200, 0.5)';
-          ctx.shadowBlur = 12;
+        // ===== STAR WARS FIGHTER — full canvas-drawn =====
+        var _tier = SHIP_TIERS[playerShipTier] || SHIP_TIERS[0];
+        var _tierCockpit = _tier.cockpitColor;
+        var _tierEngine = _tier.engineColor;
+        var _tierAccent = _tier.accentColor;
 
-          // Main hull body — elongated diamond shape
-          ctx.beginPath();
-          ctx.moveTo(0, -sz * 0.7);
-          ctx.lineTo(sz * 0.25, -sz * 0.35);
-          ctx.lineTo(sz * 0.32, sz * 0.15);
-          ctx.lineTo(sz * 0.2, sz * 0.45);
-          ctx.lineTo(0, sz * 0.5);
-          ctx.lineTo(-sz * 0.2, sz * 0.45);
-          ctx.lineTo(-sz * 0.32, sz * 0.15);
-          ctx.lineTo(-sz * 0.25, -sz * 0.35);
-          ctx.closePath();
-          ctx.fill();
-          ctx.shadowBlur = 0;
+        // Tier-based hull palette
+        var hullDark, hullMid, hullLight;
+        if (playerShipTier === 0) { hullDark = '#3a4a5a'; hullMid = '#6a8a9a'; hullLight = '#a0bcc0'; }
+        else if (playerShipTier === 1) { hullDark = '#2a2a6a'; hullMid = '#5a5abb'; hullLight = '#9a9aee'; }
+        else if (playerShipTier === 2) { hullDark = '#5a1a4a'; hullMid = '#9a3a7a'; hullLight = '#dd55aa'; }
+        else { hullDark = '#5a4a1a'; hullMid = '#9a8a3a'; hullLight = '#eedd66'; }
 
-          // Center stripe
-          ctx.strokeStyle = _tierAccent;
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.moveTo(0, -sz * 0.65);
-          ctx.lineTo(0, sz * 0.48);
-          ctx.stroke();
+        // --- Engine exhaust trails (drawn BEHIND the ship) ---
+        var flickA = 0.7 + Math.random() * 0.3;
+        var flickB = 0.6 + Math.random() * 0.4;
+        var exLen = sz * (0.28 + Math.random() * 0.12); // flame length varies
 
-          // Cockpit
-          var cockGreen = _invincible ? '#ffff00' : _tierCockpit;
-          ctx.shadowColor = cockGreen;
-          ctx.shadowBlur = 20;
-          ctx.fillStyle = cockGreen;
-          ctx.beginPath();
-          ctx.arc(0, -sz * 0.35, sz * 0.2, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.shadowBlur = 0;
+        // Left engine exhaust
+        ctx.save();
+        ctx.globalAlpha = flickA;
+        var exGradL = ctx.createLinearGradient(-sz * 0.32, sz * 0.35, -sz * 0.32, sz * 0.35 + exLen);
+        exGradL.addColorStop(0, _tierEngine);
+        exGradL.addColorStop(0.3, 'rgba(0, 255, 255, 0.7)');
+        exGradL.addColorStop(1, 'rgba(0, 100, 255, 0)');
+        ctx.fillStyle = exGradL;
+        ctx.beginPath();
+        ctx.moveTo(-sz * 0.37, sz * 0.35);
+        ctx.lineTo(-sz * 0.27, sz * 0.35);
+        ctx.lineTo(-sz * 0.32, sz * 0.35 + exLen);
+        ctx.closePath();
+        ctx.fill();
+        // Exhaust glow
+        ctx.shadowColor = _tierEngine;
+        ctx.shadowBlur = 15;
+        ctx.fillStyle = _tierEngine;
+        ctx.beginPath();
+        ctx.arc(-sz * 0.32, sz * 0.38, sz * 0.05, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.restore();
 
-          // Engine section
-          ctx.shadowColor = _tierEngine;
-          ctx.shadowBlur = 22;
-          ctx.fillStyle = _tierEngine;
-          var flicker1 = 0.9 + Math.random() * 0.2;
-          ctx.globalAlpha = flicker1;
-          ctx.beginPath();
-          ctx.arc(0, sz * 0.48, sz * 0.15, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.globalAlpha = 1;
-          ctx.shadowBlur = 0;
-        }
+        // Right engine exhaust
+        ctx.save();
+        ctx.globalAlpha = flickB;
+        var exGradR = ctx.createLinearGradient(sz * 0.32, sz * 0.35, sz * 0.32, sz * 0.35 + exLen);
+        exGradR.addColorStop(0, _tierEngine);
+        exGradR.addColorStop(0.3, 'rgba(0, 255, 255, 0.7)');
+        exGradR.addColorStop(1, 'rgba(0, 100, 255, 0)');
+        ctx.fillStyle = exGradR;
+        ctx.beginPath();
+        ctx.moveTo(sz * 0.37, sz * 0.35);
+        ctx.lineTo(sz * 0.27, sz * 0.35);
+        ctx.lineTo(sz * 0.32, sz * 0.35 + exLen);
+        ctx.closePath();
+        ctx.fill();
+        ctx.shadowColor = _tierEngine;
+        ctx.shadowBlur = 15;
+        ctx.fillStyle = _tierEngine;
+        ctx.beginPath();
+        ctx.arc(sz * 0.32, sz * 0.38, sz * 0.05, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.restore();
+
+        // Center engine exhaust (main thruster)
+        ctx.save();
+        var flickC = 0.65 + Math.random() * 0.35;
+        ctx.globalAlpha = flickC;
+        var exLenC = sz * (0.35 + Math.random() * 0.15);
+        var exGradC = ctx.createLinearGradient(0, sz * 0.38, 0, sz * 0.38 + exLenC);
+        exGradC.addColorStop(0, '#ffffff');
+        exGradC.addColorStop(0.15, _tierEngine);
+        exGradC.addColorStop(0.5, 'rgba(0, 200, 255, 0.5)');
+        exGradC.addColorStop(1, 'rgba(0, 80, 200, 0)');
+        ctx.fillStyle = exGradC;
+        ctx.beginPath();
+        ctx.moveTo(-sz * 0.08, sz * 0.38);
+        ctx.lineTo(sz * 0.08, sz * 0.38);
+        ctx.lineTo(sz * 0.03, sz * 0.38 + exLenC);
+        ctx.lineTo(-sz * 0.03, sz * 0.38 + exLenC);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+
+        // --- LEFT WING (swept-back, angled) ---
+        var wingGradL = ctx.createLinearGradient(-sz * 0.7, 0, -sz * 0.1, 0);
+        wingGradL.addColorStop(0, hullDark);
+        wingGradL.addColorStop(0.5, hullMid);
+        wingGradL.addColorStop(1, hullLight);
+        ctx.fillStyle = wingGradL;
+        ctx.beginPath();
+        ctx.moveTo(-sz * 0.18, -sz * 0.25); // wing root front
+        ctx.lineTo(-sz * 0.65, sz * 0.05);   // wing tip front
+        ctx.lineTo(-sz * 0.7, sz * 0.12);    // wing tip point
+        ctx.lineTo(-sz * 0.6, sz * 0.18);    // wing tip back
+        ctx.lineTo(-sz * 0.18, sz * 0.32);   // wing root back
+        ctx.closePath();
+        ctx.fill();
+        // Wing panel line
+        ctx.strokeStyle = hullDark;
+        ctx.lineWidth = 0.8;
+        ctx.beginPath();
+        ctx.moveTo(-sz * 0.22, -sz * 0.15);
+        ctx.lineTo(-sz * 0.58, sz * 0.08);
+        ctx.stroke();
+        // Second panel line
+        ctx.beginPath();
+        ctx.moveTo(-sz * 0.2, sz * 0.05);
+        ctx.lineTo(-sz * 0.55, sz * 0.15);
+        ctx.stroke();
+
+        // --- RIGHT WING (mirrored) ---
+        var wingGradR = ctx.createLinearGradient(sz * 0.7, 0, sz * 0.1, 0);
+        wingGradR.addColorStop(0, hullDark);
+        wingGradR.addColorStop(0.5, hullMid);
+        wingGradR.addColorStop(1, hullLight);
+        ctx.fillStyle = wingGradR;
+        ctx.beginPath();
+        ctx.moveTo(sz * 0.18, -sz * 0.25);
+        ctx.lineTo(sz * 0.65, sz * 0.05);
+        ctx.lineTo(sz * 0.7, sz * 0.12);
+        ctx.lineTo(sz * 0.6, sz * 0.18);
+        ctx.lineTo(sz * 0.18, sz * 0.32);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = hullDark;
+        ctx.lineWidth = 0.8;
+        ctx.beginPath();
+        ctx.moveTo(sz * 0.22, -sz * 0.15);
+        ctx.lineTo(sz * 0.58, sz * 0.08);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(sz * 0.2, sz * 0.05);
+        ctx.lineTo(sz * 0.55, sz * 0.15);
+        ctx.stroke();
+
+        // --- WING-TIP CANNONS (left) ---
+        ctx.fillStyle = '#556677';
+        ctx.fillRect(-sz * 0.72, sz * 0.06, sz * 0.06, sz * 0.12);
+        // Cannon tip glow
+        ctx.fillStyle = '#ffaa33';
+        ctx.shadowColor = '#ffaa33';
+        ctx.shadowBlur = 6;
+        ctx.beginPath();
+        ctx.arc(-sz * 0.69, sz * 0.05, sz * 0.025, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // --- WING-TIP CANNONS (right) ---
+        ctx.fillStyle = '#556677';
+        ctx.fillRect(sz * 0.66, sz * 0.06, sz * 0.06, sz * 0.12);
+        ctx.fillStyle = '#ffaa33';
+        ctx.shadowColor = '#ffaa33';
+        ctx.shadowBlur = 6;
+        ctx.beginPath();
+        ctx.arc(sz * 0.69, sz * 0.05, sz * 0.025, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // --- CENTRAL FUSELAGE (narrow aerodynamic body) ---
+        var fuseGrad = ctx.createLinearGradient(-sz * 0.15, -sz * 0.6, sz * 0.15, sz * 0.4);
+        fuseGrad.addColorStop(0, hullLight);
+        fuseGrad.addColorStop(0.3, hullMid);
+        fuseGrad.addColorStop(0.7, hullLight);
+        fuseGrad.addColorStop(1, hullDark);
+        ctx.fillStyle = fuseGrad;
+        ctx.shadowColor = 'rgba(100, 180, 255, 0.4)';
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.moveTo(0, -sz * 0.7);           // nose tip
+        ctx.lineTo(sz * 0.12, -sz * 0.45);  // nose right
+        ctx.lineTo(sz * 0.18, -sz * 0.15);  // mid right
+        ctx.lineTo(sz * 0.16, sz * 0.2);    // lower right
+        ctx.lineTo(sz * 0.1, sz * 0.4);     // tail right
+        ctx.lineTo(0, sz * 0.42);            // tail center
+        ctx.lineTo(-sz * 0.1, sz * 0.4);    // tail left
+        ctx.lineTo(-sz * 0.16, sz * 0.2);   // lower left
+        ctx.lineTo(-sz * 0.18, -sz * 0.15); // mid left
+        ctx.lineTo(-sz * 0.12, -sz * 0.45); // nose left
+        ctx.closePath();
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Fuselage center ridge line
+        ctx.strokeStyle = _tierAccent;
+        ctx.lineWidth = 1.2;
+        ctx.globalAlpha = 0.6;
+        ctx.beginPath();
+        ctx.moveTo(0, -sz * 0.65);
+        ctx.lineTo(0, sz * 0.38);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+
+        // Hull panel lines (horizontal detail)
+        ctx.strokeStyle = hullDark;
+        ctx.lineWidth = 0.6;
+        ctx.globalAlpha = 0.4;
+        ctx.beginPath();
+        ctx.moveTo(-sz * 0.14, -sz * 0.1);
+        ctx.lineTo(sz * 0.14, -sz * 0.1);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(-sz * 0.12, sz * 0.12);
+        ctx.lineTo(sz * 0.12, sz * 0.12);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(-sz * 0.08, sz * 0.28);
+        ctx.lineTo(sz * 0.08, sz * 0.28);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+
+        // --- COCKPIT CANOPY (elongated dome) ---
+        var cockColor = _invincible ? '#ffff00' : _tierCockpit;
+        // Canopy outer shape
+        var cockGrad = ctx.createRadialGradient(0, -sz * 0.35, sz * 0.02, 0, -sz * 0.35, sz * 0.16);
+        cockGrad.addColorStop(0, '#ffffff');
+        cockGrad.addColorStop(0.3, cockColor);
+        cockGrad.addColorStop(1, hullDark);
+        ctx.fillStyle = cockGrad;
+        ctx.shadowColor = cockColor;
+        ctx.shadowBlur = 18;
+        ctx.beginPath();
+        ctx.ellipse(0, -sz * 0.35, sz * 0.09, sz * 0.16, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        // Canopy highlight (reflection arc)
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.ellipse(-sz * 0.02, -sz * 0.38, sz * 0.04, sz * 0.08, -0.2, -0.8, 0.8);
+        ctx.stroke();
+
+        // --- ENGINE NACELLES (on wing roots) ---
+        // Left nacelle
+        ctx.fillStyle = hullDark;
+        ctx.beginPath();
+        ctx.ellipse(-sz * 0.32, sz * 0.25, sz * 0.06, sz * 0.12, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Left nacelle inner glow
+        ctx.fillStyle = _tierEngine;
+        ctx.shadowColor = _tierEngine;
+        ctx.shadowBlur = 8;
+        ctx.beginPath();
+        ctx.ellipse(-sz * 0.32, sz * 0.32, sz * 0.04, sz * 0.04, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Right nacelle
+        ctx.fillStyle = hullDark;
+        ctx.beginPath();
+        ctx.ellipse(sz * 0.32, sz * 0.25, sz * 0.06, sz * 0.12, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = _tierEngine;
+        ctx.shadowColor = _tierEngine;
+        ctx.shadowBlur = 8;
+        ctx.beginPath();
+        ctx.ellipse(sz * 0.32, sz * 0.32, sz * 0.04, sz * 0.04, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // --- NOSE CANNONS (two small barrels flanking the cockpit) ---
+        ctx.fillStyle = '#667788';
+        ctx.fillRect(-sz * 0.06, -sz * 0.7, sz * 0.025, sz * 0.15);
+        ctx.fillRect(sz * 0.035, -sz * 0.7, sz * 0.025, sz * 0.15);
+        // Nose cannon tips
+        ctx.fillStyle = '#ffcc44';
+        ctx.shadowColor = '#ffcc44';
+        ctx.shadowBlur = 4;
+        ctx.beginPath();
+        ctx.arc(-sz * 0.048, -sz * 0.71, sz * 0.015, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(sz * 0.048, -sz * 0.71, sz * 0.015, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // --- OUTER GLOW (ambient ship presence) ---
+        ctx.save();
+        ctx.globalAlpha = 0.06 + Math.sin(now * 0.004) * 0.03;
+        var ambGrad = ctx.createRadialGradient(0, 0, sz * 0.15, 0, 0, sz * 0.75);
+        ambGrad.addColorStop(0, _tierAccent);
+        ambGrad.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = ambGrad;
+        ctx.beginPath();
+        ctx.arc(0, 0, sz * 0.75, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
 
         ctx.restore();
       }
@@ -15316,6 +15940,7 @@
       hydrateNewsFromCacheForHome();
       renderMobileRecents();
       renderMobileHomeNews();
+      if (!_homeMarketsSupabaseLoaded && currentUserId) { _loadHomeMarketsFromSupabase(); }
       if (_homeMarketsData) renderHomeMarkets(_homeMarketsData); else fetchHomeMarkets();
       if (!window._marketNewsArticles || !window._marketNewsArticles.length) fetchMarketNews();
       setMobileNavActive('home');
@@ -15350,7 +15975,7 @@
 
     // ── Markets Snapshot (Home) — live prices from market-quotes ──
     var _homeMarketsData = null;
-    var _homeMarketsTickers = [
+    var _homeMarketsDefaultTickers = [
       { symbol: 'AAPL', name: 'Apple' },
       { symbol: 'MSFT', name: 'Microsoft' },
       { symbol: 'GOOGL', name: 'Alphabet' },
@@ -15362,9 +15987,200 @@
       { symbol: 'ETH/USD', name: 'Ethereum', display: 'ETH', crypto: true },
       { symbol: 'SOL/USD', name: 'Solana', display: 'SOL', crypto: true }
     ];
+    var _homeMarketsTickers = (function() {
+      try {
+        var saved = localStorage.getItem('wp_home_markets_tickers');
+        if (saved) { var parsed = JSON.parse(saved); if (Array.isArray(parsed) && parsed.length) return parsed; }
+      } catch(e) {}
+      return _homeMarketsDefaultTickers.slice();
+    })();
+    var _homeMarketsSupabaseLoaded = false;
+    async function _loadHomeMarketsFromSupabase() {
+      if (_homeMarketsSupabaseLoaded) return;
+      if (!currentUserId) return;
+      try {
+        var sb = getSupabase();
+        var { data } = await sb.from('user_notes').select('content').eq('user_id', currentUserId).eq('title', '__WP_HOME_MARKETS__').limit(1);
+        if (data && data.length > 0) {
+          try {
+            var parsed = JSON.parse(data[0].content || '[]');
+            if (Array.isArray(parsed) && parsed.length) {
+              _homeMarketsTickers = parsed;
+              try { localStorage.setItem('wp_home_markets_tickers', JSON.stringify(_homeMarketsTickers)); } catch(e) {}
+              _homeMarketsData = null;
+              fetchHomeMarkets();
+            }
+          } catch(e) { console.error('[HomeMarkets] Parse Supabase data error:', e); }
+        }
+        _homeMarketsSupabaseLoaded = true;
+      } catch(e) { console.error('[HomeMarkets] Load from Supabase error:', e); }
+    }
+    function _saveHomeMarketsTickers() {
+      try { localStorage.setItem('wp_home_markets_tickers', JSON.stringify(_homeMarketsTickers)); } catch(e) {}
+      _saveHomeMarketsToSupabase();
+    }
+    async function _saveHomeMarketsToSupabase() {
+      if (!currentUserId) return;
+      try {
+        var sb = getSupabase();
+        var payload = JSON.stringify(_homeMarketsTickers);
+        var { data } = await sb.from('user_notes').select('id').eq('user_id', currentUserId).eq('title', '__WP_HOME_MARKETS__').limit(1);
+        if (data && data.length > 0) {
+          await sb.from('user_notes').update({ content: payload, updated_at: new Date().toISOString() }).eq('id', data[0].id);
+        } else {
+          await sb.from('user_notes').insert({ user_id: currentUserId, title: '__WP_HOME_MARKETS__', content: payload });
+        }
+      } catch(e) { console.error('[HomeMarkets] Save to Supabase error:', e); }
+    }
+    function addHomeMarketTicker(symbol, name) {
+      var exists = _homeMarketsTickers.some(function(t) { return t.symbol === symbol; });
+      if (exists) return;
+      var isCrypto = symbol.indexOf('/') >= 0;
+      var entry = { symbol: symbol, name: name || symbol };
+      if (isCrypto) { entry.display = symbol.split('/')[0]; entry.crypto = true; }
+      _homeMarketsTickers.push(entry);
+      _saveHomeMarketsTickers();
+      _homeMarketsData = null;
+      fetchHomeMarkets();
+    }
+    function removeHomeMarketTicker(symbol) {
+      _homeMarketsTickers = _homeMarketsTickers.filter(function(t) { return t.symbol !== symbol; });
+      _saveHomeMarketsTickers();
+      if (_homeMarketsData) {
+        _homeMarketsData = _homeMarketsData.filter(function(d) { return d.symbol !== symbol; });
+        renderHomeMarkets(_homeMarketsData);
+      }
+    }
+    // ── Drag-to-reorder for home market tickers ──
+    var _hmDragSymbol = null;
+    (function initHomeMarketsDragDrop() {
+      var row = document.getElementById('homeMarketsRow');
+      if (!row) return;
+
+      // --- Desktop drag & drop ---
+      row.addEventListener('dragstart', function(e) {
+        var card = e.target.closest('.home-market-card');
+        if (!card) return;
+        _hmDragSymbol = card.getAttribute('data-symbol');
+        card.classList.add('hm-dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', _hmDragSymbol);
+      });
+      row.addEventListener('dragend', function(e) {
+        _hmDragSymbol = null;
+        row.querySelectorAll('.home-market-card').forEach(function(c) {
+          c.classList.remove('hm-dragging', 'hm-drag-over');
+        });
+      });
+      row.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        var card = e.target.closest('.home-market-card');
+        row.querySelectorAll('.home-market-card').forEach(function(c) { c.classList.remove('hm-drag-over'); });
+        if (card && card.getAttribute('data-symbol') !== _hmDragSymbol) {
+          card.classList.add('hm-drag-over');
+        }
+      });
+      row.addEventListener('drop', function(e) {
+        e.preventDefault();
+        var targetCard = e.target.closest('.home-market-card');
+        if (!targetCard || !_hmDragSymbol) return;
+        var targetSym = targetCard.getAttribute('data-symbol');
+        if (targetSym === _hmDragSymbol) return;
+        _reorderHomeMarketTickers(_hmDragSymbol, targetSym);
+      });
+
+      // --- Mobile touch drag ---
+      var _touchDragSym = null;
+      var _touchStartY = 0;
+      var _touchClone = null;
+      var _touchActive = false;
+
+      row.addEventListener('touchstart', function(e) {
+        var handle = e.target.closest('.home-market-drag-handle');
+        if (!handle) return;
+        var card = handle.closest('.home-market-card');
+        if (!card) return;
+        _touchDragSym = card.getAttribute('data-symbol');
+        _touchStartY = e.touches[0].clientY;
+        _touchActive = false;
+      }, { passive: true });
+
+      row.addEventListener('touchmove', function(e) {
+        if (!_touchDragSym) return;
+        var dy = Math.abs(e.touches[0].clientY - _touchStartY);
+        if (dy > 8) _touchActive = true;
+        if (!_touchActive) return;
+        e.preventDefault();
+
+        // Show floating clone
+        if (!_touchClone) {
+          var origCard = row.querySelector('[data-symbol="' + CSS.escape(_touchDragSym) + '"]');
+          if (origCard) {
+            origCard.classList.add('hm-dragging');
+            _touchClone = origCard.cloneNode(true);
+            _touchClone.style.cssText = 'position:fixed;left:0;right:0;z-index:9999;pointer-events:none;opacity:0.85;background:#1a1a2e;border-radius:10px;padding:10px 8px;box-shadow:0 8px 32px rgba(0,0,0,0.6);';
+            document.body.appendChild(_touchClone);
+          }
+        }
+        if (_touchClone) {
+          _touchClone.style.top = (e.touches[0].clientY - 28) + 'px';
+        }
+
+        // Highlight target
+        var el = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
+        var targetCard = el ? el.closest('.home-market-card') : null;
+        row.querySelectorAll('.home-market-card').forEach(function(c) { c.classList.remove('hm-drag-over'); });
+        if (targetCard && targetCard.getAttribute('data-symbol') !== _touchDragSym) {
+          targetCard.classList.add('hm-drag-over');
+        }
+      }, { passive: false });
+
+      row.addEventListener('touchend', function(e) {
+        if (!_touchDragSym || !_touchActive) { _touchDragSym = null; return; }
+        // Find target under last touch point
+        var touch = e.changedTouches[0];
+        // Remove clone so elementFromPoint sees real cards
+        if (_touchClone) { _touchClone.remove(); _touchClone = null; }
+        var el = document.elementFromPoint(touch.clientX, touch.clientY);
+        var targetCard = el ? el.closest('.home-market-card') : null;
+        row.querySelectorAll('.home-market-card').forEach(function(c) { c.classList.remove('hm-dragging', 'hm-drag-over'); });
+        if (targetCard) {
+          var targetSym = targetCard.getAttribute('data-symbol');
+          if (targetSym && targetSym !== _touchDragSym) {
+            _reorderHomeMarketTickers(_touchDragSym, targetSym);
+          }
+        }
+        _touchDragSym = null;
+        _touchActive = false;
+      });
+    })();
+
+    function _reorderHomeMarketTickers(fromSym, toSym) {
+      var fromIdx = -1, toIdx = -1;
+      for (var i = 0; i < _homeMarketsTickers.length; i++) {
+        if (_homeMarketsTickers[i].symbol === fromSym) fromIdx = i;
+        if (_homeMarketsTickers[i].symbol === toSym) toIdx = i;
+      }
+      if (fromIdx < 0 || toIdx < 0 || fromIdx === toIdx) return;
+      var item = _homeMarketsTickers.splice(fromIdx, 1)[0];
+      _homeMarketsTickers.splice(toIdx, 0, item);
+      _saveHomeMarketsTickers();
+      // Re-order displayed data to match
+      if (_homeMarketsData) {
+        var ordered = [];
+        _homeMarketsTickers.forEach(function(t) {
+          var match = _homeMarketsData.find(function(d) { return d.symbol === t.symbol; });
+          if (match) ordered.push(match);
+        });
+        _homeMarketsData = ordered;
+        renderHomeMarkets(ordered);
+      }
+    }
+
     function buildSparkSVG(bars, isUp) {
       if (!bars || bars.length < 2) return '';
-      var w = 64, h = 32, pad = 2;
+      var w = 90, h = 38, pad = 2;
       var min = Math.min.apply(null, bars), max = Math.max.apply(null, bars);
       var range = max - min || 1;
       var pts = [];
@@ -15402,44 +16218,80 @@
         var ticker = _homeMarketsTickers.find(function(t) { return t.symbol === q.symbol; });
         var sym = (ticker && ticker.display) || q.symbol;
         var name = (ticker && ticker.name) || q.symbol;
-        var chg = q.changePercent || 0;
+        var isCrypto = ticker && ticker.crypto;
+        // ── Yahoo Finance style: 3 separate values ──
+        // Alpaca snapshot fields via market-quotes edge function:
+        //   q.price        = latestTrade.p (live, includes pre/post-market trades)
+        //   q.previousClose = prevDailyBar.c (yesterday's closing price)
+        //   q.prevOpen      = prevDailyBar.o (yesterday's opening price)
+        //   q.close         = dailyBar.c (today's close / running daily bar close)
+        //   q.changePercent = (price - previousClose) / previousClose * 100
+
+        // ── MAIN PRICE (Yahoo: frozen at session close, not live extended hours) ──
+        var displayPrice;
+        if (isPre && !isCrypto) {
+          // Pre-market: show yesterday's close as the main price
+          // During pre-market, Alpaca dailyBar = yesterday's complete bar (q.close),
+          // prevDailyBar = 2 days ago (q.previousClose). Use q.close for yesterday.
+          displayPrice = q.close || q.previousClose || q.price;
+        } else if ((isAfter || isOvernight) && !isCrypto) {
+          // After-hours: show today's regular session close as the main price
+          displayPrice = q.close || q.previousClose || q.price;
+        } else {
+          // Regular hours or crypto (24/7): show live price
+          displayPrice = q.price;
+        }
+
+        // ── PILL CHANGE % (Yahoo: yesterday's session performance during pre-market) ──
+        var chg;
+        if (isPre && !isCrypto && q.close && q.previousClose && q.previousClose !== 0) {
+          // Pre-market pill = yesterday's session change (prev close → yesterday's close)
+          // During pre-market: q.close = dailyBar.c (yesterday), q.previousClose = prevDailyBar.c (2 days ago)
+          chg = ((q.close - q.previousClose) / q.previousClose) * 100;
+        } else if ((isAfter || isOvernight) && !isCrypto && q.close && q.previousClose && q.previousClose !== 0) {
+          // After-hours pill = today's regular session change (yesterday's close → today's close)
+          chg = ((q.close - q.previousClose) / q.previousClose) * 100;
+        } else {
+          // Regular hours: normal live change from yesterday's close
+          chg = q.changePercent || 0;
+        }
         var isUp = chg >= 0;
         var chgStr = (isUp ? '+' : '') + chg.toFixed(2) + '%';
+
         // Append live price as latest data point so sparkline visibly ticks
         var liveBars = q.bars && q.bars.length ? q.bars.slice() : [];
         if (q.price && liveBars.length) liveBars.push(q.price);
         var spark = buildSparkSVG(liveBars, isUp);
-        var priceStr = q.price ? ('$' + formatNum(q.price)) : '--';
-        // Extended hours % calculation:
-        // Pre-market: change from YESTERDAY's close (previousClose) to current pre-market price
-        // After-hours: change from TODAY's close to current after-hours price
-        //   - q.close or q.dailyBar?.c = today's regular session close (from Alpaca dailyBar)
-        //   - q.previousClose = yesterday's close — WRONG base for after-hours
+        var priceStr = displayPrice ? ('$' + formatNum(displayPrice)) : '--';
+
+        // ── Extended hours % (☀️ pre-market / 🌙 after-hours line) ──
+        // This is the ONLY place the live extended-hours movement appears
+        // Pre-market: (live price − yesterday's close) / yesterday's close
+        // After-hours: (live price − today's close) / today's close
         var extBase = 0;
         if (isPre) {
-          // Pre-market base = yesterday's close
-          extBase = q.previousClose || q.prevClose || 0;
+          // Pre-market extended = live price vs yesterday's close (dailyBar.c = q.close)
+          extBase = q.close || q.previousClose || 0;
         } else if (isAfter || isOvernight) {
-          // After-hours base = today's close (dailyBar.c from Alpaca)
-          // Try q.close first (today's 4 PM close), fall back to previousClose if unavailable
           extBase = q.close || q.previousClose || q.prevClose || 0;
         }
         var extChg = (q.price && extBase) ? ((q.price - extBase) / extBase * 100) : null;
         var extStr = extChg != null ? ((extChg >= 0 ? '+' : '') + extChg.toFixed(2) + '%') : '--';
         var extColor = extChg != null ? (extChg >= 0 ? '#00c853' : '#ff1744') : 'rgba(255,255,255,0.38)';
-        var isCrypto = ticker && ticker.crypto;
         var extRow = (showExt && !isCrypto) ? '<div class="home-market-extended">' + extIcon + ' <span style="color:' + extColor + '">' + extStr + '</span></div>' : '';
-        return '<div class="home-market-card" onclick="hideMobileHome();openFMTab(\'fmMarkets\');">' +
-          '<div class="home-market-left">' +
+        return '<div class="home-market-card" draggable="true" data-symbol="' + q.symbol.replace(/"/g,'&quot;') + '">' +
+          '<div class="home-market-drag-handle" title="Drag to reorder">⠿</div>' +
+          '<div class="home-market-left" onclick="hideMobileHome();openFMTab(\'fmMarkets\');setFMMainChartSymbol(\'' + q.symbol.replace(/'/g,"\\'") + '\');">' +
             '<div class="home-market-sym">' + sym + '</div>' +
             '<div class="home-market-name">' + name + '</div>' +
           '</div>' +
-          spark +
-          '<div class="home-market-right">' +
+          '<div style="flex:1;cursor:pointer;" onclick="hideMobileHome();openFMTab(\'fmMarkets\');setFMMainChartSymbol(\'' + q.symbol.replace(/'/g,"\\'") + '\');">' + spark + '</div>' +
+          '<div class="home-market-right" onclick="hideMobileHome();openFMTab(\'fmMarkets\');setFMMainChartSymbol(\'' + q.symbol.replace(/'/g,"\\'") + '\');">' +
             '<div class="home-market-price">' + priceStr + '</div>' +
             '<div class="home-market-change-pill ' + (isUp ? 'up' : 'dn') + '">' + chgStr + '</div>' +
             extRow +
           '</div>' +
+          '<button class="home-market-delete" onclick="event.stopPropagation();removeHomeMarketTicker(\'' + q.symbol.replace(/'/g,"\\'") + '\')" title="Remove ' + sym + '">✕</button>' +
         '</div>';
       }).join('');
     }
@@ -16695,7 +17547,7 @@
       var placeholders = {
         home: "What's on your mind today?",
         coach: "Continue the conversation...",
-        lifecoach: "Ask your life coach anything",
+        lifecoach: "Message your Life Coach...",
         news: "Ask me to summarize a news story",
         fm: "Ask about stocks, crypto, markets...",
         wishes: "Tell me about your next goal",
@@ -17059,10 +17911,12 @@
     // FM Main Chart — TradingView advanced chart at top of Financial Markets
     var _fmMainChartLoaded = false;
     var _fmChartRange = '1D';
+    var _fmMainSymbol = 'FOREXCOM:SPXUSD';
     var _fmRangeToInterval = { '1D': '15', '1M': 'D', '3M': 'D', '1Y': 'W', '5Y': 'W', 'All': 'M' };
     var _fmRangeToRange = { '1D': '1D', '1M': '1M', '3M': '3M', '1Y': '12M', '5Y': '60M', 'All': 'ALL' };
 
-    function loadFMMainChart() {
+    function loadFMMainChart(symbol) {
+      if (symbol) _fmMainSymbol = symbol;
       var container = document.getElementById('fmMainTVChart');
       if (!container) return;
       container.innerHTML = '';
@@ -17071,7 +17925,7 @@
       script.async = true;
       script.innerHTML = JSON.stringify({
         "autosize": true,
-        "symbol": "FOREXCOM:SPXUSD",
+        "symbol": _fmMainSymbol,
         "interval": _fmRangeToInterval[_fmChartRange] || 'D',
         "range": _fmRangeToRange[_fmChartRange] || '1D',
         "timezone": "America/New_York",
@@ -17122,6 +17976,106 @@
         btn.setAttribute('aria-selected', 'true');
       }
       loadFMMainChart();
+    }
+
+    // ── Chart fullscreen: tap-to-expand + landscape auto-fullscreen ──
+    function toggleChartFullscreen(on) {
+      var wrap = document.getElementById('fmMainChartWrap');
+      if (!wrap) return;
+      var entering = (typeof on === 'boolean') ? on : !wrap.classList.contains('fm-chart-fullscreen');
+      if (entering) {
+        wrap.classList.add('fm-chart-fullscreen');
+        document.body.style.overflow = 'hidden';
+        // Try native Fullscreen API
+        try {
+          if (wrap.requestFullscreen) wrap.requestFullscreen();
+          else if (wrap.webkitRequestFullscreen) wrap.webkitRequestFullscreen();
+        } catch(e) {}
+      } else {
+        wrap.classList.remove('fm-chart-fullscreen');
+        document.body.style.overflow = '';
+        try {
+          if (document.fullscreenElement) document.exitFullscreen();
+          else if (document.webkitFullscreenElement) document.webkitExitFullscreen();
+        } catch(e) {}
+      }
+    }
+
+    // Tap chart to go fullscreen
+    (function() {
+      var chart = document.getElementById('fmMainTVChart');
+      if (!chart) return;
+      chart.addEventListener('click', function(e) {
+        // Don't intercept clicks inside the iframe (TradingView controls)
+        if (e.target.tagName === 'IFRAME') return;
+        var wrap = document.getElementById('fmMainChartWrap');
+        if (wrap && !wrap.classList.contains('fm-chart-fullscreen')) {
+          toggleChartFullscreen(true);
+        }
+      });
+    })();
+
+    // Landscape auto-fullscreen for chart
+    (function() {
+      var mql = window.matchMedia('(orientation: landscape)');
+      function handleOrientation(e) {
+        var fmView = document.getElementById('fmView');
+        var isFMActive = fmView && fmView.style.display !== 'none' && fmView.classList.contains('active');
+        // Also check if Markets sub-tab is active
+        var mktsContent = document.getElementById('fmMarketsContent');
+        var isMktsActive = mktsContent && mktsContent.classList.contains('active');
+        if (e.matches && (isFMActive || isMktsActive) && window.innerWidth <= 1024) {
+          toggleChartFullscreen(true);
+        } else if (!e.matches) {
+          toggleChartFullscreen(false);
+        }
+      }
+      if (mql.addEventListener) mql.addEventListener('change', handleOrientation);
+      else if (mql.addListener) mql.addListener(handleOrientation);
+    })();
+
+    // Exit fullscreen on Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        var wrap = document.getElementById('fmMainChartWrap');
+        if (wrap && wrap.classList.contains('fm-chart-fullscreen')) {
+          toggleChartFullscreen(false);
+        }
+      }
+    });
+
+    // Sync CSS fallback with native fullscreen exit
+    document.addEventListener('fullscreenchange', function() {
+      if (!document.fullscreenElement) {
+        var wrap = document.getElementById('fmMainChartWrap');
+        if (wrap) { wrap.classList.remove('fm-chart-fullscreen'); document.body.style.overflow = ''; }
+      }
+    });
+    document.addEventListener('webkitfullscreenchange', function() {
+      if (!document.webkitFullscreenElement) {
+        var wrap = document.getElementById('fmMainChartWrap');
+        if (wrap) { wrap.classList.remove('fm-chart-fullscreen'); document.body.style.overflow = ''; }
+      }
+    });
+
+    // Convert a ticker symbol to TradingView format and reload the main FM chart
+    function setFMMainChartSymbol(symbol) {
+      if (!symbol) return;
+      var tvSymbol = symbol.replace('/', '');
+      var cryptoShorts = ['BTC', 'ETH', 'SOL', 'DOGE', 'ADA', 'XRP', 'AVAX', 'DOT', 'MATIC', 'LINK', 'SHIB', 'UNI', 'AAVE'];
+      var isCrypto = cryptoShorts.indexOf(tvSymbol) !== -1 || cryptoShorts.indexOf(tvSymbol.replace('USD','')) !== -1;
+      if (isCrypto) {
+        var base = tvSymbol.replace('USD', '');
+        tvSymbol = 'BINANCE:' + base + 'USDT';
+      }
+      // If it's a plain stock ticker without exchange prefix, keep it as-is (TradingView resolves it)
+      _fmMainChartLoaded = false; // force reload
+      loadFMMainChart(tvSymbol);
+      // Scroll chart into view on mobile
+      var chartWrap = document.getElementById('fmMainChartWrap');
+      if (chartWrap && window.innerWidth <= 768) {
+        chartWrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     }
 
     // Auto-load FM chart when fmView becomes active
@@ -17499,7 +18453,7 @@
             var json = await res.json();
             (json.data || []).forEach(function(q) {
               var nameObj = MAG7.find(function(s) { return s.symbol === q.symbol; });
-              results.push({ symbol: q.symbol, name: nameObj ? nameObj.name : (q.name || q.symbol), price: q.price || 0, change: q.change || 0, changePercent: q.changePercent || 0, previousClose: q.previousClose || 0 });
+              results.push({ symbol: q.symbol, name: nameObj ? nameObj.name : (q.name || q.symbol), price: q.price || 0, change: q.change || 0, changePercent: q.changePercent || 0, previousClose: q.previousClose || 0, prevOpen: q.prevOpen || 0, close: q.close || 0 });
             });
           }
         } catch(e) { console.error('Market stocks fetch error:', e); }
@@ -17512,7 +18466,7 @@
             var json = await res.json();
             (json.data || []).forEach(function(q) {
               var nameObj = CRYPTO.find(function(c) { return c.symbol === q.symbol; });
-              results.push({ symbol: q.symbol, name: nameObj ? nameObj.name : (q.name || q.symbol), price: q.price || 0, change: q.change || 0, changePercent: q.changePercent || 0, previousClose: q.previousClose || 0 });
+              results.push({ symbol: q.symbol, name: nameObj ? nameObj.name : (q.name || q.symbol), price: q.price || 0, change: q.change || 0, changePercent: q.changePercent || 0, previousClose: q.previousClose || 0, prevOpen: q.prevOpen || 0, close: q.close || 0 });
             });
           }
         } catch(e) { console.error('Market crypto fetch error:', e); }
@@ -17874,7 +18828,7 @@
           var changeText = q ? sign + formatNum(q.change) + ' (' + sign + formatNum(q.changePercent) + '%)' : '';
           var changeColor = changeClass === 'up' ? '#22c55e' : changeClass === 'down' ? '#ef4444' : 'rgba(255,255,255,0.4)';
           var fmStatus = alpacaWS.getSymbolStatus(row.quoteKey);
-          listHtml += '<div data-fm-row="' + row.quoteKey + '" onclick="openTickerChart(\'' + row.chartSym + '\')" style="display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.06);cursor:pointer;">'
+          listHtml += '<div data-fm-row="' + row.quoteKey + '" onclick="setFMMainChartSymbol(\'' + row.chartSym + '\')" style="display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.06);cursor:pointer;">'
             + '<div style="flex-shrink:0;width:36px;height:36px;margin-right:12px;display:flex;align-items:center;justify-content:center;">' + logo + '</div>'
             + '<div style="flex:1;min-width:0;">'
             + '<div style="font-size:15px;font-weight:600;color:#fff;">' + row.label + '</div>'
@@ -22342,6 +23296,78 @@
     initTickerAutocomplete('holdingEditSymbol');
     initTickerAutocomplete('watchlistAddInput');
     initTickerAutocomplete('fmWatchlistAddInput');
+
+    // ── Home Markets Search Autocomplete ──
+    (function initHomeMarketsSearch() {
+      var input = document.getElementById('homeMarketsSearchInput');
+      var dropdown = document.getElementById('homeMarketsAcDropdown');
+      if (!input || !dropdown) return;
+      var debounce = null;
+
+      input.addEventListener('input', function() {
+        var q = input.value.trim();
+        if (q.length < 1) { dropdown.style.display = 'none'; return; }
+        clearTimeout(debounce);
+        debounce = setTimeout(function() { homeMarketsSearchTickers(q, dropdown); }, 250);
+      });
+      input.addEventListener('blur', function() {
+        setTimeout(function() { dropdown.style.display = 'none'; }, 200);
+      });
+      input.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') { dropdown.style.display = 'none'; input.blur(); }
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+          e.preventDefault();
+          var items = dropdown.querySelectorAll('.home-markets-ac-item');
+          if (!items.length) return;
+          var cur = dropdown.querySelector('.home-markets-ac-item.active');
+          var idx = cur ? Array.from(items).indexOf(cur) : -1;
+          if (cur) cur.classList.remove('active');
+          if (e.key === 'ArrowDown') idx = Math.min(idx + 1, items.length - 1);
+          else idx = Math.max(idx - 1, 0);
+          items[idx].classList.add('active');
+          items[idx].scrollIntoView({ block: 'nearest' });
+        }
+        if (e.key === 'Enter') {
+          var sel = dropdown.querySelector('.home-markets-ac-item.active');
+          if (sel) { e.preventDefault(); homeMarketsSelectTicker(sel); }
+        }
+      });
+
+      async function homeMarketsSearchTickers(query, dd) {
+        try {
+          var res = await fetch(SUPABASE_FN + '/stock-search?q=' + encodeURIComponent(query), { headers: await getAuthHeaders() });
+          var results = await res.json();
+          if (!Array.isArray(results) || !results.length) { dd.style.display = 'none'; return; }
+          var filtered = results.filter(function(r) {
+            var ex = (r.exchange || '').toUpperCase();
+            var type = (r.type || '').toLowerCase();
+            return type === 'stock' || type === 'etf' || type === 'cryptocurrency' ||
+                   ex.indexOf('NYSE') >= 0 || ex.indexOf('NASDAQ') >= 0 || ex.indexOf('AMEX') >= 0;
+          }).slice(0, 8);
+          if (!filtered.length) { dd.style.display = 'none'; return; }
+          dd.innerHTML = filtered.map(function(r, i) {
+            var already = _homeMarketsTickers.some(function(t) { return t.symbol === r.symbol; });
+            var dimStyle = already ? ' style="opacity:0.4;"' : '';
+            return '<div class="home-markets-ac-item' + (i === 0 ? ' active' : '') + '"' + dimStyle + ' data-symbol="' + r.symbol + '" data-name="' + (r.name || '').replace(/"/g,'&quot;') + '" onmousedown="homeMarketsSelectTicker(this)">' +
+              '<span class="home-markets-ac-sym">' + r.symbol + '</span>' +
+              '<span class="home-markets-ac-name">' + (r.name || '').substring(0, 35) + '</span>' +
+              '<span class="home-markets-ac-type">' + (r.type || 'Stock') + '</span>' +
+              (already ? '<span style="font-size:10px;color:rgba(255,255,255,0.3);margin-left:auto;">Added</span>' : '') +
+            '</div>';
+          }).join('');
+          dd.style.display = 'block';
+        } catch(e) { dd.style.display = 'none'; }
+      }
+    })();
+    window.homeMarketsSelectTicker = function(item) {
+      var sym = item.getAttribute('data-symbol');
+      var name = item.getAttribute('data-name');
+      addHomeMarketTicker(sym, name);
+      var input = document.getElementById('homeMarketsSearchInput');
+      if (input) { input.value = ''; }
+      var dd = document.getElementById('homeMarketsAcDropdown');
+      if (dd) dd.style.display = 'none';
+    };
 
     // ── Chart Fullscreen ──
 (function initChartFullscreen() {
