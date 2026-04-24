@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-24-v354-drag-reorder-tickers';
+    var APP_VERSION = '2026-04-24-v355-live-sparklines-fix';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -16298,10 +16298,10 @@
     var _homeSparkLastFull = 0; // timestamp of last full sparkline bars fetch
     function fetchHomeMarkets() {
       var _MQ = 'https://mszilrexlupzthauoaxb.supabase.co/functions/v1/market-quotes';
-      var _SP = 'https://mszilrexlupzthauoaxb.supabase.co/functions/v1/sparkline';
       var allSymbols = _homeMarketsTickers.map(function(t) { return t.symbol; });
       var needFullBars = (Date.now() - _homeSparkLastFull) > 300000; // refresh bars every 5 min
-      fetch(_MQ + '?symbols=' + encodeURIComponent(allSymbols.join(',')) + '&bars=1')
+      // Always request bars — market-quotes now returns 15-min intraday bars from Alpaca
+      fetch(_MQ + '?symbols=' + encodeURIComponent(allSymbols.join(',')) + (needFullBars ? '&bars=1' : ''))
         .then(function(r) { return r.json(); })
         .then(function(j) {
           if (j.data && j.data.length) {
@@ -16317,19 +16317,9 @@
                 ordered.push(match);
               }
             });
+            if (needFullBars) _homeSparkLastFull = Date.now();
             _homeMarketsData = ordered;
             renderHomeMarkets(ordered);
-            // Only fetch sparkline bars every 5 minutes, not every 15s
-            if (needFullBars) {
-              _homeSparkLastFull = Date.now();
-              var sparkFetches = ordered.map(function(q) {
-                return fetch(_SP + '?symbol=' + encodeURIComponent(q.symbol))
-                  .then(function(r) { return r.json(); })
-                  .then(function(s) { if (s.values && s.values.length) q.bars = s.values; })
-                  .catch(function() {});
-              });
-              Promise.all(sparkFetches).then(function() { renderHomeMarkets(ordered); });
-            }
           }
         })
         .catch(function(e) { console.error('[HomeMarkets] Fetch error:', e); });
