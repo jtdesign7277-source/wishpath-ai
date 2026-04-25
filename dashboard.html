@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-25-v378-sports-365scores-fallback';
+    var APP_VERSION = '2026-04-25-v379-news-server-cache';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -19156,7 +19156,7 @@
         var tickerStr = userTickers.length > 0 ? userTickers.slice(0, 15).join(',') : 'AAPL,MSFT,GOOGL,AMZN,NVDA,META,TSLA';
         var requests = buildNewsFeedRequests(tickerStr, '', '');
         var articlesRaw = await fetchNewsFeedArticles(requests);
-        if (articlesRaw.length > 0) {
+        if (articlesRaw && articlesRaw.length > 0) {
           window._marketNewsStatus = 'ready';
           window._marketNewsArticles = articlesRaw.map(function(a) {
             return {
@@ -22611,36 +22611,16 @@
 
     function buildNewsFeedRequests(tickerStr, country, industry) {
       var requests = [];
-      // MarketAux free plan caps at 3 articles per request.
-      // Fire multiple requests with different params to accumulate ~9-12 articles.
       if (country || industry) {
-        // User chose specific filters — just one request
+        // User chose specific filters — single filtered request
         var p = new URLSearchParams();
         p.set('limit', '10');
         if (country) p.set('countries', country);
         if (industry) p.set('industries', industry);
         requests.push(p.toString());
       } else {
-        // Default: 4 requests with different scopes to get ~12 articles
-        // Request 1: general US news
-        var p1 = new URLSearchParams();
-        p1.set('limit', '10');
-        p1.set('countries', 'us');
-        requests.push(p1.toString());
-        // Request 2: technology/finance
-        var p2 = new URLSearchParams();
-        p2.set('limit', '10');
-        p2.set('industries', 'Technology,Financial');
-        requests.push(p2.toString());
-        // Request 3: global (no country filter)
-        var p3 = new URLSearchParams();
-        p3.set('limit', '10');
-        requests.push(p3.toString());
-        // Request 4: energy + healthcare
-        var p4 = new URLSearchParams();
-        p4.set('limit', '10');
-        p4.set('industries', 'Energy,Healthcare');
-        requests.push(p4.toString());
+        // Default: ONE request with combined=1 — server does 4 MarketAux calls + caches result
+        requests.push('combined=1');
       }
       return requests;
     }
@@ -22653,30 +22633,21 @@
         return null; // return null (not []) so caller knows it was skipped, not empty
       }
 
-      // Fire all requests in parallel to speed things up
       var headers = await getAuthHeaders();
-      var promises = requests.map(function(qs) {
-        return fetch(SUPABASE_FN + '/news?' + qs, { headers: headers })
-          .then(function(res) { return res.json(); })
-          .catch(function(e) { console.warn('News request failed:', e); return null; });
-      });
-      var results = await Promise.all(promises);
-
-      var allArticles = [];
-      var seenUrls = {};
-      results.forEach(function(data) {
+      // Single request — server handles multi-fetch + caching
+      var qs = requests[0] || 'combined=1';
+      try {
+        var res = await fetch(SUPABASE_FN + '/news?' + qs, { headers: headers });
+        var data = await res.json();
         if (data && Array.isArray(data.articles)) {
           _newsFetchLastTs = Date.now();
-          data.articles.forEach(function(a) {
-            var key = a.url || a.title;
-            if (!seenUrls[key]) {
-              seenUrls[key] = true;
-              allArticles.push(a);
-            }
-          });
+          return data.articles;
         }
-      });
-      return allArticles;
+        return [];
+      } catch(e) {
+        console.warn('News fetch failed:', e);
+        return [];
+      }
     }
 
     async function refreshNewsFeed(overrideCountry, overrideIndustry) {
