@@ -14,10 +14,11 @@
   <meta name="mobile-web-app-capable" content="yes" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x2728;</text></svg>" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Fredoka:wght@600;700&display=swap" rel="stylesheet" />
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-25-v403-greeting-typewriter';
+    var APP_VERSION = '2026-04-25-v403-casino-pixel-match';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -4805,106 +4806,122 @@
     body[data-active-view="krakenspins"] .top-bar,
     body[data-active-view="krakenspins"] .sidebar { display: none !important; }
     body[data-active-view="krakenspins"] .main-content { padding: 0 !important; margin: 0 !important; }
+    /* ── Kraken Spins — pixel-perfect reference match ── */
+    :root {
+      --ks-bg-deep: #050010;
+      --ks-bg-panel: #0a0420;
+      --ks-purple: #4b1d8a;
+      --ks-purple-br: #8a4dff;
+      --ks-gold: #f5c842;
+      --ks-gold-br: #ffd84a;
+      --ks-gold-shdw: #6b2a14;
+      --ks-orange: #f59e0b;
+      --ks-orange-hi: #ff8c42;
+      --ks-orange-lo: #c2710a;
+      --ks-cyan: #4dd0ff;
+      --ks-blue-bet: #1e3a8a;
+      --ks-white: #ffffff;
+    }
     #krakenspinsView.view { display: none; }
     #krakenspinsView.view.active {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       position: fixed; inset: 0; z-index: 500;
-      background: radial-gradient(ellipse at 50% 30%, #2a0845 0%, #120324 40%, #050008 100%);
+      background: radial-gradient(ellipse at 50% 30%, #1a0838 0%, #0a0420 50%, #050010 100%);
       height: 100vh; height: 100dvh;
       overflow: hidden;
       padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom) 0;
     }
-    /* Top bar — matches reference: coin balance | BUY COINS | gem balance */
+    /* Top bar: coin pill | crown + BUY COINS | heart pill | hamburger */
     .ks-top-bar {
-      width: 100%; display: flex; align-items: center; justify-content: space-between;
-      padding: 8px 14px; flex-shrink: 0; position: relative; z-index: 10;
-      padding-top: calc(env(safe-area-inset-top, 0px) + 44px);
+      width: 100%; display: flex; align-items: center; justify-content: center;
+      gap: 10px; padding: 8px 12px; flex-shrink: 0; position: relative; z-index: 10;
+      height: 44px; padding-top: calc(env(safe-area-inset-top, 0px) + 8px);
     }
     .ks-back-btn {
-      width: 32px; height: 32px; border-radius: 50%;
-      background: rgba(60,30,120,0.6);
-      border: none;
+      position: absolute; left: 10px; top: calc(env(safe-area-inset-top, 0px) + 8px); z-index: 20;
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--ks-purple); border: none;
       display: flex; align-items: center; justify-content: center;
       cursor: pointer; -webkit-tap-highlight-color: transparent;
-      color: #fff; font-size: 16px; position: absolute; left: 10px; top: calc(env(safe-area-inset-top, 0px) + 8px); z-index: 20;
+      color: #fff; font-size: 14px;
     }
-    .ks-coin-display {
-      background: linear-gradient(135deg, #2d1b69, #1a0e45);
-      border: 2px solid #7c5cbf; border-radius: 22px;
-      padding: 6px 14px 6px 10px; display: flex; align-items: center; gap: 6px;
-      font-size: 16px; font-weight: 800; color: #fff;
-      font-family: -apple-system, 'SF Pro Rounded', 'Helvetica Neue', sans-serif;
+    .ks-top-pill {
+      background: var(--ks-purple); border: 2px solid var(--ks-purple-br);
+      border-radius: 18px; height: 32px; padding: 0 14px;
+      display: flex; align-items: center; gap: 6px;
+      font-size: 16px; font-weight: 900; color: #fff;
+      font-family: -apple-system, 'SF Pro Rounded', system-ui, sans-serif;
     }
-    .ks-coin-icon { font-size: 18px; }
-    .ks-gem-display {
-      background: linear-gradient(135deg, #2d1b69, #1a0e45);
-      border: 2px solid #7c5cbf; border-radius: 22px;
-      padding: 6px 14px 6px 10px; display: flex; align-items: center; gap: 6px;
-      font-size: 16px; font-weight: 800; color: #fff;
-      font-family: -apple-system, 'SF Pro Rounded', 'Helvetica Neue', sans-serif;
+    .ks-top-pill-icon { font-size: 16px; }
+    .ks-top-pill-icon-gold { color: var(--ks-gold); }
+    .ks-top-pill-icon-red { color: #ff3a5c; }
+    .ks-title-wrap {
+      display: flex; flex-direction: column; align-items: center; gap: 0;
     }
+    .ks-title-crown { font-size: 18px; line-height: 1; margin-bottom: -2px; }
     .ks-title {
-      font-family: -apple-system, 'SF Pro Rounded', 'Helvetica Neue', sans-serif;
-      font-size: 22px; font-weight: 900;
-      color: #FFD700;
-      text-align: center; letter-spacing: 2px; text-transform: uppercase;
-      text-shadow: 0 2px 12px rgba(255,215,0,0.5);
+      font-family: 'Lilita One', 'Fredoka', system-ui, sans-serif;
+      font-size: 28px; font-weight: 900; letter-spacing: 1.5px;
+      color: var(--ks-gold-br);
+      -webkit-text-stroke: 1.5px var(--ks-gold-shdw);
+      text-shadow: 0 3px 0 #5a1f0a, 0 4px 8px rgba(0,0,0,0.6);
+      text-transform: uppercase; line-height: 1;
     }
-    /* Machine — fills available space */
+    .ks-hamburger {
+      position: absolute; right: 12px; top: calc(env(safe-area-inset-top, 0px) + 12px);
+      font-size: 24px; color: var(--ks-gold); cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    /* Machine — no visible outer border, blends into bg */
     .ks-machine {
-      width: calc(100% - 12px); max-width: 420px;
-      background: #0c0525;
-      border-radius: 18px; padding: 4px;
+      width: calc(100% - 16px); max-width: 420px;
+      background: var(--ks-bg-panel);
+      border-radius: 0; padding: 0;
       position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column;
       margin: 4px 0;
     }
-    .ks-machine::before {
-      content: ''; position: absolute; inset: -3px; border-radius: 21px;
-      background: linear-gradient(180deg, #c9a33e, #8b6914 20%, #f0d060 50%, #8b6914 80%, #c9a33e);
-      z-index: 0;
-    }
+    .ks-machine::before { display: none; }
     .ks-machine-inner {
       position: relative; z-index: 1;
-      background: linear-gradient(180deg, #1a0c3a 0%, #0e0525 40%, #0a031a 100%);
-      border-radius: 15px; padding: 0;
+      background: var(--ks-bg-panel);
+      border-radius: 0; padding: 0;
       flex: 1; min-height: 0; display: flex; flex-direction: column;
-      overflow: hidden;
     }
-    /* Reel area with side buttons */
+    /* Reel area with payline side buttons */
     .ks-reel-area {
-      display: flex; flex: 1; min-height: 0; padding: 8px 0;
+      display: flex; flex: 1; min-height: 0; padding: 6px 0;
     }
     .ks-side-btns {
       display: flex; flex-direction: column; justify-content: space-around;
-      padding: 4px 3px; flex-shrink: 0; gap: 4px;
+      padding: 2px 3px; flex-shrink: 0; gap: 3px;
     }
     .ks-side-btn {
-      width: 26px; height: 26px; border-radius: 6px;
-      background: linear-gradient(180deg, #5b3aad, #3a1f8a);
-      border: 1.5px solid #7c5cbf;
-      color: #fff; font-size: 12px; font-weight: 800;
+      width: 22px; height: 22px; border-radius: 5px;
+      background: var(--ks-purple);
+      border: 1.5px solid var(--ks-purple-br);
+      color: #fff; font-size: 12px; font-weight: 900;
       display: flex; align-items: center; justify-content: center;
       cursor: pointer; -webkit-tap-highlight-color: transparent;
       font-family: -apple-system, 'SF Pro Rounded', sans-serif;
     }
     .ks-side-btn:active { transform: scale(0.9); }
-    /* Reel window */
+    /* Reel window — gold border with glow */
     .ks-reel-window {
-      background: linear-gradient(180deg, #060318, #0a0520, #060318);
-      border-radius: 10px;
-      border: 2.5px solid #c9a33e;
-      box-shadow: inset 0 4px 20px rgba(0,0,0,0.9), 0 0 20px rgba(201,163,62,0.15);
+      background: var(--ks-bg-deep);
+      border-radius: 14px;
+      border: 3px solid #f0c040;
+      box-shadow: 0 0 16px rgba(255,180,40,0.55), inset 0 4px 20px rgba(0,0,0,0.9);
       overflow: hidden; position: relative; flex: 1; min-height: 0;
     }
     .ks-reel-window::before {
       content: ''; position: absolute; inset: 0; z-index: 3; pointer-events: none;
-      background: linear-gradient(180deg, rgba(6,3,24,0.5) 0%, transparent 12%, transparent 88%, rgba(6,3,24,0.5) 100%);
+      background: linear-gradient(180deg, rgba(5,0,16,0.4) 0%, transparent 10%, transparent 90%, rgba(5,0,16,0.4) 100%);
     }
     .ks-reel-canvas { display: block; width: 100%; height: 100%; position: relative; z-index: 1; }
     .ks-payline-indicator {
       position: absolute; left: 0; right: 0; height: 2px;
-      background: linear-gradient(90deg, #FFD700, #FFA500, #FFD700);
-      box-shadow: 0 0 12px rgba(255,215,0,0.5);
+      background: linear-gradient(90deg, var(--ks-gold), var(--ks-orange-hi), var(--ks-gold));
+      box-shadow: 0 0 12px rgba(255,180,40,0.5);
       top: 50%; transform: translateY(-50%);
       pointer-events: none; z-index: 4;
     }
@@ -4913,91 +4930,112 @@
       text-align: center; min-height: 0; flex-shrink: 0; padding: 0;
     }
     .ks-win-text {
-      font-size: 15px; font-weight: 900; color: #FFD700;
-      text-shadow: 0 0 12px rgba(255,215,0,0.6);
+      font-size: 15px; font-weight: 900; color: var(--ks-gold-br);
+      font-family: 'Lilita One', 'Fredoka', system-ui, sans-serif;
+      text-shadow: 0 0 12px rgba(255,216,74,0.6);
       animation: ksWinGlow 1s ease-in-out infinite alternate;
     }
     @keyframes ksWinGlow { from { filter: brightness(1); } to { filter: brightness(1.3); } }
-    /* Bottom bar — matches reference exactly: WIN | - | TOTAL BET | + | MAX BET | Spin */
+    /* Bottom bar — WIN | − | TOTAL BET | + | MAX BET | Spin */
     .ks-bottom-bar {
-      display: flex; align-items: center; gap: 8px;
-      width: 100%; padding: 10px 10px 8px 10px; flex-shrink: 0;
-      background: linear-gradient(180deg, rgba(10,5,25,0.95), rgba(6,2,16,0.98));
-      border-top: 1px solid rgba(201,163,62,0.2);
+      display: flex; align-items: center; gap: 10px;
+      width: 100%; padding: 12px 12px; flex-shrink: 0;
+      background: var(--ks-bg-panel);
     }
-    .ks-bot-cell {
-      display: flex; flex-direction: column; align-items: center;
-      background: rgba(15,8,35,0.9);
-      border: 1.5px solid rgba(201,163,62,0.2); border-radius: 8px;
-      padding: 6px 8px; min-width: 54px;
+    .ks-bot-cell-win {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: var(--ks-white); border: 2px solid var(--ks-gold);
+      border-radius: 10px; padding: 4px 10px; min-width: 88px; height: 44px;
+      box-shadow: inset 0 -2px 0 #c9a33e;
     }
-    .ks-bot-label {
-      font-size: 9px; font-weight: 700; color: rgba(255,255,255,0.35);
+    .ks-bot-cell-bet {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: var(--ks-blue-bet); border: 2px solid var(--ks-gold);
+      border-radius: 10px; padding: 4px 10px; min-width: 80px; height: 44px;
+    }
+    .ks-bot-label-win {
+      font-size: 9px; font-weight: 700; color: var(--ks-gold-shdw);
       text-transform: uppercase; letter-spacing: 0.5px;
       font-family: -apple-system, 'SF Pro Rounded', sans-serif;
     }
-    .ks-bot-value {
-      font-size: 18px; font-weight: 900;
+    .ks-bot-label-bet {
+      font-size: 9px; font-weight: 700; color: var(--ks-gold-br);
+      text-transform: uppercase; letter-spacing: 0.5px;
       font-family: -apple-system, 'SF Pro Rounded', sans-serif;
     }
-    .ks-bot-value-win { color: #4ade80; }
-    .ks-bot-value-bet { color: #fff; }
-    /* +/- round buttons like reference */
+    .ks-bot-value-win {
+      font-size: 18px; font-weight: 900; color: #1a0838;
+      font-family: 'Lilita One', system-ui, sans-serif;
+    }
+    .ks-bot-value-bet {
+      font-size: 18px; font-weight: 900; color: var(--ks-cyan);
+      font-family: 'Lilita One', system-ui, sans-serif;
+      text-shadow: 0 1px 0 #000;
+    }
+    /* Orange +/− circles */
     .ks-bet-adj-btn {
-      width: 34px; height: 34px; border-radius: 50%;
-      background: linear-gradient(180deg, #d97706, #b45309);
-      border: 2px solid #f59e0b;
-      color: #fff; font-size: 20px; font-weight: 900;
+      width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
+      background: radial-gradient(circle at 30% 30%, #ffb84d, var(--ks-orange) 60%, var(--ks-orange-lo) 100%);
+      border: 2.5px solid var(--ks-gold-br);
+      color: #fff; font-size: 22px; font-weight: 900; line-height: 1;
       display: flex; align-items: center; justify-content: center;
       cursor: pointer; -webkit-tap-highlight-color: transparent;
-      box-shadow: 0 2px 8px rgba(217,119,6,0.4);
-      font-family: -apple-system, sans-serif; line-height: 1;
+      box-shadow: 0 3px 0 #8a4d0a, 0 0 12px rgba(245,158,11,0.5);
+      font-family: -apple-system, sans-serif;
     }
-    .ks-bet-adj-btn:active { transform: scale(0.9); }
-    /* MAX BET button — gold outlined like reference */
+    .ks-bet-adj-btn:active { transform: translateY(2px); box-shadow: 0 0 0 #8a4d0a, 0 0 12px rgba(245,158,11,0.5); }
+    /* MAX BET — white bg, gold border, brown text */
     .ks-maxbet-btn {
-      padding: 8px 10px; border-radius: 8px; font-weight: 900; font-size: 13px;
-      border: 2px solid #c9a33e;
-      background: transparent;
-      color: #FFD700; cursor: pointer; -webkit-tap-highlight-color: transparent;
-      text-transform: uppercase; letter-spacing: 1px;
-      font-family: -apple-system, 'SF Pro Rounded', sans-serif;
+      width: 70px; height: 44px; border-radius: 10px; flex-shrink: 0;
+      background: var(--ks-white); border: 2.5px solid var(--ks-gold);
+      color: var(--ks-gold-shdw); font-size: 12px; font-weight: 900;
+      letter-spacing: 1px; text-transform: uppercase;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+      box-shadow: inset 0 -2px 0 #c9a33e, 0 2px 4px rgba(0,0,0,0.4);
+      font-family: 'Lilita One', system-ui, sans-serif;
+      display: flex; align-items: center; justify-content: center;
       white-space: nowrap;
     }
-    .ks-maxbet-btn:active { transform: scale(0.95); background: rgba(201,163,62,0.1); }
-    /* Green SPIN button — large rounded pill like reference */
+    .ks-maxbet-btn:active { transform: translateY(1px); box-shadow: inset 0 -1px 0 #c9a33e; }
+    /* SPIN — large orange pill */
     .ks-spin-btn {
-      padding: 10px 22px; border-radius: 24px;
-      font-weight: 800; font-size: 18px; letter-spacing: 1px;
-      border: none; cursor: pointer; color: #fff;
-      background: linear-gradient(180deg, #4ade80 0%, #22c55e 40%, #16a34a 100%);
-      box-shadow: 0 0 20px rgba(34,197,94,0.5), 0 4px 12px rgba(0,0,0,0.4),
-                  inset 0 2px 0 rgba(255,255,255,0.25);
-      -webkit-tap-highlight-color: transparent; transition: all 0.15s;
-      min-width: 72px; text-align: center;
-      font-family: -apple-system, 'SF Pro Rounded', sans-serif;
+      width: 96px; height: 64px; border-radius: 32px; flex-shrink: 0;
+      background: radial-gradient(circle at 50% 30%, var(--ks-orange-hi) 0%, #f5651a 50%, #c83a0a 100%);
+      border: 3px solid var(--ks-gold-br); cursor: pointer; color: #fff;
+      font-family: 'Lilita One', 'Fredoka', system-ui, sans-serif;
+      font-size: 22px; font-weight: 900; letter-spacing: 1px;
+      text-shadow: 0 2px 0 var(--ks-gold-shdw);
+      box-shadow: 0 0 24px rgba(255,140,66,0.7), 0 4px 0 #8a2a0a, inset 0 3px 0 rgba(255,255,255,0.3);
+      -webkit-tap-highlight-color: transparent; transition: all 0.1s;
+      display: flex; align-items: center; justify-content: center;
     }
-    .ks-spin-btn:active { transform: scale(0.93); }
+    .ks-spin-btn:active { transform: translateY(2px); box-shadow: 0 0 24px rgba(255,140,66,0.7), 0 0 0 #8a2a0a, inset 0 3px 0 rgba(255,255,255,0.3); }
     .ks-spin-btn:disabled {
       opacity: 0.4; cursor: default; transform: none;
       background: linear-gradient(180deg, #555, #333);
+      border-color: #666; box-shadow: none;
     }
-    /* Side action row (turbo + auto) */
+    /* Action row (turbo + auto) */
     .ks-action-row {
       display: flex; justify-content: center; gap: 12px; padding: 6px 0 4px 0; flex-shrink: 0;
-      background: rgba(6,2,16,0.95);
+      background: var(--ks-bg-panel);
     }
     .ks-action-btn {
       padding: 5px 16px; border-radius: 6px; font-weight: 700; font-size: 11px;
-      border: 1px solid rgba(124,92,191,0.3);
-      background: rgba(30,15,60,0.8);
+      border: 1px solid rgba(138,77,255,0.3);
+      background: rgba(75,29,138,0.4);
       color: rgba(255,255,255,0.5); cursor: pointer;
       -webkit-tap-highlight-color: transparent; text-transform: uppercase; letter-spacing: 0.5px;
       font-family: -apple-system, 'SF Pro Rounded', sans-serif;
     }
     .ks-action-btn.active {
-      border-color: #c9a33e; color: #FFD700;
-      background: rgba(201,163,62,0.1);
+      border-color: var(--ks-gold); color: var(--ks-gold-br);
+      background: rgba(245,200,66,0.1);
+    }
+    /* Mobile ≤420px overrides */
+    @media (max-width: 420px) {
+      .ks-title { font-size: 22px; }
+      .ks-spin-btn { width: 84px; height: 56px; font-size: 18px; }
     }
     /* Big win overlay */
     .ks-big-win-overlay {
@@ -6681,17 +6719,21 @@
       <div class="view" id="krakenspinsView">
         <!-- Back button (absolute positioned) -->
         <div class="ks-back-btn" onclick="if(window.innerWidth<=768){showMobileHome();}else{showView('home');}">←</div>
-        <!-- Top bar: coins | BUY COINS | gems -->
+        <!-- Top bar: coins | KRAKEN SPINS | gems | hamburger -->
         <div class="ks-top-bar">
-          <div class="ks-coin-display">
-            <span class="ks-coin-icon">🪙</span>
+          <div class="ks-top-pill">
+            <span class="ks-top-pill-icon ks-top-pill-icon-gold">🪙</span>
             <span id="ksBalanceTop">5,000</span>
           </div>
-          <div class="ks-title">BUY COINS</div>
-          <div class="ks-gem-display">
-            <span class="ks-coin-icon">💎</span>
+          <div class="ks-title-wrap">
+            <span class="ks-title-crown">👑</span>
+            <div class="ks-title">KRAKEN SPINS</div>
+          </div>
+          <div class="ks-top-pill">
+            <span class="ks-top-pill-icon ks-top-pill-icon-red">💎</span>
             <span>12</span>
           </div>
+          <div class="ks-hamburger">☰</div>
         </div>
         <!-- Machine cabinet -->
         <div class="ks-machine" id="ksMachine">
@@ -6719,18 +6761,18 @@
             <div class="ks-win-display" id="ksWinDisplay"></div>
             <!-- Bottom bar: WIN | - | TOTAL BET | + | MAX BET | Spin -->
             <div class="ks-bottom-bar">
-              <div class="ks-bot-cell">
-                <span class="ks-bot-label">WIN</span>
-                <span class="ks-bot-value ks-bot-value-win" id="ksWinAmount">0</span>
+              <div class="ks-bot-cell-win">
+                <span class="ks-bot-label-win">WIN</span>
+                <span class="ks-bot-value-win" id="ksWinAmount">0</span>
               </div>
               <div class="ks-bet-adj-btn" onclick="ksPrevBet()">−</div>
-              <div class="ks-bot-cell">
-                <span class="ks-bot-label">TOTAL BET</span>
-                <span class="ks-bot-value ks-bot-value-bet" id="ksBetDisplay">50</span>
+              <div class="ks-bot-cell-bet">
+                <span class="ks-bot-label-bet">TOTAL BET</span>
+                <span class="ks-bot-value-bet" id="ksBetDisplay">50</span>
               </div>
               <div class="ks-bet-adj-btn" onclick="ksNextBet()">+</div>
               <button class="ks-maxbet-btn" onclick="ksSetBet(500)">MAX BET</button>
-              <button class="ks-spin-btn" id="ksSpinBtn" onclick="ksSpin()">Spin</button>
+              <button class="ks-spin-btn" id="ksSpinBtn" onclick="ksSpin()">SPIN</button>
             </div>
             <!-- Turbo + Auto row -->
             <div class="ks-action-row">
