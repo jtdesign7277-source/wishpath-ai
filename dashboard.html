@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-25-v367-sports';
+    var APP_VERSION = '2026-04-25-v368-dropdown-fix';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -4002,7 +4002,7 @@
       /* News filter mobile — full width */
       .news-filter-bar { flex-direction: column; gap: 8px; }
       .news-filter-select { width: 100%; font-size: 16px !important; min-height: 44px; padding: 12px; }
-      .news-customize-dropdown { left: auto; right: 0; min-width: min(280px, calc(100vw - 32px)); }
+      .news-customize-dropdown { position: fixed !important; top: auto !important; bottom: 80px !important; left: 16px !important; right: 16px !important; min-width: unset !important; width: calc(100vw - 32px) !important; max-height: 60vh; overflow-y: auto; border-radius: 20px; padding: 20px; }
       .news-customize-dropdown select { font-size: 16px !important; min-height: 44px; padding: 12px; }
       .news-feed-item { margin-bottom: 12px; }
       .news-feed-img, .news-feed-img-placeholder { height: 160px; }
