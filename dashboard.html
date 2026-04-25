@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-25-v385-espn-sports-tab';
+    var APP_VERSION = '2026-04-25-v386-game-polish-espn-home';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -4618,10 +4618,12 @@
       display: flex;
       align-items: center;
       gap: 0;
-      background: linear-gradient(180deg, #2a5a9a 0%, #1a3a6a 50%, #0d2040 100%);
+      background: linear-gradient(180deg, rgba(113,50,245,0.4) 0%, rgba(60,20,140,0.5) 50%, rgba(20,8,60,0.7) 100%);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       border-radius: 20px;
-      border: 1.5px solid rgba(100,180,255,0.35);
-      box-shadow: 0 2px 8px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+      border: 1.5px solid rgba(113,50,245,0.4);
+      box-shadow: 0 2px 12px rgba(113,50,245,0.3), 0 4px 16px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.12);
       padding: 3px 12px 3px 3px;
       min-width: 90px;
       height: 32px;
@@ -4698,9 +4700,9 @@
       align-items: center;
       justify-content: center;
       gap: 16px;
-      background: rgba(11, 6, 17, 0.95);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+      background: radial-gradient(ellipse at center, rgba(113,50,245,0.15) 0%, rgba(11,6,17,0.97) 70%);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
       z-index: 999;
       border-radius: 0;
       padding: 24px;
@@ -6709,6 +6711,17 @@
           <div class="mobile-chip" onclick="prefillMobileHomeInput('Help me start a side hustle')"><span>🚀</span>Start a side hustle</div>
           <div class="mobile-chip" onclick="openMobileTemplates()"><span>🗂️</span>Browse Templates</div>
         </div>
+        </div>
+        <!-- Live Sports -->
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <div class="mobile-sec-label" style="margin:0;">Live Sports</div>
+          <button onclick="hideMobileHome();showView('fm');setTimeout(function(){var btn=document.querySelector('.fm-sub-tab[onclick*=fmSports]');switchFMTab('fmSports',btn);},100);"
+            style="background:linear-gradient(135deg,rgba(113,50,245,0.5),rgba(80,30,180,0.6));border:1px solid rgba(113,50,245,0.5);color:#fff;font-size:11px;font-weight:700;padding:4px 10px;border-radius:12px;cursor:pointer;-webkit-tap-highlight-color:transparent;letter-spacing:0.03em;">
+            ESPN ➜
+          </button>
+        </div>
+        <div id="homeESPNScores" style="display:flex;gap:10px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:0 0 6px 0;scrollbar-width:none;">
+          <div style="color:rgba(255,255,255,0.3);font-size:12px;padding:16px;white-space:nowrap;">Loading scores...</div>
         </div>
         <!-- News -->
         <div class="mobile-sec-label">News</div>
@@ -9485,6 +9498,76 @@
         } catch(e) {}
       }
 
+      // ── Haptic feedback — iOS Safari vibration on impacts ──
+      function haptic(type) {
+        try {
+          if ('vibrate' in navigator) {
+            if (type === 'heavy') navigator.vibrate(30);
+            else if (type === 'medium') navigator.vibrate(15);
+            else navigator.vibrate(8);
+          }
+        } catch(e) {}
+      }
+
+      // ── Engine trail particles — persistent trail behind ship ──
+      var _engineTrail = [];
+      var _engineTrailMax = 30;
+
+      function spawnEngineTrailParticle() {
+        if (gameOver || _engineTrail.length >= _engineTrailMax) return;
+        var sz = player.size * 1.35;
+        var _tier = SHIP_TIERS[playerShipTier] || SHIP_TIERS[0];
+        var colors = [_tier.engineColor, '#00ccff', '#0066ff', 'rgba(113,50,245,0.8)'];
+        // Two engine positions (left + right) + center
+        var positions = [
+          { x: player.x - sz * 0.32, y: player.y + sz * 0.42 },
+          { x: player.x + sz * 0.32, y: player.y + sz * 0.42 },
+          { x: player.x, y: player.y + sz * 0.45 }
+        ];
+        for (var ei = 0; ei < positions.length; ei++) {
+          _engineTrail.push({
+            x: positions[ei].x + (Math.random() - 0.5) * 4,
+            y: positions[ei].y,
+            vx: (Math.random() - 0.5) * 15,
+            vy: 80 + Math.random() * 60,
+            life: 0.25 + Math.random() * 0.2,
+            maxLife: 0.25 + Math.random() * 0.2,
+            size: 2 + Math.random() * 4,
+            color: colors[Math.floor(Math.random() * colors.length)]
+          });
+        }
+      }
+
+      // ── Collection sparkle ring — sparkly ring burst on pickup ──
+      function spawnCollectionSparkles(x, y, color, count) {
+        var n = count || 16;
+        for (var i = 0; i < n; i++) {
+          var angle = (i / n) * Math.PI * 2;
+          var spd = 120 + Math.random() * 100;
+          particles.push({
+            x: x, y: y,
+            vx: Math.cos(angle) * spd,
+            vy: Math.sin(angle) * spd,
+            life: 0.5 + Math.random() * 0.3,
+            maxLife: 0.5 + Math.random() * 0.3,
+            size: 2 + Math.random() * 3,
+            color: color || '#7132F5'
+          });
+        }
+        // Inner ring — tiny white sparkles
+        for (var j = 0; j < 8; j++) {
+          var a2 = Math.random() * Math.PI * 2;
+          particles.push({
+            x: x, y: y,
+            vx: Math.cos(a2) * (50 + Math.random() * 60),
+            vy: Math.sin(a2) * (50 + Math.random() * 60),
+            life: 0.3, maxLife: 0.3,
+            size: 1.5,
+            color: '#ffffff'
+          });
+        }
+      }
+
       var GW = 390;
       var GH = 680;
       var _wrRaf = null;
@@ -9734,6 +9817,7 @@
         bullets = [];
         targets = [];
         particles = [];
+        _engineTrail = [];
         powerups = [];
         backgroundPlanets = [];
         activePowerup = null;
@@ -10512,6 +10596,17 @@
 
         updateStars(dt);
         updateBackgroundPlanets(dt);
+
+        // Engine trail particles — spawn + update
+        if (!gameOver) spawnEngineTrailParticle();
+        for (var _eti = _engineTrail.length - 1; _eti >= 0; _eti--) {
+          var _et = _engineTrail[_eti];
+          _et.x += _et.vx * dt;
+          _et.y += _et.vy * dt;
+          _et.life -= dt;
+          if (_et.life <= 0) _engineTrail.splice(_eti, 1);
+        }
+
         // Update particles
         for (var pi = particles.length - 1; pi >= 0; pi--) {
           var p = particles[pi];
@@ -10579,6 +10674,7 @@
               bullets.splice(bi, 1);
               if (boss.health <= 0) {
                 // Boss defeated!
+                haptic('heavy');
                 score += 100 + currentLevel * 50;
                 spawnExplosion(boss.x, boss.y, '#FF4400', 40);
                 spawnExplosion(boss.x - 30, boss.y, '#FFCC00', 25);
@@ -10611,12 +10707,14 @@
                 // invincible — ignore
               } else if (_shieldActive && _shieldHealth > 0) {
                 _shieldHealth -= 2;
+                haptic('medium');
                 spawnExplosion(player.x, player.y, '#ff44ff', 10);
                 triggerScreenShake(4, 0.2);
                 if (_shieldHealth <= 0) { _shieldActive = false; _shieldHealth = 0; }
               } else {
                 gameOver = true;
                 _deathTime = Date.now();
+                haptic('heavy');
                 spawnExplosion(player.x, player.y, '#FF5252', 25);
                 spawnExplosion(player.x - 15, player.y + 10, '#FF9800', 15);
                 spawnExplosion(player.x + 15, player.y - 10, '#FDE047', 12);
@@ -10665,7 +10763,10 @@
             } else if (up.type === 'weapon') {
               _weaponLevel = Math.min(3, _weaponLevel + 1);
             }
-            spawnExplosion(up.x, up.y, up.type === 'shield' ? '#ff44ff' : (up.type === 'weapon' ? '#ff4444' : '#00ffcc'), 12);
+            var _ucol = up.type === 'shield' ? '#ff44ff' : (up.type === 'weapon' ? '#ff4444' : '#00ffcc');
+            spawnExplosion(up.x, up.y, _ucol, 12);
+            spawnCollectionSparkles(up.x, up.y, _ucol, 20);
+            haptic('medium');
             _upgrades.splice(ui, 1);
           }
         }
@@ -10992,6 +11093,8 @@
               activePowerup = { type: pw.type, timer: pw.duration };
             }
             spawnExplosion(pw.x, pw.y, pw.color, 20);
+            spawnCollectionSparkles(pw.x, pw.y, pw.color, 16);
+            haptic('medium');
             playPowerupSound();
             powerups.splice(pu, 1);
           }
@@ -11114,6 +11217,7 @@
                 bullets.splice(k, 1);
                 if (t.health <= 0) {
                   spawnExplosion(t.x, t.y, t.glowColor || '#7132F5', 18);
+                  haptic('light');
                   score += (t.type === 'enemy-tank' ? 25 : t.type === 'enemy-bomber' ? 15 : 10);
                   gems += 1;
                   waveEnemiesKilled++;
@@ -11220,6 +11324,7 @@
             } else {
               gameOver = true;
               _deathTime = Date.now();
+              haptic('heavy');
               playDeathSound();
               stopBgMusic();
               // Epic multi-stage death explosion
@@ -12749,6 +12854,22 @@
         for (var ti = 0; ti < targets.length; ti++) {
           var tg = targets[ti];
           if (tg.isEnemyShip) drawEnemyShip(tg);
+        }
+
+        // Draw engine trail particles (behind ship)
+        for (var _eti = 0; _eti < _engineTrail.length; _eti++) {
+          var _et = _engineTrail[_eti];
+          var _etAlpha = (_et.life / _et.maxLife) * 0.7;
+          ctx.save();
+          ctx.globalAlpha = _etAlpha;
+          ctx.shadowColor = _et.color;
+          ctx.shadowBlur = 6;
+          ctx.fillStyle = _et.color;
+          ctx.beginPath();
+          ctx.arc(_et.x, _et.y, _et.size * (_et.life / _et.maxLife), 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+          ctx.restore();
         }
 
         // Draw ship (hide when dead)
@@ -16313,6 +16434,7 @@
       if (_homeMarketsData) renderHomeMarkets(_homeMarketsData);
       fetchHomeMarkets(); // always refresh prices + bars so sparklines stay visible
       if (!window._marketNewsArticles || !window._marketNewsArticles.length) fetchMarketNews();
+      fetchHomeESPNScores(); // refresh live sports scores
       setMobileNavActive('home');
       refreshPremiumHeader();
       // Always show Ask AI bar on home too
@@ -16725,6 +16847,67 @@
         '</div>';
       }).join('');
     }
+
+    // ── Home screen ESPN mini-scores ──
+    var _homeESPNLeagues = [
+      { sport: 'football', league: 'nfl', label: 'NFL' },
+      { sport: 'basketball', league: 'nba', label: 'NBA' },
+      { sport: 'baseball', league: 'mlb', label: 'MLB' },
+      { sport: 'hockey', league: 'nhl', label: 'NHL' }
+    ];
+
+    function fetchHomeESPNScores() {
+      var container = document.getElementById('homeESPNScores');
+      if (!container) return;
+      // Fetch all leagues in parallel, show any games that are live or recent
+      var promises = _homeESPNLeagues.map(function(lg) {
+        return fetch('https://site.api.espn.com/apis/site/v2/sports/' + lg.sport + '/' + lg.league + '/scoreboard')
+          .then(function(r) { return r.ok ? r.json() : null; })
+          .then(function(d) { return { league: lg.label, events: d && d.events ? d.events : [] }; })
+          .catch(function() { return { league: lg.label, events: [] }; });
+      });
+      Promise.all(promises).then(function(results) {
+        var cards = [];
+        results.forEach(function(res) {
+          res.events.slice(0, 3).forEach(function(ev) {
+            var comp = ev.competitions && ev.competitions[0];
+            if (!comp) return;
+            var teams = comp.competitors || [];
+            if (teams.length < 2) return;
+            var home = teams.find(function(t) { return t.homeAway === 'home'; }) || teams[0];
+            var away = teams.find(function(t) { return t.homeAway === 'away'; }) || teams[1];
+            var status = comp.status || {};
+            var detail = (status.type && status.type.shortDetail) || '';
+            var isLive = status.type && status.type.state === 'in';
+            var isFinal = status.type && status.type.completed;
+            var statusColor = isLive ? '#4ade80' : (isFinal ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.5)');
+            var liveDot = isLive ? '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#4ade80;margin-right:3px;animation:espnPulse 1.5s infinite;"></span>' : '';
+            cards.push(
+              '<div style="min-width:150px;max-width:170px;flex-shrink:0;background:rgba(37,37,37,0.8);backdrop-filter:blur(8px);border-radius:12px;border:1px solid rgba(255,255,255,0.06);padding:10px 12px;cursor:pointer;" onclick="hideMobileHome();showView(\'fm\');setTimeout(function(){var btn=document.querySelector(\'.fm-sub-tab[onclick*=fmSports]\');switchFMTab(\'fmSports\',btn);},100);">' +
+                '<div style="font-size:9px;font-weight:700;color:rgba(113,50,245,0.9);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">' + res.league + '</div>' +
+                '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">' +
+                  '<span style="font-size:12px;font-weight:700;color:#fff;">' + (away.team ? away.team.abbreviation : '?') + '</span>' +
+                  '<span style="font-size:14px;font-weight:900;color:#fff;">' + (away.score || '0') + '</span>' +
+                '</div>' +
+                '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">' +
+                  '<span style="font-size:12px;font-weight:700;color:#fff;">' + (home.team ? home.team.abbreviation : '?') + '</span>' +
+                  '<span style="font-size:14px;font-weight:900;color:#fff;">' + (home.score || '0') + '</span>' +
+                '</div>' +
+                '<div style="font-size:9px;color:' + statusColor + ';font-weight:600;">' + liveDot + detail.replace(/</g,'&lt;') + '</div>' +
+              '</div>'
+            );
+          });
+        });
+        if (cards.length === 0) {
+          container.innerHTML = '<div style="color:rgba(255,255,255,0.3);font-size:12px;padding:16px;white-space:nowrap;">No games right now</div>';
+        } else {
+          container.innerHTML = cards.join('');
+        }
+      });
+    }
+
+    // Fetch on home load
+    fetchHomeESPNScores();
 
     // Patch renderWishes to also refresh mobile recents
     var _origRenderWishes = renderWishes;
