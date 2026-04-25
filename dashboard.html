@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-25-v375-sofascore-sports-chart-toolbar';
+    var APP_VERSION = '2026-04-25-v376-invaders-sofascore-chart-sparkline';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -9742,6 +9742,7 @@
         _laserActive = false; _laserTimer = 0; _missiles = [];
         _nukeFlash = 0; _starburstActive = false; _starburstTimer = 0; _homingBombs = [];
         _formationTimer = 0;
+        _formations = [];
         _deathFlash = 0;
         window._upgrades = [];
         starsInit = false;
@@ -10128,61 +10129,99 @@
         if (isEnemyShip) levelEnemiesKilled = Math.max(0, levelEnemiesKilled);
       }
 
+      // ── Space Invaders Formation System ──
+      // Formations move as a single block: left/right, drop when hitting edges
+      var _formations = []; // active formation groups
+
       function spawnEnemyFormation(formationType) {
-        var fType = formationType || ['grid', 'v-shape', 'diamond', 'line'][Math.floor(Math.random() * 4)];
-        var positions = [];
-        var spacing = 76;
-        var sz = 68;
+        var fType = formationType || ['grid', 'v-shape', 'pyramid', 'staggered'][Math.floor(Math.random() * 4)];
+        var spacing = Math.min(68, GW / 7); // scale to screen width
+        var sz = 52;
         var hp = 2 + Math.floor(currentLevel * 0.5);
-        var eType = Math.random() > 0.4 ? 'enemy-fighter' : 'enemy-bomber';
-        if (eType === 'enemy-bomber') { sz = 88; hp += 2; }
+        var positions = []; // {offX, offY} relative to formation center
 
         if (fType === 'grid') {
-          // 3-4 rows x 4-6 columns
-          var cols = 4 + Math.floor(Math.random() * 3);
-          var rows = 2 + Math.floor(Math.random() * 2);
-          var startX = GW * 0.5 - (cols - 1) * spacing * 0.5;
-          for (var row = 0; row < rows; row++) {
-            for (var col = 0; col < cols; col++) {
-              positions.push({ x: startX + col * spacing, yOff: row * spacing });
+          var cols = Math.min(6, Math.max(4, Math.floor(GW / spacing) - 1));
+          var rows = 3 + Math.min(2, Math.floor(currentLevel / 3));
+          for (var r = 0; r < rows; r++) {
+            for (var c = 0; c < cols; c++) {
+              positions.push({ offX: (c - (cols - 1) * 0.5) * spacing, offY: r * spacing * 0.8 });
             }
           }
         } else if (fType === 'v-shape') {
-          // V formation — 2 arms of 4-5 each
-          var armLen = 4 + Math.floor(Math.random() * 2);
-          positions.push({ x: GW * 0.5, yOff: 0 }); // leader
+          var armLen = 3 + Math.min(2, Math.floor(currentLevel / 2));
+          positions.push({ offX: 0, offY: 0 });
           for (var i = 1; i <= armLen; i++) {
-            positions.push({ x: GW * 0.5 - i * spacing * 0.6, yOff: i * spacing * 0.5 });
-            positions.push({ x: GW * 0.5 + i * spacing * 0.6, yOff: i * spacing * 0.5 });
+            positions.push({ offX: -i * spacing * 0.55, offY: i * spacing * 0.6 });
+            positions.push({ offX:  i * spacing * 0.55, offY: i * spacing * 0.6 });
           }
-        } else if (fType === 'diamond') {
-          // Diamond shape
-          var dSize = 3;
-          for (var row = -dSize; row <= dSize; row++) {
-            var w = dSize - Math.abs(row);
-            for (var col = -w; col <= w; col++) {
-              positions.push({ x: GW * 0.5 + col * spacing * 0.6, yOff: (row + dSize) * spacing * 0.5 });
+        } else if (fType === 'pyramid') {
+          var baseWidth = Math.min(6, Math.max(4, Math.floor(GW / spacing) - 1));
+          var rowCount = Math.min(baseWidth, 4 + Math.min(2, Math.floor(currentLevel / 3)));
+          for (var r = 0; r < rowCount; r++) {
+            var enemiesInRow = baseWidth - r;
+            for (var c = 0; c < enemiesInRow; c++) {
+              positions.push({ offX: (c - (enemiesInRow - 1) * 0.5) * spacing, offY: r * spacing * 0.8 });
             }
           }
         } else {
-          // Line — single row across screen
-          var lineCount = 5 + Math.floor(Math.random() * 3);
-          var startX = GW * 0.5 - (lineCount - 1) * spacing * 0.5;
-          for (var i = 0; i < lineCount; i++) {
-            positions.push({ x: startX + i * spacing, yOff: 0 });
+          // Staggered rows — offset every other row by half spacing
+          var cols = Math.min(5, Math.max(4, Math.floor(GW / spacing) - 1));
+          var rows = 3 + Math.min(2, Math.floor(currentLevel / 3));
+          for (var r = 0; r < rows; r++) {
+            var rowOffset = (r % 2 === 1) ? spacing * 0.5 : 0;
+            var rowCols = (r % 2 === 1) ? cols - 1 : cols;
+            for (var c = 0; c < rowCols; c++) {
+              positions.push({ offX: (c - (rowCols - 1) * 0.5) * spacing + rowOffset * ((r % 2 === 1) ? 0 : 0), offY: r * spacing * 0.7 });
+            }
           }
         }
 
-        var baseY = -40;
+        // Formation group object — moves as one block
+        var formationWidth = 0;
+        positions.forEach(function(p) { formationWidth = Math.max(formationWidth, Math.abs(p.offX)); });
+        formationWidth = (formationWidth + sz) * 2;
+        var moveSpeed = 45 + currentLevel * 8;
+        var dropAmount = spacing * 0.6;
+
+        var formation = {
+          cx: GW * 0.5,
+          cy: -spacing * 2, // start above screen
+          targetCy: GH * 0.08 + Math.random() * GH * 0.06, // slide into position
+          entered: false,
+          entrySpeed: 120 + currentLevel * 10,
+          dirX: Math.random() > 0.5 ? 1 : -1,
+          moveSpeed: moveSpeed,
+          dropAmount: dropAmount,
+          width: formationWidth,
+          enemies: [],
+          lifeTimer: 18 + Math.random() * 10 - currentLevel * 0.5
+        };
+
+        // Determine enemy types per row for visual variety
+        var rowTypes = ['enemy-fighter', 'enemy-bomber', 'enemy-zigzag', 'enemy-fighter', 'enemy-tank'];
+        var purpleGlows = ['#7132F5', '#9B59F5', '#6B2FD9', '#8844FF', '#A064FF'];
+
         for (var i = 0; i < positions.length; i++) {
           var p = positions[i];
-          targets.push({
-            x: p.x,
-            y: baseY - p.yOff,
-            size: sz,
-            health: hp,
-            maxHealth: hp,
-            speed: 55 + Math.random() * 25 + currentLevel * 5,
+          var rowIdx = Math.floor(p.offY / (spacing * 0.6));
+          var eType = rowTypes[rowIdx % rowTypes.length];
+          var eSz = eType === 'enemy-bomber' ? sz * 1.3 : eType === 'enemy-tank' ? sz * 1.5 : sz;
+          var eHp = eType === 'enemy-tank' ? hp + 4 : eType === 'enemy-bomber' ? hp + 2 : hp;
+          var eColor = eType === 'enemy-fighter' ? '#ff6644' :
+                       eType === 'enemy-bomber' ? '#ff8800' :
+                       eType === 'enemy-zigzag' ? '#dd44ff' :
+                       eType === 'enemy-tank' ? '#ff2222' : '#ff6644';
+
+          var enemy = {
+            offX: p.offX,
+            offY: p.offY,
+            x: formation.cx + p.offX,
+            y: formation.cy + p.offY,
+            size: eSz,
+            health: eHp,
+            maxHealth: eHp,
+            speed: 0, // movement handled by formation
             type: eType,
             colorIdx: Math.floor(Math.random() * PLANET_COLORS.length),
             asteroidColor: null,
@@ -10190,16 +10229,87 @@
             rotSpeed: 0,
             wobble: 0,
             isEnemyShip: true,
-            enemyColor: eType === 'enemy-fighter' ? '#ff6644' : '#ff8800',
-            movePattern: 'sine',
-            patternPhase: i * 0.4,
-            fireCounter: 1.5 + Math.random() * 2,
+            enemyColor: eColor,
+            glowColor: purpleGlows[i % purpleGlows.length],
+            movePattern: 'formation',
+            patternPhase: 0,
+            fireCounter: 2.5 + Math.random() * 3,
+            fireInterval: 2.5 + Math.random() * 2.0 - Math.min(1, currentLevel * 0.15),
             formationEnemy: true,
-            sineAmplitude: 30 + Math.random() * 40,
-            holdY: GH * 0.10 + (p.yOff * 0.5) + Math.random() * 30,
-            lifeTimer: 16 + Math.random() * 8
-          });
+            formationIdx: _formations.length,
+            sineAmplitude: 0,
+            holdY: null,
+            lifeTimer: 999 // managed by formation
+          };
+          formation.enemies.push(enemy);
+          targets.push(enemy);
           levelEnemiesTotal += 1;
+        }
+
+        _formations.push(formation);
+      }
+
+      // Update all active formations — Space Invaders block movement
+      function updateFormations(dt) {
+        for (var fi = _formations.length - 1; fi >= 0; fi--) {
+          var f = _formations[fi];
+
+          // Remove dead enemies from formation
+          f.enemies = f.enemies.filter(function(e) { return e.health > 0 && targets.indexOf(e) !== -1; });
+
+          // If formation empty, remove it
+          if (f.enemies.length === 0) {
+            _formations.splice(fi, 1);
+            continue;
+          }
+
+          // Phase 1: Smooth entry from top
+          if (!f.entered) {
+            f.cy += f.entrySpeed * dt;
+            if (f.cy >= f.targetCy) {
+              f.cy = f.targetCy;
+              f.entered = true;
+            }
+          } else {
+            // Phase 2: Space Invaders side-to-side + drop
+            f.cx += f.dirX * f.moveSpeed * dt;
+
+            // Check edges — find leftmost and rightmost enemy
+            var minX = GW, maxX = 0;
+            for (var i = 0; i < f.enemies.length; i++) {
+              var ex = f.cx + f.enemies[i].offX;
+              minX = Math.min(minX, ex - f.enemies[i].size * 0.5);
+              maxX = Math.max(maxX, ex + f.enemies[i].size * 0.5);
+            }
+
+            if (maxX >= GW - 8 || minX <= 8) {
+              f.dirX *= -1;
+              f.cy += f.dropAmount; // drop one row
+              f.moveSpeed += 3; // speed up each bounce
+            }
+
+            // Life timer — formation retreats after a while
+            f.lifeTimer -= dt;
+            if (f.lifeTimer <= 0) {
+              f.cy -= 80 * dt; // retreat upward
+              if (f.cy < -GH * 0.5) {
+                // Remove all remaining enemies
+                f.enemies.forEach(function(e) {
+                  var idx = targets.indexOf(e);
+                  if (idx !== -1) targets.splice(idx, 1);
+                });
+                _formations.splice(fi, 1);
+                continue;
+              }
+            }
+          }
+
+          // Sync all enemies to formation position
+          for (var i = 0; i < f.enemies.length; i++) {
+            var e = f.enemies[i];
+            e.x = f.cx + e.offX;
+            e.y = f.cy + e.offY;
+          }
         }
       }
 
@@ -10930,15 +11040,17 @@
         var interval = Math.max(0.38, spawnEvery - score * 0.0012);
         while (spawnAcc >= interval) { spawnAcc -= interval; spawnTarget(); }
 
-        // Formation wave spawning (levels 2+)
-        if (currentLevel >= 2 && !activeBoss) {
+        // Space Invaders formation wave spawning (all levels)
+        if (!activeBoss) {
           _formationTimer += dt;
           if (_formationTimer >= _formationInterval) {
             _formationTimer = 0;
-            _formationInterval = Math.max(4, 7 - currentLevel * 0.5);
+            _formationInterval = Math.max(3, 6 - currentLevel * 0.4);
             spawnEnemyFormation();
           }
         }
+        // Update formation group movement (Space Invaders side-to-side + drop)
+        updateFormations(dt);
 
         var i;
         for (i = bullets.length - 1; i >= 0; i--) {
@@ -10952,6 +11064,43 @@
         var j, k;
         targetLoop: for (j = targets.length - 1; j >= 0; j--) {
           var t = targets[j];
+          // Formation enemies: position managed by updateFormations(), skip individual movement
+          if (t.movePattern === 'formation') {
+            t.wobble += dt * 1.5;
+            // Formation enemies still fire at player
+            if (!activeBoss) {
+              t.fireCounter -= dt;
+              if (t.fireCounter <= 0) {
+                t.fireCounter = t.fireInterval || (2.0 + Math.random() * 1.5);
+                var bSpd = 220;
+                var dx = player.x - t.x, dy = player.y - t.y;
+                var dist = Math.sqrt(dx * dx + dy * dy) || 1;
+                enemyBullets.push({ x: t.x, y: t.y + t.size * 0.3, vx: (dx / dist) * bSpd, vy: (dy / dist) * bSpd, size: 5, color: '#7132F5' });
+              }
+            }
+            // Check bullet collisions for formation enemies
+            for (k = bullets.length - 1; k >= 0; k--) {
+              var b = bullets[k];
+              var cdx = b.x - t.x, cdy = b.y - t.y;
+              if (Math.sqrt(cdx * cdx + cdy * cdy) < t.size * 0.5 + 8) {
+                t.health -= (b.dmg || 1);
+                bullets.splice(k, 1);
+                if (t.health <= 0) {
+                  spawnExplosion(t.x, t.y, t.glowColor || '#7132F5', 18);
+                  score += (t.type === 'enemy-tank' ? 25 : t.type === 'enemy-bomber' ? 15 : 10);
+                  gems += 1;
+                  waveEnemiesKilled++;
+                  levelEnemiesKilled++;
+                  targets.splice(j, 1);
+                  updateScoreEl();
+                  continue targetLoop;
+                } else {
+                  spawnExplosion(t.x, t.y, '#ffffff', 4);
+                }
+              }
+            }
+            continue targetLoop;
+          }
           if (t.isEnemyShip) {
             if (t.type === 'enemy-scout') {
               // Scouts dart straight through — no hold position
@@ -16440,12 +16589,12 @@
         var extRow = (showExt && !isCrypto) ? '<div class="home-market-extended">' + extIcon + ' <span style="color:' + extColor + '">' + extStr + '</span></div>' : '';
         return '<div class="home-market-card" draggable="true" data-symbol="' + q.symbol.replace(/"/g,'&quot;') + '">' +
           '<div class="home-market-drag-handle" title="Drag to reorder">⠿</div>' +
-          '<div class="home-market-left" onclick="hideMobileHome();openFMTab(\'fmMarkets\');setFMMainChartSymbol(\'' + q.symbol.replace(/'/g,"\\'") + '\');">' +
+          '<div class="home-market-left" onclick="openTickerChartFromHome(\'' + q.symbol.replace(/'/g,"\\'") + '\');">' +
             '<div class="home-market-sym">' + sym + '</div>' +
             '<div class="home-market-name">' + name + '</div>' +
           '</div>' +
-          '<div style="flex:1;cursor:pointer;" onclick="hideMobileHome();openFMTab(\'fmMarkets\');setFMMainChartSymbol(\'' + q.symbol.replace(/'/g,"\\'") + '\');">' + spark + '</div>' +
-          '<div class="home-market-right" onclick="hideMobileHome();openFMTab(\'fmMarkets\');setFMMainChartSymbol(\'' + q.symbol.replace(/'/g,"\\'") + '\');">' +
+          '<div style="flex:1;cursor:pointer;" onclick="openTickerChartFromHome(\'' + q.symbol.replace(/'/g,"\\'") + '\');">' + spark + '</div>' +
+          '<div class="home-market-right" onclick="openTickerChartFromHome(\'' + q.symbol.replace(/'/g,"\\'") + '\');">' +
             '<div class="home-market-price">' + priceStr + '</div>' +
             '<div class="home-market-change-pill ' + (isUp ? 'up' : 'dn') + '">' + chgStr + '</div>' +
             extRow +
@@ -21246,7 +21395,7 @@
       if (roadmap) roadmap.style.display = tab === 'roadmap' ? '' : 'none';
       if (markets) markets.style.display = tab === 'markets' ? '' : 'none';
       if (portfolio) portfolio.style.display = tab === 'portfolio' ? '' : 'none';
-      if (tab === 'markets') { if (!window._marketsLoaded) { refreshMarkets(); window._marketsLoaded = true; } renderMobileMarkets(); wpAnime.staggerIn('#mobileStockGrid', '.stock-card'); setTimeout(function() { wpAnime.staggerIn('#mobileCryptoGrid', '.stock-card'); }, 150); setTimeout(function() { window.dispatchEvent(new Event('resize')); }, 200); }
+      if (tab === 'markets') { if (!window._marketsLoaded) { refreshMarkets(); window._marketsLoaded = true; } if (!window._mobileMarketsRendered) { renderMobileMarkets(); window._mobileMarketsRendered = true; } wpAnime.staggerIn('#mobileStockGrid', '.stock-card'); setTimeout(function() { wpAnime.staggerIn('#mobileCryptoGrid', '.stock-card'); }, 150); setTimeout(function() { window.dispatchEvent(new Event('resize')); }, 200); }
       if (tab === 'portfolio') { renderMobilePortfolio(); wpAnime.staggerIn('#mobilePortfolioTab', ':scope > *'); }
       if (tab === 'roadmap') wpAnime.staggerIn('.mobile-home-inner', '.glass-card, .wish-form-card, .momentum-widget');
     }
