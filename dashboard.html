@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-25-v363-markets-2col-grid';
+    var APP_VERSION = '2026-04-25-v364-markets-2col-fixed';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -21203,7 +21203,7 @@
       if (roadmap) roadmap.style.display = tab === 'roadmap' ? '' : 'none';
       if (markets) markets.style.display = tab === 'markets' ? '' : 'none';
       if (portfolio) portfolio.style.display = tab === 'portfolio' ? '' : 'none';
-      if (tab === 'markets') { if (!window._marketsLoaded) { refreshMarkets(); window._marketsLoaded = true; } renderMobileMarkets(); wpAnime.staggerIn('#mobileStockGrid', '.stock-card'); setTimeout(function() { wpAnime.staggerIn('#mobileCryptoGrid', '.stock-card'); }, 150); }
+      if (tab === 'markets') { if (!window._marketsLoaded) { refreshMarkets(); window._marketsLoaded = true; } renderMobileMarkets(); wpAnime.staggerIn('#mobileStockGrid', '.stock-card'); setTimeout(function() { wpAnime.staggerIn('#mobileCryptoGrid', '.stock-card'); }, 150); setTimeout(function() { window.dispatchEvent(new Event('resize')); }, 200); }
       if (tab === 'portfolio') { renderMobilePortfolio(); wpAnime.staggerIn('#mobilePortfolioTab', ':scope > *'); }
       if (tab === 'roadmap') wpAnime.staggerIn('.mobile-home-inner', '.glass-card, .wish-form-card, .momentum-widget');
     }
@@ -21225,7 +21225,7 @@
       };
       var encoded = encodeURIComponent(JSON.stringify(config));
       // Clickable wrapper opens the in-app black TradingView advanced chart
-      return '<div style="border:1px solid rgba(255,255,255,0.08);border-radius:12px;overflow:hidden;height:178px;background:rgba(255,255,255,0.04);cursor:pointer;position:relative;">' +
+      return '<div style="border:1px solid rgba(104,107,130,0.3);border-radius:14px;overflow:hidden;height:155px;background:rgba(32,35,51,0.7);cursor:pointer;position:relative;">' +
         '<iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=en#' + encoded + '" style="width:100%;height:100%;border:none;pointer-events:none;" ' +
         'sandbox="allow-scripts allow-same-origin"></iframe>' +
         '<div onclick="openTickerChartFromHome(\'' + symbol.replace(/'/g, '') + '\')" style="position:absolute;inset:0;z-index:2;cursor:pointer;"></div>' +
