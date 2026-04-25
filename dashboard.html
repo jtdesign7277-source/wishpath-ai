@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-24-v356-rich-text-formatting';
+    var APP_VERSION = '2026-04-25-v357-news-feed-expand';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -22268,7 +22268,7 @@
       var countryLabel = getSelectedNewsCountryLabel(country);
       function pushRequest(opts) {
         var params = new URLSearchParams();
-        params.set('limit', String(opts.limit || 12));
+        params.set('limit', String(opts.limit || 50));
         if (opts.symbols) params.set('symbols', opts.symbols);
         if (opts.countries) params.set('countries', opts.countries);
         if (opts.industries) params.set('industries', opts.industries);
@@ -22309,14 +22309,26 @@
     }
 
     async function fetchNewsFeedArticles(requests) {
+      var allArticles = [];
+      var seenUrls = {};
       for (var i = 0; i < requests.length; i++) {
-        var res = await fetch(SUPABASE_FN + '/news?' + requests[i], { headers: await getAuthHeaders() });
-        var data = await res.json();
-        if (data && Array.isArray(data.articles) && data.articles.length > 0) {
-          return data.articles;
+        try {
+          var res = await fetch(SUPABASE_FN + '/news?' + requests[i], { headers: await getAuthHeaders() });
+          var data = await res.json();
+          if (data && Array.isArray(data.articles)) {
+            data.articles.forEach(function(a) {
+              var key = a.url || a.title;
+              if (!seenUrls[key]) {
+                seenUrls[key] = true;
+                allArticles.push(a);
+              }
+            });
+          }
+        } catch (e) {
+          console.warn('News request ' + i + ' failed:', e);
         }
       }
-      return [];
+      return allArticles;
     }
 
     async function refreshNewsFeed(overrideCountry, overrideIndustry) {
