@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-25-v390-mobile-typewriter-wishes';
+    var APP_VERSION = '2026-04-25-v392-fix-enemies-home-casino';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -4787,7 +4787,7 @@
     }
 
     /* ══════════════════════════════════════════════════════════════
-       KRAKEN SPINS — Casino Slot Machine
+       KRAKEN SPINS — Premium Casino Slot Machine (2026 visual)
        ══════════════════════════════════════════════════════════════ */
     body[data-active-view="krakenspins"] .mobile-nav-bar { display: none !important; }
     body[data-active-view="krakenspins"] .mobile-home-header,
@@ -4798,9 +4798,26 @@
     #krakenspinsView.view.active {
       display: flex; flex-direction: column; align-items: center;
       position: fixed; inset: 0; z-index: 500;
-      background: radial-gradient(ellipse at 50% 20%, #1a0a2e 0%, #0d0618 40%, #050210 100%);
+      background: radial-gradient(ellipse at 50% 15%, #2a0845 0%, #120324 35%, #0a0114 70%, #050008 100%);
       min-height: 100vh; min-height: 100dvh;
       overflow-y: auto; -webkit-overflow-scrolling: touch;
+    }
+    /* Ambient glow orbs */
+    #krakenspinsView.view.active::before {
+      content: ''; position: fixed; top: -80px; left: -60px;
+      width: 300px; height: 300px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(113,50,245,0.15) 0%, transparent 70%);
+      pointer-events: none; filter: blur(40px); animation: ksAmbientFloat 8s ease-in-out infinite;
+    }
+    #krakenspinsView.view.active::after {
+      content: ''; position: fixed; bottom: -60px; right: -80px;
+      width: 250px; height: 250px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,170,0,0.1) 0%, transparent 70%);
+      pointer-events: none; filter: blur(40px); animation: ksAmbientFloat 10s ease-in-out infinite reverse;
+    }
+    @keyframes ksAmbientFloat {
+      0%,100% { transform: translate(0,0); }
+      50% { transform: translate(30px, 20px); }
     }
     .ks-top-bar {
       width: 100%; display: flex; align-items: center; justify-content: space-between;
@@ -4808,164 +4825,243 @@
       position: relative; z-index: 10;
     }
     .ks-back-btn {
-      width: 36px; height: 36px; border-radius: 50%;
-      background: rgba(113,50,245,0.2); border: 1px solid rgba(113,50,245,0.3);
+      width: 40px; height: 40px; border-radius: 50%;
+      background: linear-gradient(135deg, rgba(113,50,245,0.3), rgba(60,20,140,0.4));
+      border: 1.5px solid rgba(255,215,0,0.2);
       display: flex; align-items: center; justify-content: center;
       cursor: pointer; -webkit-tap-highlight-color: transparent;
-      color: #fff; font-size: 18px;
+      color: #FFD700; font-size: 18px;
+      box-shadow: 0 2px 10px rgba(113,50,245,0.3);
     }
     .ks-balance-display {
-      background: linear-gradient(135deg, rgba(113,50,245,0.25), rgba(60,20,140,0.3));
-      border: 1px solid rgba(113,50,245,0.35); border-radius: 20px;
-      padding: 6px 16px; display: flex; align-items: center; gap: 6px;
-      font-size: 14px; font-weight: 700; color: #FFD700;
-      box-shadow: 0 2px 12px rgba(113,50,245,0.2);
+      background: linear-gradient(135deg, rgba(30,10,50,0.9), rgba(20,5,40,0.95));
+      border: 1.5px solid rgba(255,215,0,0.35); border-radius: 24px;
+      padding: 8px 20px; display: flex; align-items: center; gap: 8px;
+      font-size: 16px; font-weight: 800; color: #FFD700;
+      box-shadow: 0 0 20px rgba(255,215,0,0.15), 0 4px 16px rgba(0,0,0,0.5),
+                  inset 0 1px 0 rgba(255,215,0,0.1);
+      text-shadow: 0 0 8px rgba(255,215,0,0.4);
     }
     .ks-title {
-      font-family: 'Inter', sans-serif; font-size: 22px; font-weight: 900;
-      background: linear-gradient(135deg, #c084fc, #7132F5, #a855f7);
+      font-family: 'Inter', sans-serif; font-size: 28px; font-weight: 900;
+      background: linear-gradient(180deg, #FFD700 0%, #FFA500 40%, #FFD700 100%);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      text-align: center; letter-spacing: 2px; text-transform: uppercase;
-      margin: 4px 0 8px 0;
-      filter: drop-shadow(0 2px 8px rgba(113,50,245,0.5));
+      text-align: center; letter-spacing: 4px; text-transform: uppercase;
+      margin: 0 0 4px 0;
+      filter: drop-shadow(0 2px 12px rgba(255,215,0,0.5)) drop-shadow(0 0 30px rgba(113,50,245,0.3));
     }
+    .ks-subtitle {
+      text-align: center; font-size: 10px; font-weight: 600;
+      color: rgba(255,215,0,0.5); letter-spacing: 6px; text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    /* Machine cabinet — ornate frame */
     .ks-machine {
-      width: calc(100% - 32px); max-width: 380px;
-      background: linear-gradient(180deg, #252525 0%, #1a1a1a 50%, #151515 100%);
-      border-radius: 20px; padding: 16px 12px;
-      border: 1.5px solid rgba(113,50,245,0.35);
-      box-shadow: 0 0 40px rgba(113,50,245,0.15), 0 8px 32px rgba(0,0,0,0.6),
-                  inset 0 1px 0 rgba(255,255,255,0.08);
-      position: relative; overflow: hidden;
+      width: calc(100% - 24px); max-width: 390px;
+      background: linear-gradient(180deg, #1e0a35 0%, #150828 30%, #0f0520 60%, #0a0318 100%);
+      border-radius: 24px; padding: 3px;
+      position: relative;
+      box-shadow: 0 0 60px rgba(113,50,245,0.2), 0 0 120px rgba(113,50,245,0.08),
+                  0 12px 40px rgba(0,0,0,0.7);
     }
+    /* Gold ornate border */
     .ks-machine::before {
-      content: ''; position: absolute; inset: 0; border-radius: 20px;
-      background: radial-gradient(ellipse at 50% 0%, rgba(113,50,245,0.1) 0%, transparent 60%);
-      pointer-events: none;
+      content: ''; position: absolute; inset: -2px; border-radius: 26px;
+      background: linear-gradient(180deg, #FFD700, #B8860B 30%, #FFD700 50%, #B8860B 70%, #FFD700);
+      z-index: 0; opacity: 0.6;
     }
+    .ks-machine-inner {
+      position: relative; z-index: 1;
+      background: linear-gradient(180deg, #1a0830 0%, #120520 50%, #0d0318 100%);
+      border-radius: 22px; padding: 16px 14px;
+      border: 1px solid rgba(255,215,0,0.15);
+    }
+    /* Reel window — deep inset with gold trim */
     .ks-reel-window {
-      background: #0a0a0a; border-radius: 14px;
-      border: 2px solid rgba(113,50,245,0.25);
-      box-shadow: inset 0 4px 20px rgba(0,0,0,0.8), inset 0 0 40px rgba(113,50,245,0.05);
+      background: linear-gradient(180deg, #050210 0%, #08031a 50%, #050210 100%);
+      border-radius: 16px;
+      border: 2px solid rgba(255,215,0,0.3);
+      box-shadow: inset 0 6px 30px rgba(0,0,0,0.9), inset 0 0 60px rgba(113,50,245,0.08),
+                  0 0 20px rgba(255,215,0,0.1);
       overflow: hidden; position: relative;
     }
-    .ks-reel-canvas {
-      display: block; width: 100%;
+    /* Top/bottom vignette on reels */
+    .ks-reel-window::before {
+      content: ''; position: absolute; inset: 0; z-index: 3; pointer-events: none;
+      background: linear-gradient(180deg, rgba(5,2,16,0.7) 0%, transparent 18%, transparent 82%, rgba(5,2,16,0.7) 100%);
     }
+    .ks-reel-canvas { display: block; width: 100%; position: relative; z-index: 1; }
     .ks-payline-indicator {
-      position: absolute; left: 0; right: 0; height: 2px;
-      background: linear-gradient(90deg, transparent, #FFD700, transparent);
-      box-shadow: 0 0 12px rgba(255,215,0,0.5);
+      position: absolute; left: -4px; right: -4px; height: 3px;
+      background: linear-gradient(90deg, #FFD700, #FFA500, #FFD700);
+      box-shadow: 0 0 16px rgba(255,215,0,0.6), 0 0 40px rgba(255,215,0,0.2);
       top: 50%; transform: translateY(-50%);
-      pointer-events: none; opacity: 0.6;
-      z-index: 2;
+      pointer-events: none; z-index: 4;
     }
+    /* Payline arrows */
+    .ks-payline-indicator::before, .ks-payline-indicator::after {
+      content: ''; position: absolute; top: 50%; transform: translateY(-50%);
+      width: 0; height: 0;
+      border-top: 8px solid transparent; border-bottom: 8px solid transparent;
+    }
+    .ks-payline-indicator::before {
+      left: 0; border-left: 10px solid #FFD700;
+    }
+    .ks-payline-indicator::after {
+      right: 0; border-right: 10px solid #FFD700;
+    }
+    /* Win display */
+    .ks-win-display {
+      text-align: center; margin-top: 12px; min-height: 32px;
+    }
+    .ks-win-text {
+      font-size: 18px; font-weight: 900; color: #FFD700;
+      text-shadow: 0 0 16px rgba(255,215,0,0.7), 0 2px 4px rgba(0,0,0,0.5);
+      animation: ksWinGlow 1s ease-in-out infinite alternate;
+    }
+    @keyframes ksWinGlow {
+      from { filter: brightness(1); }
+      to { filter: brightness(1.3); }
+    }
+    /* Controls area */
     .ks-controls {
-      display: flex; flex-direction: column; gap: 10px; margin-top: 14px;
+      display: flex; flex-direction: column; gap: 12px; margin-top: 14px;
     }
     .ks-bet-row {
       display: flex; align-items: center; justify-content: center; gap: 8px;
     }
-    .ks-bet-btn {
-      padding: 8px 18px; border-radius: 10px; font-weight: 700; font-size: 13px;
-      border: 1.5px solid rgba(113,50,245,0.3);
-      background: linear-gradient(180deg, rgba(113,50,245,0.2), rgba(60,20,140,0.3));
-      color: rgba(255,255,255,0.8); cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-      transition: all 0.15s;
-    }
-    .ks-bet-btn.active {
-      border-color: #7132F5; color: #fff;
-      background: linear-gradient(180deg, rgba(113,50,245,0.5), rgba(60,20,140,0.6));
-      box-shadow: 0 0 16px rgba(113,50,245,0.4);
-    }
-    .ks-btn-row {
-      display: flex; gap: 10px; justify-content: center;
-    }
-    .ks-spin-btn {
-      flex: 1; max-width: 200px; padding: 16px 0; border-radius: 14px;
-      font-weight: 900; font-size: 18px; letter-spacing: 2px; text-transform: uppercase;
-      border: 2px solid #7132F5; cursor: pointer; color: #fff;
-      background: linear-gradient(180deg, #7132F5 0%, #5020c0 100%);
-      box-shadow: 0 6px 24px rgba(113,50,245,0.5), inset 0 1px 0 rgba(255,255,255,0.2);
-      -webkit-tap-highlight-color: transparent;
-      transition: all 0.15s;
-    }
-    .ks-spin-btn:active { transform: scale(0.95); }
-    .ks-spin-btn:disabled {
-      opacity: 0.5; cursor: default; transform: none;
-    }
-    .ks-turbo-btn, .ks-auto-btn {
-      padding: 16px 20px; border-radius: 14px; font-weight: 700; font-size: 12px;
-      border: 1.5px solid rgba(113,50,245,0.3);
-      background: rgba(113,50,245,0.15);
-      color: rgba(255,255,255,0.7); cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
+    .ks-bet-label {
+      font-size: 11px; color: rgba(255,215,0,0.5); font-weight: 700;
       text-transform: uppercase; letter-spacing: 1px;
     }
-    .ks-turbo-btn.active, .ks-auto-btn.active {
-      background: rgba(113,50,245,0.4); border-color: #7132F5; color: #fff;
+    .ks-bet-btn {
+      padding: 8px 20px; border-radius: 12px; font-weight: 800; font-size: 14px;
+      border: 1.5px solid rgba(255,215,0,0.15);
+      background: linear-gradient(180deg, rgba(30,10,50,0.8), rgba(15,5,30,0.9));
+      color: rgba(255,255,255,0.6); cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: all 0.2s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
     }
-    .ks-win-display {
-      text-align: center; margin-top: 10px; min-height: 28px;
+    .ks-bet-btn.active {
+      border-color: #FFD700; color: #FFD700;
+      background: linear-gradient(180deg, rgba(255,215,0,0.15), rgba(255,170,0,0.08));
+      box-shadow: 0 0 20px rgba(255,215,0,0.2), 0 2px 8px rgba(0,0,0,0.3);
+      text-shadow: 0 0 8px rgba(255,215,0,0.4);
     }
-    .ks-win-text {
-      font-size: 16px; font-weight: 800; color: #FFD700;
-      text-shadow: 0 0 12px rgba(255,215,0,0.6);
+    .ks-btn-row {
+      display: flex; gap: 12px; justify-content: center; align-items: center;
     }
+    /* Big circular SPIN button */
+    .ks-spin-btn {
+      width: 90px; height: 90px; border-radius: 50%;
+      font-weight: 900; font-size: 16px; letter-spacing: 2px; text-transform: uppercase;
+      border: 3px solid #FFD700; cursor: pointer; color: #fff;
+      background: linear-gradient(180deg, #7132F5 0%, #5020c0 40%, #3a1090 100%);
+      box-shadow: 0 0 30px rgba(113,50,245,0.6), 0 0 60px rgba(113,50,245,0.2),
+                  0 6px 20px rgba(0,0,0,0.5), inset 0 2px 0 rgba(255,255,255,0.2),
+                  inset 0 -2px 0 rgba(0,0,0,0.3);
+      -webkit-tap-highlight-color: transparent;
+      transition: all 0.15s;
+      position: relative;
+    }
+    .ks-spin-btn::before {
+      content: ''; position: absolute; inset: -8px; border-radius: 50%;
+      border: 2px solid rgba(255,215,0,0.3);
+      box-shadow: 0 0 20px rgba(255,215,0,0.15);
+      animation: ksSpinRing 3s linear infinite;
+    }
+    @keyframes ksSpinRing {
+      0% { transform: rotate(0deg); border-color: rgba(255,215,0,0.3); }
+      50% { border-color: rgba(113,50,245,0.5); }
+      100% { transform: rotate(360deg); border-color: rgba(255,215,0,0.3); }
+    }
+    .ks-spin-btn:active { transform: scale(0.92); }
+    .ks-spin-btn:disabled {
+      opacity: 0.4; cursor: default; transform: none;
+      box-shadow: 0 0 10px rgba(113,50,245,0.2);
+    }
+    .ks-spin-btn:disabled::before { animation: none; opacity: 0.3; }
+    .ks-side-btn {
+      width: 52px; height: 52px; border-radius: 50%;
+      font-weight: 700; font-size: 18px;
+      border: 1.5px solid rgba(255,215,0,0.2);
+      background: linear-gradient(180deg, rgba(30,10,50,0.8), rgba(15,5,30,0.9));
+      color: rgba(255,255,255,0.6); cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+      transition: all 0.2s;
+    }
+    .ks-side-btn.active {
+      border-color: #FFD700; color: #FFD700;
+      background: linear-gradient(180deg, rgba(255,215,0,0.12), rgba(255,170,0,0.06));
+      box-shadow: 0 0 16px rgba(255,215,0,0.2);
+    }
+    .ks-side-btn-label {
+      font-size: 8px; font-weight: 700; color: rgba(255,255,255,0.35);
+      text-align: center; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    /* Big win overlay */
     .ks-big-win-overlay {
       position: fixed; inset: 0; z-index: 600;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      background: rgba(5,2,16,0.92);
-      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      background: radial-gradient(ellipse at 50% 40%, rgba(113,50,245,0.3), rgba(5,2,16,0.95));
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
       opacity: 0; pointer-events: none;
       transition: opacity 0.3s;
     }
     .ks-big-win-overlay.active { opacity: 1; pointer-events: auto; }
     .ks-big-win-label {
-      font-size: 48px; font-weight: 900; text-transform: uppercase;
-      letter-spacing: 6px;
-      background: linear-gradient(180deg, #FFD700, #FF8C00, #FFD700);
+      font-size: 52px; font-weight: 900; text-transform: uppercase;
+      letter-spacing: 8px;
+      background: linear-gradient(180deg, #FFD700 0%, #FF8C00 30%, #FFD700 60%, #FFF 80%, #FFD700 100%);
+      background-size: 100% 200%;
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      filter: drop-shadow(0 4px 20px rgba(255,215,0,0.6));
-      animation: ksBigWinPulse 0.6s ease-in-out infinite alternate;
+      filter: drop-shadow(0 4px 24px rgba(255,215,0,0.7)) drop-shadow(0 0 60px rgba(255,215,0,0.3));
+      animation: ksBigWinPulse 0.6s ease-in-out infinite alternate, ksBigWinShimmer 2s linear infinite;
     }
     .ks-big-win-amount {
-      font-size: 56px; font-weight: 900; color: #fff;
-      text-shadow: 0 0 30px rgba(113,50,245,0.8), 0 4px 16px rgba(0,0,0,0.8);
+      font-size: 60px; font-weight: 900; color: #fff;
+      text-shadow: 0 0 40px rgba(113,50,245,0.8), 0 0 80px rgba(255,215,0,0.3), 0 4px 16px rgba(0,0,0,0.8);
       margin-top: 8px;
     }
     @keyframes ksBigWinPulse {
       from { transform: scale(1); }
-      to { transform: scale(1.08); }
+      to { transform: scale(1.1); }
     }
+    @keyframes ksBigWinShimmer {
+      0% { background-position: 0% 0%; }
+      100% { background-position: 0% 200%; }
+    }
+    /* Info + paytable */
     .ks-info-row {
       display: flex; justify-content: space-between; margin-top: 10px;
-      font-size: 11px; color: rgba(255,255,255,0.35);
-      padding: 0 4px;
+      font-size: 10px; color: rgba(255,215,0,0.3); padding: 0 4px;
     }
     .ks-paytable-toggle {
       text-align: center; margin-top: 14px;
     }
     .ks-paytable-toggle button {
-      background: none; border: 1px solid rgba(113,50,245,0.3); border-radius: 10px;
-      color: rgba(255,255,255,0.5); font-size: 12px; padding: 6px 20px; cursor: pointer;
-      font-weight: 600;
+      background: linear-gradient(180deg, rgba(255,215,0,0.08), rgba(255,215,0,0.03));
+      border: 1px solid rgba(255,215,0,0.2); border-radius: 12px;
+      color: rgba(255,215,0,0.6); font-size: 12px; padding: 8px 24px; cursor: pointer;
+      font-weight: 700; letter-spacing: 1px;
     }
     .ks-paytable {
-      display: none; margin-top: 12px; padding: 12px;
-      background: rgba(113,50,245,0.08); border-radius: 12px;
-      border: 1px solid rgba(113,50,245,0.15);
+      display: none; margin-top: 12px; padding: 14px;
+      background: linear-gradient(180deg, rgba(113,50,245,0.08), rgba(113,50,245,0.03));
+      border-radius: 14px; border: 1px solid rgba(255,215,0,0.1);
     }
     .ks-paytable.open { display: block; }
     .ks-paytable-row {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
-      font-size: 13px; color: rgba(255,255,255,0.7);
+      padding: 7px 0; border-bottom: 1px solid rgba(255,215,0,0.06);
+      font-size: 13px; color: rgba(255,255,255,0.65);
     }
     .ks-paytable-row:last-child { border-bottom: none; }
-    .ks-paytable-symbol { font-size: 22px; }
-    .ks-paytable-mult { color: #FFD700; font-weight: 700; }
+    .ks-paytable-symbol { font-size: 24px; }
+    .ks-paytable-mult { color: #FFD700; font-weight: 800; text-shadow: 0 0 6px rgba(255,215,0,0.3); }
 
     /* ── Mobile: bottom tabs — same items & stroke icons as left sidebar (Home, Chats, News) ── */
     @media (max-width: 768px) {
@@ -6626,53 +6722,62 @@
         <div class="ks-top-bar">
           <div class="ks-back-btn" onclick="if(window.innerWidth<=768){showMobileHome();}else{showView('home');}">←</div>
           <div class="ks-balance-display">
-            <span style="font-size:16px;">🪙</span>
+            <span style="font-size:18px;">🪙</span>
             <span id="ksBalanceTop">5,000</span>
           </div>
         </div>
         <!-- Title -->
         <div class="ks-title">Kraken Spins</div>
-        <!-- Machine -->
+        <div class="ks-subtitle">Fortune Awaits</div>
+        <!-- Machine cabinet -->
         <div class="ks-machine" id="ksMachine">
-          <!-- Reel window -->
-          <div class="ks-reel-window" id="ksReelWindow">
-            <canvas id="ksReelCanvas" class="ks-reel-canvas"></canvas>
-            <div class="ks-payline-indicator"></div>
-          </div>
-          <!-- Win display -->
-          <div class="ks-win-display" id="ksWinDisplay"></div>
-          <!-- Bet selection -->
-          <div class="ks-controls">
-            <div class="ks-bet-row">
-              <span style="font-size:11px;color:rgba(255,255,255,0.4);font-weight:600;">BET:</span>
-              <button class="ks-bet-btn active" data-bet="50" onclick="ksSetBet(50)">50</button>
-              <button class="ks-bet-btn" data-bet="100" onclick="ksSetBet(100)">100</button>
-              <button class="ks-bet-btn" data-bet="250" onclick="ksSetBet(250)">250</button>
+          <div class="ks-machine-inner">
+            <!-- Reel window -->
+            <div class="ks-reel-window" id="ksReelWindow">
+              <canvas id="ksReelCanvas" class="ks-reel-canvas"></canvas>
+              <div class="ks-payline-indicator"></div>
             </div>
-            <!-- Buttons -->
-            <div class="ks-btn-row">
-              <button class="ks-turbo-btn" id="ksTurboBtn" onclick="ksToggleTurbo()">⚡ Turbo</button>
-              <button class="ks-spin-btn" id="ksSpinBtn" onclick="ksSpin()">SPIN</button>
-              <button class="ks-auto-btn" id="ksAutoBtn" onclick="ksToggleAuto()">🔄 Auto</button>
+            <!-- Win display -->
+            <div class="ks-win-display" id="ksWinDisplay"></div>
+            <!-- Bet selection -->
+            <div class="ks-controls">
+              <div class="ks-bet-row">
+                <span class="ks-bet-label">Bet:</span>
+                <button class="ks-bet-btn active" data-bet="50" onclick="ksSetBet(50)">50</button>
+                <button class="ks-bet-btn" data-bet="100" onclick="ksSetBet(100)">100</button>
+                <button class="ks-bet-btn" data-bet="250" onclick="ksSetBet(250)">250</button>
+              </div>
+              <!-- Buttons: side circles + big center spin -->
+              <div class="ks-btn-row">
+                <div style="display:flex;flex-direction:column;align-items:center;">
+                  <button class="ks-side-btn" id="ksTurboBtn" onclick="ksToggleTurbo()">⚡</button>
+                  <div class="ks-side-btn-label">Turbo</div>
+                </div>
+                <button class="ks-spin-btn" id="ksSpinBtn" onclick="ksSpin()">SPIN</button>
+                <div style="display:flex;flex-direction:column;align-items:center;">
+                  <button class="ks-side-btn" id="ksAutoBtn" onclick="ksToggleAuto()">🔄</button>
+                  <div class="ks-side-btn-label">Auto</div>
+                </div>
+              </div>
             </div>
-          </div>
-          <!-- Info -->
-          <div class="ks-info-row">
-            <span>Wish Coins — Play for fun!</span>
-            <span id="ksSpinCount">Spins: 0</span>
-          </div>
-          <!-- Paytable -->
-          <div class="ks-paytable-toggle">
-            <button onclick="document.getElementById('ksPaytable').classList.toggle('open')">📋 Paytable</button>
-          </div>
-          <div class="ks-paytable" id="ksPaytable">
-            <div class="ks-paytable-row"><span class="ks-paytable-symbol">🐙</span><span>Kraken</span><span class="ks-paytable-mult">×50</span></div>
-            <div class="ks-paytable-row"><span class="ks-paytable-symbol">🃏</span><span>Wild</span><span class="ks-paytable-mult">×25</span></div>
-            <div class="ks-paytable-row"><span class="ks-paytable-symbol">💎</span><span>Purple Gem</span><span class="ks-paytable-mult">×15</span></div>
-            <div class="ks-paytable-row"><span class="ks-paytable-symbol">🪙</span><span>Gold Coin</span><span class="ks-paytable-mult">×10</span></div>
-            <div class="ks-paytable-row"><span class="ks-paytable-symbol">7️⃣</span><span>Lucky 7</span><span class="ks-paytable-mult">×8</span></div>
-            <div class="ks-paytable-row"><span class="ks-paytable-symbol">🍀</span><span>BAR</span><span class="ks-paytable-mult">×5</span></div>
-            <div class="ks-paytable-row"><span class="ks-paytable-symbol">⭐</span><span>Star</span><span class="ks-paytable-mult">×3</span></div>
+            <!-- Info -->
+            <div class="ks-info-row">
+              <span>Wish Coins — Play for fun!</span>
+              <span id="ksSpinCount">Spins: 0</span>
+            </div>
+            <!-- Paytable -->
+            <div class="ks-paytable-toggle">
+              <button onclick="document.getElementById('ksPaytable').classList.toggle('open')">📋 Paytable</button>
+            </div>
+            <div class="ks-paytable" id="ksPaytable">
+              <div class="ks-paytable-row"><span class="ks-paytable-symbol">🐙</span><span>Kraken</span><span class="ks-paytable-mult">×50</span></div>
+              <div class="ks-paytable-row"><span class="ks-paytable-symbol">🃏</span><span>Wild</span><span class="ks-paytable-mult">×25</span></div>
+              <div class="ks-paytable-row"><span class="ks-paytable-symbol">💎</span><span>Purple Gem</span><span class="ks-paytable-mult">×15</span></div>
+              <div class="ks-paytable-row"><span class="ks-paytable-symbol">🪙</span><span>Gold Coin</span><span class="ks-paytable-mult">×10</span></div>
+              <div class="ks-paytable-row"><span class="ks-paytable-symbol">7️⃣</span><span>Lucky 7</span><span class="ks-paytable-mult">×8</span></div>
+              <div class="ks-paytable-row"><span class="ks-paytable-symbol">🍀</span><span>BAR</span><span class="ks-paytable-mult">×5</span></div>
+              <div class="ks-paytable-row"><span class="ks-paytable-symbol">⭐</span><span>Star</span><span class="ks-paytable-mult">×3</span></div>
+            </div>
           </div>
         </div>
         <!-- Big win overlay -->
@@ -6946,11 +7051,8 @@
         <!-- Hero title -->
         <div class="mobile-home-title premium-heading">What do you want to build today?</div>
         <!-- Ask AI input -->
-        <div class="mobile-home-input-wrap input-premium" style="position:relative;">
-          <div class="mobile-tw-overlay" id="mobileTwOverlay" style="position:absolute;top:0;left:0;right:40px;padding:10px 14px;pointer-events:none;z-index:1;font-size:14px;line-height:1.5;color:rgba(255,255,255,0.35);white-space:pre-wrap;word-break:break-word;overflow:hidden;">
-            <span id="mobileTwPrefix" style="color:rgba(255,255,255,0.4);"></span><span id="mobileTwAccent" style="color:#7132F5;font-weight:600;"></span><span id="mobileTwCaret" style="display:inline-block;width:1px;height:14px;background:#7132F5;margin-left:1px;vertical-align:middle;animation:ksBigWinPulse 0.8s step-end infinite;"></span>
-          </div>
-          <textarea class="mobile-home-input" id="mobileHomeInput" placeholder="" rows="2" style="position:relative;z-index:2;background:transparent;" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px';mobileTwOnInput();" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMobileHomeInput();}" onfocus="mobileTwPause()" onblur="mobileTwResume()"></textarea>
+        <div class="mobile-home-input-wrap input-premium">
+          <textarea class="mobile-home-input" id="mobileHomeInput" placeholder="Describe your goal, dream, or problem..." rows="2" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px';mobileTwOnInput();" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMobileHomeInput();}" onfocus="mobileTwPause()" onblur="mobileTwResume()"></textarea>
           <button class="mobile-home-input-send" onclick="sendMobileHomeInput()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
           </button>
@@ -10441,26 +10543,28 @@
         var rotation = Math.random() * Math.PI * 2;
         var rotSpeed = isEnemyShip ? 0 : (Math.random() - 0.5) * 2.5;
 
-        // Pick X position that doesn't overlap existing enemies
+        // Pick X position that doesn't overlap existing enemies — strict spacing
         var xPos = margin + Math.random() * (GW - margin * 2);
         var _spawnAttempts = 0;
-        while (_spawnAttempts < 8) {
+        while (_spawnAttempts < 12) {
           var _overlap = false;
           for (var _si = 0; _si < targets.length; _si++) {
             var _st = targets[_si];
-            // Check both X and Y proximity — only worry about enemies near spawn zone (top of screen)
-            if (_st.y < GH * 0.45) {
+            // Check enemies anywhere in upper 60% of screen
+            if (_st.y < GH * 0.6) {
               var _sdx = Math.abs(xPos - _st.x);
-              var _minDist = (sz + _st.size) * 0.55; // minimum distance = sum of half-sizes + padding
-              if (_sdx < _minDist) { _overlap = true; break; }
+              var _sdy = Math.abs((-sz * 0.5 - 8) - _st.y);
+              var _minDistX = (sz + _st.size) * 0.85; // generous X spacing
+              var _minDistY = (sz + _st.size) * 0.7;  // generous Y spacing
+              if (_sdx < _minDistX && _sdy < _minDistY) { _overlap = true; break; }
             }
           }
           if (!_overlap) break;
           xPos = margin + Math.random() * (GW - margin * 2);
           _spawnAttempts++;
         }
-        // If all 8 attempts failed, skip this spawn to prevent stacking
-        if (_spawnAttempts >= 8) return;
+        // If all 12 attempts failed, skip this spawn entirely to prevent stacking
+        if (_spawnAttempts >= 12) return;
 
         var enemyColor = isEnemyShip ? (
           type === 'enemy-fighter' ? '#ff6644' :
@@ -10525,19 +10629,19 @@
       var _formations = []; // active formation groups
 
       function spawnEnemyFormation(formationType) {
-        // Tight spacing — enemies packed close together like classic Space Invaders
-        var sz = 44; // uniform enemy size
-        var spacingX = sz + 6; // 6px gap between enemies horizontally
-        var spacingY = sz + 4; // 4px gap between rows
-        var hp = 1 + Math.floor(currentLevel * 0.5);
+        // Generous spacing — enemies clearly separated, no visual overlapping
+        var sz = 40; // uniform enemy size
+        var spacingX = sz + 18; // 18px gap between enemies horizontally
+        var spacingY = sz + 14; // 14px gap between rows
+        var hp = 3 + Math.floor(currentLevel * 0.8); // 3-4 hits at level 1, scales up
 
         // Always grid or pyramid — these are the Space Invaders shapes
         var fType = formationType || (Math.random() > 0.35 ? 'grid' : 'pyramid');
 
         // Calculate how many columns fit on screen (leave 20px margin each side)
-        var maxCols = Math.floor((GW - 40) / spacingX);
-        var cols = Math.min(maxCols, 6 + Math.min(2, Math.floor(currentLevel / 3)));
-        var rows = 3 + Math.min(3, Math.floor(currentLevel / 2));
+        var maxCols = Math.floor((GW - 50) / spacingX);
+        var cols = Math.min(maxCols, 4 + Math.min(2, Math.floor(currentLevel / 3)));
+        var rows = 2 + Math.min(2, Math.floor(currentLevel / 2));
         var positions = []; // {offX, offY, row}
 
         if (fType === 'pyramid') {
@@ -18712,23 +18816,23 @@
     window.addEventListener('load', initHomeWishTypewriter);
 
     // ════════════════════════════════════════════════════
-    // ── MOBILE HOME TYPEWRITER — auto-rotating example wishes
+    // ── MOBILE HOME TYPEWRITER — auto-rotating example wishes in placeholder
     // ════════════════════════════════════════════════════
     var _mobileTwTimers = [];
     var _mobileTwPaused = false;
     var _mobileTwIdx = 0;
     var _mobileTwCycleCount = 0;
     var MOBILE_TW_EXAMPLES = [
-      { p: 'I want to ', a: 'double my savings this year' },
-      { p: 'Help me ', a: 'run my first marathon by fall' },
-      { p: "I'm ready to ", a: 'start a side hustle after work' },
-      { p: 'Build a plan to ', a: 'get promoted to senior engineer' },
-      { p: 'I dream of ', a: 'buying my first home in two years' },
-      { p: 'Teach me how to ', a: 'invest $500 a month wisely' },
-      { p: 'I need a roadmap to ', a: 'leave my 9–5 for consulting' },
-      { p: 'Create steps to ', a: 'learn Spanish for a career move' },
-      { p: 'I want to ', a: 'launch a tiny SaaS on weekends' },
-      { p: 'Plan my path to ', a: 'pay off student loans early' }
+      'I want to double my savings this year',
+      'Help me run my first marathon by fall',
+      "I'm ready to start a side hustle after work",
+      'Build a plan to get promoted to senior engineer',
+      'I dream of buying my first home in two years',
+      'Teach me how to invest $500 a month wisely',
+      'I need a roadmap to leave my 9–5 for consulting',
+      'Create steps to learn Spanish for a career move',
+      'I want to launch a tiny SaaS on weekends',
+      'Plan my path to pay off student loans early'
     ];
 
     function clearMobileTwTimers() {
@@ -18756,60 +18860,59 @@
       if (_mobileTwPaused) return;
       if (!mobileTwShouldShow()) return;
 
-      var ov = document.getElementById('mobileTwOverlay');
-      var pEl = document.getElementById('mobileTwPrefix');
-      var aEl = document.getElementById('mobileTwAccent');
-      var caret = document.getElementById('mobileTwCaret');
-      if (!ov || !pEl || !aEl) return;
-      ov.style.display = 'block';
+      var ta = document.getElementById('mobileHomeInput');
+      if (!ta) return;
 
-      var ex = MOBILE_TW_EXAMPLES[_mobileTwIdx % MOBILE_TW_EXAMPLES.length];
-      pEl.textContent = '';
-      aEl.textContent = '';
-      if (caret) caret.style.display = 'inline-block';
-
-      var pi = 0, ai = 0;
-      var TYPE_P = 35, TYPE_A = 28, ERASE_MS = 12;
-
-      // Hold time: first wish short (6s), then escalating gaps before NEXT wish starts
+      var text = MOBILE_TW_EXAMPLES[_mobileTwIdx % MOBILE_TW_EXAMPLES.length];
+      var ci = 0;
+      var TYPE_MS = 32;
       var HOLD_MS = 6000;
+      var ERASE_MS = 14;
 
+      // Type forward
       function tick() {
         if (_mobileTwPaused || !mobileTwShouldShow()) { clearMobileTwTimers(); return; }
-        if (pi < ex.p.length) {
-          pi++;
-          pEl.textContent = ex.p.slice(0, pi);
-          mobileTwLater(tick, TYPE_P);
-        } else if (ai < ex.a.length) {
-          ai++;
-          aEl.textContent = ex.a.slice(0, ai);
-          mobileTwLater(tick, TYPE_A);
+        if (ci <= text.length) {
+          ta.setAttribute('placeholder', text.slice(0, ci) + '|');
+          ci++;
+          mobileTwLater(tick, TYPE_MS);
         } else {
+          ta.setAttribute('placeholder', text);
           mobileTwLater(erasePhase, HOLD_MS);
         }
       }
 
+      // Erase backward
       function erasePhase() {
         if (_mobileTwPaused) { clearMobileTwTimers(); return; }
+        var current = ta.getAttribute('placeholder') || '';
         function erTick() {
           if (!mobileTwShouldShow()) { clearMobileTwTimers(); return; }
-          if (aEl.textContent.length > 0) {
-            aEl.textContent = aEl.textContent.slice(0, -1);
-            mobileTwLater(erTick, ERASE_MS);
-          } else if (pEl.textContent.length > 0) {
-            pEl.textContent = pEl.textContent.slice(0, -1);
-            mobileTwLater(erTick, ERASE_MS);
+          current = ta.getAttribute('placeholder') || '';
+          if (current.length > 0) {
+            ta.setAttribute('placeholder', current.slice(0, -1) + '|');
+            if (current.length <= 1) {
+              ta.setAttribute('placeholder', '');
+              nextWish();
+            } else {
+              mobileTwLater(erTick, ERASE_MS);
+            }
           } else {
-            _mobileTwIdx++;
-            _mobileTwCycleCount++;
-            // Escalating delay: 1st gap = 60s, 2nd gap = 120s, then 120s ongoing
-            var gapMs = _mobileTwCycleCount <= 1 ? 60000 : 120000;
-            mobileTwLater(function() {
-              if (!_mobileTwPaused && mobileTwShouldShow()) runMobileTwCycle();
-            }, gapMs);
+            nextWish();
           }
         }
         erTick();
+      }
+
+      function nextWish() {
+        _mobileTwIdx++;
+        _mobileTwCycleCount++;
+        // Escalating delay: 1st gap = 60s, 2nd gap = 120s, then 120s ongoing
+        var gapMs = _mobileTwCycleCount <= 1 ? 60000 : 120000;
+        ta.setAttribute('placeholder', 'Describe your goal, dream, or problem...');
+        mobileTwLater(function() {
+          if (!_mobileTwPaused && mobileTwShouldShow()) runMobileTwCycle();
+        }, gapMs);
       }
 
       tick();
@@ -18818,8 +18921,8 @@
     window.mobileTwPause = function() {
       _mobileTwPaused = true;
       clearMobileTwTimers();
-      var ov = document.getElementById('mobileTwOverlay');
-      if (ov) ov.style.display = 'none';
+      var ta = document.getElementById('mobileHomeInput');
+      if (ta) ta.setAttribute('placeholder', 'Describe your goal, dream, or problem...');
     };
 
     window.mobileTwResume = function() {
@@ -18832,11 +18935,10 @@
 
     window.mobileTwOnInput = function() {
       var ta = document.getElementById('mobileHomeInput');
-      var ov = document.getElementById('mobileTwOverlay');
-      if (!ta || !ov) return;
+      if (!ta) return;
       if (ta.value.trim()) {
-        ov.style.display = 'none';
         clearMobileTwTimers();
+        ta.setAttribute('placeholder', 'Describe your goal, dream, or problem...');
       }
     };
 
@@ -24857,19 +24959,26 @@ document.addEventListener('visibilitychange', function() {
     ctx.translate(ks.shakeX, ks.shakeY);
     ctx.clearRect(-10, -10, cw + 20, ch + 20);
 
+    // Dark background fill
+    ctx.fillStyle = '#050210';
+    ctx.fillRect(0, 0, cw, ch);
+
     var ss = ks.SYMBOL_SIZE;
     var midRow = Math.floor(ks.ROWS / 2);
-    var fontSize = Math.max(24, Math.floor(ss * 0.55));
+    var fontSize = Math.max(28, Math.floor(ss * 0.58));
     ctx.font = fontSize + 'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+
+    var pad = 3; // cell padding
+    var cellR = 8; // cell corner radius
 
     for (var r = 0; r < ks.REEL_COUNT; r++) {
       var strip = ks.reels[r];
       var off = ks.reelOffsets[r];
       var reelX = r * ss;
 
-      // Draw subtle reel separator
+      // Reel divider lines — gold
       if (r > 0) {
-        ctx.strokeStyle = 'rgba(113,50,245,0.15)';
+        ctx.strokeStyle = 'rgba(255,215,0,0.12)';
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(reelX, 0);
@@ -24888,24 +24997,66 @@ document.addEventListener('visibilitychange', function() {
 
         if (y < -ss || y > ch + ss) continue;
 
-        // Dim non-center rows slightly
+        // Distance from center for dimming
         var distFromCenter = Math.abs(y - ch / 2) / (ch / 2);
-        ctx.globalAlpha = 1 - distFromCenter * 0.4;
+        var isCenter = distFromCenter < 0.25;
 
-        // Glow for center row
-        if (Math.abs(row - midRow - Math.floor(off / ss) % 1) < 0.7 && !ks.spinning) {
-          // No glow during spin
+        // Cell background — darker cells with subtle glow for center
+        var cellX = reelX + pad;
+        var cellY = y - ss / 2 + pad;
+        var cellW = ss - pad * 2;
+        var cellH = ss - pad * 2;
+
+        ctx.globalAlpha = 1 - distFromCenter * 0.3;
+
+        // Rounded rect cell background
+        ctx.fillStyle = isCenter ? 'rgba(113,50,245,0.12)' : 'rgba(10,5,25,0.6)';
+        ctx.beginPath();
+        ctx.moveTo(cellX + cellR, cellY);
+        ctx.lineTo(cellX + cellW - cellR, cellY);
+        ctx.quadraticCurveTo(cellX + cellW, cellY, cellX + cellW, cellY + cellR);
+        ctx.lineTo(cellX + cellW, cellY + cellH - cellR);
+        ctx.quadraticCurveTo(cellX + cellW, cellY + cellH, cellX + cellW - cellR, cellY + cellH);
+        ctx.lineTo(cellX + cellR, cellY + cellH);
+        ctx.quadraticCurveTo(cellX, cellY + cellH, cellX, cellY + cellH - cellR);
+        ctx.lineTo(cellX, cellY + cellR);
+        ctx.quadraticCurveTo(cellX, cellY, cellX + cellR, cellY);
+        ctx.closePath();
+        ctx.fill();
+
+        // Cell border
+        ctx.strokeStyle = isCenter ? 'rgba(255,215,0,0.2)' : 'rgba(113,50,245,0.1)';
+        ctx.lineWidth = isCenter ? 1.5 : 0.5;
+        ctx.stroke();
+
+        // Center row glow effect (when not spinning)
+        if (isCenter && !ks.spinning) {
+          ctx.shadowColor = 'rgba(113,50,245,0.4)';
+          ctx.shadowBlur = 12;
         }
 
+        // Draw emoji
         ctx.fillText(sym.emoji, x, y);
+        ctx.shadowBlur = 0;
         ctx.globalAlpha = 1;
       }
+    }
+
+    // Horizontal row separators — subtle
+    for (var rl = 1; rl < ks.ROWS; rl++) {
+      var ly = rl * ss;
+      ctx.strokeStyle = 'rgba(255,215,0,0.06)';
+      ctx.lineWidth = 0.5;
+      ctx.beginPath();
+      ctx.moveTo(0, ly);
+      ctx.lineTo(cw, ly);
+      ctx.stroke();
     }
 
     // Motion blur overlay during fast spin
     if (ks.spinning && !ks.reelStopped[0]) {
       var maxSpeed = Math.max(ks.reelSpeeds[0], ks.reelSpeeds[1], ks.reelSpeeds[2]);
-      var blurAlpha = Math.min(maxSpeed / 3000, 0.25);
+      var blurAlpha = Math.min(maxSpeed / 3000, 0.3);
       if (blurAlpha > 0.02) {
         ctx.fillStyle = 'rgba(5,2,16,' + blurAlpha + ')';
         ctx.fillRect(0, 0, cw, ch);
@@ -24918,26 +25069,14 @@ document.addEventListener('visibilitychange', function() {
       var pAlpha = Math.max(0, p.life / p.maxLife);
       ctx.globalAlpha = pAlpha;
       ctx.fillStyle = p.color;
+      ctx.shadowColor = p.color;
+      ctx.shadowBlur = 6;
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.size * pAlpha, 0, Math.PI * 2);
       ctx.fill();
     }
+    ctx.shadowBlur = 0;
     ctx.globalAlpha = 1;
-
-    // Center payline highlight
-    var centerY = ch / 2;
-    ctx.strokeStyle = 'rgba(255,215,0,0.3)';
-    ctx.lineWidth = ss * 0.92;
-    ctx.setLineDash([]);
-    ctx.beginPath();
-    ctx.moveTo(0, centerY);
-    ctx.lineTo(cw, centerY);
-    // Only draw if not spinning heavily
-    if (!ks.spinning || ks.reelStopped[0]) {
-      ctx.globalAlpha = 0.06;
-      ctx.stroke();
-      ctx.globalAlpha = 1;
-    }
 
     ctx.restore();
   }
