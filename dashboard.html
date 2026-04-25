@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-25-v381-remove-sports';
+    var APP_VERSION = '2026-04-25-v382-sparklines-fix-tickers-top';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -16258,7 +16258,8 @@
       renderMobileRecents();
       renderMobileHomeNews();
       if (!_homeMarketsSupabaseLoaded && currentUserId) { _loadHomeMarketsFromSupabase(); }
-      if (_homeMarketsData) renderHomeMarkets(_homeMarketsData); else fetchHomeMarkets();
+      if (_homeMarketsData) renderHomeMarkets(_homeMarketsData);
+      fetchHomeMarkets(); // always refresh prices + bars so sparklines stay visible
       if (!window._marketNewsArticles || !window._marketNewsArticles.length) fetchMarketNews();
       setMobileNavActive('home');
       refreshPremiumHeader();
@@ -16355,7 +16356,7 @@
       var isCrypto = symbol.indexOf('/') >= 0;
       var entry = { symbol: symbol, name: name || symbol };
       if (isCrypto) { entry.display = symbol.split('/')[0]; entry.crypto = true; }
-      _homeMarketsTickers.push(entry);
+      _homeMarketsTickers.unshift(entry); // add to TOP of list
       _saveHomeMarketsTickers();
       _homeMarketsData = null;
       fetchHomeMarkets();
@@ -16616,9 +16617,8 @@
     function fetchHomeMarkets() {
       var _MQ = 'https://mszilrexlupzthauoaxb.supabase.co/functions/v1/market-quotes';
       var allSymbols = _homeMarketsTickers.map(function(t) { return t.symbol; });
-      var needFullBars = (Date.now() - _homeSparkLastFull) > 300000; // refresh bars every 5 min
-      // Always request bars — market-quotes now returns 15-min intraday bars from Alpaca
-      fetch(_MQ + '?symbols=' + encodeURIComponent(allSymbols.join(',')) + (needFullBars ? '&bars=1' : ''))
+      // ALWAYS request bars so sparklines never disappear
+      fetch(_MQ + '?symbols=' + encodeURIComponent(allSymbols.join(',')) + '&bars=1')
         .then(function(r) { return r.json(); })
         .then(function(j) {
           if (j.data && j.data.length) {
@@ -16626,15 +16626,14 @@
             _homeMarketsTickers.forEach(function(t) {
               var match = j.data.find(function(r) { return r.symbol === t.symbol; });
               if (match) {
-                // Preserve existing bars if we have them and not doing full refresh
-                if (!needFullBars && _homeMarketsData) {
+                // If bars missing from response, preserve from previous data
+                if ((!match.bars || !match.bars.length) && _homeMarketsData) {
                   var prev = _homeMarketsData.find(function(p) { return p.symbol === match.symbol; });
                   if (prev && prev.bars && prev.bars.length) match.bars = prev.bars;
                 }
                 ordered.push(match);
               }
             });
-            if (needFullBars) _homeSparkLastFull = Date.now();
             _homeMarketsData = ordered;
             renderHomeMarkets(ordered);
           }
