@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-25-v376-invaders-sofascore-chart-sparkline';
+    var APP_VERSION = '2026-04-25-v378-sports-365scores-fallback';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -10130,116 +10130,102 @@
       }
 
       // ── Space Invaders Formation System ──
-      // Formations move as a single block: left/right, drop when hitting edges
+      // Tight uniform rows, all enemies per row identical, block movement
       var _formations = []; // active formation groups
 
       function spawnEnemyFormation(formationType) {
-        var fType = formationType || ['grid', 'v-shape', 'pyramid', 'staggered'][Math.floor(Math.random() * 4)];
-        var spacing = Math.min(68, GW / 7); // scale to screen width
-        var sz = 52;
-        var hp = 2 + Math.floor(currentLevel * 0.5);
-        var positions = []; // {offX, offY} relative to formation center
+        // Tight spacing — enemies packed close together like classic Space Invaders
+        var sz = 44; // uniform enemy size
+        var spacingX = sz + 6; // 6px gap between enemies horizontally
+        var spacingY = sz + 4; // 4px gap between rows
+        var hp = 1 + Math.floor(currentLevel * 0.5);
 
-        if (fType === 'grid') {
-          var cols = Math.min(6, Math.max(4, Math.floor(GW / spacing) - 1));
-          var rows = 3 + Math.min(2, Math.floor(currentLevel / 3));
+        // Always grid or pyramid — these are the Space Invaders shapes
+        var fType = formationType || (Math.random() > 0.35 ? 'grid' : 'pyramid');
+
+        // Calculate how many columns fit on screen (leave 20px margin each side)
+        var maxCols = Math.floor((GW - 40) / spacingX);
+        var cols = Math.min(maxCols, 6 + Math.min(2, Math.floor(currentLevel / 3)));
+        var rows = 3 + Math.min(3, Math.floor(currentLevel / 2));
+        var positions = []; // {offX, offY, row}
+
+        if (fType === 'pyramid') {
+          // Inverted pyramid — widest row on top, narrows downward (like reference screenshot)
           for (var r = 0; r < rows; r++) {
-            for (var c = 0; c < cols; c++) {
-              positions.push({ offX: (c - (cols - 1) * 0.5) * spacing, offY: r * spacing * 0.8 });
-            }
-          }
-        } else if (fType === 'v-shape') {
-          var armLen = 3 + Math.min(2, Math.floor(currentLevel / 2));
-          positions.push({ offX: 0, offY: 0 });
-          for (var i = 1; i <= armLen; i++) {
-            positions.push({ offX: -i * spacing * 0.55, offY: i * spacing * 0.6 });
-            positions.push({ offX:  i * spacing * 0.55, offY: i * spacing * 0.6 });
-          }
-        } else if (fType === 'pyramid') {
-          var baseWidth = Math.min(6, Math.max(4, Math.floor(GW / spacing) - 1));
-          var rowCount = Math.min(baseWidth, 4 + Math.min(2, Math.floor(currentLevel / 3)));
-          for (var r = 0; r < rowCount; r++) {
-            var enemiesInRow = baseWidth - r;
-            for (var c = 0; c < enemiesInRow; c++) {
-              positions.push({ offX: (c - (enemiesInRow - 1) * 0.5) * spacing, offY: r * spacing * 0.8 });
+            var rowCols = Math.max(2, cols - r);
+            for (var c = 0; c < rowCols; c++) {
+              positions.push({ offX: (c - (rowCols - 1) * 0.5) * spacingX, offY: r * spacingY, row: r });
             }
           }
         } else {
-          // Staggered rows — offset every other row by half spacing
-          var cols = Math.min(5, Math.max(4, Math.floor(GW / spacing) - 1));
-          var rows = 3 + Math.min(2, Math.floor(currentLevel / 3));
+          // Uniform grid — exact same columns per row
           for (var r = 0; r < rows; r++) {
-            var rowOffset = (r % 2 === 1) ? spacing * 0.5 : 0;
-            var rowCols = (r % 2 === 1) ? cols - 1 : cols;
-            for (var c = 0; c < rowCols; c++) {
-              positions.push({ offX: (c - (rowCols - 1) * 0.5) * spacing + rowOffset * ((r % 2 === 1) ? 0 : 0), offY: r * spacing * 0.7 });
+            for (var c = 0; c < cols; c++) {
+              positions.push({ offX: (c - (cols - 1) * 0.5) * spacingX, offY: r * spacingY, row: r });
             }
           }
         }
 
-        // Formation group object — moves as one block
-        var formationWidth = 0;
-        positions.forEach(function(p) { formationWidth = Math.max(formationWidth, Math.abs(p.offX)); });
-        formationWidth = (formationWidth + sz) * 2;
-        var moveSpeed = 45 + currentLevel * 8;
-        var dropAmount = spacing * 0.6;
+        // Formation height for entry calculation
+        var formHeight = (rows - 1) * spacingY + sz;
+        var moveSpeed = 30 + currentLevel * 6;
 
         var formation = {
           cx: GW * 0.5,
-          cy: -spacing * 2, // start above screen
-          targetCy: GH * 0.08 + Math.random() * GH * 0.06, // slide into position
+          cy: -formHeight - 20, // start fully above screen
+          targetCy: 60 + Math.random() * 30, // slide to near top
           entered: false,
-          entrySpeed: 120 + currentLevel * 10,
+          entrySpeed: 100 + currentLevel * 8,
           dirX: Math.random() > 0.5 ? 1 : -1,
           moveSpeed: moveSpeed,
-          dropAmount: dropAmount,
-          width: formationWidth,
+          dropAmount: spacingY * 0.5,
           enemies: [],
-          lifeTimer: 18 + Math.random() * 10 - currentLevel * 0.5
+          lifeTimer: 22 + Math.random() * 8
         };
 
-        // Determine enemy types per row for visual variety
-        var rowTypes = ['enemy-fighter', 'enemy-bomber', 'enemy-zigzag', 'enemy-fighter', 'enemy-tank'];
+        // Row-based enemy types — each row is the SAME enemy type (uniform look)
+        var rowEnemyTypes = [
+          { type: 'enemy-fighter', color: '#ff6644', hpBonus: 0 },
+          { type: 'enemy-bomber',  color: '#ff8800', hpBonus: 1 },
+          { type: 'enemy-zigzag',  color: '#dd44ff', hpBonus: 0 },
+          { type: 'enemy-tank',    color: '#ff2222', hpBonus: 2 },
+          { type: 'enemy-fighter', color: '#00eeff', hpBonus: 0 },
+          { type: 'enemy-bomber',  color: '#ff8800', hpBonus: 1 }
+        ];
         var purpleGlows = ['#7132F5', '#9B59F5', '#6B2FD9', '#8844FF', '#A064FF'];
 
         for (var i = 0; i < positions.length; i++) {
           var p = positions[i];
-          var rowIdx = Math.floor(p.offY / (spacing * 0.6));
-          var eType = rowTypes[rowIdx % rowTypes.length];
-          var eSz = eType === 'enemy-bomber' ? sz * 1.3 : eType === 'enemy-tank' ? sz * 1.5 : sz;
-          var eHp = eType === 'enemy-tank' ? hp + 4 : eType === 'enemy-bomber' ? hp + 2 : hp;
-          var eColor = eType === 'enemy-fighter' ? '#ff6644' :
-                       eType === 'enemy-bomber' ? '#ff8800' :
-                       eType === 'enemy-zigzag' ? '#dd44ff' :
-                       eType === 'enemy-tank' ? '#ff2222' : '#ff6644';
+          var rowDef = rowEnemyTypes[p.row % rowEnemyTypes.length];
+          var eHp = hp + rowDef.hpBonus;
 
           var enemy = {
             offX: p.offX,
             offY: p.offY,
             x: formation.cx + p.offX,
             y: formation.cy + p.offY,
-            size: eSz,
+            size: sz,
             health: eHp,
             maxHealth: eHp,
-            speed: 0, // movement handled by formation
-            type: eType,
+            speed: 0,
+            type: rowDef.type,
             colorIdx: Math.floor(Math.random() * PLANET_COLORS.length),
             asteroidColor: null,
             rotation: 0,
             rotSpeed: 0,
             wobble: 0,
             isEnemyShip: true,
-            enemyColor: eColor,
-            glowColor: purpleGlows[i % purpleGlows.length],
+            enemyColor: rowDef.color,
+            glowColor: purpleGlows[p.row % purpleGlows.length],
             movePattern: 'formation',
             patternPhase: 0,
-            fireCounter: 2.5 + Math.random() * 3,
-            fireInterval: 2.5 + Math.random() * 2.0 - Math.min(1, currentLevel * 0.15),
+            fireCounter: 3 + Math.random() * 4,
+            fireInterval: 3.0 + Math.random() * 2.5 - Math.min(1.2, currentLevel * 0.15),
             formationEnemy: true,
             formationIdx: _formations.length,
             sineAmplitude: 0,
             holdY: null,
-            lifeTimer: 999 // managed by formation
+            lifeTimer: 999
           };
           formation.enemies.push(enemy);
           targets.push(enemy);
@@ -10263,7 +10249,7 @@
             continue;
           }
 
-          // Phase 1: Smooth entry from top
+          // Phase 1: Smooth entry — slide down from above screen into position
           if (!f.entered) {
             f.cy += f.entrySpeed * dt;
             if (f.cy >= f.targetCy) {
@@ -10271,10 +10257,10 @@
               f.entered = true;
             }
           } else {
-            // Phase 2: Space Invaders side-to-side + drop
+            // Phase 2: Space Invaders left-right march + drop on edge hit
             f.cx += f.dirX * f.moveSpeed * dt;
 
-            // Check edges — find leftmost and rightmost enemy
+            // Find actual edges of remaining enemies
             var minX = GW, maxX = 0;
             for (var i = 0; i < f.enemies.length; i++) {
               var ex = f.cx + f.enemies[i].offX;
@@ -10282,18 +10268,19 @@
               maxX = Math.max(maxX, ex + f.enemies[i].size * 0.5);
             }
 
-            if (maxX >= GW - 8 || minX <= 8) {
+            // Bounce off edges and drop
+            if (maxX >= GW - 6 || minX <= 6) {
               f.dirX *= -1;
-              f.cy += f.dropAmount; // drop one row
-              f.moveSpeed += 3; // speed up each bounce
+              f.cx += f.dirX * 4; // nudge away from edge
+              f.cy += f.dropAmount;
+              f.moveSpeed += 2; // speed up slightly each bounce
             }
 
-            // Life timer — formation retreats after a while
+            // Life timer — retreat after lifespan
             f.lifeTimer -= dt;
             if (f.lifeTimer <= 0) {
-              f.cy -= 80 * dt; // retreat upward
+              f.cy -= 60 * dt;
               if (f.cy < -GH * 0.5) {
-                // Remove all remaining enemies
                 f.enemies.forEach(function(e) {
                   var idx = targets.indexOf(e);
                   if (idx !== -1) targets.splice(idx, 1);
@@ -10302,9 +10289,12 @@
                 continue;
               }
             }
+
+            // If formation drops past 75% of screen, game pressure — speed way up
+            if (f.cy > GH * 0.55) f.moveSpeed = Math.max(f.moveSpeed, 80 + currentLevel * 10);
           }
 
-          // Sync all enemies to formation position
+          // Sync all enemy positions to formation block
           for (var i = 0; i < f.enemies.length; i++) {
             var e = f.enemies[i];
             e.x = f.cx + e.offX;
@@ -11036,16 +11026,18 @@
         if (Math.abs(yDiff) > 1) player.y += yDiff * Math.min(1, lerpSpeed * dt);
         else player.y = player.targetY;
 
+        // Random solo spawns: only scouts between formation waves (sparse)
         spawnAcc += dt;
-        var interval = Math.max(0.38, spawnEvery - score * 0.0012);
-        while (spawnAcc >= interval) { spawnAcc -= interval; spawnTarget(); }
+        var interval = Math.max(1.5, 3.0 - score * 0.005);
+        while (spawnAcc >= interval) { spawnAcc -= interval; if (_formations.length === 0) spawnTarget(); }
 
         // Space Invaders formation wave spawning (all levels)
         if (!activeBoss) {
           _formationTimer += dt;
-          if (_formationTimer >= _formationInterval) {
+          var fmtInterval = Math.max(2, 5 - currentLevel * 0.3);
+          if (_formations.length === 0) fmtInterval = Math.min(fmtInterval, 1.5); // spawn fast if no formation
+          if (_formationTimer >= fmtInterval) {
             _formationTimer = 0;
-            _formationInterval = Math.max(3, 6 - currentLevel * 0.4);
             spawnEnemyFormation();
           }
         }
@@ -11408,6 +11400,12 @@
         var isTank    = tg.type === 'enemy-tank';
         ctx.save();
         ctx.translate(tg.x, tg.y);
+
+        // Purple glow aura for formation enemies
+        if (tg.formationEnemy && tg.glowColor) {
+          ctx.shadowColor = tg.glowColor;
+          ctx.shadowBlur = 14;
+        }
 
         if (isScout) {
           // ======= SCOUT — small fast diamond/dart =======
@@ -22419,26 +22417,20 @@
     // ── LIVE SPORTS (Sofascore)
     // ════════════════════════════════
 
-    // Sofascore widget URLs — widget.sofascore.com allows iframe embedding
-    // Tournament IDs: NBA=132, NFL=9464, MLB=11205, NHL=234, EPL=17, UFC=11153
-    var SOFASCORE_LEAGUES = {
-      nba:    'https://widget.sofascore.com/embed/tournament/132/season/current/events/next?widgetTheme=dark',
-      nfl:    'https://widget.sofascore.com/embed/tournament/9464/season/current/events/next?widgetTheme=dark',
-      mlb:    'https://widget.sofascore.com/embed/tournament/11205/season/current/events/next?widgetTheme=dark',
-      nhl:    'https://widget.sofascore.com/embed/tournament/234/season/current/events/next?widgetTheme=dark',
-      soccer: 'https://widget.sofascore.com/embed/tournament/17/season/current/events/next?widgetTheme=dark',
-      mma:    'https://widget.sofascore.com/embed/tournament/11153/season/current/events/next?widgetTheme=dark'
+    // 365Scores widget URLs — confirmed to allow iframe embedding
+    var SPORTS_WIDGET_URLS = {
+      nba:    'https://widgets.365scores.com/widget?sport=basket&lang=en&theme=dark',
+      nfl:    'https://widgets.365scores.com/widget?sport=american-football&lang=en&theme=dark',
+      mlb:    'https://widgets.365scores.com/widget?sport=baseball&lang=en&theme=dark',
+      nhl:    'https://widgets.365scores.com/widget?sport=ice-hockey&lang=en&theme=dark',
+      soccer: 'https://widgets.365scores.com/widget?sport=football&lang=en&theme=dark',
+      mma:    'https://widgets.365scores.com/widget?sport=mma&lang=en&theme=dark'
     };
-    // Fallback: if widget subdomain doesn't work, try main site
-    var SOFASCORE_FALLBACK = {
-      nba:    'https://www.sofascore.com/tournament/basketball/usa/nba/132',
-      nfl:    'https://www.sofascore.com/tournament/american-football/usa/nfl/9464',
-      mlb:    'https://www.sofascore.com/tournament/baseball/usa/mlb/11205',
-      nhl:    'https://www.sofascore.com/tournament/ice-hockey/usa/nhl/234',
-      soccer: 'https://www.sofascore.com/tournament/football/england/premier-league/17',
-      mma:    'https://www.sofascore.com/tournament/mma/international/ufc/11153'
-    };
+    // Fallback: SportBusy embed (confirmed working in iframes)
+    var SPORTS_FALLBACK_URL = 'https://www.sportbusy.com/embed';
     var _currentSportsLeague = 'nba';
+
+    var _sportsFallbackUsed = false;
 
     function switchSportsLeague(league, btn) {
       _currentSportsLeague = league;
@@ -22455,17 +22447,33 @@
         btn.style.borderColor = 'rgba(113,50,245,0.3)';
         btn.style.color = '#fff';
       }
-      // Load Sofascore widget in iframe
       var frame = document.getElementById('sofascoreEmbed');
-      var url = SOFASCORE_LEAGUES[league] || SOFASCORE_LEAGUES.nba;
-      if (frame) {
-        frame.src = url;
-        // If widget subdomain fails to load, fallback to main site after 3s
-        frame.onerror = function() {
-          var fb = SOFASCORE_FALLBACK[league];
-          if (fb) frame.src = fb;
-        };
+      if (!frame) return;
+
+      if (_sportsFallbackUsed) {
+        // Already know 365Scores doesn't work — use SportBusy
+        frame.src = SPORTS_FALLBACK_URL;
+        return;
       }
+
+      var url = SPORTS_WIDGET_URLS[league] || SPORTS_WIDGET_URLS.nba;
+      frame.src = url;
+
+      // If 365Scores iframe is blank after 4 seconds, fall back to SportBusy
+      var checkTimer = setTimeout(function() {
+        try {
+          // If iframe loaded but is empty/blocked, contentWindow will throw or be null
+          var doc = frame.contentDocument || frame.contentWindow.document;
+          if (!doc || !doc.body || doc.body.innerHTML.length < 50) {
+            _sportsFallbackUsed = true;
+            frame.src = SPORTS_FALLBACK_URL;
+          }
+        } catch(e) {
+          // Cross-origin = it loaded something (which is good)
+        }
+      }, 4000);
+
+      frame.onload = function() { clearTimeout(checkTimer); };
     }
 
     // ════════════════════════════════
