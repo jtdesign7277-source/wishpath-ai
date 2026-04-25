@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-25-v389-kraken-spins-live-only-home';
+    var APP_VERSION = '2026-04-25-v390-mobile-typewriter-wishes';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -6946,8 +6946,11 @@
         <!-- Hero title -->
         <div class="mobile-home-title premium-heading">What do you want to build today?</div>
         <!-- Ask AI input -->
-        <div class="mobile-home-input-wrap input-premium">
-          <textarea class="mobile-home-input" id="mobileHomeInput" placeholder="Describe your goal, dream, or problem..." rows="2" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMobileHomeInput();}"></textarea>
+        <div class="mobile-home-input-wrap input-premium" style="position:relative;">
+          <div class="mobile-tw-overlay" id="mobileTwOverlay" style="position:absolute;top:0;left:0;right:40px;padding:10px 14px;pointer-events:none;z-index:1;font-size:14px;line-height:1.5;color:rgba(255,255,255,0.35);white-space:pre-wrap;word-break:break-word;overflow:hidden;">
+            <span id="mobileTwPrefix" style="color:rgba(255,255,255,0.4);"></span><span id="mobileTwAccent" style="color:#7132F5;font-weight:600;"></span><span id="mobileTwCaret" style="display:inline-block;width:1px;height:14px;background:#7132F5;margin-left:1px;vertical-align:middle;animation:ksBigWinPulse 0.8s step-end infinite;"></span>
+          </div>
+          <textarea class="mobile-home-input" id="mobileHomeInput" placeholder="" rows="2" style="position:relative;z-index:2;background:transparent;" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px';mobileTwOnInput();" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMobileHomeInput();}" onfocus="mobileTwPause()" onblur="mobileTwResume()"></textarea>
           <button class="mobile-home-input-send" onclick="sendMobileHomeInput()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
           </button>
@@ -16705,6 +16708,13 @@
       fetchHomeESPNScores(); // refresh live sports scores
       setMobileNavActive('home');
       refreshPremiumHeader();
+      // Start mobile typewriter for example wishes
+      if (typeof runMobileTwCycle === 'function') {
+        _mobileTwPaused = false;
+        _mobileTwCycleCount = 0;
+        clearMobileTwTimers();
+        mobileTwLater(function() { if (mobileTwShouldShow()) runMobileTwCycle(); }, 800);
+      }
       // Always show Ask AI bar on home too
       var navBar = document.getElementById('mobileNavBar');
       if (navBar) navBar.style.display = 'flex';
@@ -18700,6 +18710,144 @@
     }
 
     window.addEventListener('load', initHomeWishTypewriter);
+
+    // ════════════════════════════════════════════════════
+    // ── MOBILE HOME TYPEWRITER — auto-rotating example wishes
+    // ════════════════════════════════════════════════════
+    var _mobileTwTimers = [];
+    var _mobileTwPaused = false;
+    var _mobileTwIdx = 0;
+    var _mobileTwCycleCount = 0;
+    var MOBILE_TW_EXAMPLES = [
+      { p: 'I want to ', a: 'double my savings this year' },
+      { p: 'Help me ', a: 'run my first marathon by fall' },
+      { p: "I'm ready to ", a: 'start a side hustle after work' },
+      { p: 'Build a plan to ', a: 'get promoted to senior engineer' },
+      { p: 'I dream of ', a: 'buying my first home in two years' },
+      { p: 'Teach me how to ', a: 'invest $500 a month wisely' },
+      { p: 'I need a roadmap to ', a: 'leave my 9–5 for consulting' },
+      { p: 'Create steps to ', a: 'learn Spanish for a career move' },
+      { p: 'I want to ', a: 'launch a tiny SaaS on weekends' },
+      { p: 'Plan my path to ', a: 'pay off student loans early' }
+    ];
+
+    function clearMobileTwTimers() {
+      _mobileTwTimers.forEach(function(t) { clearTimeout(t); });
+      _mobileTwTimers = [];
+    }
+
+    function mobileTwLater(fn, ms) {
+      var id = setTimeout(function() {
+        _mobileTwTimers = _mobileTwTimers.filter(function(x) { return x !== id; });
+        try { fn(); } catch(e) {}
+      }, ms);
+      _mobileTwTimers.push(id);
+      return id;
+    }
+
+    function mobileTwShouldShow() {
+      var ta = document.getElementById('mobileHomeInput');
+      var mh = document.getElementById('mobileHome');
+      return !!(mh && mh.classList.contains('active') && ta && !ta.value.trim() && document.activeElement !== ta);
+    }
+
+    function runMobileTwCycle() {
+      clearMobileTwTimers();
+      if (_mobileTwPaused) return;
+      if (!mobileTwShouldShow()) return;
+
+      var ov = document.getElementById('mobileTwOverlay');
+      var pEl = document.getElementById('mobileTwPrefix');
+      var aEl = document.getElementById('mobileTwAccent');
+      var caret = document.getElementById('mobileTwCaret');
+      if (!ov || !pEl || !aEl) return;
+      ov.style.display = 'block';
+
+      var ex = MOBILE_TW_EXAMPLES[_mobileTwIdx % MOBILE_TW_EXAMPLES.length];
+      pEl.textContent = '';
+      aEl.textContent = '';
+      if (caret) caret.style.display = 'inline-block';
+
+      var pi = 0, ai = 0;
+      var TYPE_P = 35, TYPE_A = 28, ERASE_MS = 12;
+
+      // Hold time: first wish short (6s), then escalating gaps before NEXT wish starts
+      var HOLD_MS = 6000;
+
+      function tick() {
+        if (_mobileTwPaused || !mobileTwShouldShow()) { clearMobileTwTimers(); return; }
+        if (pi < ex.p.length) {
+          pi++;
+          pEl.textContent = ex.p.slice(0, pi);
+          mobileTwLater(tick, TYPE_P);
+        } else if (ai < ex.a.length) {
+          ai++;
+          aEl.textContent = ex.a.slice(0, ai);
+          mobileTwLater(tick, TYPE_A);
+        } else {
+          mobileTwLater(erasePhase, HOLD_MS);
+        }
+      }
+
+      function erasePhase() {
+        if (_mobileTwPaused) { clearMobileTwTimers(); return; }
+        function erTick() {
+          if (!mobileTwShouldShow()) { clearMobileTwTimers(); return; }
+          if (aEl.textContent.length > 0) {
+            aEl.textContent = aEl.textContent.slice(0, -1);
+            mobileTwLater(erTick, ERASE_MS);
+          } else if (pEl.textContent.length > 0) {
+            pEl.textContent = pEl.textContent.slice(0, -1);
+            mobileTwLater(erTick, ERASE_MS);
+          } else {
+            _mobileTwIdx++;
+            _mobileTwCycleCount++;
+            // Escalating delay: 1st gap = 60s, 2nd gap = 120s, then 120s ongoing
+            var gapMs = _mobileTwCycleCount <= 1 ? 60000 : 120000;
+            mobileTwLater(function() {
+              if (!_mobileTwPaused && mobileTwShouldShow()) runMobileTwCycle();
+            }, gapMs);
+          }
+        }
+        erTick();
+      }
+
+      tick();
+    }
+
+    window.mobileTwPause = function() {
+      _mobileTwPaused = true;
+      clearMobileTwTimers();
+      var ov = document.getElementById('mobileTwOverlay');
+      if (ov) ov.style.display = 'none';
+    };
+
+    window.mobileTwResume = function() {
+      _mobileTwPaused = false;
+      mobileTwLater(function() {
+        var ta = document.getElementById('mobileHomeInput');
+        if (ta && !ta.value.trim() && mobileTwShouldShow()) runMobileTwCycle();
+      }, 400);
+    };
+
+    window.mobileTwOnInput = function() {
+      var ta = document.getElementById('mobileHomeInput');
+      var ov = document.getElementById('mobileTwOverlay');
+      if (!ta || !ov) return;
+      if (ta.value.trim()) {
+        ov.style.display = 'none';
+        clearMobileTwTimers();
+      }
+    };
+
+    // Start on initial load if mobile
+    window.addEventListener('load', function() {
+      if (window.innerWidth <= 768) {
+        mobileTwLater(function() {
+          if (mobileTwShouldShow()) runMobileTwCycle();
+        }, 1200);
+      }
+    });
 
     // ════════════════════════════════════════════════════
     // ── HOME SCREEN TABS (Roadmap / Markets / Portfolio)
