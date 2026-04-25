@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-25-v370-news-sports-fix';
+    var APP_VERSION = '2026-04-25-v371-sports-fullscreen';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -5840,12 +5840,13 @@
 
         <!-- FM: Live Sports -->
         <div class="fm-sub-content" id="fmSportsContent">
-          <div style="padding:0;">
+          <div class="fm-widget-container" id="sportBusyWidgetContainer" style="height:500px;">
             <iframe
               id="sportBusyEmbed"
               src=""
               width="100%"
-              style="border:none;overflow:hidden;background:#191919;display:block;min-height:calc(100vh - 120px);height:800px;"
+              height="100%"
+              style="border:none;overflow:hidden;background:#191919;display:block;"
               loading="lazy"
               title="Live Sports Scores"
               allow="fullscreen">
@@ -7319,14 +7320,15 @@
       };
     })();
 
-    var FM_WIDGET_TAB_IDS = ['fmTVCharts', 'fmHeatMap', 'fmScreener', 'fmOverview', 'fmCalendar', 'fmTechAnalysis'];
+    var FM_WIDGET_TAB_IDS = ['fmTVCharts', 'fmHeatMap', 'fmScreener', 'fmOverview', 'fmCalendar', 'fmTechAnalysis', 'fmSports'];
     var FM_WIDGET_CONTAINER_IDS = {
       fmTVCharts: 'tvChartWidget',
       fmHeatMap: 'tvHeatMapWidget',
       fmScreener: 'tvScreenerWidget',
       fmOverview: 'tvOverviewWidget',
       fmCalendar: 'tvCalendarWidget',
-      fmTechAnalysis: 'tvTechWidget'
+      fmTechAnalysis: 'tvTechWidget',
+      fmSports: 'sportBusyWidgetContainer'
     };
     var FM_WIDGET_LOADER_NAMES = {
       fmTVCharts: 'loadTVChart',
@@ -7334,7 +7336,8 @@
       fmScreener: 'loadTVScreener',
       fmOverview: 'loadTVOverview',
       fmCalendar: 'loadTVCalendar',
-      fmTechAnalysis: 'loadTVTechAnalysis'
+      fmTechAnalysis: 'loadTVTechAnalysis',
+      fmSports: 'loadSportBusy'
     };
     var FM_WIDGET_LOADED_FLAGS = {
       fmTVCharts: '_tvChartLoaded',
@@ -7342,7 +7345,8 @@
       fmScreener: '_tvScreenerLoaded',
       fmOverview: '_tvOverviewLoaded',
       fmCalendar: '_tvCalendarLoaded',
-      fmTechAnalysis: '_tvTechLoaded'
+      fmTechAnalysis: '_tvTechLoaded',
+      fmSports: '_sportBusyLoaded'
     };
     var _fmWidgetRenderTimers = {};
     var _fmWidgetResizeTimer = null;
@@ -21978,13 +21982,7 @@
       if (tabId === 'fmOverview' && !window._tvOverviewLoaded) { loadTVOverview(); window._tvOverviewLoaded = true; }
       if (tabId === 'fmCalendar' && !window._tvCalendarLoaded) { loadTVCalendar(); window._tvCalendarLoaded = true; }
       if (tabId === 'fmTechAnalysis' && !window._tvTechLoaded) { loadTVTechAnalysis(); window._tvTechLoaded = true; }
-      if (tabId === 'fmSports' && !window._sportBusyLoaded) {
-        var sbFrame = document.getElementById('sportBusyEmbed');
-        if (sbFrame && !sbFrame.src.includes('sportbusy')) {
-          sbFrame.src = 'https://www.sportbusy.com/embed';
-        }
-        window._sportBusyLoaded = true;
-      }
+      if (tabId === 'fmSports' && !window._sportBusyLoaded) { loadSportBusy(); window._sportBusyLoaded = true; }
       if (tabId === 'fmChartStudio' && !_activeChartStudioTemplate) { showCSGallery(); }
       syncMobileFMMenuState();
       updateMobileFMChrome();
@@ -22264,6 +22262,14 @@
         locale: 'en', colorTheme: 'dark'
       });
       container.appendChild(script);
+    }
+
+    function loadSportBusy() {
+      var sbFrame = document.getElementById('sportBusyEmbed');
+      if (sbFrame && !sbFrame.src.includes('sportbusy')) {
+        sbFrame.src = 'https://www.sportbusy.com/embed';
+      }
+      applyFMWidgetHeight('fmSports');
     }
 
     // ════════════════════════════════
