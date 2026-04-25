@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-25-v359-fab-glassmorphism';
+    var APP_VERSION = '2026-04-25-v360-fab-scroll-clearance';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -3448,7 +3448,7 @@
       .lc-list-new-fab {
         position: fixed;
         bottom: calc(80px + env(safe-area-inset-bottom, 0px));
-        right: 20px;
+        right: 16px;
         z-index: 610;
         width: 56px;
         height: 56px;
@@ -3471,6 +3471,7 @@
         flex: 1;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
+        padding-bottom: 80px;
       }
       .lc-chat-list-empty {
         flex: 1;
