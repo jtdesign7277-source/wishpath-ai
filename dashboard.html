@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-25-v379-news-server-cache';
+    var APP_VERSION = '2026-04-25-v380-bug-enemies-straight-bullets';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -9471,7 +9471,7 @@
       var spawnAcc = 0;
       var spawnEvery = 0.8;
       var fireCd = 0;
-      var autoFireRate = 0.18;
+      var autoFireRate = 0.35;
       var stars = [];
       var starsInit = false;
       var keys = {};
@@ -11065,9 +11065,8 @@
               if (t.fireCounter <= 0) {
                 t.fireCounter = t.fireInterval || (2.0 + Math.random() * 1.5);
                 var bSpd = 220;
-                var dx = player.x - t.x, dy = player.y - t.y;
-                var dist = Math.sqrt(dx * dx + dy * dy) || 1;
-                enemyBullets.push({ x: t.x, y: t.y + t.size * 0.3, vx: (dx / dist) * bSpd, vy: (dy / dist) * bSpd, size: 5, color: '#7132F5' });
+                // Straight down — no homing/aiming at player
+                enemyBullets.push({ x: t.x, y: t.y + t.size * 0.3, vx: 0, vy: bSpd, life: 3.0, size: 5, color: '#7132F5' });
               }
             }
             // Check bullet collisions for formation enemies
@@ -11630,181 +11629,209 @@
           }
 
         } else if (isFighter) {
-          // ======= ALIEN FIGHTER — menacing triangular UFO =======
-          var jDark = '#330808';
-          var jMid  = '#882211';
-          var jHi   = '#cc4422';
-          var jEdge = '#ff6644';
+          // ======= GREEN BUG — round glowing insect like screenshot =======
+          var pulse = Math.sin(Date.now() * 0.005 + tg.x) * 0.2 + 0.8;
 
-          // Engine exhaust trail (alien plasma)
-          var fk = Math.sin(Date.now() * 0.011 + tg.x) * 0.3 + 0.7;
-          ctx.shadowColor = jEdge;
-          ctx.shadowBlur = 14;
-          for (var ex = -1; ex <= 1; ex++) {
-            var exG = ctx.createLinearGradient(ex*r*0.2, -r*0.5, ex*r*0.2, -r*0.5 - r*fk*1.6);
-            exG.addColorStop(0, 'rgba(255,100,60,0.9)');
-            exG.addColorStop(0.4, 'rgba(255,50,0,0.4)');
-            exG.addColorStop(1, 'rgba(200,30,0,0)');
-            ctx.fillStyle = exG;
+          // Legs — 3 pairs, spindly insect legs
+          ctx.strokeStyle = '#22aa44';
+          ctx.lineWidth = 2;
+          ctx.shadowColor = '#44ff66';
+          ctx.shadowBlur = 6;
+          for (var lg = -1; lg <= 1; lg += 2) {
+            // Front legs
             ctx.beginPath();
-            ctx.moveTo(ex*r*0.13, -r*0.45);
-            ctx.lineTo(ex*r*0.27, -r*0.45);
-            ctx.lineTo(ex*r*0.22, -r*0.5 - r*fk*1.6);
-            ctx.lineTo(ex*r*0.18, -r*0.5 - r*fk*1.6);
-            ctx.fill();
+            ctx.moveTo(lg*r*0.3, r*0.1);
+            ctx.lineTo(lg*r*0.75, r*0.55);
+            ctx.lineTo(lg*r*0.9, r*0.7);
+            ctx.stroke();
+            // Mid legs
+            ctx.beginPath();
+            ctx.moveTo(lg*r*0.35, -r*0.05);
+            ctx.lineTo(lg*r*0.8, -r*0.1);
+            ctx.lineTo(lg*r*0.95, 0.05);
+            ctx.stroke();
+            // Back legs
+            ctx.beginPath();
+            ctx.moveTo(lg*r*0.25, -r*0.3);
+            ctx.lineTo(lg*r*0.65, -r*0.55);
+            ctx.lineTo(lg*r*0.8, -r*0.45);
+            ctx.stroke();
           }
 
-          // Spiked wings — angular alien prongs
-          ctx.strokeStyle = jHi;
-          ctx.lineWidth = 1.5;
-          ctx.shadowBlur = 8;
-          for (var ws = -1; ws <= 1; ws += 2) {
-            ctx.fillStyle = jMid;
-            ctx.beginPath();
-            ctx.moveTo(ws*r*0.12, r*0.1);
-            ctx.lineTo(ws*r*0.85, -r*0.15);
-            ctx.lineTo(ws*r*0.95, -r*0.35);
-            ctx.lineTo(ws*r*0.5, -r*0.25);
-            ctx.lineTo(ws*r*0.15, -r*0.4);
-            ctx.closePath();
-            ctx.fill(); ctx.stroke();
-          }
-
-          // Main body — inverted triangle alien hull
-          ctx.fillStyle = jMid;
-          ctx.shadowColor = jEdge;
-          ctx.shadowBlur = 10;
+          // Main body — large green glowing sphere
+          ctx.shadowColor = '#44ff66';
+          ctx.shadowBlur = 22 * pulse;
+          var bodyGrad = ctx.createRadialGradient(r*0.08, -r*0.1, 0, 0, 0, r*0.55);
+          bodyGrad.addColorStop(0, '#ccffcc');
+          bodyGrad.addColorStop(0.2, '#66ff66');
+          bodyGrad.addColorStop(0.5, '#33cc33');
+          bodyGrad.addColorStop(0.8, '#118811');
+          bodyGrad.addColorStop(1, '#004400');
+          ctx.fillStyle = bodyGrad;
           ctx.beginPath();
-          ctx.moveTo(0, r*0.8);
-          ctx.lineTo(-r*0.35, r*0.1);
-          ctx.lineTo(-r*0.3, -r*0.45);
-          ctx.lineTo(0, -r*0.55);
-          ctx.lineTo(r*0.3, -r*0.45);
-          ctx.lineTo(r*0.35, r*0.1);
-          ctx.closePath();
-          ctx.fill(); ctx.stroke();
+          ctx.arc(0, 0, r*0.55, 0, Math.PI*2);
+          ctx.fill();
 
-          // Dark inner hull panel
-          ctx.fillStyle = jDark;
+          // Specular highlight on body
           ctx.shadowBlur = 0;
+          var specGrad = ctx.createRadialGradient(r*0.1, -r*0.15, 0, r*0.1, -r*0.15, r*0.25);
+          specGrad.addColorStop(0, 'rgba(255,255,255,0.5)');
+          specGrad.addColorStop(0.5, 'rgba(200,255,200,0.15)');
+          specGrad.addColorStop(1, 'rgba(100,255,100,0)');
+          ctx.fillStyle = specGrad;
           ctx.beginPath();
-          ctx.moveTo(0, r*0.6);
-          ctx.lineTo(-r*0.2, r*0.05);
-          ctx.lineTo(-r*0.18, -r*0.35);
-          ctx.lineTo(0, -r*0.42);
-          ctx.lineTo(r*0.18, -r*0.35);
-          ctx.lineTo(r*0.2, r*0.05);
-          ctx.closePath();
+          ctx.arc(r*0.1, -r*0.15, r*0.25, 0, Math.PI*2);
           ctx.fill();
 
-          // Alien cockpit eye — glowing red orb
-          var eyePulse = Math.sin(Date.now() * 0.006 + tg.x) * 0.3 + 0.7;
-          ctx.shadowColor = jEdge;
-          ctx.shadowBlur = 16 * eyePulse;
-          var eyeGrad = ctx.createRadialGradient(0, r*0.15, 0, 0, r*0.15, r*0.14);
-          eyeGrad.addColorStop(0, '#ffffff');
-          eyeGrad.addColorStop(0.3, jEdge);
-          eyeGrad.addColorStop(1, jDark);
-          ctx.fillStyle = eyeGrad;
+          // Head — smaller dark green circle at front
+          ctx.shadowColor = '#44ff66';
+          ctx.shadowBlur = 8;
+          var headGrad = ctx.createRadialGradient(0, r*0.5, 0, 0, r*0.5, r*0.2);
+          headGrad.addColorStop(0, '#44cc44');
+          headGrad.addColorStop(0.7, '#116611');
+          headGrad.addColorStop(1, '#003300');
+          ctx.fillStyle = headGrad;
           ctx.beginPath();
-          ctx.arc(0, r*0.15, r*0.12, 0, Math.PI*2);
+          ctx.arc(0, r*0.5, r*0.2, 0, Math.PI*2);
           ctx.fill();
 
-          // Weapon tip glow at nose
-          ctx.shadowColor = '#ff2200';
-          ctx.shadowBlur = 12;
-          ctx.fillStyle = '#ff3300';
+          // Eyes — two tiny red dots on head
+          ctx.shadowColor = '#ff0000';
+          ctx.shadowBlur = 6;
+          ctx.fillStyle = '#ff3333';
           ctx.beginPath();
-          ctx.arc(0, r*0.78, r*0.05, 0, Math.PI*2);
+          ctx.arc(-r*0.08, r*0.52, r*0.04, 0, Math.PI*2);
           ctx.fill();
+          ctx.beginPath();
+          ctx.arc(r*0.08, r*0.52, r*0.04, 0, Math.PI*2);
+          ctx.fill();
+
+          // Antennae
+          ctx.strokeStyle = '#44dd44';
+          ctx.lineWidth = 1.5;
+          ctx.shadowBlur = 4;
+          ctx.beginPath();
+          ctx.moveTo(-r*0.1, r*0.65);
+          ctx.quadraticCurveTo(-r*0.25, r*0.9, -r*0.15, r*0.95);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(r*0.1, r*0.65);
+          ctx.quadraticCurveTo(r*0.25, r*0.9, r*0.15, r*0.95);
+          ctx.stroke();
           ctx.shadowBlur = 0;
 
         } else {
-          // ======= ALIEN BOMBER — large saucer with glowing ring =======
-          var hDark = '#1a0022';
-          var hMid  = '#442266';
-          var hHi   = '#7744aa';
-          var hEdge = '#ff8800';
+          // ======= ORANGE/RED BUG — fiery insect like screenshot =======
+          var pulse = Math.sin(Date.now() * 0.005 + tg.x) * 0.2 + 0.8;
 
-          // Pulsing energy field
-          var pulse = Math.sin(Date.now() * 0.004 + tg.x) * 0.25 + 0.75;
-
-          // Engine exhaust — twin plasma trails
-          var fk = Math.sin(Date.now() * 0.009 + tg.x) * 0.2 + 0.8;
-          ctx.shadowColor = hEdge;
-          ctx.shadowBlur = 10;
-          for (var ex = -1; ex <= 1; ex += 2) {
-            var exG = ctx.createLinearGradient(ex*r*0.25, -r*0.45, ex*r*0.25, -r*0.45 - r*fk*1.2);
-            exG.addColorStop(0, 'rgba(255,136,0,0.8)');
-            exG.addColorStop(0.5, 'rgba(200,60,180,0.3)');
-            exG.addColorStop(1, 'rgba(100,20,100,0)');
-            ctx.fillStyle = exG;
+          // Wings — spread out from body, orange translucent
+          ctx.shadowColor = '#ff6600';
+          ctx.shadowBlur = 10 * pulse;
+          for (var ws = -1; ws <= 1; ws += 2) {
+            var wingGrad = ctx.createRadialGradient(ws*r*0.45, -r*0.05, 0, ws*r*0.45, -r*0.05, r*0.5);
+            wingGrad.addColorStop(0, 'rgba(255,140,0,0.9)');
+            wingGrad.addColorStop(0.4, 'rgba(255,80,0,0.6)');
+            wingGrad.addColorStop(0.8, 'rgba(200,40,0,0.3)');
+            wingGrad.addColorStop(1, 'rgba(150,20,0,0)');
+            ctx.fillStyle = wingGrad;
             ctx.beginPath();
-            ctx.moveTo(ex*r*0.18, -r*0.4);
-            ctx.lineTo(ex*r*0.32, -r*0.4);
-            ctx.lineTo(ex*r*0.28, -r*0.45 - r*fk*1.2);
-            ctx.lineTo(ex*r*0.22, -r*0.45 - r*fk*1.2);
+            ctx.moveTo(ws*r*0.15, r*0.1);
+            ctx.quadraticCurveTo(ws*r*0.7, -r*0.5, ws*r*0.85, -r*0.15);
+            ctx.quadraticCurveTo(ws*r*0.9, r*0.3, ws*r*0.5, r*0.5);
+            ctx.quadraticCurveTo(ws*r*0.2, r*0.35, ws*r*0.15, r*0.1);
             ctx.fill();
+            // Wing vein
+            ctx.strokeStyle = 'rgba(255,200,50,0.4)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(ws*r*0.2, r*0.05);
+            ctx.quadraticCurveTo(ws*r*0.55, -r*0.2, ws*r*0.75, -r*0.1);
+            ctx.stroke();
           }
 
-          // Outer saucer hull — wide elliptical body
-          ctx.fillStyle = hMid;
-          ctx.strokeStyle = hHi;
+          // Legs — 3 pairs
+          ctx.strokeStyle = '#cc4400';
           ctx.lineWidth = 2;
-          ctx.shadowColor = '#aa44ff';
-          ctx.shadowBlur = 12 * pulse;
-          ctx.beginPath();
-          ctx.ellipse(0, 0, r*0.85, r*0.5, 0, 0, Math.PI*2);
-          ctx.fill(); ctx.stroke();
-
-          // Inner dark hull
-          ctx.fillStyle = hDark;
-          ctx.shadowBlur = 0;
-          ctx.beginPath();
-          ctx.ellipse(0, 0, r*0.6, r*0.32, 0, 0, Math.PI*2);
-          ctx.fill();
-
-          // Rotating energy ring
-          var ringAngle = Date.now() * 0.003;
-          ctx.strokeStyle = hEdge;
-          ctx.lineWidth = 2.5;
-          ctx.globalAlpha = 0.7 * pulse;
-          ctx.beginPath();
-          ctx.ellipse(0, 0, r*0.75, r*0.42, 0, ringAngle, ringAngle + Math.PI * 1.4);
-          ctx.stroke();
-          ctx.globalAlpha = 1;
-
-          // Dome on top — alien command bridge
-          var domeGrad = ctx.createRadialGradient(0, -r*0.08, 0, 0, -r*0.08, r*0.28);
-          domeGrad.addColorStop(0, '#9966cc');
-          domeGrad.addColorStop(0.6, hMid);
-          domeGrad.addColorStop(1, hDark);
-          ctx.fillStyle = domeGrad;
-          ctx.beginPath();
-          ctx.ellipse(0, -r*0.08, r*0.28, r*0.22, 0, 0, Math.PI*2);
-          ctx.fill();
-
-          // Central eye — menacing orange glow
-          ctx.shadowColor = hEdge;
-          ctx.shadowBlur = 14 * pulse;
-          var coreGrad = ctx.createRadialGradient(0, r*0.05, 0, 0, r*0.05, r*0.12);
-          coreGrad.addColorStop(0, '#ffffff');
-          coreGrad.addColorStop(0.35, hEdge);
-          coreGrad.addColorStop(1, '#441100');
-          ctx.fillStyle = coreGrad;
-          ctx.beginPath();
-          ctx.arc(0, r*0.05, r*0.1, 0, Math.PI*2);
-          ctx.fill();
-
-          // Side weapon pods — glowing orbs
-          for (var wp = -1; wp <= 1; wp += 2) {
-            ctx.shadowColor = '#ff4400';
-            ctx.shadowBlur = 8;
-            ctx.fillStyle = '#ff4400';
+          ctx.shadowColor = '#ff4400';
+          ctx.shadowBlur = 4;
+          for (var lg = -1; lg <= 1; lg += 2) {
             ctx.beginPath();
-            ctx.arc(wp*r*0.65, r*0.15, r*0.06, 0, Math.PI*2);
-            ctx.fill();
+            ctx.moveTo(lg*r*0.2, r*0.15);
+            ctx.lineTo(lg*r*0.55, r*0.55);
+            ctx.lineTo(lg*r*0.65, r*0.7);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(lg*r*0.25, 0);
+            ctx.lineTo(lg*r*0.6, r*0.1);
+            ctx.lineTo(lg*r*0.7, r*0.25);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(lg*r*0.2, -r*0.15);
+            ctx.lineTo(lg*r*0.5, -r*0.35);
+            ctx.lineTo(lg*r*0.6, -r*0.25);
+            ctx.stroke();
           }
+
+          // Main body — orange/red glowing abdomen
+          ctx.shadowColor = '#ff6600';
+          ctx.shadowBlur = 18 * pulse;
+          var bodyGrad = ctx.createRadialGradient(r*0.06, -r*0.05, 0, 0, 0, r*0.42);
+          bodyGrad.addColorStop(0, '#ffdd66');
+          bodyGrad.addColorStop(0.2, '#ff8800');
+          bodyGrad.addColorStop(0.5, '#dd4400');
+          bodyGrad.addColorStop(0.8, '#991100');
+          bodyGrad.addColorStop(1, '#441100');
+          ctx.fillStyle = bodyGrad;
+          ctx.beginPath();
+          ctx.arc(0, 0, r*0.42, 0, Math.PI*2);
+          ctx.fill();
+
+          // Specular highlight
+          ctx.shadowBlur = 0;
+          var specGrad = ctx.createRadialGradient(r*0.08, -r*0.1, 0, r*0.08, -r*0.1, r*0.2);
+          specGrad.addColorStop(0, 'rgba(255,255,200,0.5)');
+          specGrad.addColorStop(0.5, 'rgba(255,200,100,0.15)');
+          specGrad.addColorStop(1, 'rgba(255,100,0,0)');
+          ctx.fillStyle = specGrad;
+          ctx.beginPath();
+          ctx.arc(r*0.08, -r*0.1, r*0.2, 0, Math.PI*2);
+          ctx.fill();
+
+          // Head
+          ctx.shadowColor = '#ff4400';
+          ctx.shadowBlur = 6;
+          var headGrad = ctx.createRadialGradient(0, r*0.4, 0, 0, r*0.4, r*0.18);
+          headGrad.addColorStop(0, '#ff6600');
+          headGrad.addColorStop(0.7, '#882200');
+          headGrad.addColorStop(1, '#441100');
+          ctx.fillStyle = headGrad;
+          ctx.beginPath();
+          ctx.arc(0, r*0.4, r*0.18, 0, Math.PI*2);
+          ctx.fill();
+
+          // Eyes — bright yellow
+          ctx.shadowColor = '#ffff00';
+          ctx.shadowBlur = 6;
+          ctx.fillStyle = '#ffee33';
+          ctx.beginPath();
+          ctx.arc(-r*0.07, r*0.42, r*0.04, 0, Math.PI*2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(r*0.07, r*0.42, r*0.04, 0, Math.PI*2);
+          ctx.fill();
+
+          // Mandibles
+          ctx.strokeStyle = '#cc3300';
+          ctx.lineWidth = 2;
+          ctx.shadowBlur = 3;
+          ctx.beginPath();
+          ctx.moveTo(-r*0.06, r*0.55);
+          ctx.quadraticCurveTo(-r*0.15, r*0.72, -r*0.08, r*0.75);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(r*0.06, r*0.55);
+          ctx.quadraticCurveTo(r*0.15, r*0.72, r*0.08, r*0.75);
+          ctx.stroke();
           ctx.shadowBlur = 0;
         }
 
