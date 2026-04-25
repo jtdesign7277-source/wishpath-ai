@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-25-v388-enemy-hp-overlap-fix';
+    var APP_VERSION = '2026-04-25-v389-kraken-spins-live-only-home';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -4786,6 +4786,187 @@
       box-shadow: 0 4px 16px rgba(113, 50, 245, 0.4);
     }
 
+    /* ══════════════════════════════════════════════════════════════
+       KRAKEN SPINS — Casino Slot Machine
+       ══════════════════════════════════════════════════════════════ */
+    body[data-active-view="krakenspins"] .mobile-nav-bar { display: none !important; }
+    body[data-active-view="krakenspins"] .mobile-home-header,
+    body[data-active-view="krakenspins"] .top-bar,
+    body[data-active-view="krakenspins"] .sidebar { display: none !important; }
+    body[data-active-view="krakenspins"] .main-content { padding: 0 !important; margin: 0 !important; }
+    #krakenspinsView.view { display: none; }
+    #krakenspinsView.view.active {
+      display: flex; flex-direction: column; align-items: center;
+      position: fixed; inset: 0; z-index: 500;
+      background: radial-gradient(ellipse at 50% 20%, #1a0a2e 0%, #0d0618 40%, #050210 100%);
+      min-height: 100vh; min-height: 100dvh;
+      overflow-y: auto; -webkit-overflow-scrolling: touch;
+    }
+    .ks-top-bar {
+      width: 100%; display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px; padding-top: max(12px, env(safe-area-inset-top));
+      position: relative; z-index: 10;
+    }
+    .ks-back-btn {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: rgba(113,50,245,0.2); border: 1px solid rgba(113,50,245,0.3);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+      color: #fff; font-size: 18px;
+    }
+    .ks-balance-display {
+      background: linear-gradient(135deg, rgba(113,50,245,0.25), rgba(60,20,140,0.3));
+      border: 1px solid rgba(113,50,245,0.35); border-radius: 20px;
+      padding: 6px 16px; display: flex; align-items: center; gap: 6px;
+      font-size: 14px; font-weight: 700; color: #FFD700;
+      box-shadow: 0 2px 12px rgba(113,50,245,0.2);
+    }
+    .ks-title {
+      font-family: 'Inter', sans-serif; font-size: 22px; font-weight: 900;
+      background: linear-gradient(135deg, #c084fc, #7132F5, #a855f7);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      text-align: center; letter-spacing: 2px; text-transform: uppercase;
+      margin: 4px 0 8px 0;
+      filter: drop-shadow(0 2px 8px rgba(113,50,245,0.5));
+    }
+    .ks-machine {
+      width: calc(100% - 32px); max-width: 380px;
+      background: linear-gradient(180deg, #252525 0%, #1a1a1a 50%, #151515 100%);
+      border-radius: 20px; padding: 16px 12px;
+      border: 1.5px solid rgba(113,50,245,0.35);
+      box-shadow: 0 0 40px rgba(113,50,245,0.15), 0 8px 32px rgba(0,0,0,0.6),
+                  inset 0 1px 0 rgba(255,255,255,0.08);
+      position: relative; overflow: hidden;
+    }
+    .ks-machine::before {
+      content: ''; position: absolute; inset: 0; border-radius: 20px;
+      background: radial-gradient(ellipse at 50% 0%, rgba(113,50,245,0.1) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .ks-reel-window {
+      background: #0a0a0a; border-radius: 14px;
+      border: 2px solid rgba(113,50,245,0.25);
+      box-shadow: inset 0 4px 20px rgba(0,0,0,0.8), inset 0 0 40px rgba(113,50,245,0.05);
+      overflow: hidden; position: relative;
+    }
+    .ks-reel-canvas {
+      display: block; width: 100%;
+    }
+    .ks-payline-indicator {
+      position: absolute; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, #FFD700, transparent);
+      box-shadow: 0 0 12px rgba(255,215,0,0.5);
+      top: 50%; transform: translateY(-50%);
+      pointer-events: none; opacity: 0.6;
+      z-index: 2;
+    }
+    .ks-controls {
+      display: flex; flex-direction: column; gap: 10px; margin-top: 14px;
+    }
+    .ks-bet-row {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .ks-bet-btn {
+      padding: 8px 18px; border-radius: 10px; font-weight: 700; font-size: 13px;
+      border: 1.5px solid rgba(113,50,245,0.3);
+      background: linear-gradient(180deg, rgba(113,50,245,0.2), rgba(60,20,140,0.3));
+      color: rgba(255,255,255,0.8); cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: all 0.15s;
+    }
+    .ks-bet-btn.active {
+      border-color: #7132F5; color: #fff;
+      background: linear-gradient(180deg, rgba(113,50,245,0.5), rgba(60,20,140,0.6));
+      box-shadow: 0 0 16px rgba(113,50,245,0.4);
+    }
+    .ks-btn-row {
+      display: flex; gap: 10px; justify-content: center;
+    }
+    .ks-spin-btn {
+      flex: 1; max-width: 200px; padding: 16px 0; border-radius: 14px;
+      font-weight: 900; font-size: 18px; letter-spacing: 2px; text-transform: uppercase;
+      border: 2px solid #7132F5; cursor: pointer; color: #fff;
+      background: linear-gradient(180deg, #7132F5 0%, #5020c0 100%);
+      box-shadow: 0 6px 24px rgba(113,50,245,0.5), inset 0 1px 0 rgba(255,255,255,0.2);
+      -webkit-tap-highlight-color: transparent;
+      transition: all 0.15s;
+    }
+    .ks-spin-btn:active { transform: scale(0.95); }
+    .ks-spin-btn:disabled {
+      opacity: 0.5; cursor: default; transform: none;
+    }
+    .ks-turbo-btn, .ks-auto-btn {
+      padding: 16px 20px; border-radius: 14px; font-weight: 700; font-size: 12px;
+      border: 1.5px solid rgba(113,50,245,0.3);
+      background: rgba(113,50,245,0.15);
+      color: rgba(255,255,255,0.7); cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      text-transform: uppercase; letter-spacing: 1px;
+    }
+    .ks-turbo-btn.active, .ks-auto-btn.active {
+      background: rgba(113,50,245,0.4); border-color: #7132F5; color: #fff;
+    }
+    .ks-win-display {
+      text-align: center; margin-top: 10px; min-height: 28px;
+    }
+    .ks-win-text {
+      font-size: 16px; font-weight: 800; color: #FFD700;
+      text-shadow: 0 0 12px rgba(255,215,0,0.6);
+    }
+    .ks-big-win-overlay {
+      position: fixed; inset: 0; z-index: 600;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: rgba(5,2,16,0.92);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    .ks-big-win-overlay.active { opacity: 1; pointer-events: auto; }
+    .ks-big-win-label {
+      font-size: 48px; font-weight: 900; text-transform: uppercase;
+      letter-spacing: 6px;
+      background: linear-gradient(180deg, #FFD700, #FF8C00, #FFD700);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 4px 20px rgba(255,215,0,0.6));
+      animation: ksBigWinPulse 0.6s ease-in-out infinite alternate;
+    }
+    .ks-big-win-amount {
+      font-size: 56px; font-weight: 900; color: #fff;
+      text-shadow: 0 0 30px rgba(113,50,245,0.8), 0 4px 16px rgba(0,0,0,0.8);
+      margin-top: 8px;
+    }
+    @keyframes ksBigWinPulse {
+      from { transform: scale(1); }
+      to { transform: scale(1.08); }
+    }
+    .ks-info-row {
+      display: flex; justify-content: space-between; margin-top: 10px;
+      font-size: 11px; color: rgba(255,255,255,0.35);
+      padding: 0 4px;
+    }
+    .ks-paytable-toggle {
+      text-align: center; margin-top: 14px;
+    }
+    .ks-paytable-toggle button {
+      background: none; border: 1px solid rgba(113,50,245,0.3); border-radius: 10px;
+      color: rgba(255,255,255,0.5); font-size: 12px; padding: 6px 20px; cursor: pointer;
+      font-weight: 600;
+    }
+    .ks-paytable {
+      display: none; margin-top: 12px; padding: 12px;
+      background: rgba(113,50,245,0.08); border-radius: 12px;
+      border: 1px solid rgba(113,50,245,0.15);
+    }
+    .ks-paytable.open { display: block; }
+    .ks-paytable-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+      font-size: 13px; color: rgba(255,255,255,0.7);
+    }
+    .ks-paytable-row:last-child { border-bottom: none; }
+    .ks-paytable-symbol { font-size: 22px; }
+    .ks-paytable-mult { color: #FFD700; font-weight: 700; }
+
     /* ── Mobile: bottom tabs — same items & stroke icons as left sidebar (Home, Chats, News) ── */
     @media (max-width: 768px) {
       .wp-bottom-tabs {
@@ -5300,6 +5481,10 @@
       <a class="nav-item" data-view="wishrunner" onclick="showView('wishrunner');if(window.innerWidth<=768)toggleMobileSidebar();" style="margin-top: auto;">
         <span style="font-size:1.1rem;flex-shrink:0;">&#x1F680;</span>
         <span style="margin-left:2px;">Wish Runner</span>
+      </a>
+      <a class="nav-item" data-view="krakenspins" onclick="showView('krakenspins');initKrakenSpins();if(window.innerWidth<=768)toggleMobileSidebar();">
+        <span style="font-size:1.1rem;flex-shrink:0;">🎰</span>
+        <span style="margin-left:2px;">Kraken Spins</span>
       </a>
       <a class="nav-item" onclick="signOut()" style="color: var(--red);">
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7 4H4v12h3M10 10h7m0 0l-3-3m3 3l-3 3"/></svg>
@@ -6433,6 +6618,71 @@
         </div>
       </div>
 
+      <!-- ═══════════════════════════════════════════════════
+           KRAKEN SPINS — Casino Slot Machine View
+           ═══════════════════════════════════════════════════ -->
+      <div class="view" id="krakenspinsView">
+        <!-- Top bar: back + balance -->
+        <div class="ks-top-bar">
+          <div class="ks-back-btn" onclick="if(window.innerWidth<=768){showMobileHome();}else{showView('home');}">←</div>
+          <div class="ks-balance-display">
+            <span style="font-size:16px;">🪙</span>
+            <span id="ksBalanceTop">5,000</span>
+          </div>
+        </div>
+        <!-- Title -->
+        <div class="ks-title">Kraken Spins</div>
+        <!-- Machine -->
+        <div class="ks-machine" id="ksMachine">
+          <!-- Reel window -->
+          <div class="ks-reel-window" id="ksReelWindow">
+            <canvas id="ksReelCanvas" class="ks-reel-canvas"></canvas>
+            <div class="ks-payline-indicator"></div>
+          </div>
+          <!-- Win display -->
+          <div class="ks-win-display" id="ksWinDisplay"></div>
+          <!-- Bet selection -->
+          <div class="ks-controls">
+            <div class="ks-bet-row">
+              <span style="font-size:11px;color:rgba(255,255,255,0.4);font-weight:600;">BET:</span>
+              <button class="ks-bet-btn active" data-bet="50" onclick="ksSetBet(50)">50</button>
+              <button class="ks-bet-btn" data-bet="100" onclick="ksSetBet(100)">100</button>
+              <button class="ks-bet-btn" data-bet="250" onclick="ksSetBet(250)">250</button>
+            </div>
+            <!-- Buttons -->
+            <div class="ks-btn-row">
+              <button class="ks-turbo-btn" id="ksTurboBtn" onclick="ksToggleTurbo()">⚡ Turbo</button>
+              <button class="ks-spin-btn" id="ksSpinBtn" onclick="ksSpin()">SPIN</button>
+              <button class="ks-auto-btn" id="ksAutoBtn" onclick="ksToggleAuto()">🔄 Auto</button>
+            </div>
+          </div>
+          <!-- Info -->
+          <div class="ks-info-row">
+            <span>Wish Coins — Play for fun!</span>
+            <span id="ksSpinCount">Spins: 0</span>
+          </div>
+          <!-- Paytable -->
+          <div class="ks-paytable-toggle">
+            <button onclick="document.getElementById('ksPaytable').classList.toggle('open')">📋 Paytable</button>
+          </div>
+          <div class="ks-paytable" id="ksPaytable">
+            <div class="ks-paytable-row"><span class="ks-paytable-symbol">🐙</span><span>Kraken</span><span class="ks-paytable-mult">×50</span></div>
+            <div class="ks-paytable-row"><span class="ks-paytable-symbol">🃏</span><span>Wild</span><span class="ks-paytable-mult">×25</span></div>
+            <div class="ks-paytable-row"><span class="ks-paytable-symbol">💎</span><span>Purple Gem</span><span class="ks-paytable-mult">×15</span></div>
+            <div class="ks-paytable-row"><span class="ks-paytable-symbol">🪙</span><span>Gold Coin</span><span class="ks-paytable-mult">×10</span></div>
+            <div class="ks-paytable-row"><span class="ks-paytable-symbol">7️⃣</span><span>Lucky 7</span><span class="ks-paytable-mult">×8</span></div>
+            <div class="ks-paytable-row"><span class="ks-paytable-symbol">🍀</span><span>BAR</span><span class="ks-paytable-mult">×5</span></div>
+            <div class="ks-paytable-row"><span class="ks-paytable-symbol">⭐</span><span>Star</span><span class="ks-paytable-mult">×3</span></div>
+          </div>
+        </div>
+        <!-- Big win overlay -->
+        <div class="ks-big-win-overlay" id="ksBigWinOverlay">
+          <div class="ks-big-win-label" id="ksBigWinLabel">BIG WIN!</div>
+          <div class="ks-big-win-amount" id="ksBigWinAmount">+5,000</div>
+          <canvas id="ksBigWinParticles" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;"></canvas>
+        </div>
+      </div>
+
       <!-- You / Profile View -->
       <div class="view" id="youView">
         <div class="you-root">
@@ -6733,6 +6983,7 @@
           <div class="mobile-nav-tile" onclick="hideMobileHome();showView('notes')"><span class="mobile-nav-tile-icon">📝</span><span class="mobile-nav-tile-label">Notes</span></div>
           <div class="mobile-nav-tile" onclick="hideMobileHome();showView('library')"><span class="mobile-nav-tile-icon">📚</span><span class="mobile-nav-tile-label">Library</span></div>
           <div class="mobile-nav-tile" onclick="hideMobileHome();showView('wishrunner')"><span class="mobile-nav-tile-icon">🎮</span><span class="mobile-nav-tile-label">Wish Runner</span></div>
+          <div class="mobile-nav-tile" onclick="hideMobileHome();showView('krakenspins');initKrakenSpins()"><span class="mobile-nav-tile-icon">🎰</span><span class="mobile-nav-tile-label">Kraken Spins</span></div>
         </div>
         <!-- Recents -->
         <div class="mobile-sec-label" style="margin-top:24px;">Recents</div>
@@ -14426,7 +14677,7 @@
     }
 
     // View switching
-    var viewTitles = { home: 'Home', inbox: 'Inbox', you: 'You', lifecoach: 'Life Coach', news: 'News', fm: 'Financial Markets', cc: 'Command Center', wishes: 'My Wishes', coach: 'AI Coach', library: 'Library', notes: 'Notes', todos: 'To-Dos', feedback: 'Feedback', newwish: 'Your Wish', wishrunner: 'Wish Runner' };
+    var viewTitles = { home: 'Home', inbox: 'Inbox', you: 'You', lifecoach: 'Life Coach', news: 'News', fm: 'Financial Markets', cc: 'Command Center', wishes: 'My Wishes', coach: 'AI Coach', library: 'Library', notes: 'Notes', todos: 'To-Dos', feedback: 'Feedback', newwish: 'Your Wish', wishrunner: 'Wish Runner', krakenspins: 'Kraken Spins' };
     // ── iOS-style drag handle for chat/content split ──
     (function initDragHandles() {
       if (window.innerWidth > 768) return;
@@ -16902,12 +17153,18 @@
         html += '</div>';
 
         results.forEach(function(res) {
-          if (!res.events.length) return;
+          // Filter to LIVE games only on home screen
+          var liveEvents = res.events.filter(function(ev) {
+            var comp = ev.competitions && ev.competitions[0];
+            if (!comp || !comp.status || !comp.status.type) return false;
+            return comp.status.type.state === 'in';
+          });
+          if (!liveEvents.length) return;
           hasGames = true;
           // League label
           html += '<div style="font-size:10px;font-weight:700;color:rgba(113,50,245,0.7);text-transform:uppercase;letter-spacing:0.08em;margin:6px 0 4px 0;">' + res.league + '</div>';
-          // Show up to 4 games per league
-          res.events.slice(0, 4).forEach(function(ev) {
+          // Show up to 4 live games per league
+          liveEvents.slice(0, 4).forEach(function(ev) {
             var comp = ev.competitions && ev.competitions[0];
             if (!comp) return;
             var teams = comp.competitors || [];
@@ -16972,7 +17229,7 @@
         });
 
         if (!hasGames) {
-          container.innerHTML = '<div style="color:rgba(255,255,255,0.25);font-size:11px;padding:6px 0;">No games scheduled today</div>';
+          container.innerHTML = '<div style="color:rgba(255,255,255,0.25);font-size:11px;padding:6px 0;">No live games right now</div>';
         } else {
           container.innerHTML = html;
         }
@@ -24301,6 +24558,613 @@ window.addEventListener('focus', function() {
 document.addEventListener('visibilitychange', function() {
   if (document.visibilityState === 'visible') refreshActiveFMWidgetLayout(false);
 });
+
+// ══════════════════════════════════════════════════════════════════════
+// KRAKEN SPINS — Full Slot Machine Engine (Vanilla JS + Canvas)
+// ══════════════════════════════════════════════════════════════════════
+(function() {
+  'use strict';
+
+  // ── Symbols ──
+  var KS_SYMBOLS = [
+    { id: 'kraken',  emoji: '🐙', label: 'Kraken',     mult: 50, weight: 2 },
+    { id: 'wild',    emoji: '🃏', label: 'Wild',        mult: 25, weight: 3, isWild: true },
+    { id: 'gem',     emoji: '💎', label: 'Purple Gem',  mult: 15, weight: 5 },
+    { id: 'coin',    emoji: '🪙', label: 'Gold Coin',   mult: 10, weight: 7 },
+    { id: 'seven',   emoji: '7️⃣', label: 'Lucky 7',    mult: 8,  weight: 8 },
+    { id: 'bar',     emoji: '🍀', label: 'BAR',         mult: 5,  weight: 12 },
+    { id: 'star',    emoji: '⭐', label: 'Star',        mult: 3,  weight: 15 }
+  ];
+
+  // Build weighted pool
+  var KS_POOL = [];
+  for (var si = 0; si < KS_SYMBOLS.length; si++) {
+    for (var wi = 0; wi < KS_SYMBOLS[si].weight; wi++) KS_POOL.push(si);
+  }
+
+  // ── State ──
+  var ks = {
+    balance: 5000, bet: 50, spinning: false, turbo: false, autoSpin: false,
+    spinCount: 0, totalWins: 0, reels: [[], [], []], finalReels: [[], [], []],
+    reelOffsets: [0, 0, 0], reelSpeeds: [0, 0, 0], reelStopping: [false, false, false],
+    reelStopped: [false, false, false], stopTargets: [0, 0, 0],
+    particles: [], shakeX: 0, shakeY: 0, shakeDecay: 0,
+    canvas: null, ctx: null, animId: null, lastTime: 0,
+    ROWS: 5, REEL_COUNT: 3, SYMBOL_SIZE: 0, initialized: false,
+    bigWinParticles: [], bigWinAnimId: null
+  };
+
+  // ── Random reel strip (32 symbols each) ──
+  function ksRandomStrip() {
+    var strip = [];
+    for (var i = 0; i < 32; i++) strip.push(KS_POOL[Math.floor(Math.random() * KS_POOL.length)]);
+    return strip;
+  }
+
+  // ── Init ──
+  window.initKrakenSpins = function() {
+    if (ks.initialized) { ksResizeCanvas(); return; }
+    ks.canvas = document.getElementById('ksReelCanvas');
+    if (!ks.canvas) return;
+    ks.ctx = ks.canvas.getContext('2d');
+    // Init reels
+    for (var r = 0; r < ks.REEL_COUNT; r++) {
+      ks.reels[r] = ksRandomStrip();
+      ks.reelOffsets[r] = 0;
+    }
+    ksResizeCanvas();
+    ksUpdateBalanceUI();
+    ks.initialized = true;
+    ks.lastTime = performance.now();
+    ksLoop(ks.lastTime);
+    // Load saved balance
+    try {
+      var saved = localStorage.getItem('ks_balance');
+      if (saved && !isNaN(parseInt(saved))) { ks.balance = Math.max(0, parseInt(saved)); ksUpdateBalanceUI(); }
+      var sc = localStorage.getItem('ks_spins');
+      if (sc) { ks.spinCount = parseInt(sc) || 0; ksUpdateSpinCount(); }
+    } catch(e) {}
+  };
+
+  function ksResizeCanvas() {
+    if (!ks.canvas) return;
+    var win = ks.canvas.parentElement;
+    var w = win.clientWidth;
+    var symSize = Math.floor(w / ks.REEL_COUNT);
+    ks.SYMBOL_SIZE = symSize;
+    var h = symSize * ks.ROWS;
+    ks.canvas.width = w * 2;
+    ks.canvas.height = h * 2;
+    ks.canvas.style.width = w + 'px';
+    ks.canvas.style.height = h + 'px';
+    ks.ctx.scale(2, 2);
+    ks.ctx.textAlign = 'center';
+    ks.ctx.textBaseline = 'middle';
+  }
+
+  // ── Main loop ──
+  function ksLoop(now) {
+    ks.animId = requestAnimationFrame(ksLoop);
+    var dt = Math.min((now - ks.lastTime) / 1000, 0.05);
+    ks.lastTime = now;
+    ksUpdate(dt);
+    ksDraw();
+  }
+
+  // ── Update ──
+  function ksUpdate(dt) {
+    var baseSpeed = ks.turbo ? 2800 : 1600;
+    for (var r = 0; r < ks.REEL_COUNT; r++) {
+      if (ks.reelStopped[r]) continue;
+      if (ks.spinning && !ks.reelStopping[r]) {
+        // Accelerate
+        ks.reelSpeeds[r] = Math.min(ks.reelSpeeds[r] + baseSpeed * 4 * dt, baseSpeed);
+      }
+      if (ks.reelStopping[r]) {
+        // Decelerate to snap
+        ks.reelSpeeds[r] *= (1 - dt * (ks.turbo ? 12 : 6));
+        if (ks.reelSpeeds[r] < 30) {
+          ks.reelSpeeds[r] = 0;
+          ks.reelOffsets[r] = ks.stopTargets[r] * ks.SYMBOL_SIZE;
+          ks.reelStopped[r] = true;
+          ks.reelStopping[r] = false;
+          ksHaptic('medium');
+          // Check if all stopped
+          if (ks.reelStopped[0] && ks.reelStopped[1] && ks.reelStopped[2]) {
+            ksEvaluate();
+          }
+        }
+      }
+      ks.reelOffsets[r] += ks.reelSpeeds[r] * dt;
+      // Wrap
+      var stripHeight = ks.reels[r].length * ks.SYMBOL_SIZE;
+      if (stripHeight > 0) ks.reelOffsets[r] = ks.reelOffsets[r] % stripHeight;
+    }
+
+    // Particles
+    for (var pi = ks.particles.length - 1; pi >= 0; pi--) {
+      var p = ks.particles[pi];
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.vy += 200 * dt; // gravity
+      p.life -= dt;
+      if (p.life <= 0) ks.particles.splice(pi, 1);
+    }
+
+    // Screen shake decay
+    if (ks.shakeDecay > 0) {
+      ks.shakeDecay -= dt * 8;
+      ks.shakeX = (Math.random() - 0.5) * ks.shakeDecay * 4;
+      ks.shakeY = (Math.random() - 0.5) * ks.shakeDecay * 4;
+      if (ks.shakeDecay <= 0) { ks.shakeX = 0; ks.shakeY = 0; ks.shakeDecay = 0; }
+    }
+  }
+
+  // ── Draw ──
+  function ksDraw() {
+    var ctx = ks.ctx;
+    var cw = ks.canvas.width / 2;
+    var ch = ks.canvas.height / 2;
+    ctx.save();
+    ctx.translate(ks.shakeX, ks.shakeY);
+    ctx.clearRect(-10, -10, cw + 20, ch + 20);
+
+    var ss = ks.SYMBOL_SIZE;
+    var midRow = Math.floor(ks.ROWS / 2);
+    var fontSize = Math.max(24, Math.floor(ss * 0.55));
+    ctx.font = fontSize + 'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+
+    for (var r = 0; r < ks.REEL_COUNT; r++) {
+      var strip = ks.reels[r];
+      var off = ks.reelOffsets[r];
+      var reelX = r * ss;
+
+      // Draw subtle reel separator
+      if (r > 0) {
+        ctx.strokeStyle = 'rgba(113,50,245,0.15)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(reelX, 0);
+        ctx.lineTo(reelX, ch);
+        ctx.stroke();
+      }
+
+      // Draw symbols
+      var startIdx = Math.floor(off / ss);
+      var fractional = off % ss;
+      for (var row = -1; row <= ks.ROWS + 1; row++) {
+        var idx = ((startIdx + row) % strip.length + strip.length) % strip.length;
+        var sym = KS_SYMBOLS[strip[idx]];
+        var x = reelX + ss / 2;
+        var y = row * ss - fractional + ss / 2;
+
+        if (y < -ss || y > ch + ss) continue;
+
+        // Dim non-center rows slightly
+        var distFromCenter = Math.abs(y - ch / 2) / (ch / 2);
+        ctx.globalAlpha = 1 - distFromCenter * 0.4;
+
+        // Glow for center row
+        if (Math.abs(row - midRow - Math.floor(off / ss) % 1) < 0.7 && !ks.spinning) {
+          // No glow during spin
+        }
+
+        ctx.fillText(sym.emoji, x, y);
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    // Motion blur overlay during fast spin
+    if (ks.spinning && !ks.reelStopped[0]) {
+      var maxSpeed = Math.max(ks.reelSpeeds[0], ks.reelSpeeds[1], ks.reelSpeeds[2]);
+      var blurAlpha = Math.min(maxSpeed / 3000, 0.25);
+      if (blurAlpha > 0.02) {
+        ctx.fillStyle = 'rgba(5,2,16,' + blurAlpha + ')';
+        ctx.fillRect(0, 0, cw, ch);
+      }
+    }
+
+    // Particles
+    for (var pi = 0; pi < ks.particles.length; pi++) {
+      var p = ks.particles[pi];
+      var pAlpha = Math.max(0, p.life / p.maxLife);
+      ctx.globalAlpha = pAlpha;
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size * pAlpha, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // Center payline highlight
+    var centerY = ch / 2;
+    ctx.strokeStyle = 'rgba(255,215,0,0.3)';
+    ctx.lineWidth = ss * 0.92;
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(0, centerY);
+    ctx.lineTo(cw, centerY);
+    // Only draw if not spinning heavily
+    if (!ks.spinning || ks.reelStopped[0]) {
+      ctx.globalAlpha = 0.06;
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+
+    ctx.restore();
+  }
+
+  // ── Spin ──
+  window.ksSpin = function() {
+    if (ks.spinning) return;
+    if (ks.balance < ks.bet) {
+      ksFlashMessage('Not enough Wish Coins!', '#ff4444');
+      ks.autoSpin = false;
+      ksUpdateAutoUI();
+      return;
+    }
+    ks.balance -= ks.bet;
+    ks.spinCount++;
+    ksUpdateBalanceUI();
+    ksUpdateSpinCount();
+    ksSaveState();
+
+    // Clear previous win
+    document.getElementById('ksWinDisplay').innerHTML = '';
+
+    ks.spinning = true;
+    ks.reelStopped = [false, false, false];
+    ks.reelStopping = [false, false, false];
+    ks.reelSpeeds = [0, 0, 0];
+
+    // Generate new strips with final results
+    for (var r = 0; r < ks.REEL_COUNT; r++) {
+      ks.reels[r] = ksRandomStrip();
+      ks.reelOffsets[r] = 0;
+    }
+
+    // Determine final symbols (with near-miss chance)
+    var finalSyms = ksPickFinalSymbols();
+    // Place finals in center of strip
+    var centerPos = Math.floor(ks.reels[0].length / 2);
+    for (var r2 = 0; r2 < ks.REEL_COUNT; r2++) {
+      // Place 5 visible rows centered
+      for (var vi = 0; vi < ks.ROWS; vi++) {
+        ks.reels[r2][(centerPos - Math.floor(ks.ROWS / 2) + vi + ks.reels[r2].length) % ks.reels[r2].length] = finalSyms[r2][vi];
+      }
+      ks.stopTargets[r2] = (centerPos - Math.floor(ks.ROWS / 2)) % ks.reels[r2].length;
+    }
+
+    document.getElementById('ksSpinBtn').disabled = true;
+    ksHaptic('light');
+
+    // Audio click
+    ksPlaySound('spin');
+
+    // Staggered stop: left → mid → right
+    var stopDelay = ks.turbo ? 400 : 800;
+    setTimeout(function() { ks.reelStopping[0] = true; }, stopDelay);
+    setTimeout(function() { ks.reelStopping[1] = true; }, stopDelay * 1.6);
+    setTimeout(function() { ks.reelStopping[2] = true; }, stopDelay * 2.2);
+  };
+
+  // ── Pick final symbols (with near-miss mechanic) ──
+  function ksPickFinalSymbols() {
+    var result = [[], [], []];
+    for (var r = 0; r < 3; r++) {
+      for (var row = 0; row < ks.ROWS; row++) {
+        result[r].push(KS_POOL[Math.floor(Math.random() * KS_POOL.length)]);
+      }
+    }
+
+    // 15% chance of near-miss: make 2 center symbols match but not 3rd
+    if (Math.random() < 0.15) {
+      var mid = Math.floor(ks.ROWS / 2);
+      var sym = KS_POOL[Math.floor(Math.random() * KS_POOL.length)];
+      result[0][mid] = sym;
+      result[1][mid] = sym;
+      // Make sure 3rd is different
+      var diff = sym;
+      while (diff === sym) diff = KS_POOL[Math.floor(Math.random() * KS_POOL.length)];
+      result[2][mid] = diff;
+    }
+
+    return result;
+  }
+
+  // ── Evaluate win ──
+  function ksEvaluate() {
+    ks.spinning = false;
+    document.getElementById('ksSpinBtn').disabled = false;
+
+    var mid = Math.floor(ks.ROWS / 2);
+    var centerSyms = [];
+    var centerPos = ks.stopTargets[0];
+    for (var r = 0; r < 3; r++) {
+      var idx = (centerPos + mid) % ks.reels[r].length;
+      centerSyms.push(ks.reels[r][idx]);
+    }
+
+    // Check center payline (3 matching or wilds)
+    var s0 = KS_SYMBOLS[centerSyms[0]];
+    var s1 = KS_SYMBOLS[centerSyms[1]];
+    var s2 = KS_SYMBOLS[centerSyms[2]];
+
+    // Resolve wilds
+    var ids = [centerSyms[0], centerSyms[1], centerSyms[2]];
+    var nonWild = -1;
+    for (var i = 0; i < 3; i++) {
+      if (!KS_SYMBOLS[ids[i]].isWild) { nonWild = ids[i]; break; }
+    }
+    if (nonWild === -1) nonWild = 0; // All wilds = kraken payout
+
+    var match = true;
+    for (var j = 0; j < 3; j++) {
+      if (ids[j] !== nonWild && !KS_SYMBOLS[ids[j]].isWild) { match = false; break; }
+    }
+
+    // Count wilds for bonus
+    var wildCount = 0;
+    for (var w = 0; w < 3; w++) { if (KS_SYMBOLS[ids[w]].isWild) wildCount++; }
+
+    if (match) {
+      var baseSym = KS_SYMBOLS[nonWild];
+      var winMult = baseSym.mult;
+      if (wildCount === 3) winMult = 25; // All wilds
+      else if (wildCount > 0) winMult = Math.floor(winMult * (1 + wildCount * 0.5));
+      var winAmount = ks.bet * winMult;
+      ks.balance += winAmount;
+      ks.totalWins += winAmount;
+      ksUpdateBalanceUI();
+      ksSaveState();
+
+      // Win display
+      document.getElementById('ksWinDisplay').innerHTML =
+        '<div class="ks-win-text">+' + winAmount.toLocaleString() + ' 🪙 (' + baseSym.emoji + ' ×' + winMult + ')</div>';
+
+      // Spawn particles at center
+      var cw = ks.canvas.width / 4;
+      var cy = ks.canvas.height / 4;
+      for (var pi = 0; pi < 30; pi++) {
+        var angle = (pi / 30) * Math.PI * 2;
+        var spd = 100 + Math.random() * 150;
+        ks.particles.push({
+          x: cw / 2 + (Math.random() - 0.5) * cw,
+          y: cy,
+          vx: Math.cos(angle) * spd,
+          vy: Math.sin(angle) * spd - 60,
+          life: 0.8 + Math.random() * 0.5,
+          maxLife: 0.8 + Math.random() * 0.5,
+          size: 2 + Math.random() * 4,
+          color: ['#FFD700', '#7132F5', '#a855f7', '#fff', '#FF8C00'][Math.floor(Math.random() * 5)]
+        });
+      }
+
+      // Screen shake
+      ks.shakeDecay = winMult >= 15 ? 3 : 1.5;
+
+      // Haptic
+      ksHaptic(winMult >= 15 ? 'heavy' : 'medium');
+
+      // Sound
+      ksPlaySound(winMult >= 15 ? 'bigwin' : 'win');
+
+      // Big win overlay for huge wins
+      if (winAmount >= ks.bet * 15) {
+        ksShowBigWin(winAmount, winMult >= 25 ? 'MEGA WIN!' : 'BIG WIN!');
+      }
+    } else {
+      // No win — subtle feedback
+      ksPlaySound('lose');
+    }
+
+    // Auto-spin
+    if (ks.autoSpin && ks.balance >= ks.bet) {
+      setTimeout(function() {
+        if (ks.autoSpin) ksSpin();
+      }, ks.turbo ? 400 : 1000);
+    } else if (ks.autoSpin) {
+      ks.autoSpin = false;
+      ksUpdateAutoUI();
+    }
+  }
+
+  // ── Big win overlay ──
+  function ksShowBigWin(amount, label) {
+    var overlay = document.getElementById('ksBigWinOverlay');
+    document.getElementById('ksBigWinLabel').textContent = label;
+    document.getElementById('ksBigWinAmount').textContent = '+' + amount.toLocaleString();
+    overlay.classList.add('active');
+
+    // Confetti particles on canvas
+    var bwCanvas = document.getElementById('ksBigWinParticles');
+    var bwCtx = bwCanvas.getContext('2d');
+    bwCanvas.width = window.innerWidth * 2;
+    bwCanvas.height = window.innerHeight * 2;
+    bwCanvas.style.width = window.innerWidth + 'px';
+    bwCanvas.style.height = window.innerHeight + 'px';
+    bwCtx.scale(2, 2);
+
+    var bwParticles = [];
+    var colors = ['#FFD700', '#7132F5', '#FF8C00', '#a855f7', '#fff', '#00ff88', '#ff4488'];
+    for (var i = 0; i < 80; i++) {
+      bwParticles.push({
+        x: Math.random() * window.innerWidth,
+        y: -20 - Math.random() * 200,
+        vx: (Math.random() - 0.5) * 200,
+        vy: 100 + Math.random() * 300,
+        size: 3 + Math.random() * 5,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        rot: Math.random() * Math.PI * 2,
+        rotSpeed: (Math.random() - 0.5) * 8,
+        life: 2 + Math.random()
+      });
+    }
+
+    var bwLast = performance.now();
+    function bwLoop(now) {
+      var dt = Math.min((now - bwLast) / 1000, 0.05);
+      bwLast = now;
+      bwCtx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      var alive = false;
+      for (var j = bwParticles.length - 1; j >= 0; j--) {
+        var p = bwParticles[j];
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.vy += 150 * dt;
+        p.rot += p.rotSpeed * dt;
+        p.life -= dt;
+        if (p.life <= 0) { bwParticles.splice(j, 1); continue; }
+        alive = true;
+        var alpha = Math.min(1, p.life);
+        bwCtx.save();
+        bwCtx.translate(p.x, p.y);
+        bwCtx.rotate(p.rot);
+        bwCtx.globalAlpha = alpha;
+        bwCtx.fillStyle = p.color;
+        bwCtx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+        bwCtx.restore();
+      }
+      if (alive) ks.bigWinAnimId = requestAnimationFrame(bwLoop);
+    }
+    ks.bigWinAnimId = requestAnimationFrame(bwLoop);
+
+    ksHaptic('heavy');
+
+    setTimeout(function() {
+      overlay.classList.remove('active');
+      if (ks.bigWinAnimId) cancelAnimationFrame(ks.bigWinAnimId);
+      bwCtx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    }, 3000);
+  }
+
+  // ── Bet selection ──
+  window.ksSetBet = function(amount) {
+    ks.bet = amount;
+    document.querySelectorAll('.ks-bet-btn').forEach(function(btn) {
+      btn.classList.toggle('active', parseInt(btn.getAttribute('data-bet')) === amount);
+    });
+  };
+
+  // ── Turbo toggle ──
+  window.ksToggleTurbo = function() {
+    ks.turbo = !ks.turbo;
+    document.getElementById('ksTurboBtn').classList.toggle('active', ks.turbo);
+  };
+
+  // ── Auto-spin toggle ──
+  window.ksToggleAuto = function() {
+    ks.autoSpin = !ks.autoSpin;
+    ksUpdateAutoUI();
+    if (ks.autoSpin && !ks.spinning) ksSpin();
+  };
+
+  function ksUpdateAutoUI() {
+    document.getElementById('ksAutoBtn').classList.toggle('active', ks.autoSpin);
+  }
+
+  // ── UI helpers ──
+  function ksUpdateBalanceUI() {
+    var els = [document.getElementById('ksBalanceTop')];
+    for (var i = 0; i < els.length; i++) {
+      if (els[i]) els[i].textContent = ks.balance.toLocaleString();
+    }
+  }
+
+  function ksUpdateSpinCount() {
+    var el = document.getElementById('ksSpinCount');
+    if (el) el.textContent = 'Spins: ' + ks.spinCount;
+  }
+
+  function ksFlashMessage(msg, color) {
+    var disp = document.getElementById('ksWinDisplay');
+    if (disp) disp.innerHTML = '<div style="font-size:14px;font-weight:700;color:' + (color || '#fff') + ';">' + msg + '</div>';
+    setTimeout(function() { if (disp) disp.innerHTML = ''; }, 2000);
+  }
+
+  function ksSaveState() {
+    try {
+      localStorage.setItem('ks_balance', ks.balance);
+      localStorage.setItem('ks_spins', ks.spinCount);
+    } catch(e) {}
+  }
+
+  // ── Haptic feedback ──
+  function ksHaptic(type) {
+    try {
+      if ('vibrate' in navigator) {
+        if (type === 'heavy') navigator.vibrate(30);
+        else if (type === 'medium') navigator.vibrate(15);
+        else navigator.vibrate(8);
+      }
+    } catch(e) {}
+  }
+
+  // ── Web Audio sounds ──
+  var ksAudioCtx = null;
+  function ksGetAudioCtx() {
+    if (!ksAudioCtx) {
+      try { ksAudioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+    }
+    return ksAudioCtx;
+  }
+
+  function ksPlaySound(type) {
+    var ctx = ksGetAudioCtx();
+    if (!ctx) return;
+    try {
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      gain.gain.setValueAtTime(0.08, ctx.currentTime);
+
+      if (type === 'spin') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(440, ctx.currentTime);
+        osc.frequency.linearRampToValueAtTime(880, ctx.currentTime + 0.08);
+        gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.1);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.1);
+      } else if (type === 'win') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(523, ctx.currentTime);
+        osc.frequency.setValueAtTime(659, ctx.currentTime + 0.1);
+        osc.frequency.setValueAtTime(784, ctx.currentTime + 0.2);
+        gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.35);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.35);
+      } else if (type === 'bigwin') {
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(392, ctx.currentTime);
+        osc.frequency.setValueAtTime(523, ctx.currentTime + 0.1);
+        osc.frequency.setValueAtTime(659, ctx.currentTime + 0.2);
+        osc.frequency.setValueAtTime(784, ctx.currentTime + 0.3);
+        osc.frequency.setValueAtTime(1047, ctx.currentTime + 0.4);
+        gain.gain.setValueAtTime(0.06, ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.55);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.55);
+      } else if (type === 'lose') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(200, ctx.currentTime);
+        osc.frequency.linearRampToValueAtTime(150, ctx.currentTime + 0.15);
+        gain.gain.setValueAtTime(0.04, ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.15);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.15);
+      }
+    } catch(e) {}
+  }
+
+  // ── Cleanup on view switch ──
+  var origShowView = window.showView;
+  if (typeof origShowView !== 'function') {
+    // fallback — showView already defined elsewhere
+  }
+  // We hook into showView from the view system above — krakenspins stops cleanly
+  // when switching away because the rAF keeps running but costs nothing (hidden canvas)
+})();
 
   </script>
 
