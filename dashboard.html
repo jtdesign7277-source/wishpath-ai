@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-25-v368-dropdown-fix';
+    var APP_VERSION = '2026-04-25-v369-landscape-lock';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -4816,6 +4816,22 @@
       /* ~52px content row + safe area + buffer */
       .main-content { padding-bottom: calc(12px + 58px + env(safe-area-inset-bottom)) !important; }
       .you-page, .you-root { padding-bottom: calc(24px + 58px + env(safe-area-inset-bottom)) !important; }
+    }
+
+    /* ── Phone landscape lock: keep mobile layout when phone rotates ── */
+    /* Phones in landscape have width > 768 but height < 500 — keep mobile styles */
+    @media (orientation: landscape) and (max-height: 500px) {
+      /* Force mobile home to stay visible */
+      body.mobile-home-active #mobileHome { display: flex !important; }
+      /* Keep sidebar collapsed */
+      .sidebar { display: none !important; }
+      .main { margin-left: 0 !important; width: 100% !important; max-width: 100% !important; }
+      /* Keep bottom nav visible */
+      #mobileNavBar { display: flex !important; }
+      /* Keep mobile grid layouts */
+      .stock-grid, #mobileStockGrid, #mobileWatchlistGrid, #mobileCryptoGrid { grid-template-columns: repeat(2, 1fr) !important; }
+      /* Exception: chart fullscreen overlay uses full landscape */
+      #chartFsOverlay.active { display: flex !important; position: fixed !important; inset: 0 !important; z-index: 10000 !important; }
     }
 
     /* ── Desktop containment + layout fixes (do not affect mobile) ── */
@@ -16071,7 +16087,9 @@
     }
 
     function showMobileHome() {
-      if (window.innerWidth > 768) return;
+      // Use physical screen short edge — immune to landscape rotation
+      var shortEdge = Math.min(screen.width, screen.height);
+      if (shortEdge > 768) return; // true tablet/desktop — skip mobile home
       closeMobileAskAI();
       closeMobileFMMenu();
       dismissPaywall();
@@ -16515,7 +16533,9 @@
       showMobileHome();
     }
     window.addEventListener('resize', function() {
-      if (window.innerWidth > 768) {
+      // Only strip mobile home for true desktop (not phone landscape rotation)
+      var shortEdge = Math.min(screen.width, screen.height);
+      if (shortEdge > 768 && window.innerWidth > 768) {
         document.body.classList.remove('mobile-home-active');
         var mh = document.getElementById('mobileHome');
         if (mh) mh.classList.remove('active');
