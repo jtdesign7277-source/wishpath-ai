@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-25-v398-compact-chips';
+    var APP_VERSION = '2026-04-25-v399-casino-fullscreen';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -4807,6 +4807,7 @@
     .ks-top-bar {
       width: 100%; display: flex; align-items: center; justify-content: space-between;
       padding: 6px 12px; flex-shrink: 0; position: relative; z-index: 10;
+      padding-top: calc(env(safe-area-inset-top, 0px) + 44px);
     }
     .ks-back-btn {
       width: 36px; height: 36px; border-radius: 50%;
@@ -6947,14 +6948,14 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
           </button>
         </div>
-        <!-- Suggestion list (compact bullets) -->
-        <div style="display:flex;flex-wrap:wrap;gap:4px 16px;padding:4px 0 8px 0;">
-          <div onclick="prefillMobileHomeInput('Make a plan for my goal')" style="font-size:13px;color:rgba(255,255,255,0.7);cursor:pointer;-webkit-tap-highlight-color:transparent;padding:3px 0;">📋 Make a plan</div>
-          <div onclick="prefillMobileHomeInput('Help me manage my tasks')" style="font-size:13px;color:rgba(255,255,255,0.7);cursor:pointer;-webkit-tap-highlight-color:transparent;padding:3px 0;">✅ Manage tasks</div>
-          <div onclick="openLifeCoachView()" style="font-size:13px;color:rgba(255,255,255,0.7);cursor:pointer;-webkit-tap-highlight-color:transparent;padding:3px 0;">💡 Get advice</div>
-          <div onclick="prefillMobileHomeInput('Help me track my progress')" style="font-size:13px;color:rgba(255,255,255,0.7);cursor:pointer;-webkit-tap-highlight-color:transparent;padding:3px 0;">📊 Track progress</div>
-          <div onclick="prefillMobileHomeInput('Help me start a side hustle')" style="font-size:13px;color:rgba(255,255,255,0.7);cursor:pointer;-webkit-tap-highlight-color:transparent;padding:3px 0;">🚀 Start a side hustle</div>
-          <div onclick="openMobileTemplates()" style="font-size:13px;color:rgba(255,255,255,0.7);cursor:pointer;-webkit-tap-highlight-color:transparent;padding:3px 0;">🗂️ Browse Templates</div>
+        <!-- Suggestion list (3 × 2 grid) -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px 8px;padding:4px 0 8px 0;">
+          <div onclick="prefillMobileHomeInput('Make a plan for my goal')" style="font-size:13px;color:rgba(255,255,255,0.7);cursor:pointer;-webkit-tap-highlight-color:transparent;padding:3px 0;white-space:nowrap;">📋 Make a plan</div>
+          <div onclick="prefillMobileHomeInput('Help me manage my tasks')" style="font-size:13px;color:rgba(255,255,255,0.7);cursor:pointer;-webkit-tap-highlight-color:transparent;padding:3px 0;white-space:nowrap;">✅ Manage tasks</div>
+          <div onclick="openLifeCoachView()" style="font-size:13px;color:rgba(255,255,255,0.7);cursor:pointer;-webkit-tap-highlight-color:transparent;padding:3px 0;white-space:nowrap;">💡 Get advice</div>
+          <div onclick="prefillMobileHomeInput('Help me track my progress')" style="font-size:13px;color:rgba(255,255,255,0.7);cursor:pointer;-webkit-tap-highlight-color:transparent;padding:3px 0;white-space:nowrap;">📊 Track progress</div>
+          <div onclick="prefillMobileHomeInput('Help me start a side hustle')" style="font-size:13px;color:rgba(255,255,255,0.7);cursor:pointer;-webkit-tap-highlight-color:transparent;padding:3px 0;white-space:nowrap;">🚀 Side hustle</div>
+          <div onclick="openMobileTemplates()" style="font-size:13px;color:rgba(255,255,255,0.7);cursor:pointer;-webkit-tap-highlight-color:transparent;padding:3px 0;white-space:nowrap;">🗂️ Templates</div>
         </div>
         </div>
         <!-- Thin purple divider -->
@@ -18642,7 +18643,7 @@
     var _homeWishTwPaused = false;
     var _homeWishTwExampleIdx = 0;
     var HOME_WISH_TYPEWRITER_EXAMPLES = [
-      { p: 'I want to ', a: 'double my savings this year' },
+      { p: 'I want to ', a: 'get fit and run a 5K' },
       { p: 'Help me ', a: 'run my first marathon by fall' },
       { p: "I'm ready to ", a: 'start a side hustle after work' },
       { p: 'Build a plan to ', a: 'get promoted to senior engineer' },
@@ -18792,7 +18793,7 @@
     var _mobileTwIdx = 0;
     var _mobileTwCycleCount = 0;
     var MOBILE_TW_EXAMPLES = [
-      'I want to double my savings this year',
+      'I want to get fit and run a 5K',
       'Help me run my first marathon by fall',
       "I'm ready to start a side hustle after work",
       'Build a plan to get promoted to senior engineer',
@@ -24857,18 +24858,17 @@ document.addEventListener('visibilitychange', function() {
     var win = ks.canvas.parentElement;
     var w = win.clientWidth;
     var h = win.clientHeight || (w * ROWS / RC);
-    // Fit symbols: width divided by 5 reels, height divided by 3 rows
-    var symW = Math.floor(w / RC);
-    var symH = Math.floor(h / ROWS);
-    var ss = Math.min(symW, symH);
-    ks.SYMBOL_SIZE = ss;
-    var cw = ss * RC;
-    var ch = ss * ROWS;
+    // Fill entire reel window — use full width and height
+    var cw = w;
+    var ch = h;
+    ks.SYMBOL_SIZE = Math.floor(cw / RC); // cell width for positioning
+    ks.SYM_W = Math.floor(cw / RC);
+    ks.SYM_H = Math.floor(ch / ROWS);
     var dpr = 2;
-    ks.canvas.width = cw * dpr;
-    ks.canvas.height = ch * dpr;
-    ks.canvas.style.width = cw + 'px';
-    ks.canvas.style.height = ch + 'px';
+    ks.canvas.width = Math.floor(cw) * dpr;
+    ks.canvas.height = Math.floor(ch) * dpr;
+    ks.canvas.style.width = '100%';
+    ks.canvas.style.height = '100%';
     ks.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ks.ctx.textAlign = 'center';
     ks.ctx.textBaseline = 'middle';
@@ -24892,7 +24892,7 @@ document.addEventListener('visibilitychange', function() {
         ks.reelSpeeds[r] *= (1 - dt * (ks.turbo ? 12 : 6));
         if (ks.reelSpeeds[r] < 30) {
           ks.reelSpeeds[r] = 0;
-          ks.reelOffsets[r] = ks.stopTargets[r] * ks.SYMBOL_SIZE;
+          ks.reelOffsets[r] = ks.stopTargets[r] * (ks.SYM_H || ks.SYMBOL_SIZE);
           ks.reelStopped[r] = true; ks.reelStopping[r] = false;
           ksHaptic('medium');
           var allDone = true;
@@ -24901,7 +24901,7 @@ document.addEventListener('visibilitychange', function() {
         }
       }
       ks.reelOffsets[r] += ks.reelSpeeds[r] * dt;
-      var stripH = ks.reels[r].length * ks.SYMBOL_SIZE;
+      var stripH = ks.reels[r].length * (ks.SYM_H || ks.SYMBOL_SIZE);
       if (stripH > 0) ks.reelOffsets[r] = ks.reelOffsets[r] % stripH;
     }
     for (var pi = ks.particles.length - 1; pi >= 0; pi--) {
@@ -24918,33 +24918,33 @@ document.addEventListener('visibilitychange', function() {
   }
 
   function ksDraw() {
-    var ctx = ks.ctx; var ss = ks.SYMBOL_SIZE;
-    var cw = ss * RC; var ch = ss * ROWS;
+    var ctx = ks.ctx; var sw = ks.SYM_W || ks.SYMBOL_SIZE; var sh = ks.SYM_H || ks.SYMBOL_SIZE;
+    var cw = sw * RC; var ch = sh * ROWS;
     ctx.save(); ctx.translate(ks.shakeX, ks.shakeY);
     ctx.clearRect(-10, -10, cw + 20, ch + 20);
     ctx.fillStyle = '#050210'; ctx.fillRect(0, 0, cw, ch);
 
-    var fontSize = Math.max(20, Math.floor(ss * 0.55));
+    var fontSize = Math.max(24, Math.floor(Math.min(sw, sh) * 0.55));
     ctx.font = fontSize + 'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
     var pad = 2; var cellR = 6;
 
     for (var r = 0; r < RC; r++) {
-      var strip = ks.reels[r]; var off = ks.reelOffsets[r]; var reelX = r * ss;
+      var strip = ks.reels[r]; var off = ks.reelOffsets[r]; var reelX = r * sw;
       // Gold reel dividers
       if (r > 0) {
         ctx.strokeStyle = 'rgba(255,215,0,0.2)'; ctx.lineWidth = 1.5;
         ctx.beginPath(); ctx.moveTo(reelX, 0); ctx.lineTo(reelX, ch); ctx.stroke();
       }
-      var startIdx = Math.floor(off / ss); var frac = off % ss;
+      var startIdx = Math.floor(off / sh); var frac = off % sh;
       for (var row = -1; row <= ROWS + 1; row++) {
         var idx = ((startIdx + row) % strip.length + strip.length) % strip.length;
         var sym = KS_SYMBOLS[strip[idx]];
-        var x = reelX + ss / 2; var y = row * ss - frac + ss / 2;
-        if (y < -ss || y > ch + ss) continue;
+        var x = reelX + sw / 2; var y = row * sh - frac + sh / 2;
+        if (y < -sh || y > ch + sh) continue;
         var distC = Math.abs(y - ch / 2) / (ch / 2);
         var isCenter = distC < 0.3;
-        var cellX = reelX + pad; var cellY = y - ss / 2 + pad;
-        var cellW = ss - pad * 2; var cellH = ss - pad * 2;
+        var cellX = reelX + pad; var cellY = y - sh / 2 + pad;
+        var cellW = sw - pad * 2; var cellH = sh - pad * 2;
         ctx.globalAlpha = 1 - distC * 0.25;
         // Cell background
         ctx.fillStyle = isCenter ? 'rgba(113,50,245,0.1)' : 'rgba(10,5,25,0.5)';
@@ -25074,7 +25074,7 @@ document.addEventListener('visibilitychange', function() {
       document.getElementById('ksWinDisplay').innerHTML =
         '<div class="ks-win-text">+' + winAmount.toLocaleString() + ' (' + baseSym.emoji + ' ×' + matchCount + ')</div>';
 
-      var pcw = ks.SYMBOL_SIZE * RC / 2; var pcy = ks.SYMBOL_SIZE * ROWS / 2;
+      var pcw = (ks.SYM_W || ks.SYMBOL_SIZE) * RC / 2; var pcy = (ks.SYM_H || ks.SYMBOL_SIZE) * ROWS / 2;
       for (var pi = 0; pi < 25; pi++) {
         var ang = (pi / 25) * Math.PI * 2; var spd = 80 + Math.random() * 120;
         ks.particles.push({ x: pcw, y: pcy, vx: Math.cos(ang) * spd, vy: Math.sin(ang) * spd - 50,
