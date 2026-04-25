@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-25-v369-landscape-lock';
+    var APP_VERSION = '2026-04-25-v370-news-sports-fix';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -5840,22 +5840,16 @@
 
         <!-- FM: Live Sports -->
         <div class="fm-sub-content" id="fmSportsContent">
-          <div style="padding:0 4px;">
-            <div style="background:#191919;border-radius:16px;border:1px solid rgba(255,255,255,0.06);box-shadow:0 8px 32px rgba(0,0,0,0.4);overflow:hidden;">
-              <div style="padding:16px 18px 10px;display:flex;align-items:center;gap:10px;">
-                <span style="font-size:1.3rem;">&#x1F3C8;</span>
-                <span style="font-size:1.05rem;font-weight:700;color:#F0EFF5;">Live Sports Scores</span>
-              </div>
-              <iframe
-                id="sportBusyEmbed"
-                src=""
-                width="100%"
-                height="600"
-                style="border:none;border-radius:0 0 16px 16px;overflow:hidden;background:#191919;display:block;"
-                loading="lazy"
-                title="Live Sports Scores">
-              </iframe>
-            </div>
+          <div style="padding:0;">
+            <iframe
+              id="sportBusyEmbed"
+              src=""
+              width="100%"
+              style="border:none;overflow:hidden;background:#191919;display:block;min-height:calc(100vh - 120px);height:800px;"
+              loading="lazy"
+              title="Live Sports Scores"
+              allow="fullscreen">
+            </iframe>
           </div>
         </div>
       </div>
@@ -21987,7 +21981,7 @@
       if (tabId === 'fmSports' && !window._sportBusyLoaded) {
         var sbFrame = document.getElementById('sportBusyEmbed');
         if (sbFrame && !sbFrame.src.includes('sportbusy')) {
-          sbFrame.src = 'https://www.sportbusy.com/embed?compact=1';
+          sbFrame.src = 'https://www.sportbusy.com/embed';
         }
         window._sportBusyLoaded = true;
       }
@@ -22413,12 +22407,8 @@
       if (country || industry) {
         if (country) params.set('countries', country);
         if (industry) params.set('industries', industry);
-      } else if (tickerStr) {
-        // Send top 8 tickers max to keep URL short
-        params.set('symbols', tickerStr.split(',').slice(0, 8).join(','));
-        params.set('filter_entities', 'true');
-        params.set('must_have_entities', 'true');
       }
+      // No ticker filtering — free plan works best with general queries
       requests.push(params.toString());
       return requests;
     }
@@ -22428,7 +22418,7 @@
       var now = Date.now();
       if (_newsFetchLastTs && (now - _newsFetchLastTs) < _newsFetchCooldownMs) {
         console.log('News: skipping fetch, cooldown active (' + Math.round((_newsFetchCooldownMs - (now - _newsFetchLastTs)) / 1000) + 's remaining)');
-        return [];
+        return null; // return null (not []) so caller knows it was skipped, not empty
       }
 
       var allArticles = [];
@@ -22482,7 +22472,11 @@
       try {
         var requests = buildNewsFeedRequests(tickerStr, country, industry);
         var articlesRaw = await fetchNewsFeedArticles(requests);
-        if (articlesRaw.length > 0) {
+        // null = cooldown skipped (keep whatever is on screen); [] = actually empty
+        if (articlesRaw === null) {
+          // Cooldown active — don't overwrite existing content
+          console.log('News: cooldown active, keeping existing content');
+        } else if (articlesRaw.length > 0) {
           // Map to the format renderNewsFeed expects
           var articles = articlesRaw.map(function(a) {
             var isRecent = a.publishedAt && (Date.now() - new Date(a.publishedAt).getTime()) < 3600000;
