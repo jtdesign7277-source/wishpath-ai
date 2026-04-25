@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-25-v371-sports-fullscreen';
+    var APP_VERSION = '2026-04-25-v372-news-multi-fetch-sports-fullscreen';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -4002,13 +4002,19 @@
       /* News filter mobile — full width */
       .news-filter-bar { flex-direction: column; gap: 8px; }
       .news-filter-select { width: 100%; font-size: 16px !important; min-height: 44px; padding: 12px; }
-      .news-customize-dropdown { position: fixed !important; top: auto !important; bottom: 80px !important; left: 16px !important; right: 16px !important; min-width: unset !important; width: calc(100vw - 32px) !important; max-height: 60vh; overflow-y: auto; border-radius: 20px; padding: 20px; }
+      .news-customize-dropdown { position: fixed !important; top: auto !important; bottom: 80px !important; left: 16px !important; right: 16px !important; min-width: unset !important; width: calc(100vw - 32px) !important; max-height: 60vh; overflow-y: auto; border-radius: 20px; padding: 20px; z-index: 9999 !important; }
+      .news-customize-overlay { z-index: 9998 !important; }
       .news-customize-dropdown select { font-size: 16px !important; min-height: 44px; padding: 12px; }
       .news-feed-item { margin-bottom: 12px; }
       .news-feed-img, .news-feed-img-placeholder { height: 160px; }
       .news-carousel .news-feed-item { min-width: 260px; max-width: 300px; }
       .news-feed-action { min-height: 44px; padding: 8px 12px; }
       .news-detail-panel { max-width: 100%; border-radius: 16px 16px 0 0; padding: 20px 16px; }
+      /* SportBusy: fill entire mobile viewport */
+      #fmSportsContent { padding: 0 !important; margin: 0 !important; }
+      #fmSportsContent .fm-widget-container,
+      #sportBusyWidgetContainer { height: calc(100vh - 120px) !important; min-height: calc(100vh - 120px) !important; padding: 0 !important; margin: 0 !important; }
+      #sportBusyEmbed { height: 100% !important; min-height: 100% !important; width: 100% !important; }
       /* Watchlist mobile */
       .watchlist-item { min-height: 56px; padding: 12px 14px; }
       .watchlist-add-input { font-size: 16px !important; min-height: 44px; }
@@ -22407,15 +22413,37 @@
 
     function buildNewsFeedRequests(tickerStr, country, industry) {
       var requests = [];
-      var params = new URLSearchParams();
-      params.set('limit', '10');
-
+      // MarketAux free plan caps at 3 articles per request.
+      // Fire multiple requests with different params to accumulate ~9-12 articles.
       if (country || industry) {
-        if (country) params.set('countries', country);
-        if (industry) params.set('industries', industry);
+        // User chose specific filters — just one request
+        var p = new URLSearchParams();
+        p.set('limit', '10');
+        if (country) p.set('countries', country);
+        if (industry) p.set('industries', industry);
+        requests.push(p.toString());
+      } else {
+        // Default: 4 requests with different scopes to get ~12 articles
+        // Request 1: general US news
+        var p1 = new URLSearchParams();
+        p1.set('limit', '10');
+        p1.set('countries', 'us');
+        requests.push(p1.toString());
+        // Request 2: technology/finance
+        var p2 = new URLSearchParams();
+        p2.set('limit', '10');
+        p2.set('industries', 'Technology,Financial');
+        requests.push(p2.toString());
+        // Request 3: global (no country filter)
+        var p3 = new URLSearchParams();
+        p3.set('limit', '10');
+        requests.push(p3.toString());
+        // Request 4: energy + healthcare
+        var p4 = new URLSearchParams();
+        p4.set('limit', '10');
+        p4.set('industries', 'Energy,Healthcare');
+        requests.push(p4.toString());
       }
-      // No ticker filtering — free plan works best with general queries
-      requests.push(params.toString());
       return requests;
     }
 
@@ -22427,26 +22455,29 @@
         return null; // return null (not []) so caller knows it was skipped, not empty
       }
 
+      // Fire all requests in parallel to speed things up
+      var headers = await getAuthHeaders();
+      var promises = requests.map(function(qs) {
+        return fetch(SUPABASE_FN + '/news?' + qs, { headers: headers })
+          .then(function(res) { return res.json(); })
+          .catch(function(e) { console.warn('News request failed:', e); return null; });
+      });
+      var results = await Promise.all(promises);
+
       var allArticles = [];
       var seenUrls = {};
-      for (var i = 0; i < requests.length; i++) {
-        try {
-          var res = await fetch(SUPABASE_FN + '/news?' + requests[i], { headers: await getAuthHeaders() });
-          var data = await res.json();
-          if (data && Array.isArray(data.articles)) {
-            _newsFetchLastTs = Date.now(); // Mark successful fetch
-            data.articles.forEach(function(a) {
-              var key = a.url || a.title;
-              if (!seenUrls[key]) {
-                seenUrls[key] = true;
-                allArticles.push(a);
-              }
-            });
-          }
-        } catch (e) {
-          console.warn('News request ' + i + ' failed:', e);
+      results.forEach(function(data) {
+        if (data && Array.isArray(data.articles)) {
+          _newsFetchLastTs = Date.now();
+          data.articles.forEach(function(a) {
+            var key = a.url || a.title;
+            if (!seenUrls[key]) {
+              seenUrls[key] = true;
+              allArticles.push(a);
+            }
+          });
         }
-      }
+      });
       return allArticles;
     }
 
