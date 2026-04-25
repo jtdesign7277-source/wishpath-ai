@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-25-v358-chat-list-claude-style';
+    var APP_VERSION = '2026-04-25-v359-fab-glassmorphism';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -3453,15 +3453,17 @@
         width: 56px;
         height: 56px;
         border-radius: 50%;
-        background: linear-gradient(135deg, #7132F5, #9b6dff);
-        border: none;
+        background: rgba(113,50,245,0.2);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(113,50,245,0.35);
         color: #fff;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
         -webkit-tap-highlight-color: transparent;
-        box-shadow: 0 4px 16px rgba(113,50,245,0.45), 0 2px 6px rgba(0,0,0,0.3);
+        box-shadow: 0 4px 16px rgba(113,50,245,0.25), 0 2px 6px rgba(0,0,0,0.2);
         transition: all 0.2s ease;
       }
       .lc-list-new-fab:active { transform: scale(0.92); box-shadow: 0 2px 8px rgba(113,50,245,0.3); }
