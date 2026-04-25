@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-25-v383-alpaca-ws-home-prices';
+    var APP_VERSION = '2026-04-25-v384-fix-closed-market-prices';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -16532,6 +16532,8 @@
       var isPre = session === 'PRE_MARKET';
       var isAfter = session === 'AFTER_HOURS';
       var isOvernight = session === 'OVERNIGHT';
+      var isClosed = session === 'CLOSED';
+      var isNonRegular = isPre || isAfter || isOvernight || isClosed;
       var showExt = (isPre || isAfter || isOvernight) ? true : false;
       var extIcon = isPre ? '☀️' : '🌙';
       row.innerHTML = data.map(function(q) {
@@ -16547,32 +16549,26 @@
         //   q.close         = dailyBar.c (today's close / running daily bar close)
         //   q.changePercent = (price - previousClose) / previousClose * 100
 
-        // ── MAIN PRICE (Yahoo: frozen at session close, not live extended hours) ──
+        // ── MAIN PRICE ──
+        // During non-regular hours (pre-market, after-hours, overnight, CLOSED/weekends):
+        //   show dailyBar.c (official session close) — matches Yahoo
+        // During regular hours: show live latestTrade.p
         var displayPrice;
-        if (isPre && !isCrypto) {
-          // Pre-market: show yesterday's close as the main price
-          // During pre-market, Alpaca dailyBar = yesterday's complete bar (q.close),
-          // prevDailyBar = 2 days ago (q.previousClose). Use q.close for yesterday.
-          displayPrice = q.close || q.previousClose || q.price;
-        } else if ((isAfter || isOvernight) && !isCrypto) {
-          // After-hours: show today's regular session close as the main price
+        if (isNonRegular && !isCrypto) {
+          // Non-regular hours: show official session close (dailyBar.c)
           displayPrice = q.close || q.previousClose || q.price;
         } else {
           // Regular hours or crypto (24/7): show live price
           displayPrice = q.price;
         }
 
-        // ── PILL CHANGE % (Yahoo: yesterday's session performance during pre-market) ──
+        // ── PILL CHANGE % ──
+        // Non-regular hours: session change = (dailyBar.c - prevDailyBar.c) / prevDailyBar.c
+        // Regular hours: live change from yesterday's close
         var chg;
-        if (isPre && !isCrypto && q.close && q.previousClose && q.previousClose !== 0) {
-          // Pre-market pill = yesterday's session change (prev close → yesterday's close)
-          // During pre-market: q.close = dailyBar.c (yesterday), q.previousClose = prevDailyBar.c (2 days ago)
-          chg = ((q.close - q.previousClose) / q.previousClose) * 100;
-        } else if ((isAfter || isOvernight) && !isCrypto && q.close && q.previousClose && q.previousClose !== 0) {
-          // After-hours pill = today's regular session change (yesterday's close → today's close)
+        if (isNonRegular && !isCrypto && q.close && q.previousClose && q.previousClose !== 0) {
           chg = ((q.close - q.previousClose) / q.previousClose) * 100;
         } else {
-          // Regular hours: normal live change from yesterday's close
           chg = q.changePercent || 0;
         }
         var isUp = chg >= 0;
