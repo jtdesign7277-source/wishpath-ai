@@ -18,7 +18,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-25-v403-casino-pixel-match';
+    var APP_VERSION = '2026-04-25-v404-casino-layout-fix';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -4877,19 +4877,20 @@
       width: calc(100% - 16px); max-width: 420px;
       background: var(--ks-bg-panel);
       border-radius: 0; padding: 0;
-      position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column;
-      margin: 4px 0;
+      position: relative; flex: 1 1 0; min-height: 0; display: flex; flex-direction: column;
+      margin: 4px 0; overflow: hidden;
     }
     .ks-machine::before { display: none; }
     .ks-machine-inner {
       position: relative; z-index: 1;
       background: var(--ks-bg-panel);
       border-radius: 0; padding: 0;
-      flex: 1; min-height: 0; display: flex; flex-direction: column;
+      flex: 1 1 0; min-height: 0; display: flex; flex-direction: column;
+      overflow: hidden;
     }
     /* Reel area with payline side buttons */
     .ks-reel-area {
-      display: flex; flex: 1; min-height: 0; padding: 6px 0;
+      display: flex; flex: 1 1 0; min-height: 0; padding: 6px 0; overflow: hidden;
     }
     .ks-side-btns {
       display: flex; flex-direction: column; justify-content: space-around;
@@ -4938,20 +4939,20 @@
     @keyframes ksWinGlow { from { filter: brightness(1); } to { filter: brightness(1.3); } }
     /* Bottom bar — WIN | − | TOTAL BET | + | MAX BET | Spin */
     .ks-bottom-bar {
-      display: flex; align-items: center; gap: 10px;
-      width: 100%; padding: 12px 12px; flex-shrink: 0;
-      background: var(--ks-bg-panel);
+      display: flex; align-items: center; gap: 6px;
+      width: 100%; padding: 8px 8px; flex-shrink: 0;
+      background: var(--ks-bg-panel); justify-content: center;
     }
     .ks-bot-cell-win {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       background: var(--ks-white); border: 2px solid var(--ks-gold);
-      border-radius: 10px; padding: 4px 10px; min-width: 88px; height: 44px;
-      box-shadow: inset 0 -2px 0 #c9a33e;
+      border-radius: 10px; padding: 2px 8px; min-width: 60px; height: 40px;
+      box-shadow: inset 0 -2px 0 #c9a33e; flex-shrink: 1;
     }
     .ks-bot-cell-bet {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       background: var(--ks-blue-bet); border: 2px solid var(--ks-gold);
-      border-radius: 10px; padding: 4px 10px; min-width: 80px; height: 44px;
+      border-radius: 10px; padding: 2px 8px; min-width: 60px; height: 40px; flex-shrink: 1;
     }
     .ks-bot-label-win {
       font-size: 9px; font-weight: 700; color: var(--ks-gold-shdw);
@@ -4974,38 +4975,38 @@
     }
     /* Orange +/− circles */
     .ks-bet-adj-btn {
-      width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
+      width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
       background: radial-gradient(circle at 30% 30%, #ffb84d, var(--ks-orange) 60%, var(--ks-orange-lo) 100%);
-      border: 2.5px solid var(--ks-gold-br);
-      color: #fff; font-size: 22px; font-weight: 900; line-height: 1;
+      border: 2px solid var(--ks-gold-br);
+      color: #fff; font-size: 18px; font-weight: 900; line-height: 1;
       display: flex; align-items: center; justify-content: center;
       cursor: pointer; -webkit-tap-highlight-color: transparent;
-      box-shadow: 0 3px 0 #8a4d0a, 0 0 12px rgba(245,158,11,0.5);
+      box-shadow: 0 2px 0 #8a4d0a, 0 0 8px rgba(245,158,11,0.5);
       font-family: -apple-system, sans-serif;
     }
-    .ks-bet-adj-btn:active { transform: translateY(2px); box-shadow: 0 0 0 #8a4d0a, 0 0 12px rgba(245,158,11,0.5); }
+    .ks-bet-adj-btn:active { transform: translateY(2px); box-shadow: 0 0 0 #8a4d0a, 0 0 8px rgba(245,158,11,0.5); }
     /* MAX BET — white bg, gold border, brown text */
     .ks-maxbet-btn {
-      width: 70px; height: 44px; border-radius: 10px; flex-shrink: 0;
-      background: var(--ks-white); border: 2.5px solid var(--ks-gold);
-      color: var(--ks-gold-shdw); font-size: 12px; font-weight: 900;
-      letter-spacing: 1px; text-transform: uppercase;
+      width: 56px; height: 40px; border-radius: 8px; flex-shrink: 0;
+      background: var(--ks-white); border: 2px solid var(--ks-gold);
+      color: var(--ks-gold-shdw); font-size: 10px; font-weight: 900;
+      letter-spacing: 0.5px; text-transform: uppercase;
       cursor: pointer; -webkit-tap-highlight-color: transparent;
       box-shadow: inset 0 -2px 0 #c9a33e, 0 2px 4px rgba(0,0,0,0.4);
       font-family: 'Lilita One', system-ui, sans-serif;
       display: flex; align-items: center; justify-content: center;
-      white-space: nowrap;
+      white-space: nowrap; line-height: 1.1;
     }
     .ks-maxbet-btn:active { transform: translateY(1px); box-shadow: inset 0 -1px 0 #c9a33e; }
     /* SPIN — large orange pill */
     .ks-spin-btn {
-      width: 96px; height: 64px; border-radius: 32px; flex-shrink: 0;
+      width: 72px; height: 48px; border-radius: 24px; flex-shrink: 0;
       background: radial-gradient(circle at 50% 30%, var(--ks-orange-hi) 0%, #f5651a 50%, #c83a0a 100%);
       border: 3px solid var(--ks-gold-br); cursor: pointer; color: #fff;
       font-family: 'Lilita One', 'Fredoka', system-ui, sans-serif;
-      font-size: 22px; font-weight: 900; letter-spacing: 1px;
+      font-size: 18px; font-weight: 900; letter-spacing: 1px;
       text-shadow: 0 2px 0 var(--ks-gold-shdw);
-      box-shadow: 0 0 24px rgba(255,140,66,0.7), 0 4px 0 #8a2a0a, inset 0 3px 0 rgba(255,255,255,0.3);
+      box-shadow: 0 0 18px rgba(255,140,66,0.7), 0 3px 0 #8a2a0a, inset 0 2px 0 rgba(255,255,255,0.3);
       -webkit-tap-highlight-color: transparent; transition: all 0.1s;
       display: flex; align-items: center; justify-content: center;
     }
@@ -5035,7 +5036,12 @@
     /* Mobile ≤420px overrides */
     @media (max-width: 420px) {
       .ks-title { font-size: 22px; }
-      .ks-spin-btn { width: 84px; height: 56px; font-size: 18px; }
+      .ks-spin-btn { width: 64px; height: 42px; font-size: 16px; }
+      .ks-bot-cell-win, .ks-bot-cell-bet { min-width: 52px; height: 36px; padding: 2px 6px; }
+      .ks-bot-value-win, .ks-bot-value-bet { font-size: 15px; }
+      .ks-bet-adj-btn { width: 28px; height: 28px; font-size: 16px; }
+      .ks-maxbet-btn { width: 48px; height: 36px; font-size: 9px; }
+      .ks-bottom-bar { gap: 4px; padding: 6px 6px; }
     }
     /* Big win overlay */
     .ks-big-win-overlay {
@@ -25062,7 +25068,7 @@ document.addEventListener('visibilitychange', function() {
     ctx.clearRect(-10, -10, cw + 20, ch + 20);
     ctx.fillStyle = '#050210'; ctx.fillRect(0, 0, cw, ch);
 
-    var fontSize = Math.max(24, Math.floor(Math.min(sw, sh) * 0.55));
+    var fontSize = Math.max(28, Math.floor(Math.min(sw, sh) * 0.72));
     ctx.font = fontSize + 'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
     var pad = 2; var cellR = 6;
 
@@ -25108,7 +25114,7 @@ document.addEventListener('visibilitychange', function() {
     // Row separators
     for (var rl = 1; rl < ROWS; rl++) {
       ctx.strokeStyle = 'rgba(255,215,0,0.08)'; ctx.lineWidth = 0.5;
-      ctx.beginPath(); ctx.moveTo(0, rl * ss); ctx.lineTo(cw, rl * ss); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, rl * sh); ctx.lineTo(cw, rl * sh); ctx.stroke();
     }
     // Motion blur
     if (ks.spinning && !ks.reelStopped[0]) {
