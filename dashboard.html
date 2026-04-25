@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-25-v392-fix-enemies-home-casino';
+    var APP_VERSION = '2026-04-25-v393-fix-tabs-crash';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -7052,7 +7052,7 @@
         <div class="mobile-home-title premium-heading">What do you want to build today?</div>
         <!-- Ask AI input -->
         <div class="mobile-home-input-wrap input-premium">
-          <textarea class="mobile-home-input" id="mobileHomeInput" placeholder="Describe your goal, dream, or problem..." rows="2" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px';mobileTwOnInput();" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMobileHomeInput();}" onfocus="mobileTwPause()" onblur="mobileTwResume()"></textarea>
+          <textarea class="mobile-home-input" id="mobileHomeInput" placeholder="Describe your goal, dream, or problem..." rows="2" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMobileHomeInput();}"></textarea>
           <button class="mobile-home-input-send" onclick="sendMobileHomeInput()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
           </button>
@@ -16813,12 +16813,14 @@
       setMobileNavActive('home');
       refreshPremiumHeader();
       // Start mobile typewriter for example wishes
-      if (typeof runMobileTwCycle === 'function') {
-        _mobileTwPaused = false;
-        _mobileTwCycleCount = 0;
-        clearMobileTwTimers();
-        mobileTwLater(function() { if (mobileTwShouldShow()) runMobileTwCycle(); }, 800);
-      }
+      try {
+        if (typeof runMobileTwCycle === 'function') {
+          _mobileTwPaused = false;
+          _mobileTwCycleCount = 0;
+          clearMobileTwTimers();
+          mobileTwLater(function() { if (mobileTwShouldShow()) runMobileTwCycle(); }, 800);
+        }
+      } catch(e) {}
       // Always show Ask AI bar on home too
       var navBar = document.getElementById('mobileNavBar');
       if (navBar) navBar.style.display = 'flex';
@@ -18941,6 +18943,16 @@
         ta.setAttribute('placeholder', 'Describe your goal, dream, or problem...');
       }
     };
+
+    // Wire up focus/blur/input handlers for mobile typewriter
+    (function() {
+      var ta = document.getElementById('mobileHomeInput');
+      if (ta) {
+        ta.addEventListener('focus', function() { mobileTwPause(); });
+        ta.addEventListener('blur', function() { mobileTwResume(); });
+        ta.addEventListener('input', function() { mobileTwOnInput(); });
+      }
+    })();
 
     // Start on initial load if mobile
     window.addEventListener('load', function() {
