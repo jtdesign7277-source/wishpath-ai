@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-25-v382-sparklines-fix-tickers-top';
+    var APP_VERSION = '2026-04-25-v383-alpaca-ws-home-prices';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -16360,6 +16360,8 @@
       _saveHomeMarketsTickers();
       _homeMarketsData = null;
       fetchHomeMarkets();
+      // Subscribe new ticker to Alpaca WebSocket for real-time updates
+      if (typeof alpacaWS !== 'undefined') alpacaWS.subscribeSymbols([symbol]);
     }
     function removeHomeMarketTicker(symbol) {
       _homeMarketsTickers = _homeMarketsTickers.filter(function(t) { return t.symbol !== symbol; });
@@ -18820,7 +18822,7 @@
         if (!Array.isArray(messages)) messages = [messages];
         messages.forEach(function(msg) {
           if (msg.T === 'success' && msg.msg === 'authenticated') {
-            console.log('[Alpaca Stocks] Authenticated — subscribing MAG7 + watchlists');
+            console.log('[Alpaca Stocks] Authenticated — subscribing MAG7 + watchlists + home tickers');
             self.stockConnected = true;
             self.connected = true;
             self.reconnectDelay = 1000;
@@ -18828,6 +18830,12 @@
             if (typeof watchlists !== 'undefined') {
               watchlists.forEach(function(wl) {
                 (wl.symbols || []).forEach(function(s) { if (symbols.indexOf(s) === -1) symbols.push(s); });
+              });
+            }
+            // Also subscribe home screen tickers (non-crypto)
+            if (typeof _homeMarketsTickers !== 'undefined') {
+              _homeMarketsTickers.forEach(function(t) {
+                if (t.symbol.indexOf('/') === -1 && symbols.indexOf(t.symbol) === -1) symbols.push(t.symbol);
               });
             }
             self.stockSocket.send(JSON.stringify({ action: 'subscribe', trades: symbols }));
@@ -18844,11 +18852,17 @@
         if (!Array.isArray(messages)) messages = [messages];
         messages.forEach(function(msg) {
           if (msg.T === 'success' && msg.msg === 'authenticated') {
-            console.log('[Alpaca Crypto] Authenticated — subscribing to crypto');
+            console.log('[Alpaca Crypto] Authenticated — subscribing to crypto + home crypto');
             self.cryptoConnected = true;
             self.connected = true;
             self.reconnectDelay = 1000;
             var symbols = CRYPTO.map(function(c) { return c.symbol; });
+            // Also subscribe home screen crypto tickers
+            if (typeof _homeMarketsTickers !== 'undefined') {
+              _homeMarketsTickers.forEach(function(t) {
+                if (t.symbol.indexOf('/') !== -1 && symbols.indexOf(t.symbol) === -1) symbols.push(t.symbol);
+              });
+            }
             self.cryptoSocket.send(JSON.stringify({ action: 'subscribe', trades: symbols }));
           } else if (msg.T === 'error') {
             console.error('[Alpaca Crypto] Error:', msg.code, msg.msg);
@@ -18874,17 +18888,41 @@
           _live: true
         };
         this.symbolLastUpdate[symbol] = Date.now();
+
+        // \u2500\u2500 Also update home screen watchlist prices in real-time \u2500\u2500
+        if (_homeMarketsData) {
+          var homeItem = _homeMarketsData.find(function(d) { return d.symbol === symbol; });
+          if (homeItem) {
+            homeItem.price = price;
+            var homePrevClose = homeItem.previousClose || price;
+            homeItem.change = price - homePrevClose;
+            homeItem.changePercent = homePrevClose !== 0 ? ((price - homePrevClose) / homePrevClose) * 100 : 0;
+            this._homeNeedsRender = true;
+          }
+        }
+
         this.debouncedRender(symbol);
       },
 
+      _homeNeedsRender: false,
+      _homeRenderDebounce: null,
+
       debouncedRender(symbol) {
         if (this.renderDebounce) clearTimeout(this.renderDebounce);
+        var self = this;
         this.renderDebounce = setTimeout(function() {
           var isStock = MAG7.some(function(s) { return s.symbol === symbol; });
           var isCrypto = CRYPTO.some(function(c) { return c.symbol === symbol; });
           if (isStock) renderMarketCards();
           if (isCrypto) renderCryptoCards();
           refreshFMStockList();
+
+          // Re-render home screen if any home ticker was updated
+          if (self._homeNeedsRender && _homeMarketsData) {
+            self._homeNeedsRender = false;
+            renderHomeMarkets(_homeMarketsData);
+          }
+
           var ts = document.getElementById('marketsUpdatedTime');
           var fmTs = document.getElementById('fmMarketsUpdatedTime');
           var session = getMarketSession();
