@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-25-v400-no-bubbles';
+    var APP_VERSION = '2026-04-25-v401-bullets-music-markets';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -6959,6 +6959,21 @@
         <div id="homeESPNScores" style="padding:0 0 2px 0;">
           <div style="color:rgba(255,255,255,0.25);font-size:11px;padding:6px 0;">Loading scores...</div>
         </div>
+        <!-- Thin purple divider -->
+        <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(113,50,245,0.35),transparent);margin:6px 0 10px 0;"></div>
+        <!-- Markets Snapshot -->
+        <div class="home-markets-header">
+          <div class="mobile-sec-label">Markets</div>
+          <span class="home-markets-see-all" onclick="hideMobileHome();openFMTab('fmMarkets');">See All →</span>
+        </div>
+        <div class="home-markets-search-wrap">
+          <svg class="home-markets-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" class="home-markets-search" id="homeMarketsSearchInput" placeholder="Search ticker to add..." autocomplete="off" autocorrect="off" spellcheck="false">
+          <div class="home-markets-ac-dropdown" id="homeMarketsAcDropdown"></div>
+        </div>
+        <div class="home-markets-row" id="homeMarketsRow">
+          <div class="home-market-loading">Loading prices...</div>
+        </div>
         <!-- Thin purple divider before news -->
         <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(113,50,245,0.35),transparent);margin:6px 0 10px 0;"></div>
         <!-- News -->
@@ -6980,19 +6995,6 @@
         <div class="mobile-sec-label" style="margin-top:24px;">Recents</div>
         <div class="mobile-recents-row" id="mobileRecentsRow">
           <div class="mobile-recent-card" style="display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.3);font-size:13px;">Loading...</div>
-        </div>
-        <!-- Markets Snapshot -->
-        <div class="home-markets-header">
-          <div class="mobile-sec-label">Markets</div>
-          <span class="home-markets-see-all" onclick="hideMobileHome();openFMTab('fmMarkets');">See All →</span>
-        </div>
-        <div class="home-markets-search-wrap">
-          <svg class="home-markets-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" class="home-markets-search" id="homeMarketsSearchInput" placeholder="Search ticker to add..." autocomplete="off" autocorrect="off" spellcheck="false">
-          <div class="home-markets-ac-dropdown" id="homeMarketsAcDropdown"></div>
-        </div>
-        <div class="home-markets-row" id="homeMarketsRow">
-          <div class="home-market-loading">Loading prices...</div>
         </div>
       </div>
     </div>
@@ -9143,51 +9145,46 @@
           var wpType = activePowerup ? activePowerup.type : 'default';
 
           if (wpType === 'spread') {
-            // SPREAD: electric scatter — high chirp with stereo width
             var osc = ctx.createOscillator();
             var gain = ctx.createGain();
             osc.type = 'sawtooth';
             osc.frequency.setValueAtTime(1400, t);
             osc.frequency.exponentialRampToValueAtTime(600, t + 0.05);
-            gain.gain.setValueAtTime(0.09, t);
+            gain.gain.setValueAtTime(0.03, t);
             gain.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
             osc.connect(gain); gain.connect(ctx.destination);
             osc.start(t); osc.stop(t + 0.07);
-            // Second voice slightly detuned for width
             var osc2 = ctx.createOscillator();
             var g2 = ctx.createGain();
             osc2.type = 'sawtooth';
             osc2.frequency.setValueAtTime(1450, t);
             osc2.frequency.exponentialRampToValueAtTime(580, t + 0.05);
-            g2.gain.setValueAtTime(0.07, t);
+            g2.gain.setValueAtTime(0.025, t);
             g2.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
             osc2.connect(g2); g2.connect(ctx.destination);
             osc2.start(t); osc2.stop(t + 0.07);
 
           } else if (wpType === 'rapid') {
-            // RAPID: quick tick — tiny percussive click, higher pitch
             var osc = ctx.createOscillator();
             var gain = ctx.createGain();
             osc.type = 'triangle';
             osc.frequency.setValueAtTime(2200, t);
             osc.frequency.exponentialRampToValueAtTime(800, t + 0.025);
-            gain.gain.setValueAtTime(0.11, t);
+            gain.gain.setValueAtTime(0.04, t);
             gain.gain.exponentialRampToValueAtTime(0.001, t + 0.03);
             osc.connect(gain); gain.connect(ctx.destination);
             osc.start(t); osc.stop(t + 0.04);
 
           } else if (wpType === 'cannon') {
-            // CANNON: deep heavy thud — low bass punch with rumble
             var osc = ctx.createOscillator();
             var gain = ctx.createGain();
             osc.type = 'sine';
             osc.frequency.setValueAtTime(200, t);
             osc.frequency.exponentialRampToValueAtTime(50, t + 0.15);
-            gain.gain.setValueAtTime(0.22, t);
+            gain.gain.setValueAtTime(0.08, t);
             gain.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
             osc.connect(gain); gain.connect(ctx.destination);
             osc.start(t); osc.stop(t + 0.2);
-            // Noise thump layer
             var bufSize = Math.floor(ctx.sampleRate * 0.06);
             var nBuf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
             var nd = nBuf.getChannelData(0);
@@ -9195,19 +9192,18 @@
             var ns = ctx.createBufferSource();
             var ng = ctx.createGain();
             ns.buffer = nBuf;
-            ng.gain.setValueAtTime(0.15, t);
+            ng.gain.setValueAtTime(0.05, t);
             ng.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
             ns.connect(ng); ng.connect(ctx.destination);
             ns.start(t); ns.stop(t + 0.1);
 
           } else {
-            // DEFAULT: classic laser pew — square wave descending chirp
             var osc = ctx.createOscillator();
             var gain = ctx.createGain();
             osc.type = 'square';
             osc.frequency.setValueAtTime(880, t);
             osc.frequency.exponentialRampToValueAtTime(220, t + 0.06);
-            gain.gain.setValueAtTime(0.11, t);
+            gain.gain.setValueAtTime(0.04, t);
             gain.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
             osc.connect(gain); gain.connect(ctx.destination);
             osc.start(t); osc.stop(t + 0.08);
@@ -9221,7 +9217,7 @@
           var ctx = _gameCtx();
           if (!ctx || ctx.state === 'suspended') return;
           var t = ctx.currentTime;
-          var vol = big ? 0.25 : 0.15;
+          var vol = big ? 0.08 : 0.05;
           var dur = big ? 0.4 : 0.25;
           // Low boom
           var osc = ctx.createOscillator();
@@ -9292,7 +9288,7 @@
             osc.type = 'sine';
             osc.frequency.value = f;
             gain.gain.setValueAtTime(0, t + i * 0.06);
-            gain.gain.linearRampToValueAtTime(0.15, t + i * 0.06 + 0.01);
+            gain.gain.linearRampToValueAtTime(0.05, t + i * 0.06 + 0.01);
             gain.gain.exponentialRampToValueAtTime(0.001, t + i * 0.06 + 0.15);
             osc.connect(gain);
             gain.connect(ctx.destination);
@@ -9499,7 +9495,7 @@
 
           if (lvl === 1) {
             // ── L1: Dark Synthwave (130 BPM, A minor — moody, pulsing) ──
-            _bgMusicGain.gain.linearRampToValueAtTime(0.52, ctx.currentTime + 0.8);
+            _bgMusicGain.gain.linearRampToValueAtTime(1.0, ctx.currentTime + 0.8);
             // Deep pulsing synth bass (sine + saw layer)
             var bs1 = [55,0,0,0, 55,0,0,0, 65.4,0,0,0, 65.4,0,0,0,
                        55,0,0,0, 55,0,0,0, 73.4,0,0,0, 82.4,0,0,0];
@@ -9524,7 +9520,7 @@
 
           } else if (lvl === 2) {
             // ── L2: Chiptune Arcade (140 BPM, C major — upbeat 8-bit!) ──
-            _bgMusicGain.gain.linearRampToValueAtTime(0.56, ctx.currentTime + 0.5);
+            _bgMusicGain.gain.linearRampToValueAtTime(1.0, ctx.currentTime + 0.5);
             // Bouncy 4-on-floor kick
             _schedKick(ctx, _bgMusicGain, [1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0], 140, t);
             // Crisp snare: 2 & 4
@@ -9546,7 +9542,7 @@
 
           } else if (lvl === 3) {
             // ── L3: Drum & Bass (160 BPM, half-time feel — intense rolling) ──
-            _bgMusicGain.gain.linearRampToValueAtTime(0.60, ctx.currentTime + 0.4);
+            _bgMusicGain.gain.linearRampToValueAtTime(1.0, ctx.currentTime + 0.4);
             // Half-time kick (big slow hits, very DnB)
             _schedKick(ctx, _bgMusicGain, [1,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,
                                            1,0,0,0, 1,0,0,0, 0,0,0,0, 0,0,0,0], 160, t);
@@ -9576,7 +9572,7 @@
 
           } else if (lvl === 4) {
             // ── L4: Cyberpunk Techno (145 BPM, D Phrygian — dark industrial) ──
-            _bgMusicGain.gain.linearRampToValueAtTime(0.68, ctx.currentTime + 0.4);
+            _bgMusicGain.gain.linearRampToValueAtTime(1.0, ctx.currentTime + 0.4);
             // Punchy industrial kick (harder punch, higher start frequency)
             var _schedKickHard = function(kst, kdest, ksteps, kbpm, kat) {
               var ksd = 60/kbpm/4, kll = ksteps.length * ksd;
@@ -9647,7 +9643,7 @@
 
           } else {
             // ── L5+: Epic Boss Battle (120 BPM, A minor — cinematic, dramatic) ──
-            _bgMusicGain.gain.linearRampToValueAtTime(0.72, ctx.currentTime + 0.6);
+            _bgMusicGain.gain.linearRampToValueAtTime(1.0, ctx.currentTime + 0.6);
             // Slow heavy kicks with syncopated fills (dramatic!)
             _schedKick(ctx, _bgMusicGain, [1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0,
                                            1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1], 120, t);
@@ -10914,13 +10910,13 @@
             if (boss.fireTimer <= 0) {
               boss.fireTimer = 0.6 - Math.min(0.3, currentLevel * 0.03);
               var bSpd = 220;
-              enemyBullets.push({ x: boss.x, y: boss.y + boss.size * 0.4, vx: 0, vy: bSpd, life: 3, color: '#ff4400', size: 7 });
+              enemyBullets.push({ x: boss.x, y: boss.y + boss.size * 0.4, vx: 0, vy: bSpd, life: 3, color: '#ff4400', size: 12 });
               // Spread shots at higher levels — fan around straight down
               if (currentLevel >= 2) {
                 var spreadAngle = 0.3;
                 for (var ss = -1; ss <= 1; ss += 2) {
                   var sa = Math.PI * 0.5 + ss * spreadAngle;
-                  enemyBullets.push({ x: boss.x + ss * 20, y: boss.y + boss.size * 0.35, vx: Math.cos(sa) * bSpd * 0.9, vy: Math.sin(sa) * bSpd * 0.9, life: 2.5, color: '#ff8800', size: 6 });
+                  enemyBullets.push({ x: boss.x + ss * 20, y: boss.y + boss.size * 0.35, vx: Math.cos(sa) * bSpd * 0.9, vy: Math.sin(sa) * bSpd * 0.9, life: 2.5, color: '#ff8800', size: 11 });
                 }
               }
             }
@@ -11466,7 +11462,7 @@
                 t.fireCounter = t.fireInterval || (2.0 + Math.random() * 1.5);
                 var bSpd = 220;
                 // Straight down — no homing/aiming at player
-                enemyBullets.push({ x: t.x, y: t.y + t.size * 0.3, vx: 0, vy: bSpd, life: 3.0, size: 5, color: '#7132F5' });
+                enemyBullets.push({ x: t.x, y: t.y + t.size * 0.3, vx: 0, vy: bSpd, life: 3.0, size: 10, color: '#7132F5' });
               }
             }
             // Check bullet collisions for formation enemies
@@ -11527,12 +11523,12 @@
             if (t.fireCounter <= 0) {
               var bSpd = t.isEnemyShip ? 220 : 160;
               var bClr = t.isEnemyShip ? '#00aaff' : '#ff4400';
-              var bSz  = t.isEnemyShip ? 6 : 5;
+              var bSz  = t.isEnemyShip ? 10 : 9;
 
               if (t.type === 'enemy-tank') {
                 // Tank fires a 3-bullet spread
                 bClr = '#ff2222';
-                bSz = 7;
+                bSz = 12;
                 for (var sp = -1; sp <= 1; sp++) {
                   enemyBullets.push({
                     x: t.x + sp * 15, y: t.y + t.size * 0.4,
@@ -11543,7 +11539,7 @@
               } else if (t.type === 'enemy-scout') {
                 // Scout fires quick small shots
                 bClr = '#00eeff';
-                bSz = 4;
+                bSz = 8;
                 bSpd = 280;
                 enemyBullets.push({
                   x: t.x, y: t.y + t.size * 0.4,
@@ -13370,7 +13366,7 @@
         for (var ebi = 0; ebi < enemyBullets.length; ebi++) {
           var eb = enemyBullets[ebi];
           var ebColor = eb.color || '#ff4400';
-          var ebR = (eb.size || 5) * 1.8;
+          var ebR = (eb.size || 5) * 3.2;
           var ebAngle = Math.atan2(eb.vy, eb.vx) + Math.PI * 0.5;
           ctx.save();
           ctx.translate(eb.x, eb.y);
