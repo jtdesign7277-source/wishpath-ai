@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-25-v393-fix-tabs-crash';
+    var APP_VERSION = '2026-04-25-v394-collapsible-sports';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -17250,6 +17250,106 @@
       return '';
     }
 
+    // --- Collapsible Live Sports with Pin ---
+    var _homeSportsCollapsed = localStorage.getItem('wp_sports_collapsed') === '1';
+    var _homeSportsPinned = localStorage.getItem('wp_sports_pinned') || ''; // event ID
+
+    function toggleHomeSportsCollapse() {
+      _homeSportsCollapsed = !_homeSportsCollapsed;
+      localStorage.setItem('wp_sports_collapsed', _homeSportsCollapsed ? '1' : '0');
+      var body = document.getElementById('homeESPNBody');
+      var arrow = document.getElementById('homeESPNArrow');
+      if (body) body.style.display = _homeSportsCollapsed ? 'none' : 'block';
+      if (arrow) arrow.textContent = _homeSportsCollapsed ? '▸' : '▾';
+      // Show/hide pinned game
+      var pinEl = document.getElementById('homeESPNPinned');
+      if (pinEl) pinEl.style.display = (_homeSportsCollapsed && _homeSportsPinned) ? 'block' : 'none';
+    }
+
+    function pinHomeSportsGame(evId) {
+      if (_homeSportsPinned === evId) {
+        _homeSportsPinned = '';
+        localStorage.removeItem('wp_sports_pinned');
+      } else {
+        _homeSportsPinned = evId;
+        localStorage.setItem('wp_sports_pinned', evId);
+      }
+      fetchHomeESPNScores();
+    }
+
+    function _buildGameRowHTML(ev, isPinned) {
+      var comp = ev.competitions && ev.competitions[0];
+      if (!comp) return '';
+      var teams = comp.competitors || [];
+      if (teams.length < 2) return '';
+      var away = teams.find(function(t) { return t.homeAway === 'away'; }) || teams[1];
+      var home = teams.find(function(t) { return t.homeAway === 'home'; }) || teams[0];
+      var status = comp.status || {};
+      var detail = (status.type && status.type.shortDetail) || '';
+      var isLive = status.type && status.type.state === 'in';
+      var isFinal = status.type && status.type.completed;
+      var isPre = status.type && status.type.state === 'pre';
+
+      var awayLogo = _espnTeamLogo(away);
+      var homeLogo = _espnTeamLogo(home);
+      var awayName = away.team ? away.team.abbreviation : '?';
+      var homeName = home.team ? home.team.abbreviation : '?';
+      var awayScore = away.score || '0';
+      var homeScore = home.score || '0';
+      var awayWin = !isPre && Number(awayScore) > Number(homeScore);
+      var homeWin = !isPre && Number(homeScore) > Number(awayScore);
+      var awayColor = awayWin ? '#fff' : 'rgba(255,255,255,0.6)';
+      var homeColor = homeWin ? '#fff' : 'rgba(255,255,255,0.6)';
+      var awayScoreWeight = awayWin ? '800' : '600';
+      var homeScoreWeight = homeWin ? '800' : '600';
+
+      var statusHTML = '';
+      if (isLive) {
+        statusHTML = '<span style="color:#4ade80;font-weight:700;font-size:10px;"><span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:#4ade80;margin-right:3px;animation:espnPulse 1.5s infinite;vertical-align:middle;"></span>' + detail.replace(/</g,'&lt;') + '</span>';
+      } else if (isFinal) {
+        statusHTML = '<span style="color:rgba(255,255,255,0.3);font-size:10px;">' + detail.replace(/</g,'&lt;') + '</span>';
+      } else {
+        statusHTML = '<span style="color:rgba(255,255,255,0.4);font-size:10px;">' + detail.replace(/</g,'&lt;') + '</span>';
+      }
+
+      var awayLogoHTML = awayLogo ? '<img src="' + awayLogo + '" width="16" height="16" style="border-radius:2px;margin-right:6px;vertical-align:middle;" onerror="this.style.display=\'none\'" />' : '';
+      var homeLogoHTML = homeLogo ? '<img src="' + homeLogo + '" width="16" height="16" style="border-radius:2px;margin-right:6px;vertical-align:middle;" onerror="this.style.display=\'none\'" />' : '';
+
+      var evId = ev.id || '';
+      var pinIcon = (_homeSportsPinned === evId) ? '📌' : '📍';
+      var pinColor = (_homeSportsPinned === evId) ? 'rgba(113,50,245,0.9)' : 'rgba(255,255,255,0.2)';
+
+      var row = '';
+      row += '<div style="display:flex;align-items:center;padding:5px 0;gap:0;">';
+      // Pin button
+      if (!isPinned) {
+        row += '<span onclick="event.stopPropagation();pinHomeSportsGame(\'' + evId + '\');" style="font-size:11px;cursor:pointer;margin-right:6px;-webkit-tap-highlight-color:transparent;filter:grayscale(' + (_homeSportsPinned === evId ? '0' : '0.8') + ');opacity:' + (_homeSportsPinned === evId ? '1' : '0.5') + ';">' + pinIcon + '</span>';
+      }
+      // Clickable game area
+      row += '<div style="display:flex;align-items:center;flex:1;min-width:0;cursor:pointer;" onclick="hideMobileHome();showView(\'fm\');setTimeout(function(){var btn=document.querySelector(\'.fm-sub-tab[onclick*=fmSports]\');switchFMTab(\'fmSports\',btn);},100);">';
+      // Away team
+      row += '<div style="display:flex;align-items:center;flex:1;min-width:0;">';
+      row += awayLogoHTML;
+      row += '<span style="font-size:12px;font-weight:600;color:' + awayColor + ';">' + awayName + '</span>';
+      row += '</div>';
+      // Away score
+      row += '<span style="font-size:13px;font-weight:' + awayScoreWeight + ';color:' + awayColor + ';width:28px;text-align:right;">' + (isPre ? '-' : awayScore) + '</span>';
+      // Separator
+      row += '<span style="color:rgba(255,255,255,0.15);margin:0 6px;font-size:10px;">@</span>';
+      // Home score
+      row += '<span style="font-size:13px;font-weight:' + homeScoreWeight + ';color:' + homeColor + ';width:28px;text-align:left;">' + (isPre ? '-' : homeScore) + '</span>';
+      // Home team
+      row += '<div style="display:flex;align-items:center;flex:1;min-width:0;">';
+      row += homeLogoHTML;
+      row += '<span style="font-size:12px;font-weight:600;color:' + homeColor + ';">' + homeName + '</span>';
+      row += '</div>';
+      // Status
+      row += '<div style="min-width:50px;text-align:right;">' + statusHTML + '</div>';
+      row += '</div>'; // end clickable area
+      row += '</div>'; // end row
+      return row;
+    }
+
     function fetchHomeESPNScores() {
       var container = document.getElementById('homeESPNScores');
       if (!container) return;
@@ -17261,15 +17361,50 @@
       });
       Promise.all(promises).then(function(results) {
         var html = '';
+        var bodyHTML = '';
         var hasGames = false;
-        // Header row: LIVE SPORTS label + ESPN link
+        var pinnedEvent = null;
+        var allLiveEvents = [];
+
+        // Collect all live events and find pinned
+        results.forEach(function(res) {
+          var liveEvents = res.events.filter(function(ev) {
+            var comp = ev.competitions && ev.competitions[0];
+            if (!comp || !comp.status || !comp.status.type) return false;
+            return comp.status.type.state === 'in';
+          });
+          liveEvents.forEach(function(ev) {
+            allLiveEvents.push({ league: res.league, event: ev });
+            if (_homeSportsPinned && ev.id === _homeSportsPinned) pinnedEvent = ev;
+          });
+        });
+
+        // If pinned game is no longer live, clear pin
+        if (_homeSportsPinned && !pinnedEvent) {
+          _homeSportsPinned = '';
+          localStorage.removeItem('wp_sports_pinned');
+        }
+
+        // Header row: collapse arrow + LIVE SPORTS label + All Scores link
+        var arrowChar = _homeSportsCollapsed ? '▸' : '▾';
         html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">';
+        html += '<div style="display:flex;align-items:center;gap:6px;cursor:pointer;-webkit-tap-highlight-color:transparent;" onclick="toggleHomeSportsCollapse();">';
+        html += '<span id="homeESPNArrow" style="font-size:10px;color:rgba(255,255,255,0.4);transition:transform 0.2s;">' + arrowChar + '</span>';
         html += '<span style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:0.1em;">Live Sports</span>';
+        html += '</div>';
         html += '<span onclick="hideMobileHome();showView(\'fm\');setTimeout(function(){var btn=document.querySelector(\'.fm-sub-tab[onclick*=fmSports]\');switchFMTab(\'fmSports\',btn);},100);" style="font-size:10px;font-weight:700;color:rgba(113,50,245,0.8);cursor:pointer;-webkit-tap-highlight-color:transparent;">All Scores ›</span>';
         html += '</div>';
 
+        // Pinned game (visible when collapsed, hidden when expanded)
+        html += '<div id="homeESPNPinned" style="display:' + (_homeSportsCollapsed && pinnedEvent ? 'block' : 'none') + ';">';
+        if (pinnedEvent) {
+          html += '<div style="font-size:9px;color:rgba(113,50,245,0.6);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px;">📌 Pinned</div>';
+          html += _buildGameRowHTML(pinnedEvent, true);
+        }
+        html += '</div>';
+
+        // Body (all games, hidden when collapsed)
         results.forEach(function(res) {
-          // Filter to LIVE games only on home screen
           var liveEvents = res.events.filter(function(ev) {
             var comp = ev.competitions && ev.competitions[0];
             if (!comp || !comp.status || !comp.status.type) return false;
@@ -17277,72 +17412,15 @@
           });
           if (!liveEvents.length) return;
           hasGames = true;
-          // League label
-          html += '<div style="font-size:10px;font-weight:700;color:rgba(113,50,245,0.7);text-transform:uppercase;letter-spacing:0.08em;margin:6px 0 4px 0;">' + res.league + '</div>';
-          // Show up to 4 live games per league
+          bodyHTML += '<div style="font-size:10px;font-weight:700;color:rgba(113,50,245,0.7);text-transform:uppercase;letter-spacing:0.08em;margin:6px 0 4px 0;">' + res.league + '</div>';
           liveEvents.slice(0, 4).forEach(function(ev) {
-            var comp = ev.competitions && ev.competitions[0];
-            if (!comp) return;
-            var teams = comp.competitors || [];
-            if (teams.length < 2) return;
-            var away = teams.find(function(t) { return t.homeAway === 'away'; }) || teams[1];
-            var home = teams.find(function(t) { return t.homeAway === 'home'; }) || teams[0];
-            var status = comp.status || {};
-            var detail = (status.type && status.type.shortDetail) || '';
-            var isLive = status.type && status.type.state === 'in';
-            var isFinal = status.type && status.type.completed;
-            var isPre = status.type && status.type.state === 'pre';
-
-            var awayLogo = _espnTeamLogo(away);
-            var homeLogo = _espnTeamLogo(home);
-            var awayName = away.team ? away.team.abbreviation : '?';
-            var homeName = home.team ? home.team.abbreviation : '?';
-            var awayScore = away.score || '0';
-            var homeScore = home.score || '0';
-            // Winner gets brighter text
-            var awayWin = !isPre && Number(awayScore) > Number(homeScore);
-            var homeWin = !isPre && Number(homeScore) > Number(awayScore);
-            var awayColor = awayWin ? '#fff' : 'rgba(255,255,255,0.6)';
-            var homeColor = homeWin ? '#fff' : 'rgba(255,255,255,0.6)';
-            var awayScoreWeight = awayWin ? '800' : '600';
-            var homeScoreWeight = homeWin ? '800' : '600';
-
-            // Status styling
-            var statusHTML = '';
-            if (isLive) {
-              statusHTML = '<span style="color:#4ade80;font-weight:700;font-size:10px;"><span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:#4ade80;margin-right:3px;animation:espnPulse 1.5s infinite;vertical-align:middle;"></span>' + detail.replace(/</g,'&lt;') + '</span>';
-            } else if (isFinal) {
-              statusHTML = '<span style="color:rgba(255,255,255,0.3);font-size:10px;">' + detail.replace(/</g,'&lt;') + '</span>';
-            } else {
-              statusHTML = '<span style="color:rgba(255,255,255,0.4);font-size:10px;">' + detail.replace(/</g,'&lt;') + '</span>';
-            }
-
-            // Logo img tag (16px, inline)
-            var awayLogoHTML = awayLogo ? '<img src="' + awayLogo + '" width="16" height="16" style="border-radius:2px;margin-right:6px;vertical-align:middle;" onerror="this.style.display=\'none\'" />' : '';
-            var homeLogoHTML = homeLogo ? '<img src="' + homeLogo + '" width="16" height="16" style="border-radius:2px;margin-right:6px;vertical-align:middle;" onerror="this.style.display=\'none\'" />' : '';
-
-            html += '<div style="display:flex;align-items:center;padding:5px 0;gap:0;cursor:pointer;" onclick="hideMobileHome();showView(\'fm\');setTimeout(function(){var btn=document.querySelector(\'.fm-sub-tab[onclick*=fmSports]\');switchFMTab(\'fmSports\',btn);},100);">';
-            // Away team
-            html += '<div style="display:flex;align-items:center;flex:1;min-width:0;">';
-            html += awayLogoHTML;
-            html += '<span style="font-size:12px;font-weight:600;color:' + awayColor + ';">' + awayName + '</span>';
-            html += '</div>';
-            // Away score
-            html += '<span style="font-size:13px;font-weight:' + awayScoreWeight + ';color:' + awayColor + ';width:28px;text-align:right;">' + (isPre ? '-' : awayScore) + '</span>';
-            // Separator
-            html += '<span style="color:rgba(255,255,255,0.15);margin:0 6px;font-size:10px;">@</span>';
-            // Home score
-            html += '<span style="font-size:13px;font-weight:' + homeScoreWeight + ';color:' + homeColor + ';width:28px;text-align:left;">' + (isPre ? '-' : homeScore) + '</span>';
-            // Home team
-            html += '<div style="display:flex;align-items:center;flex:1;min-width:0;">';
-            html += homeLogoHTML;
-            html += '<span style="font-size:12px;font-weight:600;color:' + homeColor + ';">' + homeName + '</span>';
-            html += '</div>';
-            // Status
-            html += '<div style="min-width:50px;text-align:right;">' + statusHTML + '</div>';
-            html += '</div>';
+            bodyHTML += _buildGameRowHTML(ev, false);
           });
         });
+
+        html += '<div id="homeESPNBody" style="display:' + (_homeSportsCollapsed ? 'none' : 'block') + ';">';
+        html += bodyHTML;
+        html += '</div>';
 
         if (!hasGames) {
           container.innerHTML = '<div style="color:rgba(255,255,255,0.25);font-size:11px;padding:6px 0;">No live games right now</div>';
