@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-25-v357-news-feed-expand';
+    var APP_VERSION = '2026-04-25-v358-chat-list-claude-style';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -3440,24 +3440,31 @@
         flex: 1;
         text-align: center;
       }
-      .lc-list-new-btn {
-        background: none;
-        border: 1px solid rgba(255,255,255,0.1);
-        color: rgba(255,255,255,0.6);
-        cursor: pointer;
-        padding: 0;
+      .lc-list-new-btn-placeholder {
         width: 32px;
         height: 32px;
+        flex-shrink: 0;
+      }
+      .lc-list-new-fab {
+        position: fixed;
+        bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+        right: 20px;
+        z-index: 610;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #7132F5, #9b6dff);
+        border: none;
+        color: #fff;
+        cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
         -webkit-tap-highlight-color: transparent;
-        border-radius: 8px;
-        transition: all 0.15s ease;
-        flex-shrink: 0;
+        box-shadow: 0 4px 16px rgba(113,50,245,0.45), 0 2px 6px rgba(0,0,0,0.3);
+        transition: all 0.2s ease;
       }
-      .lc-list-new-btn:hover { background: rgba(255,255,255,0.08); color: #fff; border-color: rgba(255,255,255,0.18); }
-      .lc-list-new-btn:active { background: rgba(255,255,255,0.12); color: #fff; transform: scale(0.95); }
+      .lc-list-new-fab:active { transform: scale(0.92); box-shadow: 0 2px 8px rgba(113,50,245,0.3); }
       .lc-chat-list-scroll {
         flex: 1;
         overflow-y: auto;
@@ -3485,14 +3492,14 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 14px 16px;
-        border-bottom: 1px solid rgba(113,50,245,0.45);
+        padding: 16px 16px;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
         cursor: pointer;
         transition: background 0.15s ease;
         gap: 12px;
       }
       .lc-chat-item:first-child {
-        border-top: 1px solid rgba(113,50,245,0.45);
+        border-top: none;
       }
       .lc-chat-item:active { background: rgba(255,255,255,0.04); }
       .lc-chat-item-info {
@@ -3500,23 +3507,23 @@
         min-width: 0;
         display: flex;
         flex-direction: column;
-        gap: 4px;
+        gap: 3px;
       }
       .lc-chat-item-title {
-        font-size: 0.9rem;
-        font-weight: 500;
-        color: rgba(255,255,255,0.85);
+        font-size: 1rem;
+        font-weight: 400;
+        color: rgba(255,255,255,0.9);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
       }
       .lc-chat-item-time {
-        font-size: 0.75rem;
-        color: rgba(255,255,255,0.35);
+        font-size: 0.8rem;
+        color: rgba(255,255,255,0.4);
       }
       .lc-chat-item-chevron {
-        color: #7132F5;
-        font-size: 1.2rem;
+        color: rgba(255,255,255,0.25);
+        font-size: 1.1rem;
         flex-shrink: 0;
       }
 
@@ -6055,9 +6062,7 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
             </button>
             <span class="lc-list-topbar-title">Chats</span>
-            <button class="lc-list-new-btn" onclick="startNewLCFromList()" aria-label="New chat" title="New chat">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            </button>
+            <div class="lc-list-new-btn-placeholder"></div>
           </div>
           <div class="lc-chat-list-scroll" id="lcChatListScroll">
             <div class="lc-chat-list-empty" id="lcChatListEmpty">
@@ -6065,6 +6070,9 @@
               <div class="lc-chat-list-empty-text">How can I help you today?</div>
             </div>
           </div>
+          <button class="lc-list-new-fab" onclick="startNewLCFromList()" aria-label="New chat" title="New chat">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="24" height="24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
         </div>
 
         <!-- Agent Chat View -->
