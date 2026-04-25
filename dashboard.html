@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-25-v402-casino-reference-match';
+    var APP_VERSION = '2026-04-25-v403-greeting-typewriter';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -1851,6 +1851,22 @@
       }
       .premium-header .header-left .greeting #greeting-text {
         display: block;
+      }
+      .greeting-name-gradient {
+        background: linear-gradient(90deg, #d1d1db, #a78bfa, #7132F5);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 700;
+      }
+      .greeting-cursor {
+        color: #7132F5;
+        font-weight: 300;
+        animation: greetBlink 0.6s step-end infinite;
+      }
+      @keyframes greetBlink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0; }
       }
       .premium-header .location-badge {
         display: none;
@@ -6978,7 +6994,7 @@
               <span class="header-clock-date" id="headerClockDate">Sun, Apr 12</span>
             </div>
             <div class="header-avatar" onclick="openAvatarPicker()">
-              <img id="headerAvatarImg" src="https://api.dicebear.com/9.x/notionists/svg?seed=User" alt="Avatar" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:2px solid rgba(113,50,245,0.5);">
+              <img id="headerAvatarImg" src="https://api.dicebear.com/9.x/notionists/svg?seed=User" alt="Avatar" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid rgba(113,50,245,0.5);">
             </div>
           </div>
         </div>
@@ -8235,6 +8251,31 @@
       return 'Good evening';
     }
 
+    var _greetTwTimer = null;
+    function _typewriteGreeting(el, prefix, name) {
+      if (_greetTwTimer) { clearInterval(_greetTwTimer); _greetTwTimer = null; }
+      var full = prefix + name;
+      var i = 0;
+      el.innerHTML = '<span class="greeting-cursor">|</span>';
+      _greetTwTimer = setInterval(function() {
+        if (i >= full.length) {
+          clearInterval(_greetTwTimer); _greetTwTimer = null;
+          // Build final HTML with gradient name
+          el.innerHTML = prefix + '<span class="greeting-name-gradient">' + name + '</span>';
+          return;
+        }
+        var soFar = full.substring(0, i + 1);
+        // During typing, show plain text + cursor
+        if (i + 1 <= prefix.length) {
+          el.innerHTML = soFar + '<span class="greeting-cursor">|</span>';
+        } else {
+          var typed = full.substring(prefix.length, i + 1);
+          el.innerHTML = prefix + '<span class="greeting-name-gradient">' + typed + '</span><span class="greeting-cursor">|</span>';
+        }
+        i++;
+      }, 55);
+    }
+
     function firstNameFromDisplay(displayName, email) {
       var s = (displayName || '').trim();
       if (s) {
@@ -8274,7 +8315,13 @@
           try { customGreet = sanitizeGreetingName(localStorage.getItem('wp_greeting_name') || ''); } catch (e) {}
         }
         var first = (customGreet && customGreet.length) ? customGreet : fallbackFirst;
-        greetEl.textContent = getGreetingTimeLabel() + ', ' + (first || 'there');
+        // Use full display name if available, otherwise fall back to first name
+        var fullName = (customGreet && customGreet.length) ? customGreet : (displayName || first || 'there');
+        var greetStr = getGreetingTimeLabel() + ', ';
+        var nameStr = fullName;
+        greetEl.innerHTML = '';
+        greetEl.style.opacity = '1';
+        _typewriteGreeting(greetEl, greetStr, nameStr);
         if (customGreet) {
           try { localStorage.setItem('wp_greeting_name', customGreet); } catch (e) {}
         } else {
