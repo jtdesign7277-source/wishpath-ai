@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-25-v373-remove-sports';
+    var APP_VERSION = '2026-04-25-v375-sofascore-sports-chart-toolbar';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -4010,7 +4010,10 @@
       .news-carousel .news-feed-item { min-width: 260px; max-width: 300px; }
       .news-feed-action { min-height: 44px; padding: 8px 12px; }
       .news-detail-panel { max-width: 100%; border-radius: 16px 16px 0 0; padding: 20px 16px; }
-      /* SportBusy: fill entire mobile viewport */
+      /* Sofascore Live Sports: fill mobile viewport */
+      #fmSportsContent { padding: 0 4px !important; }
+      #sportsWidgetWrap { min-height: calc(100vh - 180px) !important; }
+      #sofascoreEmbed { min-height: calc(100vh - 180px) !important; height: calc(100vh - 180px) !important; }
       /* Watchlist mobile */
       .watchlist-item { min-height: 56px; padding: 12px 14px; }
       .watchlist-add-input { font-size: 16px !important; min-height: 44px; }
@@ -5124,6 +5127,7 @@
       <button class="mobile-fm-menu-item" data-fm-tab="fmOverview" onclick="selectMobileFMTab('fmOverview')"><span class="mobile-fm-menu-icon">&#x1F30D;</span><span class="mobile-fm-menu-label">Market Overview</span></button>
       <button class="mobile-fm-menu-item" data-fm-tab="fmCalendar" onclick="selectMobileFMTab('fmCalendar')"><span class="mobile-fm-menu-icon">&#x1F4C5;</span><span class="mobile-fm-menu-label">Economic Calendar</span></button>
       <button class="mobile-fm-menu-item" data-fm-tab="fmTechAnalysis" onclick="selectMobileFMTab('fmTechAnalysis')"><span class="mobile-fm-menu-icon">&#x1F4CA;</span><span class="mobile-fm-menu-label">Technical Analysis</span></button>
+      <button class="mobile-fm-menu-item" data-fm-tab="fmSports" onclick="selectMobileFMTab('fmSports')"><span class="mobile-fm-menu-icon">&#x26BD;</span><span class="mobile-fm-menu-label">Live Sports</span></button>
     </div>
   </div>
   <!-- Refined Brawl-style streak splash — dismissed after animation or if no streak -->
@@ -5246,6 +5250,7 @@
           <div class="sidebar-fm-sub" onclick="openFMTab('fmOverview')">&#x1F30D; Market Overview</div>
           <div class="sidebar-fm-sub" onclick="openFMTab('fmCalendar')">&#x1F4C5; Economic Calendar</div>
           <div class="sidebar-fm-sub" onclick="openFMTab('fmTechAnalysis')">&#x1F4CA; Technical Analysis</div>
+          <div class="sidebar-fm-sub" onclick="openFMTab('fmSports')">&#x26BD; Live Sports</div>
           <div id="sidebarFMWatchlists" style="border-top:1px solid rgba(255,255,255,0.06);margin-top:6px;padding-top:6px;"></div>
         </div>
       </div>
@@ -5836,6 +5841,21 @@
             <button class="fm-ticker-btn" onclick="loadTVTechAnalysis()">Analyze</button>
           </div>
           <div class="fm-widget-container" id="tvTechWidget" style="height:500px;"></div>
+        </div>
+
+        <!-- FM: Live Sports (Sofascore) -->
+        <div class="fm-sub-content" id="fmSportsContent">
+          <div id="sportsLeaguePicker" style="display:flex;gap:6px;padding:8px 0 12px;overflow-x:auto;-webkit-overflow-scrolling:touch;">
+            <button class="sports-league-btn active" onclick="switchSportsLeague('nba',this)" style="flex-shrink:0;padding:8px 16px;border-radius:20px;border:1px solid rgba(113,50,245,0.3);background:rgba(113,50,245,0.15);color:#fff;font:inherit;font-size:0.78rem;font-weight:600;cursor:pointer;white-space:nowrap;">&#x1F3C0; NBA</button>
+            <button class="sports-league-btn" onclick="switchSportsLeague('nfl',this)" style="flex-shrink:0;padding:8px 16px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.6);font:inherit;font-size:0.78rem;font-weight:600;cursor:pointer;white-space:nowrap;">&#x1F3C8; NFL</button>
+            <button class="sports-league-btn" onclick="switchSportsLeague('mlb',this)" style="flex-shrink:0;padding:8px 16px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.6);font:inherit;font-size:0.78rem;font-weight:600;cursor:pointer;white-space:nowrap;">&#x26BE; MLB</button>
+            <button class="sports-league-btn" onclick="switchSportsLeague('nhl',this)" style="flex-shrink:0;padding:8px 16px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.6);font:inherit;font-size:0.78rem;font-weight:600;cursor:pointer;white-space:nowrap;">&#x1F3D2; NHL</button>
+            <button class="sports-league-btn" onclick="switchSportsLeague('soccer',this)" style="flex-shrink:0;padding:8px 16px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.6);font:inherit;font-size:0.78rem;font-weight:600;cursor:pointer;white-space:nowrap;">&#x26BD; Soccer</button>
+            <button class="sports-league-btn" onclick="switchSportsLeague('mma',this)" style="flex-shrink:0;padding:8px 16px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.6);font:inherit;font-size:0.78rem;font-weight:600;cursor:pointer;white-space:nowrap;">&#x1F94A; MMA</button>
+          </div>
+          <div id="sportsWidgetWrap" style="background:#191919;border-radius:14px;border:1px solid rgba(104,107,130,0.24);overflow:hidden;min-height:calc(100vh - 200px);">
+            <iframe id="sofascoreEmbed" src="" width="100%" style="border:none;display:block;min-height:calc(100vh - 200px);height:700px;background:#191919;" loading="lazy" title="Live Sports Scores" allow="fullscreen"></iframe>
+          </div>
         </div>
 
       </div>
@@ -21964,6 +21984,7 @@
       if (tabId === 'fmOverview' && !window._tvOverviewLoaded) { loadTVOverview(); window._tvOverviewLoaded = true; }
       if (tabId === 'fmCalendar' && !window._tvCalendarLoaded) { loadTVCalendar(); window._tvCalendarLoaded = true; }
       if (tabId === 'fmTechAnalysis' && !window._tvTechLoaded) { loadTVTechAnalysis(); window._tvTechLoaded = true; }
+      if (tabId === 'fmSports' && !window._sofascoreLoaded) { switchSportsLeague('nba', document.querySelector('.sports-league-btn.active')); window._sofascoreLoaded = true; }
       if (tabId === 'fmChartStudio' && !_activeChartStudioTemplate) { showCSGallery(); }
       syncMobileFMMenuState();
       updateMobileFMChrome();
@@ -22113,7 +22134,7 @@
         support_host: 'https://www.tradingview.com',
         enable_publishing: false,
         save_image: false,
-        hide_top_toolbar: true,
+        hide_top_toolbar: false,
         hide_side_toolbar: true,
         hide_legend: false,
         hide_volume: false,
@@ -22243,6 +22264,59 @@
         locale: 'en', colorTheme: 'dark'
       });
       container.appendChild(script);
+    }
+
+    // ════════════════════════════════
+    // ── LIVE SPORTS (Sofascore)
+    // ════════════════════════════════
+
+    // Sofascore widget URLs — widget.sofascore.com allows iframe embedding
+    // Tournament IDs: NBA=132, NFL=9464, MLB=11205, NHL=234, EPL=17, UFC=11153
+    var SOFASCORE_LEAGUES = {
+      nba:    'https://widget.sofascore.com/embed/tournament/132/season/current/events/next?widgetTheme=dark',
+      nfl:    'https://widget.sofascore.com/embed/tournament/9464/season/current/events/next?widgetTheme=dark',
+      mlb:    'https://widget.sofascore.com/embed/tournament/11205/season/current/events/next?widgetTheme=dark',
+      nhl:    'https://widget.sofascore.com/embed/tournament/234/season/current/events/next?widgetTheme=dark',
+      soccer: 'https://widget.sofascore.com/embed/tournament/17/season/current/events/next?widgetTheme=dark',
+      mma:    'https://widget.sofascore.com/embed/tournament/11153/season/current/events/next?widgetTheme=dark'
+    };
+    // Fallback: if widget subdomain doesn't work, try main site
+    var SOFASCORE_FALLBACK = {
+      nba:    'https://www.sofascore.com/tournament/basketball/usa/nba/132',
+      nfl:    'https://www.sofascore.com/tournament/american-football/usa/nfl/9464',
+      mlb:    'https://www.sofascore.com/tournament/baseball/usa/mlb/11205',
+      nhl:    'https://www.sofascore.com/tournament/ice-hockey/usa/nhl/234',
+      soccer: 'https://www.sofascore.com/tournament/football/england/premier-league/17',
+      mma:    'https://www.sofascore.com/tournament/mma/international/ufc/11153'
+    };
+    var _currentSportsLeague = 'nba';
+
+    function switchSportsLeague(league, btn) {
+      _currentSportsLeague = league;
+      // Update button states
+      document.querySelectorAll('.sports-league-btn').forEach(function(b) {
+        b.classList.remove('active');
+        b.style.background = 'rgba(255,255,255,0.04)';
+        b.style.borderColor = 'rgba(255,255,255,0.1)';
+        b.style.color = 'rgba(255,255,255,0.6)';
+      });
+      if (btn) {
+        btn.classList.add('active');
+        btn.style.background = 'rgba(113,50,245,0.15)';
+        btn.style.borderColor = 'rgba(113,50,245,0.3)';
+        btn.style.color = '#fff';
+      }
+      // Load Sofascore widget in iframe
+      var frame = document.getElementById('sofascoreEmbed');
+      var url = SOFASCORE_LEAGUES[league] || SOFASCORE_LEAGUES.nba;
+      if (frame) {
+        frame.src = url;
+        // If widget subdomain fails to load, fallback to main site after 3s
+        frame.onerror = function() {
+          var fb = SOFASCORE_FALLBACK[league];
+          if (fb) frame.src = fb;
+        };
+      }
     }
 
     // ════════════════════════════════
