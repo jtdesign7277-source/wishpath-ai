@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-25-v365-news-fix';
+    var APP_VERSION = '2026-04-25-v366-news-cache';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -22351,52 +22351,36 @@
       return (option.textContent || option.innerText || countryCode).replace(/^[^\w]+/, '').trim();
     }
 
+    // ── News: single request + 10-min client cooldown to conserve API credits ──
+    var _newsFetchLastTs = 0;
+    var _newsFetchCooldownMs = 600000; // 10 minutes between API calls
+
     function buildNewsFeedRequests(tickerStr, country, industry) {
       var requests = [];
-      var countryLabel = getSelectedNewsCountryLabel(country);
-      function pushRequest(opts) {
-        var params = new URLSearchParams();
-        params.set('limit', String(opts.limit || 25));
-        if (opts.symbols) params.set('symbols', opts.symbols);
-        if (opts.countries) params.set('countries', opts.countries);
-        if (opts.industries) params.set('industries', opts.industries);
-        if (opts.q) params.set('q', opts.q);
-        if (opts.filterEntities) params.set('filter_entities', 'true');
-        if (opts.mustHaveEntities) params.set('must_have_entities', 'true');
-        requests.push(params.toString());
-      }
+      var params = new URLSearchParams();
+      params.set('limit', '10');
 
       if (country || industry) {
-        pushRequest({
-          countries: country || '',
-          industries: industry || '',
-          filterEntities: true,
-          mustHaveEntities: true
-        });
-        pushRequest({
-          countries: country || '',
-          industries: industry || ''
-        });
-        if (countryLabel || industry) {
-          pushRequest({
-            q: [countryLabel, industry].filter(Boolean).join(' ')
-          });
-        }
-      } else {
-        pushRequest({
-          symbols: tickerStr || '',
-          filterEntities: true,
-          mustHaveEntities: true
-        });
-        pushRequest({});
-        pushRequest({
-          q: 'stocks market investing'
-        });
+        if (country) params.set('countries', country);
+        if (industry) params.set('industries', industry);
+      } else if (tickerStr) {
+        // Send top 8 tickers max to keep URL short
+        params.set('symbols', tickerStr.split(',').slice(0, 8).join(','));
+        params.set('filter_entities', 'true');
+        params.set('must_have_entities', 'true');
       }
+      requests.push(params.toString());
       return requests;
     }
 
     async function fetchNewsFeedArticles(requests) {
+      // Client-side cooldown: don't hit API more than once per 10 min
+      var now = Date.now();
+      if (_newsFetchLastTs && (now - _newsFetchLastTs) < _newsFetchCooldownMs) {
+        console.log('News: skipping fetch, cooldown active (' + Math.round((_newsFetchCooldownMs - (now - _newsFetchLastTs)) / 1000) + 's remaining)');
+        return [];
+      }
+
       var allArticles = [];
       var seenUrls = {};
       for (var i = 0; i < requests.length; i++) {
@@ -22404,6 +22388,7 @@
           var res = await fetch(SUPABASE_FN + '/news?' + requests[i], { headers: await getAuthHeaders() });
           var data = await res.json();
           if (data && Array.isArray(data.articles)) {
+            _newsFetchLastTs = Date.now(); // Mark successful fetch
             data.articles.forEach(function(a) {
               var key = a.url || a.title;
               if (!seenUrls[key]) {
