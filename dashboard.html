@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-25-v366-news-cache';
+    var APP_VERSION = '2026-04-25-v367-sports';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -5106,6 +5106,7 @@
       <button class="mobile-fm-menu-item" data-fm-tab="fmOverview" onclick="selectMobileFMTab('fmOverview')"><span class="mobile-fm-menu-icon">&#x1F30D;</span><span class="mobile-fm-menu-label">Market Overview</span></button>
       <button class="mobile-fm-menu-item" data-fm-tab="fmCalendar" onclick="selectMobileFMTab('fmCalendar')"><span class="mobile-fm-menu-icon">&#x1F4C5;</span><span class="mobile-fm-menu-label">Economic Calendar</span></button>
       <button class="mobile-fm-menu-item" data-fm-tab="fmTechAnalysis" onclick="selectMobileFMTab('fmTechAnalysis')"><span class="mobile-fm-menu-icon">&#x1F4CA;</span><span class="mobile-fm-menu-label">Technical Analysis</span></button>
+      <button class="mobile-fm-menu-item" data-fm-tab="fmSports" onclick="selectMobileFMTab('fmSports')"><span class="mobile-fm-menu-icon">&#x1F3C8;</span><span class="mobile-fm-menu-label">Live Sports</span></button>
     </div>
   </div>
   <!-- Refined Brawl-style streak splash — dismissed after animation or if no streak -->
@@ -5228,6 +5229,7 @@
           <div class="sidebar-fm-sub" onclick="openFMTab('fmOverview')">&#x1F30D; Market Overview</div>
           <div class="sidebar-fm-sub" onclick="openFMTab('fmCalendar')">&#x1F4C5; Economic Calendar</div>
           <div class="sidebar-fm-sub" onclick="openFMTab('fmTechAnalysis')">&#x1F4CA; Technical Analysis</div>
+          <div class="sidebar-fm-sub" onclick="openFMTab('fmSports')">&#x1F3C8; Live Sports</div>
           <div id="sidebarFMWatchlists" style="border-top:1px solid rgba(255,255,255,0.06);margin-top:6px;padding-top:6px;"></div>
         </div>
       </div>
@@ -5818,6 +5820,27 @@
             <button class="fm-ticker-btn" onclick="loadTVTechAnalysis()">Analyze</button>
           </div>
           <div class="fm-widget-container" id="tvTechWidget" style="height:500px;"></div>
+        </div>
+
+        <!-- FM: Live Sports -->
+        <div class="fm-sub-content" id="fmSportsContent">
+          <div style="padding:0 4px;">
+            <div style="background:#191919;border-radius:16px;border:1px solid rgba(255,255,255,0.06);box-shadow:0 8px 32px rgba(0,0,0,0.4);overflow:hidden;">
+              <div style="padding:16px 18px 10px;display:flex;align-items:center;gap:10px;">
+                <span style="font-size:1.3rem;">&#x1F3C8;</span>
+                <span style="font-size:1.05rem;font-weight:700;color:#F0EFF5;">Live Sports Scores</span>
+              </div>
+              <iframe
+                id="sportBusyEmbed"
+                src=""
+                width="100%"
+                height="600"
+                style="border:none;border-radius:0 0 16px 16px;overflow:hidden;background:#191919;display:block;"
+                loading="lazy"
+                title="Live Sports Scores">
+              </iframe>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -21941,6 +21964,13 @@
       if (tabId === 'fmOverview' && !window._tvOverviewLoaded) { loadTVOverview(); window._tvOverviewLoaded = true; }
       if (tabId === 'fmCalendar' && !window._tvCalendarLoaded) { loadTVCalendar(); window._tvCalendarLoaded = true; }
       if (tabId === 'fmTechAnalysis' && !window._tvTechLoaded) { loadTVTechAnalysis(); window._tvTechLoaded = true; }
+      if (tabId === 'fmSports' && !window._sportBusyLoaded) {
+        var sbFrame = document.getElementById('sportBusyEmbed');
+        if (sbFrame && !sbFrame.src.includes('sportbusy')) {
+          sbFrame.src = 'https://www.sportbusy.com/embed?compact=1';
+        }
+        window._sportBusyLoaded = true;
+      }
       if (tabId === 'fmChartStudio' && !_activeChartStudioTemplate) { showCSGallery(); }
       syncMobileFMMenuState();
       updateMobileFMChrome();
