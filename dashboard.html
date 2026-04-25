@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-25-v394-collapsible-sports';
+    var APP_VERSION = '2026-04-25-v395-fit-casino-bigger-sports';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -4799,8 +4799,8 @@
       display: flex; flex-direction: column; align-items: center;
       position: fixed; inset: 0; z-index: 500;
       background: radial-gradient(ellipse at 50% 15%, #2a0845 0%, #120324 35%, #0a0114 70%, #050008 100%);
-      min-height: 100vh; min-height: 100dvh;
-      overflow-y: auto; -webkit-overflow-scrolling: touch;
+      height: 100vh; height: 100dvh;
+      overflow: hidden;
     }
     /* Ambient glow orbs */
     #krakenspinsView.view.active::before {
@@ -4821,11 +4821,11 @@
     }
     .ks-top-bar {
       width: 100%; display: flex; align-items: center; justify-content: space-between;
-      padding: 12px 16px; padding-top: max(12px, env(safe-area-inset-top));
-      position: relative; z-index: 10;
+      padding: 6px 16px; padding-top: max(6px, env(safe-area-inset-top));
+      position: relative; z-index: 10; flex-shrink: 0;
     }
     .ks-back-btn {
-      width: 40px; height: 40px; border-radius: 50%;
+      width: 34px; height: 34px; border-radius: 50%;
       background: linear-gradient(135deg, rgba(113,50,245,0.3), rgba(60,20,140,0.4));
       border: 1.5px solid rgba(255,215,0,0.2);
       display: flex; align-items: center; justify-content: center;
@@ -4836,31 +4836,31 @@
     .ks-balance-display {
       background: linear-gradient(135deg, rgba(30,10,50,0.9), rgba(20,5,40,0.95));
       border: 1.5px solid rgba(255,215,0,0.35); border-radius: 24px;
-      padding: 8px 20px; display: flex; align-items: center; gap: 8px;
-      font-size: 16px; font-weight: 800; color: #FFD700;
+      padding: 5px 16px; display: flex; align-items: center; gap: 6px;
+      font-size: 14px; font-weight: 800; color: #FFD700;
       box-shadow: 0 0 20px rgba(255,215,0,0.15), 0 4px 16px rgba(0,0,0,0.5),
                   inset 0 1px 0 rgba(255,215,0,0.1);
       text-shadow: 0 0 8px rgba(255,215,0,0.4);
     }
     .ks-title {
-      font-family: 'Inter', sans-serif; font-size: 28px; font-weight: 900;
+      font-family: 'Inter', sans-serif; font-size: 22px; font-weight: 900;
       background: linear-gradient(180deg, #FFD700 0%, #FFA500 40%, #FFD700 100%);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      text-align: center; letter-spacing: 4px; text-transform: uppercase;
-      margin: 0 0 4px 0;
+      text-align: center; letter-spacing: 3px; text-transform: uppercase;
+      margin: 0; flex-shrink: 0;
       filter: drop-shadow(0 2px 12px rgba(255,215,0,0.5)) drop-shadow(0 0 30px rgba(113,50,245,0.3));
     }
     .ks-subtitle {
-      text-align: center; font-size: 10px; font-weight: 600;
-      color: rgba(255,215,0,0.5); letter-spacing: 6px; text-transform: uppercase;
-      margin-bottom: 10px;
+      text-align: center; font-size: 9px; font-weight: 600;
+      color: rgba(255,215,0,0.5); letter-spacing: 5px; text-transform: uppercase;
+      margin-bottom: 4px; flex-shrink: 0;
     }
     /* Machine cabinet — ornate frame */
     .ks-machine {
       width: calc(100% - 24px); max-width: 390px;
       background: linear-gradient(180deg, #1e0a35 0%, #150828 30%, #0f0520 60%, #0a0318 100%);
-      border-radius: 24px; padding: 3px;
-      position: relative;
+      border-radius: 20px; padding: 3px;
+      position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column;
       box-shadow: 0 0 60px rgba(113,50,245,0.2), 0 0 120px rgba(113,50,245,0.08),
                   0 12px 40px rgba(0,0,0,0.7);
     }
@@ -4873,8 +4873,9 @@
     .ks-machine-inner {
       position: relative; z-index: 1;
       background: linear-gradient(180deg, #1a0830 0%, #120520 50%, #0d0318 100%);
-      border-radius: 22px; padding: 16px 14px;
+      border-radius: 18px; padding: 10px 12px;
       border: 1px solid rgba(255,215,0,0.15);
+      flex: 1; min-height: 0; display: flex; flex-direction: column;
     }
     /* Reel window — deep inset with gold trim */
     .ks-reel-window {
@@ -4912,7 +4913,7 @@
     }
     /* Win display */
     .ks-win-display {
-      text-align: center; margin-top: 12px; min-height: 32px;
+      text-align: center; margin-top: 6px; min-height: 24px; flex-shrink: 0;
     }
     .ks-win-text {
       font-size: 18px; font-weight: 900; color: #FFD700;
@@ -4925,7 +4926,7 @@
     }
     /* Controls area */
     .ks-controls {
-      display: flex; flex-direction: column; gap: 12px; margin-top: 14px;
+      display: flex; flex-direction: column; gap: 8px; margin-top: 8px; flex-shrink: 0;
     }
     .ks-bet-row {
       display: flex; align-items: center; justify-content: center; gap: 8px;
@@ -4935,7 +4936,7 @@
       text-transform: uppercase; letter-spacing: 1px;
     }
     .ks-bet-btn {
-      padding: 8px 20px; border-radius: 12px; font-weight: 800; font-size: 14px;
+      padding: 6px 16px; border-radius: 10px; font-weight: 800; font-size: 13px;
       border: 1.5px solid rgba(255,215,0,0.15);
       background: linear-gradient(180deg, rgba(30,10,50,0.8), rgba(15,5,30,0.9));
       color: rgba(255,255,255,0.6); cursor: pointer;
@@ -4954,8 +4955,8 @@
     }
     /* Big circular SPIN button */
     .ks-spin-btn {
-      width: 90px; height: 90px; border-radius: 50%;
-      font-weight: 900; font-size: 16px; letter-spacing: 2px; text-transform: uppercase;
+      width: 68px; height: 68px; border-radius: 50%;
+      font-weight: 900; font-size: 14px; letter-spacing: 2px; text-transform: uppercase;
       border: 3px solid #FFD700; cursor: pointer; color: #fff;
       background: linear-gradient(180deg, #7132F5 0%, #5020c0 40%, #3a1090 100%);
       box-shadow: 0 0 30px rgba(113,50,245,0.6), 0 0 60px rgba(113,50,245,0.2),
@@ -4983,8 +4984,8 @@
     }
     .ks-spin-btn:disabled::before { animation: none; opacity: 0.3; }
     .ks-side-btn {
-      width: 52px; height: 52px; border-radius: 50%;
-      font-weight: 700; font-size: 18px;
+      width: 42px; height: 42px; border-radius: 50%;
+      font-weight: 700; font-size: 16px;
       border: 1.5px solid rgba(255,215,0,0.2);
       background: linear-gradient(180deg, rgba(30,10,50,0.8), rgba(15,5,30,0.9));
       color: rgba(255,255,255,0.6); cursor: pointer;
@@ -5036,11 +5037,11 @@
     }
     /* Info + paytable */
     .ks-info-row {
-      display: flex; justify-content: space-between; margin-top: 10px;
-      font-size: 10px; color: rgba(255,215,0,0.3); padding: 0 4px;
+      display: flex; justify-content: space-between; margin-top: 6px;
+      font-size: 10px; color: rgba(255,215,0,0.3); padding: 0 4px; flex-shrink: 0;
     }
     .ks-paytable-toggle {
-      text-align: center; margin-top: 14px;
+      text-align: center; margin-top: 6px; flex-shrink: 0;
     }
     .ks-paytable-toggle button {
       background: linear-gradient(180deg, rgba(255,215,0,0.08), rgba(255,215,0,0.03));
@@ -17305,46 +17306,45 @@
 
       var statusHTML = '';
       if (isLive) {
-        statusHTML = '<span style="color:#4ade80;font-weight:700;font-size:10px;"><span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:#4ade80;margin-right:3px;animation:espnPulse 1.5s infinite;vertical-align:middle;"></span>' + detail.replace(/</g,'&lt;') + '</span>';
+        statusHTML = '<span style="color:#4ade80;font-weight:700;font-size:13px;"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#4ade80;margin-right:4px;animation:espnPulse 1.5s infinite;vertical-align:middle;"></span>' + detail.replace(/</g,'&lt;') + '</span>';
       } else if (isFinal) {
-        statusHTML = '<span style="color:rgba(255,255,255,0.3);font-size:10px;">' + detail.replace(/</g,'&lt;') + '</span>';
+        statusHTML = '<span style="color:rgba(255,255,255,0.3);font-size:13px;">' + detail.replace(/</g,'&lt;') + '</span>';
       } else {
-        statusHTML = '<span style="color:rgba(255,255,255,0.4);font-size:10px;">' + detail.replace(/</g,'&lt;') + '</span>';
+        statusHTML = '<span style="color:rgba(255,255,255,0.4);font-size:13px;">' + detail.replace(/</g,'&lt;') + '</span>';
       }
 
-      var awayLogoHTML = awayLogo ? '<img src="' + awayLogo + '" width="16" height="16" style="border-radius:2px;margin-right:6px;vertical-align:middle;" onerror="this.style.display=\'none\'" />' : '';
-      var homeLogoHTML = homeLogo ? '<img src="' + homeLogo + '" width="16" height="16" style="border-radius:2px;margin-right:6px;vertical-align:middle;" onerror="this.style.display=\'none\'" />' : '';
+      var awayLogoHTML = awayLogo ? '<img src="' + awayLogo + '" width="20" height="20" style="border-radius:2px;margin-right:6px;vertical-align:middle;" onerror="this.style.display=\'none\'" />' : '';
+      var homeLogoHTML = homeLogo ? '<img src="' + homeLogo + '" width="20" height="20" style="border-radius:2px;margin-right:6px;vertical-align:middle;" onerror="this.style.display=\'none\'" />' : '';
 
       var evId = ev.id || '';
       var pinIcon = (_homeSportsPinned === evId) ? '📌' : '📍';
-      var pinColor = (_homeSportsPinned === evId) ? 'rgba(113,50,245,0.9)' : 'rgba(255,255,255,0.2)';
 
       var row = '';
-      row += '<div style="display:flex;align-items:center;padding:5px 0;gap:0;">';
+      row += '<div style="display:flex;align-items:center;padding:7px 0;gap:0;">';
       // Pin button
       if (!isPinned) {
-        row += '<span onclick="event.stopPropagation();pinHomeSportsGame(\'' + evId + '\');" style="font-size:11px;cursor:pointer;margin-right:6px;-webkit-tap-highlight-color:transparent;filter:grayscale(' + (_homeSportsPinned === evId ? '0' : '0.8') + ');opacity:' + (_homeSportsPinned === evId ? '1' : '0.5') + ';">' + pinIcon + '</span>';
+        row += '<span onclick="event.stopPropagation();pinHomeSportsGame(\'' + evId + '\');" style="font-size:18px;cursor:pointer;margin-right:8px;-webkit-tap-highlight-color:transparent;filter:grayscale(' + (_homeSportsPinned === evId ? '0' : '0.8') + ');opacity:' + (_homeSportsPinned === evId ? '1' : '0.5') + ';padding:4px;">' + pinIcon + '</span>';
       }
       // Clickable game area
       row += '<div style="display:flex;align-items:center;flex:1;min-width:0;cursor:pointer;" onclick="hideMobileHome();showView(\'fm\');setTimeout(function(){var btn=document.querySelector(\'.fm-sub-tab[onclick*=fmSports]\');switchFMTab(\'fmSports\',btn);},100);">';
       // Away team
       row += '<div style="display:flex;align-items:center;flex:1;min-width:0;">';
       row += awayLogoHTML;
-      row += '<span style="font-size:12px;font-weight:600;color:' + awayColor + ';">' + awayName + '</span>';
+      row += '<span style="font-size:14px;font-weight:600;color:' + awayColor + ';">' + awayName + '</span>';
       row += '</div>';
       // Away score
-      row += '<span style="font-size:13px;font-weight:' + awayScoreWeight + ';color:' + awayColor + ';width:28px;text-align:right;">' + (isPre ? '-' : awayScore) + '</span>';
+      row += '<span style="font-size:15px;font-weight:' + awayScoreWeight + ';color:' + awayColor + ';width:30px;text-align:right;">' + (isPre ? '-' : awayScore) + '</span>';
       // Separator
-      row += '<span style="color:rgba(255,255,255,0.15);margin:0 6px;font-size:10px;">@</span>';
+      row += '<span style="color:rgba(255,255,255,0.15);margin:0 6px;font-size:12px;">@</span>';
       // Home score
-      row += '<span style="font-size:13px;font-weight:' + homeScoreWeight + ';color:' + homeColor + ';width:28px;text-align:left;">' + (isPre ? '-' : homeScore) + '</span>';
+      row += '<span style="font-size:15px;font-weight:' + homeScoreWeight + ';color:' + homeColor + ';width:30px;text-align:left;">' + (isPre ? '-' : homeScore) + '</span>';
       // Home team
       row += '<div style="display:flex;align-items:center;flex:1;min-width:0;">';
       row += homeLogoHTML;
-      row += '<span style="font-size:12px;font-weight:600;color:' + homeColor + ';">' + homeName + '</span>';
+      row += '<span style="font-size:14px;font-weight:600;color:' + homeColor + ';">' + homeName + '</span>';
       row += '</div>';
       // Status
-      row += '<div style="min-width:50px;text-align:right;">' + statusHTML + '</div>';
+      row += '<div style="min-width:55px;text-align:right;">' + statusHTML + '</div>';
       row += '</div>'; // end clickable area
       row += '</div>'; // end row
       return row;
@@ -17387,18 +17387,18 @@
 
         // Header row: collapse arrow + LIVE SPORTS label + All Scores link
         var arrowChar = _homeSportsCollapsed ? '▸' : '▾';
-        html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">';
-        html += '<div style="display:flex;align-items:center;gap:6px;cursor:pointer;-webkit-tap-highlight-color:transparent;" onclick="toggleHomeSportsCollapse();">';
-        html += '<span id="homeESPNArrow" style="font-size:10px;color:rgba(255,255,255,0.4);transition:transform 0.2s;">' + arrowChar + '</span>';
-        html += '<span style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:0.1em;">Live Sports</span>';
+        html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding:6px 0;">';
+        html += '<div style="display:flex;align-items:center;gap:8px;cursor:pointer;-webkit-tap-highlight-color:transparent;padding:4px 0;" onclick="toggleHomeSportsCollapse();">';
+        html += '<span id="homeESPNArrow" style="font-size:14px;color:rgba(255,255,255,0.5);transition:transform 0.2s;">' + arrowChar + '</span>';
+        html += '<span style="font-size:14px;font-weight:700;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:0.1em;">Live Sports</span>';
         html += '</div>';
-        html += '<span onclick="hideMobileHome();showView(\'fm\');setTimeout(function(){var btn=document.querySelector(\'.fm-sub-tab[onclick*=fmSports]\');switchFMTab(\'fmSports\',btn);},100);" style="font-size:10px;font-weight:700;color:rgba(113,50,245,0.8);cursor:pointer;-webkit-tap-highlight-color:transparent;">All Scores ›</span>';
+        html += '<span onclick="hideMobileHome();showView(\'fm\');setTimeout(function(){var btn=document.querySelector(\'.fm-sub-tab[onclick*=fmSports]\');switchFMTab(\'fmSports\',btn);},100);" style="font-size:13px;font-weight:700;color:rgba(113,50,245,0.8);cursor:pointer;-webkit-tap-highlight-color:transparent;padding:4px 0;">All Scores ›</span>';
         html += '</div>';
 
         // Pinned game (visible when collapsed, hidden when expanded)
         html += '<div id="homeESPNPinned" style="display:' + (_homeSportsCollapsed && pinnedEvent ? 'block' : 'none') + ';">';
         if (pinnedEvent) {
-          html += '<div style="font-size:9px;color:rgba(113,50,245,0.6);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px;">📌 Pinned</div>';
+          html += '<div style="font-size:12px;color:rgba(113,50,245,0.7);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;font-weight:600;">📌 Pinned</div>';
           html += _buildGameRowHTML(pinnedEvent, true);
         }
         html += '</div>';
@@ -17412,7 +17412,7 @@
           });
           if (!liveEvents.length) return;
           hasGames = true;
-          bodyHTML += '<div style="font-size:10px;font-weight:700;color:rgba(113,50,245,0.7);text-transform:uppercase;letter-spacing:0.08em;margin:6px 0 4px 0;">' + res.league + '</div>';
+          bodyHTML += '<div style="font-size:13px;font-weight:700;color:rgba(113,50,245,0.7);text-transform:uppercase;letter-spacing:0.08em;margin:8px 0 4px 0;">' + res.league + '</div>';
           liveEvents.slice(0, 4).forEach(function(ev) {
             bodyHTML += _buildGameRowHTML(ev, false);
           });
@@ -24930,7 +24930,7 @@ document.addEventListener('visibilitychange', function() {
     reelStopped: [false, false, false], stopTargets: [0, 0, 0],
     particles: [], shakeX: 0, shakeY: 0, shakeDecay: 0,
     canvas: null, ctx: null, animId: null, lastTime: 0,
-    ROWS: 5, REEL_COUNT: 3, SYMBOL_SIZE: 0, initialized: false,
+    ROWS: 3, REEL_COUNT: 3, SYMBOL_SIZE: 0, initialized: false,
     bigWinParticles: [], bigWinAnimId: null
   };
 
@@ -24970,7 +24970,12 @@ document.addEventListener('visibilitychange', function() {
     if (!ks.canvas) return;
     var win = ks.canvas.parentElement;
     var w = win.clientWidth;
-    var symSize = Math.floor(w / ks.REEL_COUNT);
+    // Cap symbol size so 3 rows fit comfortably
+    var maxSymFromWidth = Math.floor(w / ks.REEL_COUNT);
+    // Limit height: aim for reel window ~45% of viewport
+    var maxReelH = Math.floor(window.innerHeight * 0.38);
+    var maxSymFromHeight = Math.floor(maxReelH / ks.ROWS);
+    var symSize = Math.min(maxSymFromWidth, maxSymFromHeight);
     ks.SYMBOL_SIZE = symSize;
     var h = symSize * ks.ROWS;
     ks.canvas.width = w * 2;
