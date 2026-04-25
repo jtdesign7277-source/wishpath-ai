@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-25-v380-bug-enemies-straight-bullets';
+    var APP_VERSION = '2026-04-25-v381-remove-sports';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -4011,7 +4011,7 @@
       .news-feed-action { min-height: 44px; padding: 8px 12px; }
       .news-detail-panel { max-width: 100%; border-radius: 16px 16px 0 0; padding: 20px 16px; }
       /* Sofascore Live Sports: fill mobile viewport */
-      #fmSportsContent { padding: 0 4px !important; }
+      /* sports removed */
       #sportsWidgetWrap { min-height: calc(100vh - 180px) !important; }
       #sofascoreEmbed { min-height: calc(100vh - 180px) !important; height: calc(100vh - 180px) !important; }
       /* Watchlist mobile */
@@ -5127,7 +5127,6 @@
       <button class="mobile-fm-menu-item" data-fm-tab="fmOverview" onclick="selectMobileFMTab('fmOverview')"><span class="mobile-fm-menu-icon">&#x1F30D;</span><span class="mobile-fm-menu-label">Market Overview</span></button>
       <button class="mobile-fm-menu-item" data-fm-tab="fmCalendar" onclick="selectMobileFMTab('fmCalendar')"><span class="mobile-fm-menu-icon">&#x1F4C5;</span><span class="mobile-fm-menu-label">Economic Calendar</span></button>
       <button class="mobile-fm-menu-item" data-fm-tab="fmTechAnalysis" onclick="selectMobileFMTab('fmTechAnalysis')"><span class="mobile-fm-menu-icon">&#x1F4CA;</span><span class="mobile-fm-menu-label">Technical Analysis</span></button>
-      <button class="mobile-fm-menu-item" data-fm-tab="fmSports" onclick="selectMobileFMTab('fmSports')"><span class="mobile-fm-menu-icon">&#x26BD;</span><span class="mobile-fm-menu-label">Live Sports</span></button>
     </div>
   </div>
   <!-- Refined Brawl-style streak splash — dismissed after animation or if no streak -->
@@ -5250,7 +5249,6 @@
           <div class="sidebar-fm-sub" onclick="openFMTab('fmOverview')">&#x1F30D; Market Overview</div>
           <div class="sidebar-fm-sub" onclick="openFMTab('fmCalendar')">&#x1F4C5; Economic Calendar</div>
           <div class="sidebar-fm-sub" onclick="openFMTab('fmTechAnalysis')">&#x1F4CA; Technical Analysis</div>
-          <div class="sidebar-fm-sub" onclick="openFMTab('fmSports')">&#x26BD; Live Sports</div>
           <div id="sidebarFMWatchlists" style="border-top:1px solid rgba(255,255,255,0.06);margin-top:6px;padding-top:6px;"></div>
         </div>
       </div>
@@ -5843,20 +5841,6 @@
           <div class="fm-widget-container" id="tvTechWidget" style="height:500px;"></div>
         </div>
 
-        <!-- FM: Live Sports (Sofascore) -->
-        <div class="fm-sub-content" id="fmSportsContent">
-          <div id="sportsLeaguePicker" style="display:flex;gap:6px;padding:8px 0 12px;overflow-x:auto;-webkit-overflow-scrolling:touch;">
-            <button class="sports-league-btn active" onclick="switchSportsLeague('nba',this)" style="flex-shrink:0;padding:8px 16px;border-radius:20px;border:1px solid rgba(113,50,245,0.3);background:rgba(113,50,245,0.15);color:#fff;font:inherit;font-size:0.78rem;font-weight:600;cursor:pointer;white-space:nowrap;">&#x1F3C0; NBA</button>
-            <button class="sports-league-btn" onclick="switchSportsLeague('nfl',this)" style="flex-shrink:0;padding:8px 16px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.6);font:inherit;font-size:0.78rem;font-weight:600;cursor:pointer;white-space:nowrap;">&#x1F3C8; NFL</button>
-            <button class="sports-league-btn" onclick="switchSportsLeague('mlb',this)" style="flex-shrink:0;padding:8px 16px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.6);font:inherit;font-size:0.78rem;font-weight:600;cursor:pointer;white-space:nowrap;">&#x26BE; MLB</button>
-            <button class="sports-league-btn" onclick="switchSportsLeague('nhl',this)" style="flex-shrink:0;padding:8px 16px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.6);font:inherit;font-size:0.78rem;font-weight:600;cursor:pointer;white-space:nowrap;">&#x1F3D2; NHL</button>
-            <button class="sports-league-btn" onclick="switchSportsLeague('soccer',this)" style="flex-shrink:0;padding:8px 16px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.6);font:inherit;font-size:0.78rem;font-weight:600;cursor:pointer;white-space:nowrap;">&#x26BD; Soccer</button>
-            <button class="sports-league-btn" onclick="switchSportsLeague('mma',this)" style="flex-shrink:0;padding:8px 16px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.6);font:inherit;font-size:0.78rem;font-weight:600;cursor:pointer;white-space:nowrap;">&#x1F94A; MMA</button>
-          </div>
-          <div id="sportsWidgetWrap" style="background:#191919;border-radius:14px;border:1px solid rgba(104,107,130,0.24);overflow:hidden;min-height:calc(100vh - 200px);">
-            <iframe id="sofascoreEmbed" src="" width="100%" style="border:none;display:block;min-height:calc(100vh - 200px);height:700px;background:#191919;" loading="lazy" title="Live Sports Scores" allow="fullscreen"></iframe>
-          </div>
-        </div>
 
       </div>
 
@@ -22158,7 +22142,6 @@
       if (tabId === 'fmOverview' && !window._tvOverviewLoaded) { loadTVOverview(); window._tvOverviewLoaded = true; }
       if (tabId === 'fmCalendar' && !window._tvCalendarLoaded) { loadTVCalendar(); window._tvCalendarLoaded = true; }
       if (tabId === 'fmTechAnalysis' && !window._tvTechLoaded) { loadTVTechAnalysis(); window._tvTechLoaded = true; }
-      if (tabId === 'fmSports' && !window._sofascoreLoaded) { switchSportsLeague('nba', document.querySelector('.sports-league-btn.active')); window._sofascoreLoaded = true; }
       if (tabId === 'fmChartStudio' && !_activeChartStudioTemplate) { showCSGallery(); }
       syncMobileFMMenuState();
       updateMobileFMChrome();
@@ -22440,68 +22423,6 @@
       container.appendChild(script);
     }
 
-    // ════════════════════════════════
-    // ── LIVE SPORTS (Sofascore)
-    // ════════════════════════════════
-
-    // 365Scores widget URLs — confirmed to allow iframe embedding
-    var SPORTS_WIDGET_URLS = {
-      nba:    'https://widgets.365scores.com/widget?sport=basket&lang=en&theme=dark',
-      nfl:    'https://widgets.365scores.com/widget?sport=american-football&lang=en&theme=dark',
-      mlb:    'https://widgets.365scores.com/widget?sport=baseball&lang=en&theme=dark',
-      nhl:    'https://widgets.365scores.com/widget?sport=ice-hockey&lang=en&theme=dark',
-      soccer: 'https://widgets.365scores.com/widget?sport=football&lang=en&theme=dark',
-      mma:    'https://widgets.365scores.com/widget?sport=mma&lang=en&theme=dark'
-    };
-    // Fallback: SportBusy embed (confirmed working in iframes)
-    var SPORTS_FALLBACK_URL = 'https://www.sportbusy.com/embed';
-    var _currentSportsLeague = 'nba';
-
-    var _sportsFallbackUsed = false;
-
-    function switchSportsLeague(league, btn) {
-      _currentSportsLeague = league;
-      // Update button states
-      document.querySelectorAll('.sports-league-btn').forEach(function(b) {
-        b.classList.remove('active');
-        b.style.background = 'rgba(255,255,255,0.04)';
-        b.style.borderColor = 'rgba(255,255,255,0.1)';
-        b.style.color = 'rgba(255,255,255,0.6)';
-      });
-      if (btn) {
-        btn.classList.add('active');
-        btn.style.background = 'rgba(113,50,245,0.15)';
-        btn.style.borderColor = 'rgba(113,50,245,0.3)';
-        btn.style.color = '#fff';
-      }
-      var frame = document.getElementById('sofascoreEmbed');
-      if (!frame) return;
-
-      if (_sportsFallbackUsed) {
-        // Already know 365Scores doesn't work — use SportBusy
-        frame.src = SPORTS_FALLBACK_URL;
-        return;
-      }
-
-      var url = SPORTS_WIDGET_URLS[league] || SPORTS_WIDGET_URLS.nba;
-      frame.src = url;
-
-      // If 365Scores iframe is blank after 4 seconds, fall back to SportBusy
-      var checkTimer = setTimeout(function() {
-        try {
-          // If iframe loaded but is empty/blocked, contentWindow will throw or be null
-          var doc = frame.contentDocument || frame.contentWindow.document;
-          if (!doc || !doc.body || doc.body.innerHTML.length < 50) {
-            _sportsFallbackUsed = true;
-            frame.src = SPORTS_FALLBACK_URL;
-          }
-        } catch(e) {
-          // Cross-origin = it loaded something (which is good)
-        }
-      }, 4000);
-
-      frame.onload = function() { clearTimeout(checkTimer); };
-    }
 
     // ════════════════════════════════
     // ── CHART STUDIO (dedicated tab)
