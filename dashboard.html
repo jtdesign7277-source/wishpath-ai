@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-25-v362-unified-chip-borders';
+    var APP_VERSION = '2026-04-25-v363-markets-2col-grid';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -3339,9 +3339,16 @@
       .home-header-row { margin-bottom: 0; gap: 8px; }
       .home-tabs { overflow: visible; }
       .home-tab { padding: 14px 8px; margin: 0; font-size: 15px; }
-      .stock-grid { display: flex; flex-direction: column; gap: 0; padding: 0; margin-bottom: 16px; border: none; border-radius: 0; }
-      #mobileStockGrid, #mobileWatchlistGrid, #mobileCryptoGrid { display: flex; flex-direction: column; gap: 0; padding: 0; margin-bottom: 16px; }
-      .stock-card { padding: 12px 0; }
+      .stock-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 0; margin-bottom: 16px; border: none; border-radius: 0; }
+      #mobileStockGrid, #mobileWatchlistGrid, #mobileCryptoGrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 0; margin-bottom: 16px; }
+      .stock-card { padding: 10px 10px; flex-direction: column; align-items: flex-start; gap: 4px; background: rgba(32,35,51,0.7); border: 1px solid rgba(104,107,130,0.3); border-radius: 14px; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+      .stock-card:last-child { border-bottom: 1px solid rgba(104,107,130,0.3); }
+      .stock-card-info { width: 100%; flex-direction: row; align-items: baseline; justify-content: space-between; }
+      .stock-name { max-width: 60px; font-size: 10px; }
+      .stock-spark-wrap { width: 100%; max-width: 100%; height: 24px; }
+      .stock-right-group { width: 100%; justify-content: space-between; align-items: center; }
+      .stock-price-val { font-size: 11px; }
+      .stock-pct-badge { min-width: 48px; font-size: 10.5px; padding: 3px 6px; }
       .portfolio-summary { grid-template-columns: repeat(2, 1fr); gap: 10px; }
       .portfolio-stat-value { font-size: 18px !important; }
       .portfolio-hero-value { font-size: 32px; }
