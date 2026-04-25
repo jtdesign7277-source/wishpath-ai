@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-25-v395-fit-casino-bigger-sports';
+    var APP_VERSION = '2026-04-25-v396-fix-enemy-spacing';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -10555,8 +10555,8 @@
             if (_st.y < GH * 0.6) {
               var _sdx = Math.abs(xPos - _st.x);
               var _sdy = Math.abs((-sz * 0.5 - 8) - _st.y);
-              var _minDistX = (sz + _st.size) * 0.85; // generous X spacing
-              var _minDistY = (sz + _st.size) * 0.7;  // generous Y spacing
+              var _minDistX = (sz + _st.size) * 1.1; // very generous X spacing
+              var _minDistY = (sz + _st.size) * 0.9;  // very generous Y spacing
               if (_sdx < _minDistX && _sdy < _minDistY) { _overlap = true; break; }
             }
           }
@@ -10579,7 +10579,7 @@
         var baseSpd = 85 + Math.random() * 50 + Math.min(55, score * 0.11);
         var mvPat = Math.random() > 0.5 ? 'sine' : 'straight';
         var sineAmp = 55;
-        var _hY = isEnemyShip ? GH * 0.08 + Math.random() * GH * 0.35 : null;
+        var _hY = isEnemyShip ? GH * 0.18 + Math.random() * GH * 0.30 : null;
         var _lT = isEnemyShip ? 14 + Math.random() * 8 : null;
         var _fI = 2.0 + Math.random() * 1.5;
         if (type === 'enemy-scout') {
@@ -10630,19 +10630,19 @@
       var _formations = []; // active formation groups
 
       function spawnEnemyFormation(formationType) {
-        // Generous spacing — enemies clearly separated, no visual overlapping
-        var sz = 40; // uniform enemy size
-        var spacingX = sz + 18; // 18px gap between enemies horizontally
-        var spacingY = sz + 14; // 14px gap between rows
+        // Extra generous spacing — enemies must NOT visually overlap at all
+        var sz = 36; // slightly smaller enemy size for cleaner look
+        var spacingX = sz + 28; // 28px gap between enemies horizontally
+        var spacingY = sz + 24; // 24px gap between rows
         var hp = 3 + Math.floor(currentLevel * 0.8); // 3-4 hits at level 1, scales up
 
         // Always grid or pyramid — these are the Space Invaders shapes
         var fType = formationType || (Math.random() > 0.35 ? 'grid' : 'pyramid');
 
-        // Calculate how many columns fit on screen (leave 20px margin each side)
-        var maxCols = Math.floor((GW - 50) / spacingX);
-        var cols = Math.min(maxCols, 4 + Math.min(2, Math.floor(currentLevel / 3)));
-        var rows = 2 + Math.min(2, Math.floor(currentLevel / 2));
+        // Calculate how many columns fit on screen (leave 40px margin each side)
+        var maxCols = Math.floor((GW - 80) / spacingX);
+        var cols = Math.min(maxCols, Math.min(4, 3 + Math.min(1, Math.floor(currentLevel / 4))));
+        var rows = Math.min(3, 2 + Math.min(1, Math.floor(currentLevel / 3)));
         var positions = []; // {offX, offY, row}
 
         if (fType === 'pyramid') {
@@ -10669,7 +10669,7 @@
         var formation = {
           cx: GW * 0.5,
           cy: -formHeight - 20, // start fully above screen
-          targetCy: 60 + Math.random() * 30, // slide to near top
+          targetCy: 120 + Math.random() * 40, // slide down well below status bar
           entered: false,
           entrySpeed: 100 + currentLevel * 8,
           dirX: Math.random() > 0.5 ? 1 : -1,
