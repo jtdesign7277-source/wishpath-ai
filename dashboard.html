@@ -18,7 +18,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-25-v404-casino-layout-fix';
+    var APP_VERSION = '2026-04-25-v403-live-odds';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -17312,6 +17312,148 @@
       fetchHomeESPNScores();
     }
 
+    // ── Polymarket live odds helpers ──
+    var _wpPolyCache = { ts: 0, events: [] };
+    function fetchPolymarketSportsEvents() {
+      var now = Date.now();
+      if (now - _wpPolyCache.ts < 60000 && _wpPolyCache.events.length) {
+        return Promise.resolve(_wpPolyCache.events);
+      }
+      return fetch('https://gamma-api.polymarket.com/events?active=true&closed=false&tag_slug=sports&limit=200')
+        .then(function(r) { return r.ok ? r.json() : []; })
+        .then(function(d) { _wpPolyCache = { ts: Date.now(), events: d || [] }; return _wpPolyCache.events; })
+        .catch(function() { return []; });
+    }
+
+    function _polyFindMatch(events, awayNames, homeNames) {
+      var a = awayNames.map(function(s) { return (s || '').toLowerCase(); }).filter(function(s) { return s.length >= 3; });
+      var h = homeNames.map(function(s) { return (s || '').toLowerCase(); }).filter(function(s) { return s.length >= 3; });
+      for (var i = 0; i < events.length; i++) {
+        var t = (events[i].title || '').toLowerCase();
+        var aHit = a.some(function(s) { return t.indexOf(s) !== -1; });
+        var hHit = h.some(function(s) { return t.indexOf(s) !== -1; });
+        if (aHit && hHit) return events[i];
+      }
+      return null;
+    }
+
+    function _polyPickMarket(ev) {
+      if (!ev || !ev.markets || !ev.markets.length) return null;
+      var sorted = ev.markets.slice().sort(function(a, b) {
+        return (Number(b.liquidity) || 0) - (Number(a.liquidity) || 0);
+      });
+      return sorted[0];
+    }
+
+    function _polyPriceToAmerican(p) {
+      p = Number(p);
+      if (!p || p <= 0 || p >= 1) return null;
+      return p >= 0.5 ? -Math.round(p / (1 - p) * 100) : Math.round((1 - p) / p * 100);
+    }
+
+    function _polyVolStr(v) {
+      v = Number(v) || 0;
+      if (v >= 1000000) return '$' + (v / 1000000).toFixed(1) + 'M';
+      if (v >= 1000) return '$' + Math.round(v / 1000) + 'K';
+      return '';
+    }
+
+    function hydratePolymarketOdds(allLiveEvents) {
+      fetchPolymarketSportsEvents().then(function(polyEvents) {
+        if (!polyEvents || !polyEvents.length) return;
+        allLiveEvents.forEach(function(item) {
+          try {
+            var ev = item.event;
+            var comp = ev.competitions && ev.competitions[0];
+            if (!comp) return;
+            var teams = comp.competitors || [];
+            if (teams.length < 2) return;
+            var away = teams.find(function(t) { return t.homeAway === 'away'; }) || teams[1];
+            var home = teams.find(function(t) { return t.homeAway === 'home'; }) || teams[0];
+            var awayNames = [
+              away.team ? away.team.displayName : '',
+              away.team ? away.team.shortDisplayName : '',
+              away.team ? away.team.abbreviation : ''
+            ];
+            var homeNames = [
+              home.team ? home.team.displayName : '',
+              home.team ? home.team.shortDisplayName : '',
+              home.team ? home.team.abbreviation : ''
+            ];
+            var match = _polyFindMatch(polyEvents, awayNames, homeNames);
+            if (!match) return;
+            var mkt = _polyPickMarket(match);
+            if (!mkt) return;
+            var outcomes, prices;
+            try { outcomes = JSON.parse(mkt.outcomes); } catch(e) { return; }
+            try { prices = JSON.parse(mkt.outcomePrices); } catch(e) { return; }
+            if (!outcomes || !prices || outcomes.length < 2 || prices.length < 2) return;
+
+            // Map outcome labels to prices — match team names to figure out away/home
+            var awayAbbr = (away.team ? away.team.abbreviation : '').toUpperCase();
+            var homeAbbr = (home.team ? home.team.abbreviation : '').toUpperCase();
+            var awayPrice = null, homePrice = null;
+            var awayFull = (away.team ? away.team.displayName : '').toLowerCase();
+            var homeFull = (home.team ? home.team.displayName : '').toLowerCase();
+            for (var oi = 0; oi < outcomes.length; oi++) {
+              var oLow = (outcomes[oi] || '').toLowerCase();
+              if (oLow.indexOf(awayFull) !== -1 || (awayFull && oLow.indexOf(awayFull.split(' ').pop()) !== -1)) {
+                awayPrice = Number(prices[oi]);
+              } else if (oLow.indexOf(homeFull) !== -1 || (homeFull && oLow.indexOf(homeFull.split(' ').pop()) !== -1)) {
+                homePrice = Number(prices[oi]);
+              }
+            }
+            // Fallback: first outcome = first listed team, second = second
+            if (awayPrice === null && homePrice === null && prices.length >= 2) {
+              awayPrice = Number(prices[0]);
+              homePrice = Number(prices[1]);
+            }
+            if (!awayPrice && !homePrice) return;
+
+            var awayOdds = _polyPriceToAmerican(awayPrice);
+            var homeOdds = _polyPriceToAmerican(homePrice);
+            if (awayOdds === null && homeOdds === null) return;
+
+            function oddsColor(o) {
+              if (o === null) return 'rgba(255,255,255,0.6)';
+              return o < 0 ? '#4ade80' : '#f59e0b';
+            }
+            function oddsStr(o) {
+              if (o === null) return '—';
+              return (o > 0 ? '+' : '') + o;
+            }
+
+            var vol = _polyVolStr(mkt.volume);
+            var slug = match.slug || match.id || '';
+
+            var oddsHTML = '<div onclick="window.open(\'https://polymarket.com/event/' + slug + '\',\'_blank\',\'noopener\')" style="display:flex;align-items:center;gap:10px;padding:2px 0 6px 26px;margin-top:-2px;font-family:-apple-system,\'SF Pro Rounded\',sans-serif;cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:4px;" onmouseover="if(window.innerWidth>768)this.style.background=\'rgba(45,156,219,0.06)\'" onmouseout="this.style.background=\'none\'">';
+            // Poly dot + label
+            oddsHTML += '<span style="width:6px;height:6px;border-radius:50%;background:#2D9CDB;flex-shrink:0;"></span>';
+            oddsHTML += '<span style="font-size:9px;font-weight:800;color:rgba(45,156,219,0.9);letter-spacing:0.08em;margin-right:4px;">POLY</span>';
+            // Away odds
+            oddsHTML += '<span style="display:inline-flex;align-items:baseline;gap:4px;font-size:11px;">';
+            oddsHTML += '<span style="color:rgba(255,255,255,0.45);font-weight:600;">' + awayAbbr + '</span>';
+            oddsHTML += '<span style="font-weight:800;font-variant-numeric:tabular-nums;color:' + oddsColor(awayOdds) + ';">' + oddsStr(awayOdds) + '</span>';
+            oddsHTML += '</span>';
+            // Home odds
+            oddsHTML += '<span style="display:inline-flex;align-items:baseline;gap:4px;font-size:11px;margin-left:6px;">';
+            oddsHTML += '<span style="color:rgba(255,255,255,0.45);font-weight:600;">' + homeAbbr + '</span>';
+            oddsHTML += '<span style="font-weight:800;font-variant-numeric:tabular-nums;color:' + oddsColor(homeOdds) + ';">' + oddsStr(homeOdds) + '</span>';
+            oddsHTML += '</span>';
+            // Volume
+            if (vol) {
+              oddsHTML += '<span style="margin-left:auto;font-size:10px;font-weight:600;color:rgba(255,255,255,0.3);">Vol ' + vol + '</span>';
+            }
+            oddsHTML += '</div>';
+
+            // Insert into the slot
+            var slot = document.querySelector('.wp-poly-odds-slot[data-evid="' + (ev.id || '') + '"]');
+            if (slot) slot.innerHTML = oddsHTML;
+          } catch(e) { /* silently skip bad matches */ }
+        });
+      });
+    }
+
     function _buildGameRowHTML(ev, isPinned) {
       var comp = ev.competitions && ev.competitions[0];
       if (!comp) return '';
@@ -17381,6 +17523,10 @@
       row += '<div style="min-width:55px;text-align:right;">' + statusHTML + '</div>';
       row += '</div>'; // end clickable area
       row += '</div>'; // end row
+      // Polymarket odds slot (only for live games)
+      if (isLive) {
+        row += '<div class="wp-poly-odds-slot" data-evid="' + evId + '"></div>';
+      }
       return row;
     }
 
@@ -17460,6 +17606,10 @@
           container.innerHTML = '<div style="color:rgba(255,255,255,0.25);font-size:11px;padding:6px 0;">No live games right now</div>';
         } else {
           container.innerHTML = html;
+          // Hydrate Polymarket odds for live games
+          if (allLiveEvents.length) {
+            hydratePolymarketOdds(allLiveEvents);
+          }
         }
       });
     }
