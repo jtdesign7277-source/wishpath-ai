@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-25-v384-fix-closed-market-prices';
+    var APP_VERSION = '2026-04-25-v385-espn-sports-tab';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -2921,6 +2921,39 @@
     .fm-sub-tab.active { color: var(--accent); border-bottom-color: var(--accent); background: linear-gradient(135deg, rgba(113,50,245,0.08) 0%, rgba(255,255,255,0.02) 100%); box-shadow: 0 0 12px rgba(113,50,245,0.08); }
     .fm-sub-content { display: none; }
     .fm-sub-content.active { display: block; }
+
+    /* ESPN Sports Tab */
+    .espn-league-pill {
+      padding: 6px 16px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.6); font-size: 0.8rem;
+      font-weight: 600; cursor: pointer; transition: all 0.2s;
+    }
+    .espn-league-pill:hover { background: rgba(113,50,245,0.15); color: #fff; border-color: rgba(113,50,245,0.3); }
+    .espn-league-pill.active { background: #7132F5; color: #fff; border-color: #7132F5; }
+    .espn-score-card {
+      background: #252525; border-radius: 10px; border: 1px solid rgba(255,255,255,0.06);
+      padding: 14px; display: flex; flex-direction: column; gap: 8px; transition: transform 0.15s;
+    }
+    .espn-score-card:hover { transform: translateY(-2px); }
+    .espn-team-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    }
+    .espn-team-info { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; }
+    .espn-team-logo { width: 24px; height: 24px; border-radius: 4px; flex-shrink: 0; }
+    .espn-team-name { font-size: 0.85rem; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .espn-team-record { font-size: 0.65rem; color: rgba(255,255,255,0.35); margin-left: 4px; }
+    .espn-team-score { font-size: 1.15rem; font-weight: 800; color: #fff; min-width: 28px; text-align: right; }
+    .espn-team-score.winner { color: #7132F5; }
+    .espn-game-status {
+      font-size: 0.7rem; color: rgba(255,255,255,0.4); text-align: center;
+      padding-top: 4px; border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    .espn-live-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #22c55e; margin-right: 4px; animation: espnPulse 1.5s infinite; }
+    @keyframes espnPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+    @media (max-width: 480px) {
+      #espnScoresContainer { grid-template-columns: 1fr !important; }
+    }
+
     /* FM Markets: full-bleed ticker + chart (no card chrome), seamless stack */
     #fmMarketsContent #fmTickerTapeWrap,
     #fmMarketsContent #fmMainChartWrap {
@@ -5249,6 +5282,7 @@
           <div class="sidebar-fm-sub" onclick="openFMTab('fmOverview')">&#x1F30D; Market Overview</div>
           <div class="sidebar-fm-sub" onclick="openFMTab('fmCalendar')">&#x1F4C5; Economic Calendar</div>
           <div class="sidebar-fm-sub" onclick="openFMTab('fmTechAnalysis')">&#x1F4CA; Technical Analysis</div>
+          <div class="sidebar-fm-sub" onclick="openFMTab('fmSports')">&#x1F3C8; Live Sports</div>
           <div id="sidebarFMWatchlists" style="border-top:1px solid rgba(255,255,255,0.06);margin-top:6px;padding-top:6px;"></div>
         </div>
       </div>
@@ -5522,6 +5556,7 @@
           <button class="fm-sub-tab" onclick="switchFMTab('fmOverview',this)">&#x1F30D; Overview</button>
           <button class="fm-sub-tab" onclick="switchFMTab('fmCalendar',this)">&#x1F4C5; Calendar</button>
           <button class="fm-sub-tab" onclick="switchFMTab('fmTechAnalysis',this)">&#x1F4CA; Analysis</button>
+          <button class="fm-sub-tab" onclick="switchFMTab('fmSports',this)">&#x1F3C8; Sports</button>
         </div>
 
         <!-- FM: Markets -->
@@ -5839,6 +5874,23 @@
             <button class="fm-ticker-btn" onclick="loadTVTechAnalysis()">Analyze</button>
           </div>
           <div class="fm-widget-container" id="tvTechWidget" style="height:500px;"></div>
+        </div>
+
+        <!-- ESPN Live Sports -->
+        <div class="fm-sub-content" id="fmSportsContent">
+          <div style="padding:12px 0 8px;">
+            <div style="font-size:1.1rem;font-weight:700;color:#fff;margin-bottom:10px;">Live Sports Scores</div>
+            <div id="espnLeaguePicker" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
+              <button class="espn-league-pill active" data-league="nfl" onclick="pickESPNLeague('nfl',this)">NFL</button>
+              <button class="espn-league-pill" data-league="nba" onclick="pickESPNLeague('nba',this)">NBA</button>
+              <button class="espn-league-pill" data-league="mlb" onclick="pickESPNLeague('mlb',this)">MLB</button>
+              <button class="espn-league-pill" data-league="nhl" onclick="pickESPNLeague('nhl',this)">NHL</button>
+            </div>
+            <div id="espnScoresContainer" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;">
+              <div style="color:rgba(255,255,255,0.4);padding:40px 0;text-align:center;">Loading scores...</div>
+            </div>
+            <div id="espnLastUpdated" style="color:rgba(255,255,255,0.3);font-size:0.7rem;margin-top:10px;text-align:right;"></div>
+          </div>
         </div>
 
 
@@ -22175,6 +22227,7 @@
       if (tabId === 'fmOverview' && !window._tvOverviewLoaded) { loadTVOverview(); window._tvOverviewLoaded = true; }
       if (tabId === 'fmCalendar' && !window._tvCalendarLoaded) { loadTVCalendar(); window._tvCalendarLoaded = true; }
       if (tabId === 'fmTechAnalysis' && !window._tvTechLoaded) { loadTVTechAnalysis(); window._tvTechLoaded = true; }
+      if (tabId === 'fmSports') { startESPNSportsTab(); } else { stopESPNAutoRefresh(); }
       if (tabId === 'fmChartStudio' && !_activeChartStudioTemplate) { showCSGallery(); }
       syncMobileFMMenuState();
       updateMobileFMChrome();
@@ -22183,6 +22236,122 @@
       }
       // Update mobile nav label based on sub-tab
       if (window.innerWidth <= 768) updateMobileNavLabel('fm');
+    }
+
+    // === ESPN Live Sports ===
+    var _espnEndpoints = {
+      nfl: 'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard',
+      nba: 'https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard',
+      mlb: 'https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard',
+      nhl: 'https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard'
+    };
+    var _espnCurrentLeague = 'nfl';
+    var _espnRefreshInterval = null;
+
+    function startESPNSportsTab() {
+      if (!window._espnFirstLoad) {
+        fetchESPNScores(_espnCurrentLeague);
+        window._espnFirstLoad = true;
+      }
+      stopESPNAutoRefresh();
+      _espnRefreshInterval = setInterval(function() { fetchESPNScores(_espnCurrentLeague); }, 45000);
+    }
+
+    function stopESPNAutoRefresh() {
+      if (_espnRefreshInterval) { clearInterval(_espnRefreshInterval); _espnRefreshInterval = null; }
+    }
+
+    function pickESPNLeague(league, btn) {
+      _espnCurrentLeague = league;
+      document.querySelectorAll('.espn-league-pill').forEach(function(p) { p.classList.remove('active'); });
+      if (btn) btn.classList.add('active');
+      fetchESPNScores(league);
+    }
+
+    async function fetchESPNScores(league) {
+      var container = document.getElementById('espnScoresContainer');
+      if (!container) return;
+      try {
+        var url = _espnEndpoints[league];
+        if (!url) return;
+        var resp = await fetch(url);
+        if (!resp.ok) throw new Error('ESPN API error');
+        var data = await resp.json();
+        var events = (data.events || []);
+        renderSportsScores(events, league);
+        var ts = document.getElementById('espnLastUpdated');
+        if (ts) ts.textContent = 'Updated ' + new Date().toLocaleTimeString();
+      } catch (err) {
+        container.innerHTML = '<div style="color:rgba(255,255,255,0.4);padding:40px 0;text-align:center;">Unable to load scores. Try again later.</div>';
+      }
+    }
+
+    function renderSportsScores(events, league) {
+      var container = document.getElementById('espnScoresContainer');
+      if (!container) return;
+      if (!events.length) {
+        container.innerHTML = '<div style="color:rgba(255,255,255,0.4);padding:40px 0;text-align:center;">No ' + league.toUpperCase() + ' games scheduled today.</div>';
+        return;
+      }
+      var html = '';
+      events.forEach(function(ev) {
+        var comp = ev.competitions && ev.competitions[0];
+        if (!comp) return;
+        var teams = comp.competitors || [];
+        var status = ev.status || {};
+        var statusType = (status.type || {});
+        var stateName = statusType.state || '';
+        var statusText = (status.type || {}).shortDetail || status.displayClock || '';
+        var isLive = stateName === 'in';
+        var isFinal = stateName === 'post';
+
+        var statusHTML = '';
+        if (isLive) {
+          statusHTML = '<span class="espn-live-dot"></span><span style="color:#22c55e;font-weight:600;">LIVE</span> — ' + statusText;
+        } else if (isFinal) {
+          statusHTML = '<span style="color:rgba(255,255,255,0.5);">' + statusText + '</span>';
+        } else {
+          statusHTML = '<span style="color:rgba(255,255,255,0.4);">' + statusText + '</span>';
+        }
+
+        // Determine winner
+        var awayTeam = null, homeTeam = null;
+        teams.forEach(function(t) {
+          if (t.homeAway === 'away') awayTeam = t;
+          else homeTeam = t;
+        });
+        if (!awayTeam || !homeTeam) return;
+
+        function buildRow(t, isWinner) {
+          var team = t.team || {};
+          var logo = (team.logo || '');
+          var abbr = team.abbreviation || team.shortDisplayName || '???';
+          var score = t.score || '—';
+          var record = '';
+          if (t.records && t.records[0]) record = t.records[0].summary || '';
+          var winClass = (isFinal && isWinner) ? ' winner' : '';
+          return '<div class="espn-team-row">' +
+            '<div class="espn-team-info">' +
+              (logo ? '<img class="espn-team-logo" src="' + logo + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">' : '') +
+              '<span class="espn-team-name">' + abbr + '</span>' +
+              (record ? '<span class="espn-team-record">(' + record + ')</span>' : '') +
+            '</div>' +
+            '<span class="espn-team-score' + winClass + '">' + score + '</span>' +
+          '</div>';
+        }
+
+        var awayScore = parseFloat(awayTeam.score) || 0;
+        var homeScore = parseFloat(homeTeam.score) || 0;
+        var awayWins = isFinal && awayScore > homeScore;
+        var homeWins = isFinal && homeScore > awayScore;
+
+        html += '<div class="espn-score-card' + (isLive ? ' espn-live' : '') + '" style="' + (isLive ? 'border-color:rgba(34,197,94,0.25);' : '') + '">' +
+          buildRow(awayTeam, awayWins) +
+          buildRow(homeTeam, homeWins) +
+          '<div class="espn-game-status">' + statusHTML + '</div>' +
+        '</div>';
+      });
+      container.innerHTML = html;
     }
 
     // FM Markets — renders into fmView grids
