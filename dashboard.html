@@ -17,7 +17,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-25-v364-markets-2col-fixed';
+    var APP_VERSION = '2026-04-25-v365-news-fix';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -22356,7 +22356,7 @@
       var countryLabel = getSelectedNewsCountryLabel(country);
       function pushRequest(opts) {
         var params = new URLSearchParams();
-        params.set('limit', String(opts.limit || 50));
+        params.set('limit', String(opts.limit || 25));
         if (opts.symbols) params.set('symbols', opts.symbols);
         if (opts.countries) params.set('countries', opts.countries);
         if (opts.industries) params.set('industries', opts.industries);
