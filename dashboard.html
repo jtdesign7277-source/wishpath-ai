@@ -18,7 +18,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-26-v416-swipe-delete';
+    var APP_VERSION = '2026-04-26-v418-swipe-fix';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -2054,9 +2054,9 @@
         right: 0; top: 0; bottom: 0;
         width: 72px;
         display: flex; align-items: center; justify-content: center;
-        background: linear-gradient(135deg, #dc2626, #ef4444);
-        color: #fff;
-        font-size: 22px;
+        background: rgba(239,68,68,0.18);
+        color: rgba(255,255,255,0.95);
+        font-size: 20px;
         cursor: pointer;
         -webkit-tap-highlight-color: transparent;
         opacity: 0;
@@ -17430,44 +17430,74 @@
     })();
 
     // ── Swipe-to-Delete for Market Cards ──
+    // ── Swipe-to-Delete for Market Cards ──
+    function _closeAllSwipeCards(except) {
+      var row = document.getElementById('homeMarketsRow');
+      if (!row) return;
+      row.querySelectorAll('.hm-swipe-wrap.swiped').forEach(function(w) {
+        if (except && w === except) return;
+        w.classList.remove('swiped');
+        var ci = w.querySelector('.home-market-card');
+        if (ci) ci.style.transform = '';
+        var tr = w.querySelector('.hm-swipe-trash');
+        if (tr) tr.style.opacity = '';
+      });
+    }
+
     (function initHomeMarketsSwipeDelete() {
       var row = document.getElementById('homeMarketsRow');
       if (!row) return;
-      var _swipeStartX = 0, _swipeStartY = 0, _swipeCard = null, _swipeDx = 0, _swiping = false;
-      var SWIPE_THRESHOLD = 60;
+      var _swipeStartX = 0, _swipeStartY = 0, _swipeCard = null, _swipeDx = 0;
+      var _swiping = false, _directionLocked = false;
+      var SWIPE_THRESHOLD = 50;
 
       row.addEventListener('touchstart', function(e) {
         var wrap = e.target.closest('.hm-swipe-wrap');
         if (!wrap) return;
-        // Don't swipe if touching the drag handle
         if (e.target.closest('.home-market-drag-handle')) return;
+        if (e.target.closest('.hm-swipe-trash')) return; // let trash onclick handle it
+
+        // If tapping on an already-swiped card (not on trash), close it
+        if (wrap.classList.contains('swiped')) {
+          _closeAllSwipeCards();
+          _swipeCard = null;
+          return;
+        }
+
+        // Close any other open cards first
+        _closeAllSwipeCards();
+
         _swipeStartX = e.touches[0].clientX;
         _swipeStartY = e.touches[0].clientY;
         _swipeCard = wrap;
         _swipeDx = 0;
         _swiping = false;
+        _directionLocked = false;
       }, { passive: true });
 
       row.addEventListener('touchmove', function(e) {
         if (!_swipeCard) return;
         var dx = e.touches[0].clientX - _swipeStartX;
         var dy = e.touches[0].clientY - _swipeStartY;
-        // Only swipe left, and only if horizontal motion dominates
-        if (!_swiping && Math.abs(dy) > Math.abs(dx)) { _swipeCard = null; return; }
-        if (dx > 5) { // swiping right — reset any open card
-          if (_swipeCard.classList.contains('swiped')) {
-            _swipeCard.classList.remove('swiped');
-            var inner = _swipeCard.querySelector('.home-market-card');
-            if (inner) inner.style.transform = '';
+
+        // Lock direction on first significant movement
+        if (!_directionLocked && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) {
+          _directionLocked = true;
+          if (Math.abs(dy) > Math.abs(dx)) {
+            // Vertical scroll — bail out
+            _swipeCard = null;
+            return;
           }
-          _swipeCard = null;
-          return;
-        }
-        if (dx < -10) {
+          if (dx > 0) {
+            // Swiping right — bail out
+            _swipeCard = null;
+            return;
+          }
           _swiping = true;
-          e.preventDefault();
         }
+
         if (_swiping) {
+          e.preventDefault();
           _swipeDx = Math.min(0, Math.max(dx, -80));
           var inner = _swipeCard.querySelector('.home-market-card');
           if (inner) inner.style.transform = 'translateX(' + _swipeDx + 'px)';
@@ -17477,38 +17507,37 @@
       }, { passive: false });
 
       row.addEventListener('touchend', function(e) {
-        if (!_swipeCard || !_swiping) { _swipeCard = null; return; }
+        if (!_swipeCard) return;
         var inner = _swipeCard.querySelector('.home-market-card');
+        var trash = _swipeCard.querySelector('.hm-swipe-trash');
+
+        if (!_swiping) {
+          // No swipe happened — reset
+          _swipeCard = null;
+          return;
+        }
+
         if (Math.abs(_swipeDx) >= SWIPE_THRESHOLD) {
-          // Snap open
+          // Snap open — show trash
           _swipeCard.classList.add('swiped');
           if (inner) inner.style.transform = 'translateX(-72px)';
-          // Close any other open cards
-          row.querySelectorAll('.hm-swipe-wrap.swiped').forEach(function(w) {
-            if (w !== _swipeCard) {
-              w.classList.remove('swiped');
-              var ci = w.querySelector('.home-market-card');
-              if (ci) ci.style.transform = '';
-            }
-          });
+          if (trash) trash.style.opacity = '1';
         } else {
-          // Snap back
+          // Didn't swipe far enough — snap back
           _swipeCard.classList.remove('swiped');
           if (inner) inner.style.transform = '';
+          if (trash) trash.style.opacity = '0';
         }
         _swipeCard = null;
         _swiping = false;
+        _directionLocked = false;
         _swipeDx = 0;
       }, { passive: true });
 
-      // Tap anywhere else closes open swipe cards
+      // Tap anywhere outside market cards closes all open swipes
       document.addEventListener('touchstart', function(e) {
         if (e.target.closest('.hm-swipe-wrap')) return;
-        row.querySelectorAll('.hm-swipe-wrap.swiped').forEach(function(w) {
-          w.classList.remove('swiped');
-          var ci = w.querySelector('.home-market-card');
-          if (ci) ci.style.transform = '';
-        });
+        _closeAllSwipeCards();
       }, { passive: true });
     })();
 
@@ -17654,7 +17683,7 @@
           '</div>' +
           '<span class="home-market-pin" onclick="event.stopPropagation();pinHomeMarketTicker(\'' + q.symbol.replace(/'/g,"\\'") + '\');" title="Pin ' + sym + '" style="font-size:16px;cursor:pointer;padding:4px;-webkit-tap-highlight-color:transparent;filter:grayscale(' + (_homeMarketsPinnedList.indexOf(q.symbol) >= 0 ? '0' : '0.8') + ');opacity:' + (_homeMarketsPinnedList.indexOf(q.symbol) >= 0 ? '1' : '0.45') + ';">' + (_homeMarketsPinnedList.indexOf(q.symbol) >= 0 ? '📌' : '📍') + '</span>' +
         '</div>' +
-        '<div class="hm-swipe-trash" onclick="event.stopPropagation();removeHomeMarketTicker(\'' + q.symbol.replace(/'/g,"\\'") + '\');" title="Delete ' + sym + '">🗑️</div>' +
+        '<div class="hm-swipe-trash" onclick="event.stopPropagation();removeHomeMarketTicker(\'' + q.symbol.replace(/'/g,"\\'") + '\');" title="Delete ' + sym + '"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div>' +
         '</div>';
       }).join('');
     }
