@@ -322,7 +322,7 @@
     body[data-active-view="coach"] #wpStarfield,
     body[data-active-view="newwish"] #wpStarfield,
     body.mobile-ai-open #wpStarfield { opacity: 1; }
-    #lifecoachView, #coachView, #newwishView { position: relative; z-index: 1; }
+    #lifecoachView, #coachView, #newwishView { position: relative; z-index: 601; }
     #mobileChat { position: relative; z-index: 1; }
     .coach-input-row { display: flex; gap: 8px; flex-shrink: 0; align-items: flex-end; }
     .coach-input-row .chat-input-wrap { flex: 1; }
@@ -3660,6 +3660,8 @@
         padding: calc(max(12px, env(safe-area-inset-top)) + 4px) 16px 10px;
         flex-shrink: 0;
         border-bottom: 1px solid rgba(255,255,255,0.06);
+        background: #0f0a1a;
+        z-index: 20;
       }
       .lc-back-btn {
         background: none;
@@ -3711,6 +3713,7 @@
         justify-content: center;
         gap: 16px;
         padding: 40px 20px;
+        background: #0f0a1a;
       }
       .lc-wand-icon {
         font-size: 3rem;
@@ -3745,6 +3748,7 @@
         overscroll-behavior-y: contain;
         padding: 16px 16px;
         display: none;
+        background: #0f0a1a;
       }
       .lc-messages.has-messages { display: flex; flex-direction: column; }
       .lc-msg {
@@ -3826,10 +3830,11 @@
         cursor: pointer;
         align-items: center;
         justify-content: center;
-        z-index: 10;
+        z-index: 15;
         box-shadow: 0 4px 16px rgba(0,0,0,0.4);
         -webkit-tap-highlight-color: transparent;
         transition: opacity 0.2s ease;
+        pointer-events: auto;
       }
       .lc-scroll-bottom.visible { display: flex; }
       .lc-scroll-bottom:active { opacity: 0.7; }
@@ -3863,8 +3868,9 @@
         padding: 12px 16px calc(12px + env(safe-area-inset-bottom)) 16px;
         border-top: 1px solid rgba(255,255,255,0.08);
         flex-shrink: 0;
-        background: #0f0f1e;
+        background: #0f0a1a;
         position: relative;
+        z-index: 20;
       }
       .lc-input-plus {
         background: none;
@@ -3891,6 +3897,7 @@
         animation: inputPulse 2s ease-in-out infinite;
         transition: all 0.3s ease;
         overflow: hidden;
+        z-index: 2;
       }
       .lc-input-wrap::before {
         content: '';
@@ -5314,12 +5321,13 @@
       }
       /* Right pane: chat thread — always visible on desktop, override mobile inline display:none */
       #lifecoachView .lc-fullscreen {
-        position: relative !important;
-        inset: auto !important;
+        position: relative;
+        inset: auto;
         display: flex !important;
         flex: 1;
         min-width: 0;
-        background: var(--bg, #0a0a0a);
+        background: #0f0a1a;
+        z-index: 10;
       }
       /* Hide mobile back buttons — no need to navigate between panels on desktop */
       #lifecoachView .lc-list-back-btn,
@@ -18576,7 +18584,7 @@
         // Disable input during streaming
         var lcInput = document.getElementById('lcInput');
         var lcSendBtn = document.querySelector('.lc-send-btn');
-        if (lcInput) lcInput.disabled = true;
+        if (lcInput) { lcInput.contentEditable = 'false'; lcInput.style.opacity = '0.5'; }
         if (lcSendBtn) lcSendBtn.style.opacity = '0.5';
 
         var msgs = document.getElementById('lcMessages');
@@ -18591,7 +18599,7 @@
             actionsDiv.innerHTML = '<button class="lc-msg-action-btn" onclick="lcCopyMsg(this)" title="Copy" aria-label="Copy message">📋</button>';
             aiDiv.appendChild(actionsDiv);
             // Re-enable input
-            if (lcInput) lcInput.disabled = false;
+            if (lcInput) { lcInput.contentEditable = 'true'; lcInput.style.opacity = '1'; }
             if (lcSendBtn) lcSendBtn.style.opacity = '1';
           }
         });
