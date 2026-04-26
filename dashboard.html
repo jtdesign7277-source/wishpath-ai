@@ -18,7 +18,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-25-v403-live-odds';
+    var APP_VERSION = '2026-04-25-v404-unified-ai-ui-newspix';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -258,16 +258,11 @@
     .coach-messages { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 8px 0; margin-bottom: 12px; }
     .msg { max-width: 90%; padding: 12px 16px; border-radius: 16px; font-size: 0.88rem; line-height: 1.6; transition: all 0.3s ease; }
     .msg.user { align-self: flex-end; background: linear-gradient(135deg, rgba(113,50,245,0.3) 0%, rgba(80,30,200,0.18) 50%, rgba(113,50,245,0.12) 100%); color: rgba(255,255,255,0.95); border-bottom-right-radius: 4px; border: 1px solid rgba(113,50,245,0.3); box-shadow: 0 4px 16px rgba(113,50,245,0.15), inset 0 1px 0 rgba(255,255,255,0.06); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
-    .msg.ai { align-self: flex-start; background: none; border: none; border-radius: 0; color: rgba(255,255,255,0.9); max-width: 92%; box-shadow: none; overflow-x: auto; word-wrap: break-word; overflow-wrap: break-word; }
+    .msg.ai { align-self: flex-start; background: transparent !important; border: none !important; border-radius: 0 !important; padding: 12px 0 !important; color: rgba(255,255,255,0.9); max-width: 100% !important; width: 100% !important; box-shadow: none !important; overflow-x: auto; word-wrap: break-word; overflow-wrap: break-word; }
     .msg.ai .thinking-status { display: inline-flex; align-items: center; gap: 8px; color: rgba(255,255,255,0.5); font-size: 14px; font-style: italic; }
     .msg.ai .thinking-label { color: rgba(255,255,255,0.5); font-weight: normal; }
-    .msg.ai .thinking-dots { display: flex; gap: 4px; }
-    .msg.ai .thinking-dots span { width: 5px; height: 5px; border-radius: 50%; background: rgba(113,50,245,0.7); animation: dotPulse 1.4s infinite ease-in-out; display: inline-block; }
-    .msg.ai .thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
-    .msg.ai .thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
-    @keyframes dotPulse { 0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); } 40% { opacity: 1; transform: scale(1.1); } }
 
-    /* ── Wand Thinking Indicator (Claude-style) ── */
+    /* ── Wand Thinking Indicator (unified) ── */
     .wp-thinking {
       display: inline-flex;
       align-items: center;
@@ -284,20 +279,43 @@
       50% { transform: scale(1.2); opacity: 0.7; }
     }
     .wp-thinking-text {
-      color: rgba(255,255,255,0.5);
+      color: rgba(255,255,255,0.55);
       font-size: 14px;
       font-weight: 400;
     }
     .wp-thinking-timer {
-      color: rgba(113,50,245,0.8);
+      color: #8c64f0;
       font-size: 13px;
-      font-weight: 500;
+      font-weight: 600;
       font-variant-numeric: tabular-nums;
     }
-    .wp-thinking-dot {
-      color: rgba(255,255,255,0.25);
+    .wp-thinking-pulse {
+      display: inline-block;
+      width: 6px; height: 6px; border-radius: 50%;
+      background: rgba(140,100,255,0.95);
+      box-shadow: 0 0 8px rgba(140,100,255,0.7);
+      animation: wpPulseDot 1.2s ease-in-out infinite;
       margin: 0 2px;
     }
+    @keyframes wpPulseDot {
+      0%, 100% { transform: scale(1); opacity: 0.7; }
+      50% { transform: scale(1.4); opacity: 1; }
+    }
+    /* ── Starfield canvas ── */
+    #wpStarfield {
+      position: fixed; inset: 0;
+      width: 100vw; height: 100dvh;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+    body[data-active-view="lifecoach"] #wpStarfield,
+    body[data-active-view="coach"] #wpStarfield,
+    body[data-active-view="newwish"] #wpStarfield,
+    body.mobile-ai-open #wpStarfield { opacity: 1; }
+    #lifecoachView, #coachView, #newwishView { position: relative; z-index: 1; }
+    #mobileChat { position: relative; z-index: 1; }
     .coach-input-row { display: flex; gap: 8px; flex-shrink: 0; align-items: flex-end; }
     .coach-input-row .chat-input-wrap { flex: 1; }
     .coach-input { flex: 1; padding: 12px 16px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.04); border-radius: 12px; color: var(--text); font: inherit; font-size: 0.9rem; outline: none; resize: none; min-height: 48px; max-height: 240px; overflow-y: auto; box-shadow: inset 4px 4px 8px rgba(0,0,0,0.5), inset -2px -2px 6px rgba(255,255,255,0.02); transition: all 0.3s ease; }
@@ -1382,7 +1400,7 @@
       .coach-messages { flex: 1 !important; min-height: 0 !important; overflow-y: auto !important; max-height: none !important; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
       .msg { font-size: 15px !important; line-height: 1.55 !important; }
       .msg.user { max-width: 82% !important; }
-      .msg.ai { max-width: 92% !important; }
+      .msg.ai { max-width: 100% !important; width: 100% !important; background: transparent !important; border: none !important; border-radius: 0 !important; padding: 12px 0 !important; box-shadow: none !important; }
       .coach-right-wrapper { flex: 1 !important; min-height: 0 !important; border-left: none !important; border-top: none !important; overflow: hidden; }
       .coach-right { padding: 14px 0; }
 
@@ -2865,10 +2883,9 @@
     /* Portfolio-specific chart override — seamless */
     #portfolioChartContainer, #fmPortfolioChartContainer { background: transparent; border: none; box-shadow: none; }
     .chart-container .highcharts-container { margin: 0 auto; }
-    .portfolio-coach-section .msg.ai { background: linear-gradient(135deg, rgba(42,42,52,0.6) 0%, rgba(30,20,50,0.4) 50%, rgba(42,42,52,0.3) 100%); border: 1px solid rgba(113,50,245,0.12); border-radius: 16px 16px 16px 4px; color: rgba(255,255,255,0.9); box-shadow: 0 2px 12px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04); }
+    .portfolio-coach-section .msg.ai { background: transparent !important; border: none !important; border-radius: 0 !important; padding: 12px 0 !important; color: rgba(255,255,255,0.9); box-shadow: none !important; max-width: 100% !important; width: 100% !important; }
     .portfolio-coach-section .msg.user { background: linear-gradient(135deg, rgba(113,50,245,0.3) 0%, rgba(80,30,200,0.18) 50%, rgba(113,50,245,0.12) 100%); border: 1px solid rgba(113,50,245,0.3); color: rgba(255,255,255,0.95); box-shadow: 0 4px 16px rgba(113,50,245,0.15), inset 0 1px 0 rgba(255,255,255,0.06); }
     .portfolio-coach-section .msg.ai .thinking-label { color: rgba(255,255,255,0.5); }
-    .portfolio-coach-section .msg.ai .thinking-dots span { background: rgba(113,50,245,0.7); }
     .chart-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
     .chart-action-btn { display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%); border: 1px solid rgba(255,255,255,0.06); border-radius: 99px; color: rgba(255,255,255,0.55); font-size: 0.7rem; font-weight: 500; cursor: pointer; font-family: inherit; box-shadow: 0 2px 8px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04); transition: all 0.3s ease; }
     .chart-action-btn:hover { background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%); color: rgba(255,255,255,0.85); border-color: rgba(255,255,255,0.1); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
@@ -3262,9 +3279,6 @@
     /* Input focus glow */
     .coach-input:focus, .wish-textarea:focus, .note-title-input:focus, .note-body-input:focus { border-color: rgba(113,50,245,0.4) !important; box-shadow: 0 0 0 3px rgba(113,50,245,0.08) !important; }
     /* Staggered thinking dots */
-    .msg.ai .thinking-dots span:nth-child(1) { animation-delay: 0s; }
-    .msg.ai .thinking-dots span:nth-child(2) { animation-delay: 0.15s; }
-    .msg.ai .thinking-dots span:nth-child(3) { animation-delay: 0.3s; }
     /* Toast notifications */
     .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px); background: rgba(30,30,35,0.95); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px 20px; font-size: 0.85rem; color: var(--text); z-index: 99999; opacity: 0; pointer-events: none; transition: all 0.25s ease; white-space: nowrap; box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
     .toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
@@ -3762,16 +3776,7 @@
         color: rgba(255,255,255,0.5);
         font-size: 14px;
         padding: 0;
-        font-style: italic;
       }
-      .lc-msg-ai .lc-thinking .dot-pulse span {
-        width: 5px; height: 5px; border-radius: 50%;
-        background: rgba(113,50,245,0.7);
-        display: inline-block;
-        animation: dotPulse 1.4s infinite ease-in-out;
-      }
-      .lc-msg-ai .lc-thinking .dot-pulse span:nth-child(2) { animation-delay: 0.2s; }
-      .lc-msg-ai .lc-thinking .dot-pulse span:nth-child(3) { animation-delay: 0.4s; }
       .lc-msg-actions {
         display: flex;
         gap: 12px;
@@ -5390,6 +5395,8 @@
   <div id="wpPurpleEdge"></div>
   <!-- Ambient particle background -->
   <canvas id="wpAmbientCanvas" style="position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:0.45;"></canvas>
+  <!-- xAI-style starfield (AI surfaces only) -->
+  <canvas id="wpStarfield" aria-hidden="true"></canvas>
   <!-- Paywall Modal -->
   <div class="paywall-overlay" id="paywallOverlay">
     <div class="paywall-modal">
@@ -8741,36 +8748,44 @@
     }
 
     // ── Wand Thinking Indicator (Claude-style with live timer) ──
-    var thinkingPhrases = ['Thinking', 'Processing', 'Analyzing', 'Researching', 'Connecting the dots'];
+    var thinkingPhrases = ['Thinking','Processing','Analyzing','Researching','Connecting the dots','Cross-checking','Reasoning','Working','Synthesizing','Pulling sources','Considering','Looking it up','Reading the room','Almost there'];
     var thinkingIntervals = {};
     var _wpThinkingTimers = {};
+    var _wpThinkingLastPhrase = {};
 
     function _wpThinkingHTML(label) {
       return '<div class="wp-thinking">' +
         '<span class="wp-thinking-wand">✨</span>' +
         '<span class="wp-thinking-text">' + (label || 'Thinking') + '</span>' +
-        '<span class="wp-thinking-dot">·</span>' +
-        '<span class="wp-thinking-timer">0s</span>' +
+        '<span class="wp-thinking-pulse"></span>' +
+        '<span class="wp-thinking-timer">0.0s</span>' +
       '</div>';
     }
 
     function _wpStartTimer(id) {
       var start = Date.now();
+      var lastPhraseChange = start;
+      _wpThinkingLastPhrase[id] = 0;
       _wpThinkingTimers[id] = setInterval(function() {
         var el = document.getElementById(id);
         if (!el) { clearInterval(_wpThinkingTimers[id]); delete _wpThinkingTimers[id]; return; }
         var timerEl = el.querySelector('.wp-thinking-timer');
         if (timerEl) {
-          var elapsed = Math.floor((Date.now() - start) / 1000);
-          timerEl.textContent = elapsed + 's';
+          var elapsedMs = Date.now() - start;
+          var elapsedS = elapsedMs / 1000;
+          timerEl.textContent = elapsedS < 10 ? elapsedS.toFixed(1) + 's' : Math.floor(elapsedS) + 's';
         }
-        // Rotate thinking phrases
+        // Rotate thinking phrases every 4s (random, no repeats)
         var textEl = el.querySelector('.wp-thinking-text');
-        if (textEl) {
-          var phraseIdx = Math.floor((Date.now() - start) / 4000) % thinkingPhrases.length;
-          textEl.textContent = thinkingPhrases[phraseIdx];
+        if (textEl && Date.now() - lastPhraseChange >= 4000) {
+          lastPhraseChange = Date.now();
+          var cur = _wpThinkingLastPhrase[id] || 0;
+          var next;
+          do { next = Math.floor(Math.random() * thinkingPhrases.length); } while (next === cur && thinkingPhrases.length > 1);
+          _wpThinkingLastPhrase[id] = next;
+          textEl.textContent = thinkingPhrases[next];
         }
-      }, 1000);
+      }, 250);
     }
 
     function _wpStopTimer(id) {
@@ -8778,6 +8793,7 @@
         clearInterval(_wpThinkingTimers[id]);
         delete _wpThinkingTimers[id];
       }
+      delete _wpThinkingLastPhrase[id];
     }
 
     function showThinking(containerId, typingId) {
@@ -8797,6 +8813,67 @@
       var el = document.getElementById(typingId);
       if (el) el.remove();
     }
+
+    // ── xAI-style starfield (AI surfaces only) ──
+    (function initStarfield(){
+      var c = document.getElementById('wpStarfield');
+      if (!c) return;
+      var ctx = c.getContext('2d');
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      var stars = [], shooters = [];
+      var W = 0, H = 0;
+      function resize() {
+        W = window.innerWidth; H = window.innerHeight;
+        c.width = W * dpr; c.height = H * dpr;
+        c.style.width = W + 'px'; c.style.height = H + 'px';
+        ctx.setTransform(dpr,0,0,dpr,0,0);
+        var count = Math.round((W * H) / 9000);
+        stars = [];
+        for (var i = 0; i < count; i++) {
+          stars.push({
+            x: Math.random()*W, y: Math.random()*H,
+            r: Math.random()*1.2+0.2, a: Math.random()*0.6+0.2,
+            tw: 0.4+Math.random()*1.6, ph: Math.random()*Math.PI*2,
+            drift: (Math.random()-0.5)*0.04
+          });
+        }
+      }
+      window.addEventListener('resize', resize);
+      resize();
+      function frame(t) {
+        requestAnimationFrame(frame);
+        if (getComputedStyle(c).opacity === '0') return;
+        ctx.clearRect(0, 0, W, H);
+        for (var i = 0; i < stars.length; i++) {
+          var s = stars[i];
+          s.x += s.drift; if (s.x < 0) s.x = W; if (s.x > W) s.x = 0;
+          var alpha = s.a * (0.55 + 0.45*Math.sin(t*0.001*s.tw + s.ph));
+          ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+          ctx.fillStyle = 'rgba(255,255,255,' + alpha.toFixed(3) + ')';
+          ctx.fill();
+        }
+        if (Math.random() < 0.0015) {
+          shooters.push({
+            x: Math.random()*W*0.7, y: Math.random()*H*0.4,
+            vx: 4+Math.random()*3, vy: 1+Math.random()*1.2,
+            life: 0, max: 50+Math.random()*30
+          });
+        }
+        for (var j = shooters.length - 1; j >= 0; j--) {
+          var sh = shooters[j];
+          sh.x += sh.vx; sh.y += sh.vy; sh.life++;
+          var fade = 1 - (sh.life/sh.max);
+          if (fade <= 0 || sh.x > W || sh.y > H) { shooters.splice(j,1); continue; }
+          var grad = ctx.createLinearGradient(sh.x, sh.y, sh.x - sh.vx*8, sh.y - sh.vy*8);
+          grad.addColorStop(0, 'rgba(180,160,255,' + (0.9*fade) + ')');
+          grad.addColorStop(1, 'rgba(180,160,255,0)');
+          ctx.strokeStyle = grad; ctx.lineWidth = 1.4; ctx.lineCap = 'round';
+          ctx.beginPath(); ctx.moveTo(sh.x, sh.y);
+          ctx.lineTo(sh.x - sh.vx*8, sh.y - sh.vy*8); ctx.stroke();
+        }
+      }
+      requestAnimationFrame(frame);
+    })();
 
     // ── Reusable markdown→HTML converter ──
     function formatMdToHtml(text) {
@@ -17232,6 +17309,48 @@
         .catch(function(e) { console.error('[HomeMarkets] Fetch error:', e); });
     }
 
+    // ── News image helper: detect source logos, generate unique fallbacks ──
+    var _newsImgGradients = [
+      'linear-gradient(135deg,#1a0838 0%,#2d1b69 50%,#4a1d8a 100%)',
+      'linear-gradient(135deg,#0f3443 0%,#1b5e7a 50%,#2196a4 100%)',
+      'linear-gradient(135deg,#1b2838 0%,#2a4a6b 50%,#3b82f6 100%)',
+      'linear-gradient(135deg,#2d1b00 0%,#6b3a00 50%,#f59e0b 100%)',
+      'linear-gradient(135deg,#1a2e1a 0%,#2d5a2d 50%,#4ade80 100%)',
+      'linear-gradient(135deg,#2e1a1a 0%,#5a2d2d 50%,#f87171 100%)',
+      'linear-gradient(135deg,#0d1117 0%,#1a1a3e 50%,#6366f1 100%)',
+      'linear-gradient(135deg,#1a0a2e 0%,#3b1f6e 50%,#a78bfa 100%)'
+    ];
+    function _isSourceLogo(url) {
+      if (!url) return true;
+      var u = url.toLowerCase();
+      return /logo|brand|favicon|icon|default|placeholder|avatar/i.test(u) ||
+             /seekingalpha\.com\/(api\/image|cdn\/s\/logos|assets)/i.test(u) ||
+             /\/logo[s]?\//i.test(u) ||
+             u.indexOf('opengraph') !== -1;
+    }
+    function _newsCardMedia(a, idx, cssClass, fallbackClass, height) {
+      var img = a.image || a.image_url || a.imageUrl || '';
+      var source = String(a.source || 'Market News').replace(/</g, '&lt;');
+      var tickers = a.tickers || [];
+      var ticker = tickers.length ? tickers[0] : '';
+      var sentiment = a.sentiment || 'neutral';
+      var sentIcon = sentiment === 'bullish' ? '📈' : sentiment === 'bearish' ? '📉' : '📊';
+      var grad = _newsImgGradients[(idx * 7 + (a.title || '').length) % _newsImgGradients.length];
+      var h = height || 108;
+
+      // Generate fallback card with gradient + ticker + sentiment icon
+      var fallback = '<div class="' + fallbackClass + '" style="background:' + grad + ';position:relative;overflow:hidden;">' +
+        '<div style="position:absolute;top:8px;left:10px;font-size:9px;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.1em;">' + source + '</div>' +
+        (ticker ? '<div style="position:absolute;bottom:10px;left:10px;font-size:22px;font-weight:900;color:rgba(255,255,255,0.15);letter-spacing:2px;">' + ticker + '</div>' : '') +
+        '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:32px;opacity:0.25;">' + sentIcon + '</div>' +
+        '</div>';
+
+      if (!img || _isSourceLogo(img)) return fallback;
+
+      // Use real image with fallback on error
+      return '<img class="' + cssClass + '" src="' + img.replace(/"/g, '&quot;') + '" alt="" loading="lazy" onerror="this.outerHTML=\'' + fallback.replace(/'/g, '&#39;').replace(/"/g, '&quot;') + '\'" />';
+    }
+
     function renderMobileHomeNews() {
       var row = document.getElementById('mobileNewsRow');
       if (!row) return;
@@ -17253,10 +17372,7 @@
         var source = String(a.source || 'Market News').replace(/</g, '&lt;');
         var title = String(a.title || '').replace(/</g, '&lt;');
         var published = String(a.timeAgo || a.published || '').replace(/</g, '&lt;');
-        var img = a.image || a.image_url || a.imageUrl || '';
-        var media = img
-          ? '<img class="mobile-news-img" src="' + img.replace(/"/g, '&quot;') + '" alt="" loading="lazy" onerror="this.outerHTML=\'<div class=&quot;mobile-news-img-fallback&quot;>' + source.replace(/'/g, '&#39;') + '</div>\'" />'
-          : '<div class="mobile-news-img-fallback">' + source + '</div>';
+        var media = _newsCardMedia(a, idx, 'mobile-news-img', 'mobile-news-img-fallback', 108);
         return '<div class="mobile-news-card" onclick="openArticleReader(window._mobileHomeNewsArticles[' + idx + '])">' +
           media +
           '<div class="mobile-news-body">' +
@@ -17654,15 +17770,17 @@
     function submitHomeQuestion(msg) {
       if (!checkAgentLimit()) return;
       applyMood(msg, document.getElementById('mobileHome'));
-      // Hide home content, show chat
+      // Hide home content, show chat + enable starfield
       document.getElementById('mobileHomeContent').style.display = 'none';
       var chat = document.getElementById('mobileChat');
       chat.style.display = 'flex';
+      document.body.classList.add('mobile-ai-open');
       // Add user bubble
       var msgs = document.getElementById('mobileChatMessages');
       msgs.innerHTML += '<div style="text-align:right;margin-bottom:16px;"><div style="display:inline-block;background:#2a2040;padding:12px 16px;border-radius:16px 16px 4px 16px;max-width:82%;text-align:left;color:rgba(255,255,255,0.9);font-size:15px;line-height:1.5;">' + msg.replace(/</g,'&lt;') + '</div></div>';
-      // Add thinking indicator
-      msgs.innerHTML += '<div id="mobileHomeThinking" style="margin-bottom:16px;"><div style="display:inline-flex;align-items:center;gap:8px;background:#202020;padding:10px 14px;border-radius:16px 16px 16px 4px;color:rgba(255,255,255,0.5);font-size:14px;">✨ <span id="mobileHomeThinkingLabel">Analyzing</span><span style="display:flex;gap:3px;margin-left:2px;"><span style="width:5px;height:5px;border-radius:50%;background:rgba(113,50,245,0.7);display:inline-block;animation:dotPulse 1.4s infinite ease-in-out;"></span><span style="width:5px;height:5px;border-radius:50%;background:rgba(113,50,245,0.7);display:inline-block;animation:dotPulse 1.4s 0.2s infinite ease-in-out;"></span><span style="width:5px;height:5px;border-radius:50%;background:rgba(113,50,245,0.7);display:inline-block;animation:dotPulse 1.4s 0.4s infinite ease-in-out;"></span></span></div></div>';
+      // Add unified thinking indicator
+      msgs.innerHTML += '<div id="mobileHomeThinking" style="margin-bottom:16px;padding:4px 0;">' + _wpThinkingHTML('Thinking') + '</div>';
+      _wpStartTimer('mobileHomeThinking');
       msgs.scrollTop = msgs.scrollHeight;
       sendToCoachFromHome(msg);
     }
@@ -17679,19 +17797,21 @@
         var data = await res.json();
         var reply = data.reply || "I couldn't process that. Please try again.";
         mobileHomeChatHistory.push({ role: 'assistant', content: reply });
+        _wpStopTimer('mobileHomeThinking');
         var thinking = document.getElementById('mobileHomeThinking');
         if (thinking) thinking.remove();
         var msgs = document.getElementById('mobileChatMessages');
         var htmlReply = formatMdToHtml(reply);
         var aiMsgWrap = document.createElement('div');
         aiMsgWrap.style.marginBottom = '16px';
-        aiMsgWrap.innerHTML = '<div style="display:inline-block;max-width:90%;background:#202020;padding:12px 16px;border-radius:16px 16px 16px 4px;color:rgba(255,255,255,0.85);font-size:15px;line-height:1.6;">' + htmlReply + '</div>';
+        aiMsgWrap.innerHTML = '<div style="max-width:100%;width:100%;background:transparent;padding:12px 0;color:rgba(255,255,255,0.9);font-size:15px;line-height:1.6;">' + htmlReply + '</div>';
         msgs.appendChild(aiMsgWrap);
         wrapAiTables(aiMsgWrap);
         // Scroll to TOP of new message so user reads from the beginning
         msgs.scrollTop = aiMsgWrap.offsetTop - 8;
         incrementAgentUsage();
       } catch(e) {
+        _wpStopTimer('mobileHomeThinking');
         var thinking = document.getElementById('mobileHomeThinking');
         if (thinking) thinking.remove();
         var msgs = document.getElementById('mobileChatMessages');
@@ -18462,6 +18582,7 @@
     function closeMobileChat() {
       document.getElementById('mobileChat').style.display = 'none';
       document.getElementById('mobileHomeContent').style.display = '';
+      document.body.classList.remove('mobile-ai-open');
       // Conversation preserved — tapping Back no longer erases chat history.
       // mobileHomeChatHistory and mobileChatMessages are kept intact so the
       // user can return to the same conversation by tapping any chip or submitting again.
@@ -20305,7 +20426,7 @@
             };
           });
           var html = window._marketNewsArticles.map(function(a, idx) {
-            var imgHtml = a.image ? '<img class="news-item-img" src="' + a.image + '" alt="" onerror="this.style.display=\'none\'" loading="lazy" />' : '';
+            var imgHtml = (!a.image || _isSourceLogo(a.image)) ? '' : '<img class="news-item-img" src="' + a.image + '" alt="" onerror="this.style.display=\'none\'" loading="lazy" />';
             var tickerHtml = (a.tickers && a.tickers.length > 0) ? '<div class="news-tickers">' + a.tickers.map(function(t) { return '<span class="news-ticker-pill">' + t + '</span>'; }).join('') + (a.sentiment && a.sentiment !== 'neutral' ? '<span class="news-sentiment ' + a.sentiment + '">' + a.sentiment + '</span>' : '') + '</div>' : '';
             var descHtml = a.description ? '<div style="font-size:0.78rem;color:var(--text-dim);margin-top:4px;line-height:1.4;">' + String(a.description).replace(/</g,'&lt;').substring(0, 140) + '</div>' : '';
             return '<div class="news-item" onclick="openArticleReader(window._marketNewsArticles[' + idx + '])" style="cursor:pointer;">' +
@@ -23942,14 +24063,7 @@
         var heldTickers = (a.tickers || []).filter(function(t) { return userTickers.indexOf(t) !== -1; });
         heldTickers.forEach(function(t) { badges += '<span class="news-badge holding">' + t + '</span>'; });
 
-        var imgHtml = '';
-        if (a.image_url || a.imageUrl) {
-          imgHtml = '<img class="news-feed-img" src="' + (a.image_url || a.imageUrl) + '" alt="" onerror="this.outerHTML=\'<div class=news-feed-img-placeholder style=background:linear-gradient(135deg,rgba(113,50,245,0.2),rgba(59,130,246,0.2))>' + (a.source || 'News').replace(/'/g,'') + '</div>\'" loading="lazy" />';
-        } else {
-          var gradients = ['linear-gradient(135deg,#1a1a2e,#16213e)','linear-gradient(135deg,#0f3443,#34e89e20)','linear-gradient(135deg,#2d1b69,#6c63ff20)','linear-gradient(135deg,#1b2838,rgb(113,50,245)20)'];
-          var grad = gradients[idx % gradients.length];
-          imgHtml = '<div class="news-feed-img-placeholder" style="background:' + grad + ';">' + (a.source || 'Market News') + '</div>';
-        }
+        var imgHtml = _newsCardMedia(a, idx, 'news-feed-img', 'news-feed-img-placeholder', null);
 
         return '<div class="news-feed-item" onclick="openNewsDetail(' + idx + ')">' +
           imgHtml +
@@ -24429,19 +24543,22 @@
       if (!msg) return;
       inputEl.value = '';
       msgsEl.innerHTML += '<div class="msg user">' + msg.replace(/</g,'&lt;') + '</div>';
-      msgsEl.innerHTML += '<div class="msg ai" id="ccCoachTyping-' + idx + '"><span class="thinking-dots"><span></span><span></span><span></span></span></div>';
+      msgsEl.innerHTML += '<div class="msg ai" id="ccCoachTyping-' + idx + '">' + _wpThinkingHTML('Thinking') + '</div>';
+      _wpStartTimer('ccCoachTyping-' + idx);
       msgsEl.scrollTop = msgsEl.scrollHeight;
       try {
         var res = await fetch(EDGE_FN, { method: 'POST', headers: await getAuthHeaders(),
           body: JSON.stringify({ coachMode: true, model: 'claude-sonnet-4-20250514', systemPrompt: 'You are the WishPath AI Coach — expert financial advisor. Be helpful, concise, data-driven. Keep your responses concise and actionable. Use 2-3 short paragraphs maximum. Only provide longer responses when the user explicitly asks for more detail or a comprehensive analysis.', messages: [{ role: 'user', content: msg }] }) });
         var data = await res.json();
         var reply = data.reply || "Couldn't process that.";
+        _wpStopTimer('ccCoachTyping-' + idx);
         var typing = document.getElementById('ccCoachTyping-' + idx);
         if (typing) typing.remove();
 
         // Stream the response using typewriter effect
         typewriterEffect(msgsEl, reply, function() { incrementAgentUsage(); });
       } catch(e) {
+        _wpStopTimer('ccCoachTyping-' + idx);
         var typing = document.getElementById('ccCoachTyping-' + idx);
         if (typing) typing.remove();
         msgsEl.innerHTML += '<div class="msg ai" style="color:#f85149;">Connection error.</div>';
