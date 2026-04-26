@@ -18,7 +18,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-26-v414-chart-overhaul';
+    var APP_VERSION = '2026-04-26-v415-fast-ticker';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -24082,7 +24082,7 @@
 
     // === Faster TradingView ticker tape on mobile (FM + in-document TV DOM; re-apply after TV re-renders) ===
     (function initFastTickerTape() {
-      var TICKER_DUR = '22s';
+      var TICKER_DUR = '10s';
       function speedUpTradingViewTicker() {
         if (window.innerWidth > 768) return;
         var id = 'wp-ticker-tape-speed-fix';
