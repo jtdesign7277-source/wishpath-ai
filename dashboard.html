@@ -18,7 +18,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-25-v406-vegas-cabinet';
+    var APP_VERSION = '2026-04-25-v406b-cabinet-fix';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -4830,31 +4830,23 @@
     }
     #krakenspinsView.view { display: none; }
     #krakenspinsView.view.active {
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
       position: fixed; inset: 0; z-index: 500;
       background: radial-gradient(ellipse at 50% 30%, #ff8a2e 0%, #c8451f 25%, #5a1e3a 55%, #1a0828 100%);
       height: 100vh; height: 100dvh;
       overflow: hidden;
-      padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom) 0;
+      padding: 0;
     }
-    /* Dotted purple side panels */
-    #krakenspinsView.view.active::before,
-    #krakenspinsView.view.active::after {
-      content: ''; position: fixed; top: 0; bottom: 0; width: 14%; z-index: 0; pointer-events: none;
-      background-color: rgba(42,14,63,0.7);
-      background-image: radial-gradient(circle at center, rgba(255,255,255,0.08) 1.5px, transparent 2px);
-      background-size: 12px 12px;
-    }
-    #krakenspinsView.view.active::before { left: 0; }
-    #krakenspinsView.view.active::after { right: 0; }
 
     /* ── Cabinet frame ── */
     .ks-cabinet {
       position: relative; z-index: 1;
-      width: 100%; max-width: 440px; height: 100dvh;
-      padding: 18px; box-sizing: border-box;
+      width: 100%; height: 100dvh;
+      padding: 6px 6px env(safe-area-inset-bottom, 6px) 6px;
+      padding-top: calc(env(safe-area-inset-top, 0px) + 6px);
+      box-sizing: border-box;
       display: flex; flex-direction: column;
-      border: 8px solid transparent;
+      border: 6px solid transparent;
       border-image: linear-gradient(180deg, #f5c842 0%, #b35cff 25%, #5a1e3a 50%, #b35cff 75%, #f5c842 100%) 1;
       box-shadow: 0 0 40px rgba(179,92,255,0.5), inset 0 0 24px rgba(255,200,80,0.15);
     }
@@ -4878,66 +4870,66 @@
     /* ── Top bar (loaded) ── */
     .ks-top-bar {
       width: 100%; display: flex; align-items: center;
-      gap: 6px; padding: 8px 6px; flex-shrink: 0; position: relative; z-index: 10;
-      min-height: 56px; padding-top: calc(env(safe-area-inset-top, 0px) + 8px);
+      gap: 5px; padding: 4px 4px; flex-shrink: 0; position: relative; z-index: 10;
+      min-height: 44px;
       flex-wrap: wrap; justify-content: center;
     }
     .ks-top-home {
-      width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+      width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
       background: radial-gradient(circle at 40% 35%, #6b2a8f, #3a1252);
       border: 2px solid var(--ks-gold);
       display: flex; align-items: center; justify-content: center;
       cursor: pointer; -webkit-tap-highlight-color: transparent;
-      font-size: 16px; color: #fff;
+      font-size: 14px; color: #fff;
     }
     .ks-level-pill {
       background: linear-gradient(180deg, #d4a3ff, #9d4edd);
-      border: 2px solid var(--ks-gold-br); border-radius: 14px;
-      padding: 4px 10px; color: #fff; font-size: 12px; font-weight: 900;
+      border: 1.5px solid var(--ks-gold-br); border-radius: 12px;
+      padding: 3px 8px; color: #fff; font-size: 10px; font-weight: 900;
       letter-spacing: 0.5px; flex-shrink: 0;
       font-family: 'Lilita One', system-ui, sans-serif;
     }
-    .ks-mascot { font-size: 28px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); flex-shrink: 0; line-height: 1; }
+    .ks-mascot { font-size: 22px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); flex-shrink: 0; line-height: 1; }
     .ks-getgems {
       background: linear-gradient(180deg, var(--ks-gold-br), #f5a623);
-      border: 2px solid #fff; border-radius: 18px; padding: 4px 12px;
+      border: 1.5px solid #fff; border-radius: 14px; padding: 2px 8px;
       display: flex; flex-direction: column; align-items: center;
       cursor: pointer; -webkit-tap-highlight-color: transparent;
-      box-shadow: 0 0 16px rgba(255,216,74,0.6); flex-shrink: 0;
+      box-shadow: 0 0 12px rgba(255,216,74,0.5); flex-shrink: 0;
       font-family: 'Lilita One', system-ui, sans-serif;
     }
-    .ks-getgems-top { font-size: 9px; font-weight: 900; color: #4a1a05; letter-spacing: 0.5px; line-height: 1.2; }
-    .ks-getgems-bot { font-size: 13px; font-weight: 900; color: #4a1a05; line-height: 1.2; }
+    .ks-getgems-top { font-size: 7px; font-weight: 900; color: #4a1a05; letter-spacing: 0.3px; line-height: 1.2; }
+    .ks-getgems-bot { font-size: 11px; font-weight: 900; color: #4a1a05; line-height: 1.2; }
     .ks-gem-count {
-      background: #4b1d8a; border: 1.5px solid var(--ks-purple-br); border-radius: 12px;
-      padding: 3px 10px; font-size: 13px; font-weight: 900; color: #fff;
-      display: flex; align-items: center; gap: 4px; flex-shrink: 0;
+      background: #4b1d8a; border: 1.5px solid var(--ks-purple-br); border-radius: 10px;
+      padding: 2px 7px; font-size: 11px; font-weight: 900; color: #fff;
+      display: flex; align-items: center; gap: 3px; flex-shrink: 0;
       font-family: 'Lilita One', system-ui, sans-serif;
     }
-    .ks-gem-count .ks-gem-icon { color: var(--ks-cyan); }
+    .ks-gem-count .ks-gem-icon { color: var(--ks-cyan); font-size: 10px; }
     .ks-coin-count {
-      display: flex; align-items: center; gap: 4px; flex: 1; justify-content: flex-end;
+      display: flex; align-items: center; gap: 3px; flex: 1; justify-content: flex-end;
       font-family: 'Lilita One', system-ui, sans-serif;
-      font-size: 22px; font-weight: 900; color: var(--ks-gold-br);
-      -webkit-text-stroke: 1.5px var(--ks-gold-shdw); line-height: 1;
+      font-size: 18px; font-weight: 900; color: var(--ks-gold-br);
+      -webkit-text-stroke: 1px var(--ks-gold-shdw); line-height: 1;
     }
-    .ks-coin-count .ks-coin-icon { font-size: 18px; -webkit-text-stroke: 0; }
+    .ks-coin-count .ks-coin-icon { font-size: 15px; -webkit-text-stroke: 0; }
     .ks-shop {
       background: linear-gradient(180deg, var(--ks-purple-hi), var(--ks-purple));
-      border: 2px solid var(--ks-gold-br); border-radius: 14px;
-      padding: 6px 14px; color: #fff; font-size: 14px; font-weight: 900;
+      border: 1.5px solid var(--ks-gold-br); border-radius: 12px;
+      padding: 4px 10px; color: #fff; font-size: 12px; font-weight: 900;
       cursor: pointer; -webkit-tap-highlight-color: transparent;
       text-shadow: 0 1px 0 #2a0e3f; flex-shrink: 0;
       font-family: 'Lilita One', system-ui, sans-serif;
     }
     .ks-hot {
       background: radial-gradient(circle at 50% 40%, var(--ks-red), #c01840);
-      border: 1.5px solid #fff; border-radius: 12px; padding: 4px 10px;
+      border: 1.5px solid #fff; border-radius: 10px; padding: 2px 7px;
       display: flex; flex-direction: column; align-items: center; flex-shrink: 0;
       animation: ksHotPulse 1.8s ease-in-out infinite;
     }
-    .ks-hot-label { font-size: 9px; font-weight: 700; color: #fff; opacity: 0.85; line-height: 1.2; }
-    .ks-hot-timer { font-size: 11px; font-weight: 900; color: #fff; line-height: 1.2; }
+    .ks-hot-label { font-size: 7px; font-weight: 700; color: #fff; opacity: 0.85; line-height: 1.2; }
+    .ks-hot-timer { font-size: 9px; font-weight: 900; color: #fff; line-height: 1.2; }
     @keyframes ksHotPulse {
       0%, 100% { box-shadow: 0 0 0 rgba(255,77,109,0.7); }
       50% { box-shadow: 0 0 12px rgba(255,77,109,0.7); }
@@ -4982,9 +4974,8 @@
     /* ── Reel frame (sunset bg + mountain silhouette) ── */
     .ks-reel-frame {
       flex: 1; min-width: 0; position: relative; overflow: hidden;
-      margin: 6px 4px; border-radius: 14px;
-      border: 5px solid transparent;
-      border-image: linear-gradient(180deg, var(--ks-gold-br), #c2710a 50%, var(--ks-gold-br)) 1;
+      margin: 4px 2px; border-radius: 14px;
+      border: 4px solid var(--ks-gold-br);
       background:
         linear-gradient(180deg, rgba(10,4,28,0.55) 0%, rgba(60,20,40,0.35) 30%, rgba(40,15,30,0.55) 100%),
         radial-gradient(ellipse at 50% 70%, #ff8a2e 0%, #c8451f 25%, #2a0e3f 70%);
@@ -5115,18 +5106,25 @@
 
     /* Mobile ≤420px overrides */
     @media (max-width: 420px) {
-      .ks-cabinet { padding: 10px; }
-      .ks-top-bar { gap: 4px; padding: 6px 4px; min-height: 48px; }
-      .ks-coin-count { font-size: 18px; }
-      .ks-getgems { padding: 3px 8px; }
-      .ks-bot-cell { min-width: 72px; height: 44px; padding: 4px 8px; }
+      .ks-cabinet { padding: 4px 4px env(safe-area-inset-bottom, 4px) 4px; padding-top: calc(env(safe-area-inset-top, 0px) + 4px); }
+      .ks-top-bar { gap: 3px; padding: 2px 2px; min-height: 36px; }
+      .ks-top-home { width: 24px; height: 24px; font-size: 12px; }
+      .ks-level-pill { font-size: 9px; padding: 2px 6px; }
+      .ks-mascot { font-size: 18px; }
+      .ks-coin-count { font-size: 15px; }
+      .ks-getgems { padding: 2px 6px; }
+      .ks-getgems-top { font-size: 6px; }
+      .ks-getgems-bot { font-size: 9px; }
+      .ks-shop { font-size: 10px; padding: 3px 8px; }
+      .ks-hot { padding: 2px 5px; }
+      .ks-bot-cell { min-width: 68px; height: 42px; padding: 3px 6px; }
       .ks-bot-value-bet, .ks-bot-value-win { font-size: 16px; }
-      .ks-bet-adj-btn { width: 34px; height: 34px; font-size: 18px; }
-      .ks-maxbet-btn { height: 42px; font-size: 11px; padding: 0 10px; }
-      .ks-spin-btn { width: 80px; height: 46px; font-size: 19px; }
-      .ks-bottom-bar { gap: 5px; padding: 6px 6px; }
-      .ks-side-rail { width: 18px; }
-      .ks-rail-text { font-size: 9px; }
+      .ks-bet-adj-btn { width: 32px; height: 32px; font-size: 17px; }
+      .ks-maxbet-btn { height: 40px; font-size: 11px; padding: 0 8px; }
+      .ks-spin-btn { width: 76px; height: 44px; font-size: 18px; }
+      .ks-bottom-bar { gap: 4px; padding: 4px 4px; }
+      .ks-side-rail { width: 16px; }
+      .ks-rail-text { font-size: 8px; }
     }
 
     /* ── Big win overlay ── */
@@ -25368,15 +25366,15 @@ document.addEventListener('visibilitychange', function() {
   var BETS = [50, 100, 250, 500];
 
   var KS_SYMBOLS = [
-    { id: 'buffalo', emoji: '🐃', label: 'Buffalo',  mult: 50, weight: 2, halo: true },
-    { id: 'wild',    emoji: '🐺', label: 'Wolf',     mult: 25, weight: 3, isWild: true, halo: true },
-    { id: 'eagle',   emoji: '🦅', label: 'Eagle',    mult: 15, weight: 5, halo: true },
-    { id: 'sunset',  emoji: '🌅', label: 'Sunset',   mult: 10, weight: 7, halo: true },
-    { id: 'coin',    emoji: '🪙', label: 'Coin',     mult: 8,  weight: 8, halo: true },
-    { id: 'ace',     emoji: 'A',  label: 'Ace',      mult: 5,  weight: 12, card: true, color: '#f5c842' },
-    { id: 'queen',   emoji: 'Q',  label: 'Queen',    mult: 4,  weight: 13, card: true, color: '#ff8a3a' },
-    { id: 'jack',    emoji: 'J',  label: 'Jack',     mult: 3,  weight: 14, card: true, color: '#4dd0ff' },
-    { id: 'ten',     emoji: '10', label: 'Ten',       mult: 3,  weight: 15, card: true, color: '#ff3a5c' }
+    { id: 'diamond', emoji: '💎', label: 'Diamond',    mult: 50, weight: 2, halo: true },
+    { id: 'wand',    emoji: '🪄', label: 'Wand',       mult: 25, weight: 3, isWild: true, halo: true },
+    { id: 'tophat',  emoji: '🎩', label: 'Magic Hat',  mult: 15, weight: 5, halo: true },
+    { id: 'fire',    emoji: '🔥', label: 'Fire',       mult: 12, weight: 6, halo: true },
+    { id: 'gem',     emoji: '♦️', label: 'Gem',        mult: 10, weight: 7, halo: true },
+    { id: 'star',    emoji: '⭐', label: 'Star',       mult: 8,  weight: 9, halo: true },
+    { id: 'seven',   emoji: '7',  label: 'Lucky 7',    mult: 6,  weight: 10, card: true, color: '#ff3a5c' },
+    { id: 'coin',    emoji: '🪙', label: 'Gold Coin',  mult: 4,  weight: 12, halo: true },
+    { id: 'sparkle', emoji: '✨', label: 'Sparkle',    mult: 3,  weight: 15, halo: true }
   ];
 
   var KS_POOL = [];
