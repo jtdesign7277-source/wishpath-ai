@@ -18,7 +18,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-25-v406c-symbols-fix';
+    var APP_VERSION = '2026-04-26-v406e-casino-polish';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -6843,7 +6843,6 @@
             </div>
             <div class="ks-reel-frame" id="ksReelWindow">
               <canvas id="ksReelCanvas" class="ks-reel-canvas"></canvas>
-              <div class="ks-payline-indicator"></div>
             </div>
             <div class="ks-side-rail right">
               <span class="ks-rail-text">XTRA REEL POWER</span>
@@ -17486,6 +17485,18 @@
       }).join('');
     }
     var _homeSparkLastFull = 0; // timestamp of last full sparkline bars fetch
+
+    // ── Sparkline bars cache (localStorage) — survives page reloads + weekends ──
+    function _loadCachedBars() {
+      try {
+        var raw = localStorage.getItem('wp_home_markets_bars');
+        return raw ? JSON.parse(raw) : {};
+      } catch(e) { return {}; }
+    }
+    function _saveCachedBars(barsMap) {
+      try { localStorage.setItem('wp_home_markets_bars', JSON.stringify(barsMap)); } catch(e) {}
+    }
+
     function fetchHomeMarkets() {
       var _MQ = 'https://mszilrexlupzthauoaxb.supabase.co/functions/v1/market-quotes';
       var allSymbols = _homeMarketsTickers.map(function(t) { return t.symbol; });
@@ -17494,18 +17505,27 @@
         .then(function(r) { return r.json(); })
         .then(function(j) {
           if (j.data && j.data.length) {
+            var cachedBars = _loadCachedBars();
             var ordered = [];
             _homeMarketsTickers.forEach(function(t) {
               var match = j.data.find(function(r) { return r.symbol === t.symbol; });
               if (match) {
-                // If bars missing from response, preserve from previous data
-                if ((!match.bars || !match.bars.length) && _homeMarketsData) {
-                  var prev = _homeMarketsData.find(function(p) { return p.symbol === match.symbol; });
-                  if (prev && prev.bars && prev.bars.length) match.bars = prev.bars;
+                if (match.bars && match.bars.length) {
+                  // Fresh bars from API — update cache
+                  cachedBars[match.symbol] = match.bars;
+                } else {
+                  // No bars from API — try in-memory first, then localStorage cache
+                  var prev = _homeMarketsData ? _homeMarketsData.find(function(p) { return p.symbol === match.symbol; }) : null;
+                  if (prev && prev.bars && prev.bars.length) {
+                    match.bars = prev.bars;
+                  } else if (cachedBars[match.symbol] && cachedBars[match.symbol].length) {
+                    match.bars = cachedBars[match.symbol];
+                  }
                 }
                 ordered.push(match);
               }
             });
+            _saveCachedBars(cachedBars);
             _homeMarketsData = ordered;
             renderHomeMarkets(ordered);
           }
@@ -25362,7 +25382,7 @@ document.addEventListener('visibilitychange', function() {
 (function() {
   'use strict';
   var RC = 5; // 5 reels
-  var ROWS = 3;
+  var ROWS = 4;
   var BETS = [50, 100, 250, 500];
 
   var KS_SYMBOLS = [
@@ -25544,7 +25564,7 @@ document.addEventListener('visibilitychange', function() {
     // Dark base so emojis pop
     ctx.fillStyle = '#0a041c'; ctx.fillRect(0, 0, cw, ch);
 
-    var emojiFS = Math.max(36, Math.floor(Math.min(sw, sh) * 0.55));
+    var emojiFS = Math.max(40, Math.floor(Math.min(sw, sh) * 0.75));
     var pad = 3; var cellR = 8;
 
     for (var r = 0; r < RC; r++) {
@@ -25837,10 +25857,21 @@ document.addEventListener('visibilitychange', function() {
       var osc = ctx.createOscillator(); var gain = ctx.createGain();
       osc.connect(gain); gain.connect(ctx.destination); gain.gain.setValueAtTime(0.08, ctx.currentTime);
       if (type === 'spin') {
-        osc.type = 'sine'; osc.frequency.setValueAtTime(440, ctx.currentTime);
-        osc.frequency.linearRampToValueAtTime(880, ctx.currentTime + 0.08);
-        gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.1);
-        osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.1);
+        // Slot machine lever pull: rising whir
+        osc.type = 'sawtooth'; gain.gain.setValueAtTime(0.15, ctx.currentTime);
+        osc.frequency.setValueAtTime(200, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.15);
+        osc.frequency.exponentialRampToValueAtTime(900, ctx.currentTime + 0.25);
+        gain.gain.linearRampToValueAtTime(0.08, ctx.currentTime + 0.15);
+        gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.35);
+        osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.35);
+        // Click layer
+        try { var osc2 = ctx.createOscillator(); var g2 = ctx.createGain();
+        osc2.connect(g2); g2.connect(ctx.destination);
+        osc2.type = 'square'; osc2.frequency.setValueAtTime(1200, ctx.currentTime);
+        g2.gain.setValueAtTime(0.12, ctx.currentTime);
+        g2.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.04);
+        osc2.start(ctx.currentTime); osc2.stop(ctx.currentTime + 0.04); } catch(e2) {}
       } else if (type === 'win') {
         osc.type = 'sine'; osc.frequency.setValueAtTime(523, ctx.currentTime);
         osc.frequency.setValueAtTime(659, ctx.currentTime + 0.1); osc.frequency.setValueAtTime(784, ctx.currentTime + 0.2);
