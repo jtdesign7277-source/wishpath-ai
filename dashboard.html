@@ -18,7 +18,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-26-v408-pin-tickers';
+    var APP_VERSION = '2026-04-26-v409-wish-examples';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -19461,16 +19461,16 @@
     var _homeWishTwPaused = false;
     var _homeWishTwExampleIdx = 0;
     var HOME_WISH_TYPEWRITER_EXAMPLES = [
-      { p: 'I want to ', a: 'get fit and run a 5K' },
-      { p: 'Help me ', a: 'run my first marathon by fall' },
-      { p: "I'm ready to ", a: 'start a side hustle after work' },
-      { p: 'Build a plan to ', a: 'get promoted to senior engineer' },
-      { p: 'I dream of ', a: 'buying my first home in two years' },
-      { p: 'Teach me how to ', a: 'invest $500 a month wisely' },
-      { p: 'I need a roadmap to ', a: 'leave my 9–5 for consulting' },
-      { p: 'Create steps to ', a: 'learn Spanish for a career move' },
-      { p: 'I want to ', a: 'launch a tiny SaaS on weekends' },
-      { p: 'Plan my path to ', a: 'pay off student loans early' }
+      { p: 'I wish I could ', a: 'retire by 50' },
+      { p: 'I wish I could ', a: 'speak three languages' },
+      { p: 'I wish I could ', a: 'start my own business' },
+      { p: 'I wish I could ', a: 'travel the world for a year' },
+      { p: 'I wish I could ', a: 'write a bestselling book' },
+      { p: 'I wish I could ', a: 'run a marathon' },
+      { p: 'I wish I could ', a: 'build an app people love' },
+      { p: 'I wish I could ', a: 'get out of debt forever' },
+      { p: 'I wish I could ', a: 'land my dream job' },
+      { p: 'I wish I could ', a: 'master the guitar' }
     ];
 
     function clearHomeWishTwTimers() {
@@ -19519,7 +19519,7 @@
       if (caret) caret.style.display = 'inline-block';
 
       var pi = 0, ai = 0;
-      var TYPE_P = 30, TYPE_A = 26, HOLD_MS = 20000, ERASE_MS = 11, GAP_MS = 700;
+      var TYPE_P = 30, TYPE_A = 26, HOLD_MS = 90000, ERASE_MS = 11, GAP_MS = 700;
 
       function tick() {
         if (_homeWishTwPaused || !homeWishTypewriterShouldShowOverlay()) {
@@ -19611,16 +19611,16 @@
     var _mobileTwIdx = 0;
     var _mobileTwCycleCount = 0;
     var MOBILE_TW_EXAMPLES = [
-      'I want to get fit and run a 5K',
-      'Help me run my first marathon by fall',
-      "I'm ready to start a side hustle after work",
-      'Build a plan to get promoted to senior engineer',
-      'I dream of buying my first home in two years',
-      'Teach me how to invest $500 a month wisely',
-      'I need a roadmap to leave my 9–5 for consulting',
-      'Create steps to learn Spanish for a career move',
-      'I want to launch a tiny SaaS on weekends',
-      'Plan my path to pay off student loans early'
+      'I wish I could retire by 50',
+      'I wish I could speak three languages',
+      'I wish I could start my own business',
+      'I wish I could travel the world for a year',
+      'I wish I could write a bestselling book',
+      'I wish I could run a marathon',
+      'I wish I could build an app people love',
+      'I wish I could get out of debt forever',
+      'I wish I could land my dream job',
+      'I wish I could master the guitar'
     ];
 
     function clearMobileTwTimers() {
@@ -19654,7 +19654,7 @@
       var text = MOBILE_TW_EXAMPLES[_mobileTwIdx % MOBILE_TW_EXAMPLES.length];
       var ci = 0;
       var TYPE_MS = 32;
-      var HOLD_MS = 6000;
+      var HOLD_MS = 90000;
       var ERASE_MS = 14;
 
       // Type forward
