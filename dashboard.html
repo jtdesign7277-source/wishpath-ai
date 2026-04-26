@@ -18,7 +18,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-25-v405-typewriter-everywhere';
+    var APP_VERSION = '2026-04-25-v406-vegas-cabinet';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -4811,211 +4811,286 @@
     body[data-active-view="krakenspins"] .top-bar,
     body[data-active-view="krakenspins"] .sidebar { display: none !important; }
     body[data-active-view="krakenspins"] .main-content { padding: 0 !important; margin: 0 !important; }
-    /* ── Kraken Spins — pixel-perfect reference match ── */
+    /* ── Kraken Spins — Vegas-Arcade Cabinet (v406) ── */
     :root {
-      --ks-bg-deep: #050010;
-      --ks-bg-panel: #0a0420;
-      --ks-purple: #4b1d8a;
+      --ks-bg-deep:   #0a041c;
+      --ks-bg-cab:    #2a0e3f;
+      --ks-purple:    #6b2a8f;
+      --ks-purple-hi: #b35cff;
       --ks-purple-br: #8a4dff;
-      --ks-gold: #f5c842;
-      --ks-gold-br: #ffd84a;
+      --ks-gold:      #f5c842;
+      --ks-gold-br:   #ffd84a;
       --ks-gold-shdw: #6b2a14;
-      --ks-orange: #f59e0b;
-      --ks-orange-hi: #ff8c42;
-      --ks-orange-lo: #c2710a;
-      --ks-cyan: #4dd0ff;
-      --ks-blue-bet: #1e3a8a;
-      --ks-white: #ffffff;
+      --ks-orange:    #ff8a3a;
+      --ks-red:       #ff4d6d;
+      --ks-cyan:      #4dd0ff;
+      --ks-green:     #2bbf4a;
+      --ks-green-hi:  #6dee8a;
+      --ks-bulb:      #fff8c2;
     }
     #krakenspinsView.view { display: none; }
     #krakenspinsView.view.active {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       position: fixed; inset: 0; z-index: 500;
-      background: radial-gradient(ellipse at 50% 30%, #1a0838 0%, #0a0420 50%, #050010 100%);
+      background: radial-gradient(ellipse at 50% 30%, #ff8a2e 0%, #c8451f 25%, #5a1e3a 55%, #1a0828 100%);
       height: 100vh; height: 100dvh;
       overflow: hidden;
       padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom) 0;
     }
-    /* Top bar: coin pill | crown + BUY COINS | heart pill | hamburger */
-    .ks-top-bar {
-      width: 100%; display: flex; align-items: center; justify-content: center;
-      gap: 10px; padding: 8px 12px; flex-shrink: 0; position: relative; z-index: 10;
-      height: 44px; padding-top: calc(env(safe-area-inset-top, 0px) + 8px);
+    /* Dotted purple side panels */
+    #krakenspinsView.view.active::before,
+    #krakenspinsView.view.active::after {
+      content: ''; position: fixed; top: 0; bottom: 0; width: 14%; z-index: 0; pointer-events: none;
+      background-color: rgba(42,14,63,0.7);
+      background-image: radial-gradient(circle at center, rgba(255,255,255,0.08) 1.5px, transparent 2px);
+      background-size: 12px 12px;
     }
-    .ks-back-btn {
-      position: absolute; left: 10px; top: calc(env(safe-area-inset-top, 0px) + 8px); z-index: 20;
-      width: 28px; height: 28px; border-radius: 50%;
-      background: var(--ks-purple); border: none;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; -webkit-tap-highlight-color: transparent;
-      color: #fff; font-size: 14px;
-    }
-    .ks-top-pill {
-      background: var(--ks-purple); border: 2px solid var(--ks-purple-br);
-      border-radius: 18px; height: 32px; padding: 0 14px;
-      display: flex; align-items: center; gap: 6px;
-      font-size: 16px; font-weight: 900; color: #fff;
-      font-family: -apple-system, 'SF Pro Rounded', system-ui, sans-serif;
-    }
-    .ks-top-pill-icon { font-size: 16px; }
-    .ks-top-pill-icon-gold { color: var(--ks-gold); }
-    .ks-top-pill-icon-red { color: #ff3a5c; }
-    .ks-title-wrap {
-      display: flex; flex-direction: column; align-items: center; gap: 0;
-    }
-    .ks-title-crown { font-size: 18px; line-height: 1; margin-bottom: -2px; }
-    .ks-title {
-      font-family: 'Lilita One', 'Fredoka', system-ui, sans-serif;
-      font-size: 28px; font-weight: 900; letter-spacing: 1.5px;
-      color: var(--ks-gold-br);
-      -webkit-text-stroke: 1.5px var(--ks-gold-shdw);
-      text-shadow: 0 3px 0 #5a1f0a, 0 4px 8px rgba(0,0,0,0.6);
-      text-transform: uppercase; line-height: 1;
-    }
-    .ks-hamburger {
-      position: absolute; right: 12px; top: calc(env(safe-area-inset-top, 0px) + 12px);
-      font-size: 24px; color: var(--ks-gold); cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-    }
-    /* Machine — no visible outer border, blends into bg */
-    .ks-machine {
-      width: calc(100% - 16px); max-width: 420px;
-      background: var(--ks-bg-panel);
-      border-radius: 0; padding: 0;
-      position: relative; flex: 1 1 0; min-height: 0; display: flex; flex-direction: column;
-      margin: 4px 0; overflow: hidden;
-    }
-    .ks-machine::before { display: none; }
-    .ks-machine-inner {
+    #krakenspinsView.view.active::before { left: 0; }
+    #krakenspinsView.view.active::after { right: 0; }
+
+    /* ── Cabinet frame ── */
+    .ks-cabinet {
       position: relative; z-index: 1;
-      background: var(--ks-bg-panel);
-      border-radius: 0; padding: 0;
-      flex: 1 1 0; min-height: 0; display: flex; flex-direction: column;
-      overflow: hidden;
+      width: 100%; max-width: 440px; height: 100dvh;
+      padding: 18px; box-sizing: border-box;
+      display: flex; flex-direction: column;
+      border: 8px solid transparent;
+      border-image: linear-gradient(180deg, #f5c842 0%, #b35cff 25%, #5a1e3a 50%, #b35cff 75%, #f5c842 100%) 1;
+      box-shadow: 0 0 40px rgba(179,92,255,0.5), inset 0 0 24px rgba(255,200,80,0.15);
     }
-    /* Reel area with payline side buttons */
-    .ks-reel-area {
-      display: flex; flex: 1 1 0; min-height: 0; padding: 6px 0; overflow: hidden;
+    /* Bulb lights ring */
+    .ks-cabinet::before {
+      content: ''; position: absolute; inset: 4px; border-radius: 22px; z-index: 0; pointer-events: none;
+      background:
+        repeating-radial-gradient(circle at 12px 12px, var(--ks-bulb) 0px, var(--ks-bulb) 3px, transparent 4px, transparent 18px);
+      -webkit-mask: linear-gradient(#000,#000) padding-box, linear-gradient(#000,#000);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      padding: 6px;
+      animation: ksBulbChase 1.4s linear infinite;
     }
-    .ks-side-btns {
-      display: flex; flex-direction: column; justify-content: space-around;
-      padding: 2px 3px; flex-shrink: 0; gap: 3px;
+    @keyframes ksBulbChase {
+      0%   { filter: brightness(1)   drop-shadow(0 0 4px #fff7a0); }
+      50%  { filter: brightness(1.6) drop-shadow(0 0 10px #ffeb3b); }
+      100% { filter: brightness(1)   drop-shadow(0 0 4px #fff7a0); }
     }
-    .ks-side-btn {
-      width: 22px; height: 22px; border-radius: 5px;
-      background: var(--ks-purple);
-      border: 1.5px solid var(--ks-purple-br);
-      color: #fff; font-size: 12px; font-weight: 900;
+
+    /* ── Top bar (loaded) ── */
+    .ks-top-bar {
+      width: 100%; display: flex; align-items: center;
+      gap: 6px; padding: 8px 6px; flex-shrink: 0; position: relative; z-index: 10;
+      min-height: 56px; padding-top: calc(env(safe-area-inset-top, 0px) + 8px);
+      flex-wrap: wrap; justify-content: center;
+    }
+    .ks-top-home {
+      width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+      background: radial-gradient(circle at 40% 35%, #6b2a8f, #3a1252);
+      border: 2px solid var(--ks-gold);
       display: flex; align-items: center; justify-content: center;
       cursor: pointer; -webkit-tap-highlight-color: transparent;
-      font-family: -apple-system, 'SF Pro Rounded', sans-serif;
+      font-size: 16px; color: #fff;
     }
-    .ks-side-btn:active { transform: scale(0.9); }
-    /* Reel window — gold border with glow */
-    .ks-reel-window {
-      background: var(--ks-bg-deep);
-      border-radius: 14px;
-      border: 3px solid #f0c040;
-      box-shadow: 0 0 16px rgba(255,180,40,0.55), inset 0 4px 20px rgba(0,0,0,0.9);
-      overflow: hidden; position: relative; flex: 1; min-height: 0;
+    .ks-level-pill {
+      background: linear-gradient(180deg, #d4a3ff, #9d4edd);
+      border: 2px solid var(--ks-gold-br); border-radius: 14px;
+      padding: 4px 10px; color: #fff; font-size: 12px; font-weight: 900;
+      letter-spacing: 0.5px; flex-shrink: 0;
+      font-family: 'Lilita One', system-ui, sans-serif;
     }
-    .ks-reel-window::before {
+    .ks-mascot { font-size: 28px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); flex-shrink: 0; line-height: 1; }
+    .ks-getgems {
+      background: linear-gradient(180deg, var(--ks-gold-br), #f5a623);
+      border: 2px solid #fff; border-radius: 18px; padding: 4px 12px;
+      display: flex; flex-direction: column; align-items: center;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+      box-shadow: 0 0 16px rgba(255,216,74,0.6); flex-shrink: 0;
+      font-family: 'Lilita One', system-ui, sans-serif;
+    }
+    .ks-getgems-top { font-size: 9px; font-weight: 900; color: #4a1a05; letter-spacing: 0.5px; line-height: 1.2; }
+    .ks-getgems-bot { font-size: 13px; font-weight: 900; color: #4a1a05; line-height: 1.2; }
+    .ks-gem-count {
+      background: #4b1d8a; border: 1.5px solid var(--ks-purple-br); border-radius: 12px;
+      padding: 3px 10px; font-size: 13px; font-weight: 900; color: #fff;
+      display: flex; align-items: center; gap: 4px; flex-shrink: 0;
+      font-family: 'Lilita One', system-ui, sans-serif;
+    }
+    .ks-gem-count .ks-gem-icon { color: var(--ks-cyan); }
+    .ks-coin-count {
+      display: flex; align-items: center; gap: 4px; flex: 1; justify-content: flex-end;
+      font-family: 'Lilita One', system-ui, sans-serif;
+      font-size: 22px; font-weight: 900; color: var(--ks-gold-br);
+      -webkit-text-stroke: 1.5px var(--ks-gold-shdw); line-height: 1;
+    }
+    .ks-coin-count .ks-coin-icon { font-size: 18px; -webkit-text-stroke: 0; }
+    .ks-shop {
+      background: linear-gradient(180deg, var(--ks-purple-hi), var(--ks-purple));
+      border: 2px solid var(--ks-gold-br); border-radius: 14px;
+      padding: 6px 14px; color: #fff; font-size: 14px; font-weight: 900;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+      text-shadow: 0 1px 0 #2a0e3f; flex-shrink: 0;
+      font-family: 'Lilita One', system-ui, sans-serif;
+    }
+    .ks-hot {
+      background: radial-gradient(circle at 50% 40%, var(--ks-red), #c01840);
+      border: 1.5px solid #fff; border-radius: 12px; padding: 4px 10px;
+      display: flex; flex-direction: column; align-items: center; flex-shrink: 0;
+      animation: ksHotPulse 1.8s ease-in-out infinite;
+    }
+    .ks-hot-label { font-size: 9px; font-weight: 700; color: #fff; opacity: 0.85; line-height: 1.2; }
+    .ks-hot-timer { font-size: 11px; font-weight: 900; color: #fff; line-height: 1.2; }
+    @keyframes ksHotPulse {
+      0%, 100% { box-shadow: 0 0 0 rgba(255,77,109,0.7); }
+      50% { box-shadow: 0 0 12px rgba(255,77,109,0.7); }
+    }
+
+    /* ── Reel section with side rails ── */
+    .ks-reel-section {
+      display: flex; flex: 1 1 0; min-height: 0; gap: 0; align-items: stretch; position: relative;
+    }
+    /* Side rails */
+    .ks-side-rail {
+      width: 22px; flex-shrink: 0;
+      background: linear-gradient(180deg, var(--ks-purple), #3a1252);
+      border: 1.5px solid var(--ks-purple-br); border-radius: 8px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      position: relative; z-index: 2;
+    }
+    .ks-rail-text {
+      writing-mode: vertical-rl;
+      font-family: 'Lilita One', system-ui, sans-serif;
+      font-size: 11px; font-weight: 900; letter-spacing: 0.15em;
+      color: var(--ks-gold-br); text-shadow: 0 1px 0 #2a0e3f;
+      white-space: nowrap;
+    }
+    .ks-side-rail.left .ks-rail-text { transform: rotate(180deg); }
+    .ks-rail-badge-alert {
+      position: absolute; top: 6px; left: 50%; transform: translateX(-50%);
+      width: 20px; height: 20px; border-radius: 50%;
+      background: var(--ks-orange); color: #fff;
+      font-size: 14px; font-weight: 900; line-height: 20px; text-align: center;
+    }
+    .ks-rail-badge-gem {
+      position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%);
+      width: 22px; height: 22px; border-radius: 50%;
+      background: #4b1d8a; border: 1.5px solid var(--ks-purple-br);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      font-size: 7px; font-weight: 900; color: #fff; line-height: 1; overflow: hidden;
+    }
+    .ks-rail-badge-gem .ks-rbg-icon { font-size: 9px; }
+    .ks-rail-badge-gem .ks-rbg-text { font-size: 7px; }
+
+    /* ── Reel frame (sunset bg + mountain silhouette) ── */
+    .ks-reel-frame {
+      flex: 1; min-width: 0; position: relative; overflow: hidden;
+      margin: 6px 4px; border-radius: 14px;
+      border: 5px solid transparent;
+      border-image: linear-gradient(180deg, var(--ks-gold-br), #c2710a 50%, var(--ks-gold-br)) 1;
+      background:
+        linear-gradient(180deg, rgba(10,4,28,0.55) 0%, rgba(60,20,40,0.35) 30%, rgba(40,15,30,0.55) 100%),
+        radial-gradient(ellipse at 50% 70%, #ff8a2e 0%, #c8451f 25%, #2a0e3f 70%);
+      box-shadow: 0 0 30px rgba(255,140,46,0.45), inset 0 0 20px rgba(0,0,0,0.5);
+    }
+    .ks-reel-frame::before {
+      content: ''; position: absolute; left: 0; right: 0; bottom: 30%;
+      height: 40%; pointer-events: none; z-index: 0; opacity: 0.35;
+      background: #1a0828;
+      clip-path: polygon(0 60%, 8% 50%, 18% 65%, 30% 40%, 45% 55%, 60% 35%, 75% 50%, 88% 30%, 100% 55%, 100% 100%, 0 100%);
+    }
+    .ks-reel-frame::after {
       content: ''; position: absolute; inset: 0; z-index: 3; pointer-events: none;
-      background: linear-gradient(180deg, rgba(5,0,16,0.4) 0%, transparent 10%, transparent 90%, rgba(5,0,16,0.4) 100%);
+      background: linear-gradient(180deg, rgba(10,4,28,0.4) 0%, transparent 10%, transparent 90%, rgba(10,4,28,0.4) 100%);
     }
     .ks-reel-canvas { display: block; width: 100%; height: 100%; position: relative; z-index: 1; }
     .ks-payline-indicator {
       position: absolute; left: 0; right: 0; height: 2px;
-      background: linear-gradient(90deg, var(--ks-gold), var(--ks-orange-hi), var(--ks-gold));
+      background: linear-gradient(90deg, var(--ks-gold), var(--ks-orange), var(--ks-gold));
       box-shadow: 0 0 12px rgba(255,180,40,0.5);
       top: 50%; transform: translateY(-50%);
       pointer-events: none; z-index: 4;
     }
-    /* Win display */
+
+    /* ── Win display ── */
     .ks-win-display {
       text-align: center; min-height: 0; flex-shrink: 0; padding: 0;
     }
     .ks-win-text {
       font-size: 15px; font-weight: 900; color: var(--ks-gold-br);
-      font-family: 'Lilita One', 'Fredoka', system-ui, sans-serif;
+      font-family: 'Lilita One', system-ui, sans-serif;
       text-shadow: 0 0 12px rgba(255,216,74,0.6);
       animation: ksWinGlow 1s ease-in-out infinite alternate;
     }
     @keyframes ksWinGlow { from { filter: brightness(1); } to { filter: brightness(1.3); } }
-    /* Bottom bar — WIN | − | TOTAL BET | + | MAX BET | Spin */
+
+    /* ── Bet multiplier caption ── */
+    .ks-bet-multiplier {
+      text-align: center; padding: 2px 0; flex-shrink: 0;
+      font-family: 'Lilita One', system-ui, sans-serif;
+      font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.7);
+      text-shadow: 0 1px 0 rgba(0,0,0,0.5);
+    }
+
+    /* ── Bottom bar ── */
     .ks-bottom-bar {
-      display: flex; align-items: center; gap: 6px;
-      width: 100%; padding: 8px 8px; flex-shrink: 0;
-      background: var(--ks-bg-panel); justify-content: center;
+      display: flex; align-items: center; gap: 8px;
+      width: 100%; padding: 8px 10px; flex-shrink: 0;
+      justify-content: center;
     }
-    .ks-bot-cell-win {
+    .ks-bot-cell {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      background: var(--ks-white); border: 2px solid var(--ks-gold);
-      border-radius: 10px; padding: 2px 8px; min-width: 60px; height: 40px;
-      box-shadow: inset 0 -2px 0 #c9a33e; flex-shrink: 1;
+      background: #1a0828; border: 2.5px solid var(--ks-gold-br); border-radius: 10px;
+      padding: 6px 12px; min-width: 96px; height: 52px; flex-shrink: 1;
     }
-    .ks-bot-cell-bet {
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      background: var(--ks-blue-bet); border: 2px solid var(--ks-gold);
-      border-radius: 10px; padding: 2px 8px; min-width: 60px; height: 40px; flex-shrink: 1;
-    }
-    .ks-bot-label-win {
-      font-size: 9px; font-weight: 700; color: var(--ks-gold-shdw);
-      text-transform: uppercase; letter-spacing: 0.5px;
-      font-family: -apple-system, 'SF Pro Rounded', sans-serif;
-    }
-    .ks-bot-label-bet {
-      font-size: 9px; font-weight: 700; color: var(--ks-gold-br);
-      text-transform: uppercase; letter-spacing: 0.5px;
-      font-family: -apple-system, 'SF Pro Rounded', sans-serif;
-    }
-    .ks-bot-value-win {
-      font-size: 18px; font-weight: 900; color: #1a0838;
+    .ks-bot-label {
+      font-size: 9px; font-weight: 700; letter-spacing: 0.6px;
+      color: var(--ks-gold-br); text-transform: uppercase;
       font-family: 'Lilita One', system-ui, sans-serif;
     }
     .ks-bot-value-bet {
-      font-size: 18px; font-weight: 900; color: var(--ks-cyan);
+      font-size: 20px; font-weight: 900; color: #fff;
       font-family: 'Lilita One', system-ui, sans-serif;
-      text-shadow: 0 1px 0 #000;
+    }
+    .ks-bot-value-win {
+      font-size: 20px; font-weight: 900; color: var(--ks-cyan);
+      font-family: 'Lilita One', system-ui, sans-serif;
     }
     /* Orange +/− circles */
     .ks-bet-adj-btn {
-      width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
-      background: radial-gradient(circle at 30% 30%, #ffb84d, var(--ks-orange) 60%, var(--ks-orange-lo) 100%);
-      border: 2px solid var(--ks-gold-br);
-      color: #fff; font-size: 18px; font-weight: 900; line-height: 1;
+      width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+      background: radial-gradient(circle at 30% 30%, #ffb84d, #f5a623 60%, #c2710a 100%);
+      border: 2.5px solid var(--ks-gold-br);
+      color: #fff; font-size: 20px; font-weight: 900; line-height: 1;
       display: flex; align-items: center; justify-content: center;
       cursor: pointer; -webkit-tap-highlight-color: transparent;
-      box-shadow: 0 2px 0 #8a4d0a, 0 0 8px rgba(245,158,11,0.5);
+      box-shadow: 0 3px 0 var(--ks-gold-shdw), 0 0 12px rgba(255,140,46,0.5);
       font-family: -apple-system, sans-serif;
     }
-    .ks-bet-adj-btn:active { transform: translateY(2px); box-shadow: 0 0 0 #8a4d0a, 0 0 8px rgba(245,158,11,0.5); }
-    /* MAX BET — white bg, gold border, brown text */
+    .ks-bet-adj-btn:active { transform: translateY(2px); box-shadow: 0 0 0 var(--ks-gold-shdw), 0 0 12px rgba(255,140,46,0.5); }
+    /* MAX BET */
     .ks-maxbet-btn {
-      width: 56px; height: 40px; border-radius: 8px; flex-shrink: 0;
-      background: var(--ks-white); border: 2px solid var(--ks-gold);
-      color: var(--ks-gold-shdw); font-size: 10px; font-weight: 900;
-      letter-spacing: 0.5px; text-transform: uppercase;
+      height: 48px; padding: 0 14px; border-radius: 10px; flex-shrink: 0;
+      background: #fff; border: 2.5px solid var(--ks-gold-br);
+      color: var(--ks-gold-shdw); font-size: 13px; font-weight: 900;
+      letter-spacing: 1px; text-transform: uppercase;
       cursor: pointer; -webkit-tap-highlight-color: transparent;
       box-shadow: inset 0 -2px 0 #c9a33e, 0 2px 4px rgba(0,0,0,0.4);
       font-family: 'Lilita One', system-ui, sans-serif;
       display: flex; align-items: center; justify-content: center;
-      white-space: nowrap; line-height: 1.1;
+      white-space: nowrap;
     }
     .ks-maxbet-btn:active { transform: translateY(1px); box-shadow: inset 0 -1px 0 #c9a33e; }
-    /* SPIN — large orange pill */
+    /* SPIN — GREEN per reference */
     .ks-spin-btn {
-      width: 72px; height: 48px; border-radius: 24px; flex-shrink: 0;
-      background: radial-gradient(circle at 50% 30%, var(--ks-orange-hi) 0%, #f5651a 50%, #c83a0a 100%);
+      width: 96px; height: 52px; border-radius: 28px; flex-shrink: 0;
+      background: radial-gradient(circle at 50% 30%, var(--ks-green-hi) 0%, var(--ks-green) 50%, #168f30 100%);
       border: 3px solid var(--ks-gold-br); cursor: pointer; color: #fff;
-      font-family: 'Lilita One', 'Fredoka', system-ui, sans-serif;
-      font-size: 18px; font-weight: 900; letter-spacing: 1px;
-      text-shadow: 0 2px 0 var(--ks-gold-shdw);
-      box-shadow: 0 0 18px rgba(255,140,66,0.7), 0 3px 0 #8a2a0a, inset 0 2px 0 rgba(255,255,255,0.3);
+      font-family: 'Lilita One', system-ui, sans-serif;
+      font-size: 22px; font-weight: 900;
+      text-shadow: 0 2px 0 #0a4a18;
+      box-shadow: 0 0 24px rgba(45,200,90,0.6), 0 4px 0 #0a4a18, inset 0 3px 0 rgba(255,255,255,0.3);
       -webkit-tap-highlight-color: transparent; transition: all 0.1s;
       display: flex; align-items: center; justify-content: center;
     }
-    .ks-spin-btn:active { transform: translateY(2px); box-shadow: 0 0 24px rgba(255,140,66,0.7), 0 0 0 #8a2a0a, inset 0 3px 0 rgba(255,255,255,0.3); }
+    .ks-spin-btn:active { transform: translateY(2px); box-shadow: 0 0 16px rgba(45,200,90,0.6), inset 0 3px 0 rgba(255,255,255,0.3); }
     .ks-spin-btn:disabled {
       opacity: 0.4; cursor: default; transform: none;
       background: linear-gradient(180deg, #555, #333);
@@ -5023,8 +5098,7 @@
     }
     /* Action row (turbo + auto) */
     .ks-action-row {
-      display: flex; justify-content: center; gap: 12px; padding: 6px 0 4px 0; flex-shrink: 0;
-      background: var(--ks-bg-panel);
+      display: flex; justify-content: center; gap: 12px; padding: 4px 0 2px 0; flex-shrink: 0;
     }
     .ks-action-btn {
       padding: 5px 16px; border-radius: 6px; font-weight: 700; font-size: 11px;
@@ -5038,17 +5112,24 @@
       border-color: var(--ks-gold); color: var(--ks-gold-br);
       background: rgba(245,200,66,0.1);
     }
+
     /* Mobile ≤420px overrides */
     @media (max-width: 420px) {
-      .ks-title { font-size: 22px; }
-      .ks-spin-btn { width: 64px; height: 42px; font-size: 16px; }
-      .ks-bot-cell-win, .ks-bot-cell-bet { min-width: 52px; height: 36px; padding: 2px 6px; }
-      .ks-bot-value-win, .ks-bot-value-bet { font-size: 15px; }
-      .ks-bet-adj-btn { width: 28px; height: 28px; font-size: 16px; }
-      .ks-maxbet-btn { width: 48px; height: 36px; font-size: 9px; }
-      .ks-bottom-bar { gap: 4px; padding: 6px 6px; }
+      .ks-cabinet { padding: 10px; }
+      .ks-top-bar { gap: 4px; padding: 6px 4px; min-height: 48px; }
+      .ks-coin-count { font-size: 18px; }
+      .ks-getgems { padding: 3px 8px; }
+      .ks-bot-cell { min-width: 72px; height: 44px; padding: 4px 8px; }
+      .ks-bot-value-bet, .ks-bot-value-win { font-size: 16px; }
+      .ks-bet-adj-btn { width: 34px; height: 34px; font-size: 18px; }
+      .ks-maxbet-btn { height: 42px; font-size: 11px; padding: 0 10px; }
+      .ks-spin-btn { width: 80px; height: 46px; font-size: 19px; }
+      .ks-bottom-bar { gap: 5px; padding: 6px 6px; }
+      .ks-side-rail { width: 18px; }
+      .ks-rail-text { font-size: 9px; }
     }
-    /* Big win overlay */
+
+    /* ── Big win overlay ── */
     .ks-big-win-overlay {
       position: fixed; inset: 0; z-index: 600;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -5064,11 +5145,12 @@
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       filter: drop-shadow(0 4px 20px rgba(255,215,0,0.6));
       animation: ksBigWinPulse 0.6s ease-in-out infinite alternate, ksBigWinShimmer 2s linear infinite;
+      font-family: 'Lilita One', system-ui, sans-serif;
     }
     .ks-big-win-amount {
       font-size: 52px; font-weight: 900; color: #fff;
       text-shadow: 0 0 30px rgba(113,50,245,0.7), 0 0 60px rgba(255,215,0,0.2);
-      margin-top: 6px;
+      margin-top: 6px; font-family: 'Lilita One', system-ui, sans-serif;
     }
     @keyframes ksBigWinPulse { from { transform: scale(1); } to { transform: scale(1.08); } }
     @keyframes ksBigWinShimmer { 0% { background-position: 0% 0%; } 100% { background-position: 0% 200%; } }
@@ -6730,71 +6812,80 @@
            KRAKEN SPINS — Casino Slot Machine View
            ═══════════════════════════════════════════════════ -->
       <div class="view" id="krakenspinsView">
-        <!-- Back button (absolute positioned) -->
-        <div class="ks-back-btn" onclick="if(window.innerWidth<=768){showMobileHome();}else{showView('home');}">←</div>
-        <!-- Top bar: coins | KRAKEN SPINS | gems | hamburger -->
-        <div class="ks-top-bar">
-          <div class="ks-top-pill">
-            <span class="ks-top-pill-icon ks-top-pill-icon-gold">🪙</span>
-            <span id="ksBalanceTop">5,000</span>
+        <div class="ks-cabinet">
+          <!-- ── Top bar (loaded) ── -->
+          <div class="ks-top-bar">
+            <div class="ks-top-home" onclick="if(window.innerWidth<=768){showMobileHome();}else{showView('home');}">🏠</div>
+            <div class="ks-level-pill" id="ksLevelPill">LEVEL 1</div>
+            <div class="ks-mascot">🐷</div>
+            <div class="ks-getgems">
+              <span class="ks-getgems-top">GET 50 GEMS</span>
+              <span class="ks-getgems-bot">💎 50K</span>
+            </div>
+            <div class="ks-gem-count">
+              <span class="ks-gem-icon">💎</span>
+              <span id="ksGemCount">2</span>
+            </div>
+            <div class="ks-coin-count">
+              <span class="ks-coin-icon">🪙</span>
+              <span id="ksBalanceTop">5,000</span>
+            </div>
+            <div class="ks-shop">SHOP</div>
+            <div class="ks-hot">
+              <span class="ks-hot-label">HOT OFFERS</span>
+              <span class="ks-hot-timer">🔥 1D 23H</span>
+            </div>
           </div>
-          <div class="ks-title-wrap">
-            <span class="ks-title-crown">👑</span>
-            <div class="ks-title">KRAKEN SPINS</div>
+
+          <!-- ── Reel section: left rail + reel frame + right rail ── -->
+          <div class="ks-reel-section">
+            <div class="ks-side-rail left">
+              <div class="ks-rail-badge-alert">!</div>
+              <span class="ks-rail-text">XTRA REEL POWER</span>
+            </div>
+            <div class="ks-reel-frame" id="ksReelWindow">
+              <canvas id="ksReelCanvas" class="ks-reel-canvas"></canvas>
+              <div class="ks-payline-indicator"></div>
+            </div>
+            <div class="ks-side-rail right">
+              <span class="ks-rail-text">XTRA REEL POWER</span>
+              <div class="ks-rail-badge-gem">
+                <span class="ks-rbg-icon">💎</span>
+                <span class="ks-rbg-text" id="ksGemProgress">0/5</span>
+              </div>
+            </div>
           </div>
-          <div class="ks-top-pill">
-            <span class="ks-top-pill-icon ks-top-pill-icon-red">💎</span>
-            <span>12</span>
+
+          <!-- Win display -->
+          <div class="ks-win-display" id="ksWinDisplay"></div>
+
+          <!-- Bet multiplier caption -->
+          <div class="ks-bet-multiplier" id="ksBetMultiplier">Bet Multiplier 1</div>
+
+          <!-- ── Bottom bar ── -->
+          <div class="ks-bottom-bar">
+            <div class="ks-bot-cell">
+              <span class="ks-bot-label">TOTAL BET</span>
+              <span class="ks-bot-value-bet" id="ksBetDisplay">50</span>
+            </div>
+            <div class="ks-bet-adj-btn" onclick="ksPrevBet()">−</div>
+            <div class="ks-bot-cell">
+              <span class="ks-bot-label">TOTAL WIN</span>
+              <span class="ks-bot-value-win" id="ksWinAmount">0</span>
+            </div>
+            <div class="ks-bet-adj-btn" onclick="ksNextBet()">+</div>
+            <button class="ks-maxbet-btn" onclick="ksSetBet(500)">MAX BET</button>
+            <button class="ks-spin-btn" id="ksSpinBtn" onclick="ksSpin()">SPIN</button>
           </div>
-          <div class="ks-hamburger">☰</div>
+
+          <!-- Turbo + Auto row -->
+          <div class="ks-action-row">
+            <button class="ks-action-btn" id="ksTurboBtn" onclick="ksToggleTurbo()">⚡ Turbo</button>
+            <button class="ks-action-btn" id="ksAutoBtn" onclick="ksToggleAuto()">🔄 Auto</button>
+            <span style="font-size:10px;color:rgba(255,255,255,0.25);" id="ksSpinCount">Spins: 0</span>
+          </div>
         </div>
-        <!-- Machine cabinet -->
-        <div class="ks-machine" id="ksMachine">
-          <div class="ks-machine-inner">
-            <!-- Reel area: side buttons + reels + side buttons -->
-            <div class="ks-reel-area">
-              <div class="ks-side-btns">
-                <div class="ks-side-btn">1</div>
-                <div class="ks-side-btn">2</div>
-                <div class="ks-side-btn">3</div>
-                <div class="ks-side-btn">4</div>
-              </div>
-              <div class="ks-reel-window" id="ksReelWindow">
-                <canvas id="ksReelCanvas" class="ks-reel-canvas"></canvas>
-                <div class="ks-payline-indicator"></div>
-              </div>
-              <div class="ks-side-btns">
-                <div class="ks-side-btn">1</div>
-                <div class="ks-side-btn">2</div>
-                <div class="ks-side-btn">3</div>
-                <div class="ks-side-btn">4</div>
-              </div>
-            </div>
-            <!-- Win display -->
-            <div class="ks-win-display" id="ksWinDisplay"></div>
-            <!-- Bottom bar: WIN | - | TOTAL BET | + | MAX BET | Spin -->
-            <div class="ks-bottom-bar">
-              <div class="ks-bot-cell-win">
-                <span class="ks-bot-label-win">WIN</span>
-                <span class="ks-bot-value-win" id="ksWinAmount">0</span>
-              </div>
-              <div class="ks-bet-adj-btn" onclick="ksPrevBet()">−</div>
-              <div class="ks-bot-cell-bet">
-                <span class="ks-bot-label-bet">TOTAL BET</span>
-                <span class="ks-bot-value-bet" id="ksBetDisplay">50</span>
-              </div>
-              <div class="ks-bet-adj-btn" onclick="ksNextBet()">+</div>
-              <button class="ks-maxbet-btn" onclick="ksSetBet(500)">MAX BET</button>
-              <button class="ks-spin-btn" id="ksSpinBtn" onclick="ksSpin()">SPIN</button>
-            </div>
-            <!-- Turbo + Auto row -->
-            <div class="ks-action-row">
-              <button class="ks-action-btn" id="ksTurboBtn" onclick="ksToggleTurbo()">⚡ Turbo</button>
-              <button class="ks-action-btn" id="ksAutoBtn" onclick="ksToggleAuto()">🔄 Auto</button>
-              <span style="font-size:10px;color:rgba(255,255,255,0.25);" id="ksSpinCount">Spins: 0</span>
-            </div>
-          </div>
-        </div>
+
         <!-- Big win overlay -->
         <div class="ks-big-win-overlay" id="ksBigWinOverlay">
           <div class="ks-big-win-label" id="ksBigWinLabel">BIG WIN!</div>
@@ -25277,13 +25368,15 @@ document.addEventListener('visibilitychange', function() {
   var BETS = [50, 100, 250, 500];
 
   var KS_SYMBOLS = [
-    { id: 'kraken',  emoji: '🐙', label: 'Kraken',     mult: 50, weight: 2 },
-    { id: 'wild',    emoji: '🃏', label: 'Wild',        mult: 25, weight: 3, isWild: true },
-    { id: 'gem',     emoji: '💎', label: 'Purple Gem',  mult: 15, weight: 5 },
-    { id: 'coin',    emoji: '🪙', label: 'Gold Coin',   mult: 10, weight: 7 },
-    { id: 'seven',   emoji: '7️⃣', label: 'Lucky 7',    mult: 8,  weight: 8 },
-    { id: 'bar',     emoji: '🍀', label: 'BAR',         mult: 5,  weight: 12 },
-    { id: 'star',    emoji: '⭐', label: 'Star',        mult: 3,  weight: 15 }
+    { id: 'buffalo', emoji: '🐃', label: 'Buffalo',  mult: 50, weight: 2, halo: true },
+    { id: 'wild',    emoji: '🐺', label: 'Wolf',     mult: 25, weight: 3, isWild: true, halo: true },
+    { id: 'eagle',   emoji: '🦅', label: 'Eagle',    mult: 15, weight: 5, halo: true },
+    { id: 'sunset',  emoji: '🌅', label: 'Sunset',   mult: 10, weight: 7, halo: true },
+    { id: 'coin',    emoji: '🪙', label: 'Coin',     mult: 8,  weight: 8, halo: true },
+    { id: 'ace',     emoji: 'A',  label: 'Ace',      mult: 5,  weight: 12, card: true, color: '#f5c842' },
+    { id: 'queen',   emoji: 'Q',  label: 'Queen',    mult: 4,  weight: 13, card: true, color: '#ff8a3a' },
+    { id: 'jack',    emoji: 'J',  label: 'Jack',     mult: 3,  weight: 14, card: true, color: '#4dd0ff' },
+    { id: 'ten',     emoji: '10', label: 'Ten',       mult: 3,  weight: 15, card: true, color: '#ff3a5c' }
   ];
 
   var KS_POOL = [];
@@ -25328,6 +25421,14 @@ document.addEventListener('visibilitychange', function() {
       if (saved && !isNaN(parseInt(saved))) { ks.balance = Math.max(0, parseInt(saved)); ksUpdateBalanceUI(); }
       var sc = localStorage.getItem('ks_spins');
       if (sc) { ks.spinCount = parseInt(sc) || 0; ksUpdateSpinCount(); }
+      // Load level
+      var lvl = localStorage.getItem('ks_level');
+      var lp = document.getElementById('ksLevelPill');
+      if (lp) lp.textContent = 'LEVEL ' + (lvl ? parseInt(lvl) : 1);
+      // Load gem progress
+      var gp = localStorage.getItem('ks_gem_progress');
+      var gpEl = document.getElementById('ksGemProgress');
+      if (gpEl) gpEl.textContent = (gp || '0') + '/5';
     } catch(e) {}
   };
 
@@ -25395,22 +25496,64 @@ document.addEventListener('visibilitychange', function() {
     }
   }
 
+  // Card SVG cache (rendered once per size per symbol)
+  var _ksCardCache = {};
+  function ksGetCardImage(value, color, w, h) {
+    var key = value + '_' + w + 'x' + h;
+    if (_ksCardCache[key]) return _ksCardCache[key];
+    var cW = Math.floor(w * 0.7); var cH = Math.floor(h * 0.82);
+    var cvs = document.createElement('canvas');
+    cvs.width = cW * 2; cvs.height = cH * 2;
+    var c = cvs.getContext('2d');
+    c.scale(2, 2);
+    var r = 6;
+    // Card body
+    c.fillStyle = '#2a0e3f';
+    c.strokeStyle = '#ffd84a'; c.lineWidth = 2.5;
+    c.beginPath();
+    c.moveTo(r, 0); c.lineTo(cW - r, 0);
+    c.quadraticCurveTo(cW, 0, cW, r);
+    c.lineTo(cW, cH - r);
+    c.quadraticCurveTo(cW, cH, cW - r, cH);
+    c.lineTo(r, cH);
+    c.quadraticCurveTo(0, cH, 0, cH - r);
+    c.lineTo(0, r);
+    c.quadraticCurveTo(0, 0, r, 0);
+    c.closePath();
+    c.fill(); c.stroke();
+    // Letter
+    var fs = Math.floor(cH * 0.55);
+    c.font = '900 ' + fs + 'px "Lilita One", system-ui, sans-serif';
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillStyle = color;
+    c.strokeStyle = '#6b2a14'; c.lineWidth = 2;
+    c.strokeText(value, cW / 2, cH / 2);
+    c.fillText(value, cW / 2, cH / 2);
+    // Suit pips (small, top-left + bottom-right)
+    var pipFS = Math.floor(cH * 0.14);
+    c.font = pipFS + 'px sans-serif'; c.fillStyle = color;
+    c.fillText('♠', 8, 12);
+    c.fillText('♠', cW - 8, cH - 10);
+    _ksCardCache[key] = cvs;
+    return cvs;
+  }
+
   function ksDraw() {
     var ctx = ks.ctx; var sw = ks.SYM_W || ks.SYMBOL_SIZE; var sh = ks.SYM_H || ks.SYMBOL_SIZE;
     var cw = sw * RC; var ch = sh * ROWS;
     ctx.save(); ctx.translate(ks.shakeX, ks.shakeY);
     ctx.clearRect(-10, -10, cw + 20, ch + 20);
-    ctx.fillStyle = '#050210'; ctx.fillRect(0, 0, cw, ch);
+    // Transparent bg (sunset shows through from CSS)
+    ctx.clearRect(0, 0, cw, ch);
 
-    var fontSize = Math.max(28, Math.floor(Math.min(sw, sh) * 0.72));
-    ctx.font = fontSize + 'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+    var emojiFS = Math.max(28, Math.floor(Math.min(sw, sh) * 0.72));
     var pad = 2; var cellR = 6;
 
     for (var r = 0; r < RC; r++) {
       var strip = ks.reels[r]; var off = ks.reelOffsets[r]; var reelX = r * sw;
       // Gold reel dividers
       if (r > 0) {
-        ctx.strokeStyle = 'rgba(255,215,0,0.2)'; ctx.lineWidth = 1.5;
+        ctx.strokeStyle = 'rgba(255,216,74,0.15)'; ctx.lineWidth = 1.5;
         ctx.beginPath(); ctx.moveTo(reelX, 0); ctx.lineTo(reelX, ch); ctx.stroke();
       }
       var startIdx = Math.floor(off / sh); var frac = off % sh;
@@ -25424,8 +25567,9 @@ document.addEventListener('visibilitychange', function() {
         var cellX = reelX + pad; var cellY = y - sh / 2 + pad;
         var cellW = sw - pad * 2; var cellH = sh - pad * 2;
         ctx.globalAlpha = 1 - distC * 0.25;
-        // Cell background
-        ctx.fillStyle = isCenter ? 'rgba(113,50,245,0.1)' : 'rgba(10,5,25,0.5)';
+
+        // Cell background — subtle
+        ctx.fillStyle = isCenter ? 'rgba(113,50,245,0.12)' : 'rgba(10,4,28,0.35)';
         ctx.beginPath();
         ctx.moveTo(cellX + cellR, cellY);
         ctx.lineTo(cellX + cellW - cellR, cellY);
@@ -25437,24 +25581,46 @@ document.addEventListener('visibilitychange', function() {
         ctx.lineTo(cellX, cellY + cellR);
         ctx.quadraticCurveTo(cellX, cellY, cellX + cellR, cellY);
         ctx.closePath(); ctx.fill();
+
         // Cell border
-        ctx.strokeStyle = isCenter ? 'rgba(255,215,0,0.25)' : 'rgba(113,50,245,0.08)';
+        ctx.strokeStyle = isCenter ? 'rgba(255,216,74,0.3)' : 'rgba(113,50,245,0.08)';
         ctx.lineWidth = isCenter ? 1.5 : 0.5; ctx.stroke();
-        if (isCenter && !ks.spinning) { ctx.shadowColor = 'rgba(113,50,245,0.3)'; ctx.shadowBlur = 8; }
-        ctx.fillText(sym.emoji, x, y);
-        ctx.shadowBlur = 0; ctx.globalAlpha = 1;
+
+        if (sym.card) {
+          // Draw gold-framed playing card
+          var cardImg = ksGetCardImage(sym.emoji, sym.color, sw, sh);
+          var cImgW = cardImg.width / 2; var cImgH = cardImg.height / 2;
+          ctx.drawImage(cardImg, x - cImgW / 2, y - cImgH / 2, cImgW, cImgH);
+        } else {
+          // Emoji with gold halo
+          if (sym.halo) {
+            var haloR = Math.min(sw, sh) * 0.38;
+            var haloGrad = ctx.createRadialGradient(x, y - sh * 0.03, 0, x, y - sh * 0.03, haloR);
+            haloGrad.addColorStop(0, 'rgba(255,216,74,0.45)');
+            haloGrad.addColorStop(0.4, 'rgba(255,216,74,0.15)');
+            haloGrad.addColorStop(1, 'rgba(255,216,74,0)');
+            ctx.fillStyle = haloGrad;
+            ctx.beginPath(); ctx.arc(x, y - sh * 0.03, haloR, 0, Math.PI * 2); ctx.fill();
+          }
+          if (isCenter && !ks.spinning) { ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 4; ctx.shadowOffsetY = 3; }
+          ctx.font = emojiFS + 'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText(sym.emoji, x, y);
+          ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+        }
+        ctx.globalAlpha = 1;
       }
     }
     // Row separators
     for (var rl = 1; rl < ROWS; rl++) {
-      ctx.strokeStyle = 'rgba(255,215,0,0.08)'; ctx.lineWidth = 0.5;
+      ctx.strokeStyle = 'rgba(255,216,74,0.08)'; ctx.lineWidth = 0.5;
       ctx.beginPath(); ctx.moveTo(0, rl * sh); ctx.lineTo(cw, rl * sh); ctx.stroke();
     }
     // Motion blur
     if (ks.spinning && !ks.reelStopped[0]) {
       var ms = 0; for (var mr = 0; mr < RC; mr++) ms = Math.max(ms, ks.reelSpeeds[mr]);
       var ba = Math.min(ms / 3000, 0.25);
-      if (ba > 0.02) { ctx.fillStyle = 'rgba(5,2,16,' + ba + ')'; ctx.fillRect(0, 0, cw, ch); }
+      if (ba > 0.02) { ctx.fillStyle = 'rgba(10,4,28,' + ba + ')'; ctx.fillRect(0, 0, cw, ch); }
     }
     // Particles
     for (var pi = 0; pi < ks.particles.length; pi++) {
@@ -25622,6 +25788,8 @@ document.addEventListener('visibilitychange', function() {
   function ksUpdateBetUI() {
     var el = document.getElementById('ksBetDisplay');
     if (el) el.textContent = ks.bet.toLocaleString();
+    var bm = document.getElementById('ksBetMultiplier');
+    if (bm) bm.textContent = 'Bet Multiplier ' + Math.max(1, Math.round(ks.bet / BETS[0]));
   }
   function ksUpdateWinUI() {
     var el = document.getElementById('ksWinAmount');
