@@ -18,7 +18,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-26-v413-portfolio-input';
+    var APP_VERSION = '2026-04-26-v414-chart-overhaul';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -22582,137 +22582,267 @@
       };
     }
 
+    // ── WishPath Dark Theme for Highcharts ──
+    var WP_CHART_COLORS = ['#7132F5', '#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#a78bfa', '#06b6d4', '#ec4899', '#84cc16', '#f97316'];
+    var WP_CHART_THEME = {
+      chart: {
+        backgroundColor: 'transparent',
+        style: { fontFamily: "'IBM Plex Sans', system-ui, -apple-system, sans-serif" },
+        spacing: [20, 16, 16, 16]
+      },
+      title: {
+        style: { color: 'rgba(255,255,255,0.92)', fontSize: '16px', fontWeight: '700' }
+      },
+      subtitle: {
+        style: { color: 'rgba(255,255,255,0.4)', fontSize: '12px', fontWeight: '400' }
+      },
+      xAxis: {
+        labels: { style: { color: 'rgba(255,255,255,0.45)', fontSize: '11px' } },
+        lineColor: 'rgba(255,255,255,0.08)',
+        tickColor: 'rgba(255,255,255,0.08)',
+        gridLineColor: 'rgba(113,50,245,0.08)',
+        title: { style: { color: 'rgba(255,255,255,0.45)', fontSize: '11px' } }
+      },
+      yAxis: {
+        labels: { style: { color: 'rgba(255,255,255,0.45)', fontSize: '11px' } },
+        lineColor: 'rgba(255,255,255,0.06)',
+        gridLineColor: 'rgba(113,50,245,0.1)',
+        title: { style: { color: 'rgba(255,255,255,0.45)', fontSize: '11px' } }
+      },
+      legend: {
+        itemStyle: { color: 'rgba(255,255,255,0.65)', fontWeight: '500', fontSize: '12px' },
+        itemHoverStyle: { color: 'rgba(255,255,255,0.9)' },
+        itemHiddenStyle: { color: 'rgba(255,255,255,0.2)' }
+      },
+      tooltip: {
+        backgroundColor: 'rgba(15,10,26,0.92)',
+        borderColor: 'rgba(113,50,245,0.3)',
+        borderRadius: 12,
+        shadow: { color: 'rgba(113,50,245,0.2)', offsetX: 0, offsetY: 4, width: 16 },
+        style: { color: 'rgba(255,255,255,0.9)', fontSize: '13px' },
+        useHTML: true
+      },
+      plotOptions: {
+        series: {
+          animation: { duration: 1200, easing: 'easeOutQuart' },
+          marker: { enabled: true, radius: 4, lineWidth: 2, lineColor: null, symbol: 'circle',
+            states: { hover: { radiusPlus: 3, lineWidthPlus: 1 } }
+          },
+          states: { hover: { lineWidthPlus: 1 } }
+        },
+        line: { lineWidth: 3 },
+        spline: { lineWidth: 3 },
+        area: { lineWidth: 2.5, fillOpacity: 0.15 },
+        column: { borderRadius: 4, borderWidth: 0 },
+        bar: { borderRadius: 4, borderWidth: 0 },
+        pie: {
+          borderWidth: 0,
+          shadow: false,
+          dataLabels: { color: 'rgba(255,255,255,0.75)', style: { fontSize: '12px', fontWeight: '500', textOutline: 'none' } }
+        }
+      },
+      credits: { enabled: false }
+    };
+
+    function _wpDeepMerge(target, src) {
+      var out = Object.assign({}, target);
+      Object.keys(src).forEach(function(k) {
+        if (src[k] && typeof src[k] === 'object' && !Array.isArray(src[k]) && target[k] && typeof target[k] === 'object' && !Array.isArray(target[k])) {
+          out[k] = _wpDeepMerge(target[k], src[k]);
+        } else {
+          out[k] = src[k];
+        }
+      });
+      return out;
+    }
+
     function buildTemplateChartConfig(template) {
       var clickHandler = getTemplateChartClickHandler(template.name);
-      var baseConfig = {
-        chart: { height: 320, animation: true, events: { click: clickHandler } },
-        title: { text: template.name + ' Template' },
+      var base = _wpDeepMerge(WP_CHART_THEME, {
+        chart: { height: 400, animation: true, events: { click: clickHandler } },
+        title: { text: template.name },
         subtitle: { text: 'Tap chart to ask AI to fill in your numbers' },
-        credits: { enabled: false }
-      };
+        colors: WP_CHART_COLORS
+      });
+
       switch (template.name) {
         case 'Candlestick Chart':
-          return Object.assign({}, baseConfig, {
-            chart: Object.assign({}, baseConfig.chart, { type: 'candlestick' }),
-            xAxis: { categories: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'] },
-            yAxis: { title: { text: 'Price' } },
+          return _wpDeepMerge(base, {
+            chart: { type: 'candlestick' },
+            xAxis: { categories: ['Mon','Tue','Wed','Thu','Fri','Mon','Tue','Wed','Thu','Fri','Mon','Tue','Wed','Thu','Fri','Mon','Tue','Wed','Thu','Fri'] },
+            yAxis: { title: { text: 'Price ($)' }, gridLineColor: 'rgba(113,50,245,0.08)' },
             plotOptions: {
               candlestick: {
-                color: '#ef4444',
-                upColor: '#22c55e',
-                lineColor: '#ef4444',
-                upLineColor: '#22c55e'
+                color: '#ef4444', upColor: '#22c55e', lineColor: '#ef4444', upLineColor: '#22c55e',
+                shadow: { color: 'rgba(0,0,0,0.3)', offsetX: 0, offsetY: 2, width: 4 }
               }
             },
-            series: [{
-              type: 'candlestick',
-              name: 'OHLC',
-              data: [
-                [180, 186, 179, 182],
-                [183, 188, 182, 186],
-                [186, 187, 183, 184],
-                [184, 190, 183, 189],
-                [189, 193, 188, 191]
-              ]
-            }]
+            series: [{ type: 'candlestick', name: 'OHLC', data: [
+              [180,186,179,182],[183,188,181,186],[185,187,183,184],[184,190,183,189],[189,193,187,191],
+              [190,195,189,194],[193,196,191,192],[191,194,189,193],[194,198,193,197],[196,201,195,199],
+              [198,202,196,197],[196,199,194,198],[199,204,198,203],[202,206,200,201],[200,205,198,204],
+              [203,208,202,207],[206,210,204,205],[204,209,203,208],[207,212,206,211],[210,215,208,213]
+            ] }]
           });
+
         case 'Portfolio Performance':
-          return Object.assign({}, baseConfig, {
-            chart: Object.assign({}, baseConfig.chart, { type: 'line' }),
-            xAxis: { categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'] },
+          return _wpDeepMerge(base, {
+            chart: { type: 'spline' },
+            xAxis: { categories: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'] },
             yAxis: { title: { text: 'Portfolio Value ($)' } },
             series: [
-              { name: 'Portfolio', color: '#22c55e', data: [12000, 12650, 13400, 14150, 14720, 15380] },
-              { name: 'Benchmark', color: '#8b949e', data: [12000, 12240, 12820, 13310, 13850, 14410] }
+              { name: 'Portfolio', color: '#22c55e', data: [100000,103200,107800,105400,112600,118900,116200,122400,128700,131500,136800,142300],
+                marker: { symbol: 'circle' },
+                zones: [{ value: 105400, color: '#ef4444' }, { color: '#22c55e' }]
+              },
+              { name: 'S&P 500', color: 'rgba(139,148,158,0.6)', dashStyle: 'ShortDash', lineWidth: 2,
+                data: [100000,101800,104200,103600,108400,112700,111500,115200,118900,121300,125600,129800],
+                marker: { enabled: false }
+              }
             ]
           });
+
         case 'Asset Allocation Pie':
-          return Object.assign({}, baseConfig, {
-            chart: Object.assign({}, baseConfig.chart, { type: 'pie' }),
-            series: [{ name: 'Allocation', innerSize: '54%', data: [{ name: 'Tech', y: 42 }, { name: 'ETFs', y: 24 }, { name: 'Cash', y: 18 }, { name: 'Other', y: 16 }] }]
+          return _wpDeepMerge(base, {
+            chart: { type: 'pie' },
+            plotOptions: { pie: { innerSize: '58%', shadow: false, center: ['50%','50%'],
+              dataLabels: { distance: 20, format: '<b>{point.name}</b><br>{point.percentage:.1f}%', style: { fontSize: '12px' } }
+            } },
+            series: [{ name: 'Allocation', colorByPoint: true, data: [
+              { name: 'US Tech', y: 34, color: '#7132F5' },
+              { name: 'Index ETFs', y: 22, color: '#3b82f6' },
+              { name: 'Int\'l Equity', y: 14, color: '#06b6d4' },
+              { name: 'Bonds', y: 12, color: '#22c55e' },
+              { name: 'Real Estate', y: 8, color: '#f59e0b' },
+              { name: 'Crypto', y: 6, color: '#ec4899' },
+              { name: 'Cash', y: 4, color: 'rgba(255,255,255,0.2)' }
+            ] }]
           });
+
         case 'Monthly Spending Breakdown':
-          return Object.assign({}, baseConfig, {
-            chart: Object.assign({}, baseConfig.chart, { type: 'pie' }),
-            series: [{ name: 'Spend', innerSize: '48%', data: [{ name: 'Housing', y: 35 }, { name: 'Food', y: 18 }, { name: 'Transport', y: 11 }, { name: 'Utilities', y: 12 }, { name: 'Other', y: 24 }] }]
+          return _wpDeepMerge(base, {
+            chart: { type: 'pie' },
+            plotOptions: { pie: { innerSize: '52%',
+              dataLabels: { distance: 18, format: '<b>{point.name}</b><br>${point.y:,.0f}', style: { fontSize: '12px' } }
+            } },
+            series: [{ name: 'Monthly Spend', colorByPoint: true, data: [
+              { name: 'Housing', y: 2200, color: '#7132F5' },
+              { name: 'Food & Dining', y: 850, color: '#22c55e' },
+              { name: 'Transportation', y: 520, color: '#3b82f6' },
+              { name: 'Utilities', y: 380, color: '#06b6d4' },
+              { name: 'Entertainment', y: 310, color: '#f59e0b' },
+              { name: 'Health', y: 240, color: '#ec4899' },
+              { name: 'Subscriptions', y: 180, color: '#a78bfa' },
+              { name: 'Other', y: 420, color: 'rgba(255,255,255,0.2)' }
+            ] }]
           });
+
         case 'Budget vs Actual':
-          return Object.assign({}, baseConfig, {
-            chart: Object.assign({}, baseConfig.chart, { type: 'column' }),
-            xAxis: { categories: ['Housing', 'Food', 'Transport', 'Savings'] },
+          return _wpDeepMerge(base, {
+            chart: { type: 'column' },
+            xAxis: { categories: ['Housing','Food','Transport','Savings','Entertainment','Health','Subscriptions','Other'] },
             yAxis: { title: { text: 'Amount ($)' } },
+            plotOptions: { column: { groupPadding: 0.15, pointPadding: 0.05, borderRadius: 5 } },
             series: [
-              { name: 'Budget', color: '#3b82f6', data: [1800, 700, 250, 600] },
-              { name: 'Actual', color: '#22c55e', data: [1750, 740, 230, 500] }
+              { name: 'Budget', color: '#3b82f6', data: [2200,800,550,800,350,250,200,400] },
+              { name: 'Actual', color: '#22c55e', data: [2200,850,520,650,310,240,180,420] }
             ]
           });
+
         case 'Expense Waterfall':
-          return Object.assign({}, baseConfig, {
-            chart: Object.assign({}, baseConfig.chart, { type: 'column' }),
-            xAxis: { categories: ['Income', 'Fixed Costs', 'Variable Costs', 'Savings', 'Balance'] },
+          return _wpDeepMerge(base, {
+            chart: { type: 'column' },
+            xAxis: { categories: ['Income','Housing','Food','Transport','Utilities','Entertainment','Savings','Balance'] },
             yAxis: { title: { text: 'Amount ($)' } },
-            plotOptions: { column: { colorByPoint: true } },
-            series: [{ name: 'Cash Movement', data: [6200, -2400, -1450, -900, 1450] }]
+            plotOptions: { column: { borderRadius: 5, colorByPoint: true } },
+            series: [{ name: 'Cash Flow', data: [
+              { y: 8500, color: '#22c55e' }, { y: -2200, color: '#ef4444' }, { y: -850, color: '#ef4444' },
+              { y: -520, color: '#ef4444' }, { y: -380, color: '#ef4444' }, { y: -310, color: '#f59e0b' },
+              { y: -800, color: '#3b82f6' }, { y: 3440, color: '#7132F5' }
+            ] }]
           });
+
         case 'Net Worth Tracker':
-          return Object.assign({}, baseConfig, {
-            chart: Object.assign({}, baseConfig.chart, { type: 'area' }),
-            xAxis: { categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'] },
+          return _wpDeepMerge(base, {
+            chart: { type: 'areaspline' },
+            xAxis: { categories: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'] },
             yAxis: { title: { text: 'Net Worth ($)' } },
-            series: [{ name: 'Net Worth', color: '#22c55e', data: [25000, 26400, 27950, 29100, 30850, 32400] }]
+            plotOptions: { areaspline: { fillColor: { linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
+              stops: [[0, 'rgba(34,197,94,0.35)'],[1, 'rgba(34,197,94,0.02)']] }, lineWidth: 3, marker: { radius: 4 } } },
+            series: [{ name: 'Net Worth', color: '#22c55e',
+              data: [125000,128400,132950,136100,141850,148400,152700,158200,163400,169800,176200,182900]
+            }]
           });
+
         case 'Cash Flow Timeline':
-          return Object.assign({}, baseConfig, {
-            chart: Object.assign({}, baseConfig.chart, { type: 'line' }),
-            xAxis: { categories: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6'] },
+          return _wpDeepMerge(base, {
+            chart: { type: 'areaspline' },
+            xAxis: { categories: ['Wk 1','Wk 2','Wk 3','Wk 4','Wk 5','Wk 6','Wk 7','Wk 8','Wk 9','Wk 10','Wk 11','Wk 12'] },
             yAxis: { title: { text: 'Cash ($)' } },
+            plotOptions: { areaspline: { fillOpacity: 0.12, lineWidth: 3 } },
             series: [
-              { name: 'Inflow', color: '#22c55e', data: [1800, 1500, 2200, 2100, 2400, 2000] },
-              { name: 'Outflow', color: '#ef4444', data: [1100, 1250, 1360, 1290, 1500, 1425] }
+              { name: 'Inflow', color: '#22c55e', data: [4200,3800,5100,4600,5400,4900,5800,5200,6100,5700,6400,5900] },
+              { name: 'Outflow', color: '#ef4444', data: [3100,3400,3800,3200,3900,3500,4100,3700,4300,3900,4500,4100] }
             ]
           });
+
         case 'Savings Goal Progress':
-          return Object.assign({}, baseConfig, {
-            chart: Object.assign({}, baseConfig.chart, { type: 'bar' }),
-            xAxis: { categories: ['Savings Goal'] },
-            yAxis: { min: 0, title: { text: 'Amount ($)' }, stackLabels: { enabled: true } },
-            plotOptions: { series: { stacking: 'normal' } },
+          return _wpDeepMerge(base, {
+            chart: { type: 'bar' },
+            xAxis: { categories: ['Emergency Fund','Vacation','New Car','Home Down Payment'] },
+            yAxis: { min: 0, max: 100, title: { text: 'Progress (%)' }, stackLabels: { enabled: true, style: { color: 'rgba(255,255,255,0.7)', fontSize: '12px', textOutline: 'none' } } },
+            plotOptions: { series: { stacking: 'normal', borderRadius: 5 } },
             series: [
-              { name: 'Saved', color: '#22c55e', data: [6200] },
-              { name: 'Remaining', color: '#374151', data: [3800] }
+              { name: 'Saved', color: '#22c55e', data: [82, 64, 35, 18] },
+              { name: 'Remaining', color: 'rgba(255,255,255,0.08)', data: [18, 36, 65, 82] }
             ]
           });
+
         case 'Debt Payoff Plan':
-          return Object.assign({}, baseConfig, {
-            chart: Object.assign({}, baseConfig.chart, { type: 'line' }),
-            xAxis: { categories: ['Month 1', 'Month 2', 'Month 3', 'Month 4', 'Month 5', 'Month 6'] },
+          return _wpDeepMerge(base, {
+            chart: { type: 'areaspline' },
+            xAxis: { categories: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar'] },
             yAxis: { title: { text: 'Balance ($)' } },
-            series: [{ name: 'Debt Balance', color: '#ef4444', data: [18400, 16950, 15320, 13840, 12150, 10620] }]
+            plotOptions: { areaspline: { fillColor: { linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
+              stops: [[0, 'rgba(239,68,68,0.3)'],[1, 'rgba(239,68,68,0.02)']] }, lineWidth: 3, marker: { radius: 3 } } },
+            series: [{ name: 'Debt Balance', color: '#ef4444',
+              data: [24800,23600,22300,21100,19800,18400,17100,15700,14200,12800,11300,9700,8200,6600,4900]
+            }]
           });
+
         case 'Revenue Dashboard':
-          return Object.assign({}, baseConfig, {
-            chart: Object.assign({}, baseConfig.chart, { type: 'column' }),
-            xAxis: { categories: ['Q1', 'Q2', 'Q3', 'Q4'] },
+          return _wpDeepMerge(base, {
+            chart: { type: 'column' },
+            xAxis: { categories: ['Q1 \'24','Q2 \'24','Q3 \'24','Q4 \'24','Q1 \'25','Q2 \'25','Q3 \'25','Q4 \'25'] },
             yAxis: { title: { text: 'Amount ($)' } },
+            plotOptions: { column: { groupPadding: 0.15, pointPadding: 0.05, borderRadius: 5 } },
             series: [
-              { name: 'Revenue', color: '#3b82f6', data: [24000, 27800, 32400, 36900] },
-              { name: 'Profit', color: '#22c55e', data: [6200, 7400, 9800, 11850] }
+              { name: 'Revenue', color: '#3b82f6', data: [24000,27800,32400,36900,41200,45800,52100,58400] },
+              { name: 'Profit', color: '#22c55e', data: [6200,7400,9800,11850,13600,15200,18400,21700] },
+              { name: 'Costs', color: 'rgba(255,255,255,0.12)', data: [17800,20400,22600,25050,27600,30600,33700,36700] }
             ]
           });
+
         case 'P&L Statement':
-          return Object.assign({}, baseConfig, {
-            chart: Object.assign({}, baseConfig.chart, { type: 'column' }),
-            xAxis: { categories: ['Revenue', 'COGS', 'Gross Profit', 'OpEx', 'Net Income'] },
+          return _wpDeepMerge(base, {
+            chart: { type: 'column' },
+            xAxis: { categories: ['Revenue','COGS','Gross Profit','Marketing','R&D','G&A','EBITDA','Net Income'] },
             yAxis: { title: { text: 'Amount ($)' } },
-            plotOptions: { column: { colorByPoint: true } },
-            series: [{ name: 'P&L', data: [58000, -21000, 37000, -16000, 21000] }]
+            plotOptions: { column: { borderRadius: 5, colorByPoint: true } },
+            series: [{ name: 'P&L', data: [
+              { y: 285000, color: '#22c55e' }, { y: -98000, color: '#ef4444' }, { y: 187000, color: '#3b82f6' },
+              { y: -42000, color: '#f59e0b' }, { y: -58000, color: '#a78bfa' }, { y: -31000, color: '#06b6d4' },
+              { y: 56000, color: '#7132F5' }, { y: 41000, color: '#22c55e' }
+            ] }]
           });
+
         default:
-          return Object.assign({}, baseConfig, {
-            chart: Object.assign({}, baseConfig.chart, { type: 'column' }),
-            xAxis: { categories: ['A', 'B', 'C', 'D'] },
+          return _wpDeepMerge(base, {
+            chart: { type: 'column' },
+            xAxis: { categories: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug'] },
             yAxis: { title: { text: 'Value' } },
-            series: [{ name: 'Template', data: [5, 8, 4, 7] }]
+            plotOptions: { column: { borderRadius: 5 } },
+            series: [{ name: 'Template', color: '#7132F5', data: [12,18,14,22,19,26,21,28] }]
           });
       }
     }
