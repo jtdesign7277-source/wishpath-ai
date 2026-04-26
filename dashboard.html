@@ -7205,16 +7205,21 @@
         <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(113,50,245,0.35),transparent);margin:6px 0 10px 0;"></div>
         <!-- Markets Snapshot -->
         <div class="home-markets-header">
-          <div class="mobile-sec-label" style="font-size:14px;font-weight:700;color:rgba(255,255,255,0.55);letter-spacing:0.1em;">Markets</div>
+          <div style="display:flex;align-items:center;gap:8px;cursor:pointer;-webkit-tap-highlight-color:transparent;padding:4px 0;" onclick="toggleHomeMarketsCollapse();">
+            <span id="homeMarketsArrow" style="font-size:18px;color:rgba(255,255,255,0.85);transition:transform 0.2s;">▾</span>
+            <span class="mobile-sec-label" style="font-size:14px;font-weight:700;color:rgba(255,255,255,0.9);letter-spacing:0.1em;margin:0;">Markets</span>
+          </div>
           <span class="home-markets-see-all" onclick="hideMobileHome();openFMTab('fmMarkets');">See All →</span>
         </div>
-        <div class="home-markets-search-wrap">
-          <svg class="home-markets-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" class="home-markets-search" id="homeMarketsSearchInput" placeholder="Search ticker to add..." autocomplete="off" autocorrect="off" spellcheck="false">
-          <div class="home-markets-ac-dropdown" id="homeMarketsAcDropdown"></div>
-        </div>
-        <div class="home-markets-row" id="homeMarketsRow">
-          <div class="home-market-loading">Loading prices...</div>
+        <div id="homeMarketsBody">
+          <div class="home-markets-search-wrap">
+            <svg class="home-markets-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" class="home-markets-search" id="homeMarketsSearchInput" placeholder="Search ticker to add..." autocomplete="off" autocorrect="off" spellcheck="false">
+            <div class="home-markets-ac-dropdown" id="homeMarketsAcDropdown"></div>
+          </div>
+          <div class="home-markets-row" id="homeMarketsRow">
+            <div class="home-market-loading">Loading prices...</div>
+          </div>
         </div>
         <!-- Thin purple divider before news -->
         <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(113,50,245,0.35),transparent);margin:6px 0 10px 0;"></div>
@@ -17667,6 +17672,24 @@
       if (pinEl) pinEl.style.display = (_homeSportsCollapsed && _homeSportsPinned) ? 'block' : 'none';
     }
 
+    // --- Collapsible Markets ---
+    var _homeMarketsCollapsed = localStorage.getItem('wp_markets_collapsed') === '1';
+    function toggleHomeMarketsCollapse() {
+      _homeMarketsCollapsed = !_homeMarketsCollapsed;
+      localStorage.setItem('wp_markets_collapsed', _homeMarketsCollapsed ? '1' : '0');
+      var body = document.getElementById('homeMarketsBody');
+      var arrow = document.getElementById('homeMarketsArrow');
+      if (body) body.style.display = _homeMarketsCollapsed ? 'none' : 'block';
+      if (arrow) arrow.textContent = _homeMarketsCollapsed ? '▸' : '▾';
+    }
+    // Apply initial Markets collapsed state
+    if (_homeMarketsCollapsed) {
+      var _mb = document.getElementById('homeMarketsBody');
+      var _ma = document.getElementById('homeMarketsArrow');
+      if (_mb) _mb.style.display = 'none';
+      if (_ma) _ma.textContent = '▸';
+    }
+
     function pinHomeSportsGame(evId) {
       if (_homeSportsPinned === evId) {
         _homeSportsPinned = '';
@@ -17938,8 +17961,8 @@
         var arrowChar = _homeSportsCollapsed ? '▸' : '▾';
         html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding:6px 0;">';
         html += '<div style="display:flex;align-items:center;gap:8px;cursor:pointer;-webkit-tap-highlight-color:transparent;padding:4px 0;" onclick="toggleHomeSportsCollapse();">';
-        html += '<span id="homeESPNArrow" style="font-size:14px;color:rgba(255,255,255,0.5);transition:transform 0.2s;">' + arrowChar + '</span>';
-        html += '<span style="font-size:14px;font-weight:700;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:0.1em;">' + sectionLabel + '</span>';
+        html += '<span id="homeESPNArrow" style="font-size:18px;color:rgba(255,255,255,0.85);transition:transform 0.2s;">' + arrowChar + '</span>';
+        html += '<span style="font-size:14px;font-weight:700;color:rgba(255,255,255,0.9);text-transform:uppercase;letter-spacing:0.1em;">' + sectionLabel + '</span>';
         html += '</div>';
         html += '<span onclick="hideMobileHome();showView(\'fm\');setTimeout(function(){var btn=document.querySelector(\'.fm-sub-tab[onclick*=fmSports]\');switchFMTab(\'fmSports\',btn);},100);" style="font-size:13px;font-weight:700;color:rgba(113,50,245,0.8);cursor:pointer;-webkit-tap-highlight-color:transparent;padding:4px 0;">All Scores ›</span>';
         html += '</div>';
