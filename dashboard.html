@@ -18,7 +18,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-25-v406b-cabinet-fix';
+    var APP_VERSION = '2026-04-25-v406c-symbols-fix';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -25370,7 +25370,7 @@ document.addEventListener('visibilitychange', function() {
     { id: 'wand',    emoji: '🪄', label: 'Wand',       mult: 25, weight: 3, isWild: true, halo: true },
     { id: 'tophat',  emoji: '🎩', label: 'Magic Hat',  mult: 15, weight: 5, halo: true },
     { id: 'fire',    emoji: '🔥', label: 'Fire',       mult: 12, weight: 6, halo: true },
-    { id: 'gem',     emoji: '♦️', label: 'Gem',        mult: 10, weight: 7, halo: true },
+    { id: 'gem',     emoji: '💜', label: 'Gem',        mult: 10, weight: 7, halo: true },
     { id: 'star',    emoji: '⭐', label: 'Star',       mult: 8,  weight: 9, halo: true },
     { id: 'seven',   emoji: '7',  label: 'Lucky 7',    mult: 6,  weight: 10, card: true, color: '#ff3a5c' },
     { id: 'coin',    emoji: '🪙', label: 'Gold Coin',  mult: 4,  weight: 12, halo: true },
@@ -25541,17 +25541,17 @@ document.addEventListener('visibilitychange', function() {
     var cw = sw * RC; var ch = sh * ROWS;
     ctx.save(); ctx.translate(ks.shakeX, ks.shakeY);
     ctx.clearRect(-10, -10, cw + 20, ch + 20);
-    // Transparent bg (sunset shows through from CSS)
-    ctx.clearRect(0, 0, cw, ch);
+    // Dark base so emojis pop
+    ctx.fillStyle = '#0a041c'; ctx.fillRect(0, 0, cw, ch);
 
-    var emojiFS = Math.max(28, Math.floor(Math.min(sw, sh) * 0.72));
-    var pad = 2; var cellR = 6;
+    var emojiFS = Math.max(36, Math.floor(Math.min(sw, sh) * 0.55));
+    var pad = 3; var cellR = 8;
 
     for (var r = 0; r < RC; r++) {
       var strip = ks.reels[r]; var off = ks.reelOffsets[r]; var reelX = r * sw;
       // Gold reel dividers
       if (r > 0) {
-        ctx.strokeStyle = 'rgba(255,216,74,0.15)'; ctx.lineWidth = 1.5;
+        ctx.strokeStyle = 'rgba(255,216,74,0.2)'; ctx.lineWidth = 1.5;
         ctx.beginPath(); ctx.moveTo(reelX, 0); ctx.lineTo(reelX, ch); ctx.stroke();
       }
       var startIdx = Math.floor(off / sh); var frac = off % sh;
@@ -25564,10 +25564,10 @@ document.addEventListener('visibilitychange', function() {
         var isCenter = distC < 0.3;
         var cellX = reelX + pad; var cellY = y - sh / 2 + pad;
         var cellW = sw - pad * 2; var cellH = sh - pad * 2;
-        ctx.globalAlpha = 1 - distC * 0.25;
+        ctx.globalAlpha = 1 - distC * 0.2;
 
-        // Cell background — subtle
-        ctx.fillStyle = isCenter ? 'rgba(113,50,245,0.12)' : 'rgba(10,4,28,0.35)';
+        // Cell background — solid dark with subtle purple tint
+        ctx.fillStyle = isCenter ? '#1a0838' : '#0d0520';
         ctx.beginPath();
         ctx.moveTo(cellX + cellR, cellY);
         ctx.lineTo(cellX + cellW - cellR, cellY);
@@ -25580,27 +25580,28 @@ document.addEventListener('visibilitychange', function() {
         ctx.quadraticCurveTo(cellX, cellY, cellX + cellR, cellY);
         ctx.closePath(); ctx.fill();
 
-        // Cell border
-        ctx.strokeStyle = isCenter ? 'rgba(255,216,74,0.3)' : 'rgba(113,50,245,0.08)';
-        ctx.lineWidth = isCenter ? 1.5 : 0.5; ctx.stroke();
+        // Cell border — gold on center row
+        ctx.strokeStyle = isCenter ? 'rgba(255,216,74,0.4)' : 'rgba(138,77,255,0.15)';
+        ctx.lineWidth = isCenter ? 2 : 1; ctx.stroke();
 
         if (sym.card) {
-          // Draw gold-framed playing card
+          // Draw gold-framed playing card (Lucky 7)
           var cardImg = ksGetCardImage(sym.emoji, sym.color, sw, sh);
           var cImgW = cardImg.width / 2; var cImgH = cardImg.height / 2;
           ctx.drawImage(cardImg, x - cImgW / 2, y - cImgH / 2, cImgW, cImgH);
         } else {
-          // Emoji with gold halo
+          // Gold halo glow behind emoji
           if (sym.halo) {
-            var haloR = Math.min(sw, sh) * 0.38;
-            var haloGrad = ctx.createRadialGradient(x, y - sh * 0.03, 0, x, y - sh * 0.03, haloR);
-            haloGrad.addColorStop(0, 'rgba(255,216,74,0.45)');
-            haloGrad.addColorStop(0.4, 'rgba(255,216,74,0.15)');
+            var haloR = Math.min(sw, sh) * 0.4;
+            var haloGrad = ctx.createRadialGradient(x, y, 0, x, y, haloR);
+            haloGrad.addColorStop(0, 'rgba(255,216,74,0.35)');
+            haloGrad.addColorStop(0.5, 'rgba(255,216,74,0.1)');
             haloGrad.addColorStop(1, 'rgba(255,216,74,0)');
             ctx.fillStyle = haloGrad;
-            ctx.beginPath(); ctx.arc(x, y - sh * 0.03, haloR, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(x, y, haloR, 0, Math.PI * 2); ctx.fill();
           }
-          if (isCenter && !ks.spinning) { ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 4; ctx.shadowOffsetY = 3; }
+          // Draw emoji BIG and centered
+          ctx.shadowColor = 'rgba(0,0,0,0.7)'; ctx.shadowBlur = 6; ctx.shadowOffsetY = 2;
           ctx.font = emojiFS + 'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
           ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
           ctx.fillText(sym.emoji, x, y);
