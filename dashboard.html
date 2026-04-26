@@ -18,7 +18,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-26-v407-collapsible-all';
+    var APP_VERSION = '2026-04-26-v408-pin-tickers';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -7211,6 +7211,7 @@
           </div>
           <span class="home-markets-see-all" onclick="hideMobileHome();openFMTab('fmMarkets');">See All →</span>
         </div>
+        <div id="homeMarketsPinned" style="display:none;"></div>
         <div id="homeMarketsBody">
           <div class="home-markets-search-wrap">
             <svg class="home-markets-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -8356,7 +8357,7 @@
       // Expressive & playful
       'notionists', 'fun-emoji', 'thumbs', 'croodles', 'big-smile', 'dylan', 'open-peeps',
       // Minimalist & abstract
-      'rings', 'shapes', 'glass', 'initials', 'identicon', 'pixel-art',
+      'rings', 'shapes', 'glass', 'pixel-art',
       // Robots & tech
       'bottts', 'micah', 'avataaars', 'avataaars-neutral', 'miniavs'
     ];
@@ -17172,7 +17173,7 @@
       renderMobileRecents();
       renderMobileHomeNews();
       if (!_homeMarketsSupabaseLoaded && currentUserId) { _loadHomeMarketsFromSupabase(); }
-      if (_homeMarketsData) renderHomeMarkets(_homeMarketsData);
+      if (_homeMarketsData) { renderHomeMarkets(_homeMarketsData); _renderPinnedMarkets(); }
       fetchHomeMarkets(); // always refresh prices + bars so sparklines stay visible
       if (!window._marketNewsArticles || !window._marketNewsArticles.length) fetchMarketNews();
       fetchHomeESPNScores(); // refresh live sports scores
@@ -17419,6 +17420,7 @@
         });
         _homeMarketsData = ordered;
         renderHomeMarkets(ordered);
+        _renderPinnedMarkets();
       }
     }
 
@@ -17444,6 +17446,12 @@
     }
     // NOTE: getMarketSession() is defined once below (around line 17470) — do NOT duplicate here.
     // It returns 'PRE_MARKET', 'REGULAR', 'AFTER_HOURS', 'OVERNIGHT', or 'CLOSED'.
+
+    // Pinned markets list — declared early so renderHomeMarkets can reference it
+    var _homeMarketsPinnedList = (function() {
+      try { var r = localStorage.getItem('wp_markets_pinned'); return r ? JSON.parse(r) : []; } catch(e) { return []; }
+    })();
+
     function renderHomeMarkets(data) {
       var row = document.getElementById('homeMarketsRow');
       if (!row) return;
@@ -17532,6 +17540,7 @@
             '<div class="home-market-change-pill ' + (isUp ? 'up' : 'dn') + '">' + chgStr + '</div>' +
             extRow +
           '</div>' +
+          '<span class="home-market-pin" onclick="event.stopPropagation();pinHomeMarketTicker(\'' + q.symbol.replace(/'/g,"\\'") + '\');" title="Pin ' + sym + '" style="font-size:16px;cursor:pointer;padding:4px;-webkit-tap-highlight-color:transparent;filter:grayscale(' + (_homeMarketsPinnedList.indexOf(q.symbol) >= 0 ? '0' : '0.8') + ');opacity:' + (_homeMarketsPinnedList.indexOf(q.symbol) >= 0 ? '1' : '0.45') + ';">' + (_homeMarketsPinnedList.indexOf(q.symbol) >= 0 ? '📌' : '📍') + '</span>' +
           '<button class="home-market-delete" onclick="event.stopPropagation();removeHomeMarketTicker(\'' + q.symbol.replace(/'/g,"\\'") + '\')" title="Remove ' + sym + '">✕</button>' +
         '</div>';
       }).join('');
@@ -17580,6 +17589,7 @@
             _saveCachedBars(cachedBars);
             _homeMarketsData = ordered;
             renderHomeMarkets(ordered);
+            _renderPinnedMarkets();
           }
         })
         .catch(function(e) { console.error('[HomeMarkets] Fetch error:', e); });
@@ -17695,6 +17705,78 @@
 
     // --- Collapsible Markets ---
     var _homeMarketsCollapsed = localStorage.getItem('wp_markets_collapsed') === '1';
+    // --- Pinned Market Tickers (up to 3) ---
+    function pinHomeMarketTicker(symbol) {
+      var idx = _homeMarketsPinnedList.indexOf(symbol);
+      if (idx >= 0) {
+        _homeMarketsPinnedList.splice(idx, 1);
+      } else {
+        if (_homeMarketsPinnedList.length >= 3) {
+          _homeMarketsPinnedList.shift(); // remove oldest pin
+        }
+        _homeMarketsPinnedList.push(symbol);
+      }
+      localStorage.setItem('wp_markets_pinned', JSON.stringify(_homeMarketsPinnedList));
+      if (_homeMarketsData) renderHomeMarkets(_homeMarketsData);
+      _renderPinnedMarkets();
+    }
+
+    function _renderPinnedMarkets() {
+      var pinEl = document.getElementById('homeMarketsPinned');
+      if (!pinEl) return;
+      // Only show pinned when collapsed AND there are pinned tickers
+      if (!_homeMarketsCollapsed || !_homeMarketsPinnedList.length) {
+        pinEl.style.display = 'none';
+        return;
+      }
+      if (!_homeMarketsData || !_homeMarketsData.length) {
+        pinEl.style.display = 'none';
+        return;
+      }
+      var session = getMarketSession();
+      var isNonRegular = session === 'PRE_MARKET' || session === 'AFTER_HOURS' || session === 'OVERNIGHT' || session === 'CLOSED';
+      var html = '<div style="font-size:12px;color:rgba(113,50,245,0.7);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;font-weight:600;">📌 Pinned</div>';
+      _homeMarketsPinnedList.forEach(function(sym) {
+        var q = _homeMarketsData.find(function(d) { return d.symbol === sym; });
+        if (!q) return;
+        var ticker = _homeMarketsTickers.find(function(t) { return t.symbol === q.symbol; });
+        var displaySym = (ticker && ticker.display) || q.symbol;
+        var name = (ticker && ticker.name) || q.symbol;
+        var isCrypto = ticker && ticker.crypto;
+        var displayPrice;
+        if (isNonRegular && !isCrypto) {
+          displayPrice = q.close || q.previousClose || q.price;
+        } else {
+          displayPrice = q.price;
+        }
+        var chg;
+        if (isNonRegular && !isCrypto && q.close && q.previousClose && q.previousClose !== 0) {
+          chg = ((q.close - q.previousClose) / q.previousClose) * 100;
+        } else {
+          chg = q.changePercent || 0;
+        }
+        var isUp = chg >= 0;
+        var chgStr = (isUp ? '+' : '') + chg.toFixed(2) + '%';
+        var liveBars = q.bars && q.bars.length ? q.bars.slice() : [];
+        if (q.price && liveBars.length) liveBars.push(q.price);
+        var spark = buildSparkSVG(liveBars, isUp);
+        var priceStr = displayPrice ? ('$' + formatNum(displayPrice)) : '--';
+        html += '<div class="home-market-card" style="cursor:pointer;" onclick="openTickerChartFromHome(\'' + q.symbol.replace(/'/g,"\\'") + '\');">' +
+          '<div class="home-market-left">' +
+            '<div class="home-market-sym">' + displaySym + '</div>' +
+            '<div class="home-market-name">' + name + '</div>' +
+          '</div>' +
+          '<div style="flex:1;">' + spark + '</div>' +
+          '<div class="home-market-right">' +
+            '<div class="home-market-price">' + priceStr + '</div>' +
+            '<div class="home-market-change-pill ' + (isUp ? 'up' : 'dn') + '">' + chgStr + '</div>' +
+          '</div>' +
+        '</div>';
+      });
+      pinEl.innerHTML = html;
+      pinEl.style.display = 'block';
+    }
+
     function toggleHomeMarketsCollapse() {
       _homeMarketsCollapsed = !_homeMarketsCollapsed;
       localStorage.setItem('wp_markets_collapsed', _homeMarketsCollapsed ? '1' : '0');
@@ -17702,6 +17784,7 @@
       var arrow = document.getElementById('homeMarketsArrow');
       if (body) body.style.display = _homeMarketsCollapsed ? 'none' : 'block';
       if (arrow) arrow.textContent = _homeMarketsCollapsed ? '▸' : '▾';
+      _renderPinnedMarkets();
     }
     // Apply initial Markets collapsed state
     if (_homeMarketsCollapsed) {
@@ -20447,6 +20530,7 @@
           if (self._homeNeedsRender && _homeMarketsData) {
             self._homeNeedsRender = false;
             renderHomeMarkets(_homeMarketsData);
+            _renderPinnedMarkets();
           }
 
           var ts = document.getElementById('marketsUpdatedTime');
