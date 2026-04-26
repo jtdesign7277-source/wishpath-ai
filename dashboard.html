@@ -18,7 +18,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-25-v404-unified-ai-ui-newspix';
+    var APP_VERSION = '2026-04-25-v405-typewriter-everywhere';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -301,6 +301,14 @@
       0%, 100% { transform: scale(1); opacity: 0.7; }
       50% { transform: scale(1.4); opacity: 1; }
     }
+    /* ── Typewriter caret ── */
+    .wp-tw-caret {
+      color: #8c64f0;
+      animation: wpCaretBlink 0.9s step-end infinite;
+      margin-left: 1px;
+      font-weight: 400;
+    }
+    @keyframes wpCaretBlink { 50% { opacity: 0; } }
     /* ── Starfield canvas ── */
     #wpStarfield {
       position: fixed; inset: 0;
@@ -3768,14 +3776,6 @@
         border: none;
         border-radius: 0;
         box-shadow: none;
-      }
-      .lc-msg-ai .lc-thinking {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        color: rgba(255,255,255,0.5);
-        font-size: 14px;
-        padding: 0;
       }
       .lc-msg-actions {
         display: flex;
@@ -8900,51 +8900,165 @@
       return result;
     }
 
-    function typewriterEffect(container, text, callback) {
+    // ── Unified typewriter for ALL AI replies ──
+    var _twActiveJobs = [];
+    function typeOutAi(container, text, opts) {
+      opts = opts || {};
+      if (typeof opts === 'function') opts = { onDone: opts };
+      var className = opts.className || 'msg ai';
+      var bubbleClass = opts.bubbleClass || '';
+      var onDone = opts.onDone || null;
+      var formatter = opts.formatter || formatMdToHtml;
+
+      // Build DOM
       var msgDiv = document.createElement('div');
-      msgDiv.className = 'msg ai';
+      msgDiv.className = className;
+      var target = msgDiv;
+      if (bubbleClass) {
+        var bub = document.createElement('div');
+        bub.className = bubbleClass;
+        msgDiv.appendChild(bub);
+        target = bub;
+      }
       container.appendChild(msgDiv);
       wpAnime.bubbleEntrance(msgDiv);
-      // Scroll to show TOP of new message so user reads from the beginning
       container.scrollTop = msgDiv.offsetTop - 8;
 
-      // Rich markdown → HTML conversion using shared formatter
-      var htmlText = formatMdToHtml(text);
-
-      var i = 0;
-      var speed = 8;
-      var buffer = '';
-      var chars = htmlText.split('');
-
-      function typeChar() {
-        if (i >= chars.length) {
-          msgDiv.innerHTML = buffer;
-          container.scrollTop = container.scrollHeight;
-          wpTsConfetti('starburst');
-          if (callback) callback(msgDiv);
-          return;
-        }
-        // Handle HTML tags — add whole tag at once
-        if (chars[i] === '<') {
-          var tagEnd = htmlText.indexOf('>', i);
-          if (tagEnd !== -1) {
-            buffer += htmlText.substring(i, tagEnd + 1);
-            i = tagEnd + 1;
-          } else {
-            buffer += chars[i];
-            i++;
-          }
-        } else {
-          buffer += chars[i];
-          i++;
-        }
-        msgDiv.innerHTML = buffer;
-        // Scroll every 5 chars to reduce jank
-        if (i % 5 === 0) container.scrollTop = container.scrollHeight;
-        requestAnimationFrame(function() { setTimeout(typeChar, speed); });
+      if (opts.instant) {
+        target.innerHTML = formatter(text);
+        try { wrapAiTables(target); } catch(e){}
+        wpTsConfetti('starburst');
+        if (onDone) onDone(msgDiv);
+        return msgDiv;
       }
-      typeChar();
+
+      // Parse HTML into DOM offscreen, extract text node queue
+      var htmlText = formatter(text);
+      var offscreen = document.createElement('div');
+      offscreen.innerHTML = htmlText;
+
+      // Move the parsed tree into target
+      while (offscreen.firstChild) target.appendChild(offscreen.firstChild);
+
+      // Walk text nodes, blank them, build queue
+      var queue = [];
+      var walker = document.createTreeWalker(target, NodeFilter.SHOW_TEXT, null, false);
+      var tn;
+      while (tn = walker.nextNode()) {
+        var words = tn.textContent.split(/(\s+)/);
+        if (words.length) {
+          tn._twOriginal = tn.textContent;
+          tn.textContent = '';
+          queue.push({ node: tn, words: words, idx: 0 });
+        }
+      }
+
+      // Adaptive speed
+      var len = text.length;
+      var delay = len <= 200 ? 28 : len <= 600 ? 18 : len <= 1500 ? 10 : 6;
+      var batch = len > 1500 ? 2 : 1;
+
+      // Caret
+      var caret = document.createElement('span');
+      caret.className = 'wp-tw-caret';
+      caret.textContent = '▍';
+
+      // Scroll tracking
+      var stickToBottom = true;
+      function onScroll() {
+        var nb = container.scrollHeight - container.scrollTop - container.clientHeight < 60;
+        stickToBottom = nb;
+      }
+      container.addEventListener('scroll', onScroll);
+
+      var done = false;
+      var rafId = null;
+      var lastTick = 0;
+
+      function placeCaret(node) {
+        if (caret.parentNode) caret.parentNode.removeChild(caret);
+        if (node && node.parentNode) node.parentNode.insertBefore(caret, node.nextSibling);
+      }
+
+      function finish() {
+        if (done) return;
+        done = true;
+        if (rafId) cancelAnimationFrame(rafId);
+        container.removeEventListener('scroll', onScroll);
+        // Reveal all remaining
+        for (var q = 0; q < queue.length; q++) {
+          var item = queue[q];
+          item.node.textContent = item.words.join('');
+        }
+        queue.length = 0;
+        if (caret.parentNode) caret.parentNode.removeChild(caret);
+        try { wrapAiTables(target); } catch(e){}
+        if (stickToBottom) container.scrollTop = container.scrollHeight;
+        wpTsConfetti('starburst');
+        // Remove from active jobs
+        var ji = _twActiveJobs.indexOf(job);
+        if (ji !== -1) _twActiveJobs.splice(ji, 1);
+        if (onDone) onDone(msgDiv);
+      }
+
+      function skip() { finish(); }
+
+      // Click/key to skip
+      msgDiv.addEventListener('click', skip);
+      var keySkip = function() { skip(); };
+      document.addEventListener('keydown', keySkip, { once: true });
+
+      function tick(now) {
+        if (done) return;
+        rafId = requestAnimationFrame(tick);
+        if (now - lastTick < delay) return;
+        lastTick = now;
+
+        for (var b = 0; b < batch; b++) {
+          if (!queue.length) { finish(); return; }
+          var head = queue[0];
+          if (head.idx < head.words.length) {
+            head.node.textContent += head.words[head.idx];
+            head.idx++;
+          }
+          if (head.idx >= head.words.length) {
+            queue.shift();
+          }
+        }
+
+        // Place caret
+        var lastNode = queue.length ? queue[0].node : (target.lastChild ? target.lastChild : target);
+        // Find deepest last text node for caret placement
+        var caretAnchor = null;
+        for (var q = queue.length - 1; q >= 0; q--) {
+          if (queue[q].idx > 0) { caretAnchor = queue[q].node; break; }
+        }
+        if (!caretAnchor && queue.length) caretAnchor = queue[0].node;
+        if (caretAnchor) placeCaret(caretAnchor);
+
+        if (stickToBottom) container.scrollTop = container.scrollHeight;
+      }
+
+      rafId = requestAnimationFrame(tick);
+
+      var job = { cancel: finish, msgDiv: msgDiv };
+      _twActiveJobs.push(job);
+
+      msgDiv._twSkip = skip;
       return msgDiv;
+    }
+
+    typeOutAi.cancelAll = function() {
+      var jobs = _twActiveJobs.slice();
+      for (var i = 0; i < jobs.length; i++) {
+        try { jobs[i].cancel(); } catch(e) {}
+      }
+      _twActiveJobs.length = 0;
+    };
+
+    // Alias for legacy callers
+    function typewriterEffect(container, text, callback) {
+      return typeOutAi(container, text, { onDone: callback });
     }
 
     // ── Agent usage tracking ──
@@ -15003,6 +15117,7 @@
     })();
 
     function showView(view) {
+      try { typeOutAi.cancelAll(); } catch(e) {}
       try { if (typeof stopWishRunnerGame === 'function') stopWishRunnerGame(); } catch (e) {}
       closeMobileAskAI();
       closeMobileFMMenu();
@@ -17801,15 +17916,10 @@
         var thinking = document.getElementById('mobileHomeThinking');
         if (thinking) thinking.remove();
         var msgs = document.getElementById('mobileChatMessages');
-        var htmlReply = formatMdToHtml(reply);
-        var aiMsgWrap = document.createElement('div');
-        aiMsgWrap.style.marginBottom = '16px';
-        aiMsgWrap.innerHTML = '<div style="max-width:100%;width:100%;background:transparent;padding:12px 0;color:rgba(255,255,255,0.9);font-size:15px;line-height:1.6;">' + htmlReply + '</div>';
-        msgs.appendChild(aiMsgWrap);
-        wrapAiTables(aiMsgWrap);
-        // Scroll to TOP of new message so user reads from the beginning
-        msgs.scrollTop = aiMsgWrap.offsetTop - 8;
-        incrementAgentUsage();
+        typeOutAi(msgs, reply, { onDone: function(msgDiv) {
+          wrapAiTables(msgDiv);
+          incrementAgentUsage();
+        }});
       } catch(e) {
         _wpStopTimer('mobileHomeThinking');
         var thinking = document.getElementById('mobileHomeThinking');
@@ -18319,65 +18429,22 @@
         if (lcInput) lcInput.disabled = true;
         if (lcSendBtn) lcSendBtn.style.opacity = '0.5';
 
-        // Prepare HTML reply with formatting (including markdown table support)
-        var htmlReply = formatAIResponse(reply);
-
-        // Create Life Coach message container with bubble
         var msgs = document.getElementById('lcMessages');
-        var aiDiv = document.createElement('div');
-        aiDiv.className = 'lc-msg lc-msg-ai';
-        var bubble = document.createElement('div');
-        bubble.className = 'lc-bubble';
-        aiDiv.appendChild(bubble);
-        msgs.appendChild(aiDiv);
-        wpAnime.bubbleEntrance(aiDiv);
-        msgs.scrollTop = msgs.scrollHeight;
-
-        // Stream text character-by-character into bubble
-        var i = 0;
-        var buffer = '';
-        var chars = htmlReply.split('');
-
-        function typeChar() {
-          if (i >= chars.length) {
-            bubble.innerHTML = htmlReply;
-            msgs.scrollTop = msgs.scrollHeight;
-
-            // After streaming completes, add action buttons
+        typeOutAi(msgs, reply, {
+          className: 'lc-msg lc-msg-ai',
+          bubbleClass: 'lc-bubble',
+          formatter: formatAIResponse,
+          onDone: function(aiDiv) {
+            // Add action buttons
             var actionsDiv = document.createElement('div');
             actionsDiv.className = 'lc-msg-actions';
             actionsDiv.innerHTML = '<button class="lc-msg-action-btn" onclick="lcCopyMsg(this)" title="Copy" aria-label="Copy message">📋</button>';
             aiDiv.appendChild(actionsDiv);
-
             // Re-enable input
             if (lcInput) lcInput.disabled = false;
             if (lcSendBtn) lcSendBtn.style.opacity = '1';
-            wpTsConfetti('starburst');
-            return;
           }
-
-          // Handle HTML tags — add whole tag at once
-          if (chars[i] === '<') {
-            var tagEnd = htmlReply.indexOf('>', i);
-            if (tagEnd !== -1) {
-              buffer += htmlReply.substring(i, tagEnd + 1);
-              i = tagEnd + 1;
-            } else {
-              buffer += chars[i];
-              i++;
-            }
-          } else {
-            buffer += chars[i];
-            i++;
-          }
-
-          bubble.innerHTML = buffer;
-          // Scroll every 5 chars to reduce jank
-          if (i % 5 === 0) msgs.scrollTop = msgs.scrollHeight;
-          requestAnimationFrame(function() { setTimeout(typeChar, 8); });
-        }
-
-        typeChar();
+        });
 
         incrementAgentUsage();
         saveLCConversation();
