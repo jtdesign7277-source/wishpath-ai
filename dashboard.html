@@ -3777,6 +3777,17 @@
         border-radius: 0;
         box-shadow: none;
       }
+      /* Ensure AI response text is fully visible */
+      .lc-msg-ai .lc-bubble > * {
+        color: rgba(255,255,255,0.9) !important;
+      }
+      .lc-msg-ai .note-paragraph,
+      .lc-msg-ai .note-bullet,
+      .lc-msg-ai .note-h1,
+      .lc-msg-ai .note-h2,
+      .lc-msg-ai .note-h3 {
+        color: rgba(255,255,255,0.9) !important;
+      }
       .lc-msg-actions {
         display: flex;
         gap: 12px;
@@ -17448,7 +17459,8 @@
         var chgStr = (isUp ? '+' : '') + chg.toFixed(2) + '%';
 
         // Append live price as latest data point so sparkline visibly ticks
-        var liveBars = q.bars && q.bars.length ? q.bars.slice() : [];
+        // Keep only last 26 bars (one trading day of 15-min intervals) to match Yahoo Finance single-day view
+        var liveBars = q.bars && q.bars.length ? q.bars.slice(-26) : [];
         if (q.price && liveBars.length) liveBars.push(q.price);
         var spark = buildSparkSVG(liveBars, isUp);
         var priceStr = displayPrice ? ('$' + formatNum(displayPrice)) : '--';
