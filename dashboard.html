@@ -18,7 +18,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-26-v410-candlestick-fix';
+    var APP_VERSION = '2026-04-26-v411-input-bar-match';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -3891,13 +3891,16 @@
         position: relative;
         display: flex;
         align-items: center;
-        background: #2a2a2a;
-        border: 1px solid rgba(113,50,245,0.2);
+        background: linear-gradient(135deg, rgba(113,50,245,0.3) 0%, rgba(80,30,200,0.18) 50%, rgba(113,50,245,0.12) 100%);
+        border: 1px solid rgba(113,50,245,0.3);
         border-radius: 24px;
         animation: inputPulse 2s ease-in-out infinite;
         transition: all 0.3s ease;
         overflow: hidden;
         z-index: 2;
+        box-shadow: 0 4px 16px rgba(113,50,245,0.15), inset 0 1px 0 rgba(255,255,255,0.06);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
       }
       .lc-input-wrap::before {
         content: '';
@@ -3940,9 +3943,9 @@
         position: relative;
         z-index: 2;
       }
-      .lc-input::placeholder { color: rgba(255,255,255,0.35); }
-      .lc-input:empty::before { content: attr(data-placeholder); color: rgba(255,255,255,0.35); pointer-events: none; }
-      .lc-input:focus:empty::before { color: rgba(255,255,255,0.25); }
+      .lc-input::placeholder { color: rgba(255,255,255,0.55); }
+      .lc-input:empty::before { content: attr(data-placeholder); color: rgba(255,255,255,0.55); pointer-events: none; }
+      .lc-input:focus:empty::before { color: rgba(255,255,255,0.45); }
       @keyframes inputPulse {
         0%, 100% { box-shadow: 0 0 0 0 rgba(113,50,245,0.3); }
         50% { box-shadow: 0 0 0 2px rgba(113,50,245,0.2); }
