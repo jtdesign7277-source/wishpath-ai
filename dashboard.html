@@ -18,7 +18,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-26-v406f-upcoming-games';
+    var APP_VERSION = '2026-04-26-v406h-coach-sports-fix';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -1613,6 +1613,8 @@
         display: none !important;
       }
       body[data-active-view="home"] .main-header { display: none !important; }
+      body[data-active-view="lifecoach"] .main-header { display: none !important; }
+      body[data-active-view="coach"] .main-header { display: none !important; }
       body[data-active-view="home"] .main-content { padding-top: calc(max(6px, env(safe-area-inset-top)) + 4px) !important; }
       body[data-active-view="home"] #homeView { padding-top: 0 !important; }
       body[data-active-view="home"] #homeView .home-header-row { margin-top: 0 !important; }
@@ -3647,7 +3649,7 @@
         position: fixed;
         inset: 0;
         z-index: 601;
-        background: var(--bg, #0a0a0a);
+        background: #0f0a1a;
         display: flex;
         flex-direction: column;
       }
@@ -3744,7 +3746,7 @@
         padding: 16px 16px;
         display: none;
       }
-      .lc-messages.has-messages { display: block; }
+      .lc-messages.has-messages { display: flex; flex-direction: column; }
       .lc-msg {
         margin-bottom: 20px;
         animation: fadeInUp 0.25s ease;
@@ -3769,7 +3771,7 @@
       .lc-msg-ai .lc-bubble {
         padding: 14px 0;
         max-width: 92%;
-        color: rgba(255,255,255,0.9);
+        color: #e8e8e8;
         font-size: 15px;
         line-height: 1.65;
         background: none;
@@ -3778,15 +3780,19 @@
         box-shadow: none;
       }
       /* Ensure AI response text is fully visible */
-      .lc-msg-ai .lc-bubble > * {
-        color: rgba(255,255,255,0.9) !important;
+      .lc-msg-ai .lc-bubble > *,
+      .lc-msg-ai .lc-bubble div,
+      .lc-msg-ai .lc-bubble span,
+      .lc-msg-ai .lc-bubble p {
+        color: #e8e8e8 !important;
       }
       .lc-msg-ai .note-paragraph,
       .lc-msg-ai .note-bullet,
+      .lc-msg-ai .note-bullet span,
       .lc-msg-ai .note-h1,
       .lc-msg-ai .note-h2,
       .lc-msg-ai .note-h3 {
-        color: rgba(255,255,255,0.9) !important;
+        color: #e8e8e8 !important;
       }
       .lc-msg-actions {
         display: flex;
@@ -6267,10 +6273,10 @@
           <div style="padding:12px 0 8px;">
             <div style="font-size:1.1rem;font-weight:700;color:#fff;margin-bottom:10px;">Live Sports Scores</div>
             <div id="espnLeaguePicker" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
-              <button class="espn-league-pill active" data-league="nfl" onclick="pickESPNLeague('nfl',this)">NFL</button>
-              <button class="espn-league-pill" data-league="nba" onclick="pickESPNLeague('nba',this)">NBA</button>
+              <button class="espn-league-pill active" data-league="nba" onclick="pickESPNLeague('nba',this)">NBA</button>
               <button class="espn-league-pill" data-league="mlb" onclick="pickESPNLeague('mlb',this)">MLB</button>
               <button class="espn-league-pill" data-league="nhl" onclick="pickESPNLeague('nhl',this)">NHL</button>
+              <button class="espn-league-pill" data-league="nfl" onclick="pickESPNLeague('nfl',this)">NFL</button>
             </div>
             <div id="espnScoresContainer" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;">
               <div style="color:rgba(255,255,255,0.4);padding:40px 0;text-align:center;">Loading scores...</div>
@@ -23614,7 +23620,7 @@
       mlb: 'https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard',
       nhl: 'https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard'
     };
-    var _espnCurrentLeague = 'nfl';
+    var _espnCurrentLeague = 'nba';
     var _espnRefreshInterval = null;
 
     function startESPNSportsTab() {
