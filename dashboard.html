@@ -18,7 +18,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-26-v415-fast-ticker';
+    var APP_VERSION = '2026-04-26-v416-swipe-delete';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -2044,10 +2044,36 @@
       .home-markets-ac-sym { font-weight: 700; color: #fff; font-size: 14px; min-width: 52px; }
       .home-markets-ac-name { color: rgba(255,255,255,0.5); font-size: 13px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .home-markets-ac-type { font-size: 10px; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; font-weight: 600; background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.4); }
-      /* ── Home Market Delete Button ── */
-      .home-market-delete { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: none; background: transparent; color: rgba(255,255,255,0.2); cursor: pointer; border-radius: 6px; transition: color 0.15s, background 0.15s; flex-shrink: 0; -webkit-tap-highlight-color: transparent; font-size: 15px; padding: 0; margin-left: 4px; }
-      .home-market-delete:hover { color: #EF4444; background: rgba(239,68,68,0.12); }
-      .home-market-delete:active { opacity: 0.6; }
+      /* ── Swipe-to-Delete Wrapper ── */
+      .hm-swipe-wrap {
+        position: relative;
+        overflow: hidden;
+      }
+      .hm-swipe-trash {
+        position: absolute;
+        right: 0; top: 0; bottom: 0;
+        width: 72px;
+        display: flex; align-items: center; justify-content: center;
+        background: linear-gradient(135deg, #dc2626, #ef4444);
+        color: #fff;
+        font-size: 22px;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+        z-index: 1;
+        border-radius: 0 8px 8px 0;
+      }
+      .hm-swipe-wrap.swiped .hm-swipe-trash { opacity: 1; }
+      .hm-swipe-wrap .home-market-card {
+        position: relative;
+        z-index: 2;
+        background: transparent;
+        transition: transform 0.25s ease;
+      }
+      .hm-swipe-wrap.swiped .home-market-card {
+        transform: translateX(-72px);
+      }
       .home-market-loading { color: rgba(255,255,255,0.2); font-size: 11px; padding: 20px 0; text-align: center; }
       .mobile-recent-card { min-width: 155px; background: #181225; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 16px; scroll-snap-align: start; cursor: pointer; flex-shrink: 0; box-shadow: 8px 8px 16px rgba(0,0,0,0.6), -4px -4px 12px rgba(255,255,255,0.03); transition: all 0.3s ease; }
       .mobile-recent-card:active { border-color: rgba(113,50,245,0.2); box-shadow: 4px 4px 8px rgba(0,0,0,0.5), -2px -2px 6px rgba(255,255,255,0.02); transform: scale(0.97); }
@@ -17403,6 +17429,89 @@
       });
     })();
 
+    // ── Swipe-to-Delete for Market Cards ──
+    (function initHomeMarketsSwipeDelete() {
+      var row = document.getElementById('homeMarketsRow');
+      if (!row) return;
+      var _swipeStartX = 0, _swipeStartY = 0, _swipeCard = null, _swipeDx = 0, _swiping = false;
+      var SWIPE_THRESHOLD = 60;
+
+      row.addEventListener('touchstart', function(e) {
+        var wrap = e.target.closest('.hm-swipe-wrap');
+        if (!wrap) return;
+        // Don't swipe if touching the drag handle
+        if (e.target.closest('.home-market-drag-handle')) return;
+        _swipeStartX = e.touches[0].clientX;
+        _swipeStartY = e.touches[0].clientY;
+        _swipeCard = wrap;
+        _swipeDx = 0;
+        _swiping = false;
+      }, { passive: true });
+
+      row.addEventListener('touchmove', function(e) {
+        if (!_swipeCard) return;
+        var dx = e.touches[0].clientX - _swipeStartX;
+        var dy = e.touches[0].clientY - _swipeStartY;
+        // Only swipe left, and only if horizontal motion dominates
+        if (!_swiping && Math.abs(dy) > Math.abs(dx)) { _swipeCard = null; return; }
+        if (dx > 5) { // swiping right — reset any open card
+          if (_swipeCard.classList.contains('swiped')) {
+            _swipeCard.classList.remove('swiped');
+            var inner = _swipeCard.querySelector('.home-market-card');
+            if (inner) inner.style.transform = '';
+          }
+          _swipeCard = null;
+          return;
+        }
+        if (dx < -10) {
+          _swiping = true;
+          e.preventDefault();
+        }
+        if (_swiping) {
+          _swipeDx = Math.min(0, Math.max(dx, -80));
+          var inner = _swipeCard.querySelector('.home-market-card');
+          if (inner) inner.style.transform = 'translateX(' + _swipeDx + 'px)';
+          var trash = _swipeCard.querySelector('.hm-swipe-trash');
+          if (trash) trash.style.opacity = Math.min(1, Math.abs(_swipeDx) / SWIPE_THRESHOLD);
+        }
+      }, { passive: false });
+
+      row.addEventListener('touchend', function(e) {
+        if (!_swipeCard || !_swiping) { _swipeCard = null; return; }
+        var inner = _swipeCard.querySelector('.home-market-card');
+        if (Math.abs(_swipeDx) >= SWIPE_THRESHOLD) {
+          // Snap open
+          _swipeCard.classList.add('swiped');
+          if (inner) inner.style.transform = 'translateX(-72px)';
+          // Close any other open cards
+          row.querySelectorAll('.hm-swipe-wrap.swiped').forEach(function(w) {
+            if (w !== _swipeCard) {
+              w.classList.remove('swiped');
+              var ci = w.querySelector('.home-market-card');
+              if (ci) ci.style.transform = '';
+            }
+          });
+        } else {
+          // Snap back
+          _swipeCard.classList.remove('swiped');
+          if (inner) inner.style.transform = '';
+        }
+        _swipeCard = null;
+        _swiping = false;
+        _swipeDx = 0;
+      }, { passive: true });
+
+      // Tap anywhere else closes open swipe cards
+      document.addEventListener('touchstart', function(e) {
+        if (e.target.closest('.hm-swipe-wrap')) return;
+        row.querySelectorAll('.hm-swipe-wrap.swiped').forEach(function(w) {
+          w.classList.remove('swiped');
+          var ci = w.querySelector('.home-market-card');
+          if (ci) ci.style.transform = '';
+        });
+      }, { passive: true });
+    })();
+
     function _reorderHomeMarketTickers(fromSym, toSym) {
       var fromIdx = -1, toIdx = -1;
       for (var i = 0; i < _homeMarketsTickers.length; i++) {
@@ -17530,7 +17639,8 @@
         var extStr = extChg != null ? ((extChg >= 0 ? '+' : '') + extChg.toFixed(2) + '%') : '--';
         var extColor = extChg != null ? (extChg >= 0 ? '#00c853' : '#ff1744') : 'rgba(255,255,255,0.38)';
         var extRow = (showExt && !isCrypto) ? '<div class="home-market-extended">' + extIcon + ' <span style="color:' + extColor + '">' + extStr + '</span></div>' : '';
-        return '<div class="home-market-card" draggable="true" data-symbol="' + q.symbol.replace(/"/g,'&quot;') + '">' +
+        return '<div class="hm-swipe-wrap" data-symbol="' + q.symbol.replace(/"/g,'&quot;') + '">' +
+        '<div class="home-market-card" draggable="true" data-symbol="' + q.symbol.replace(/"/g,'&quot;') + '">' +
           '<div class="home-market-drag-handle" title="Drag to reorder">⠿</div>' +
           '<div class="home-market-left" onclick="openTickerChartFromHome(\'' + q.symbol.replace(/'/g,"\\'") + '\');">' +
             '<div class="home-market-sym">' + sym + '</div>' +
@@ -17543,7 +17653,8 @@
             extRow +
           '</div>' +
           '<span class="home-market-pin" onclick="event.stopPropagation();pinHomeMarketTicker(\'' + q.symbol.replace(/'/g,"\\'") + '\');" title="Pin ' + sym + '" style="font-size:16px;cursor:pointer;padding:4px;-webkit-tap-highlight-color:transparent;filter:grayscale(' + (_homeMarketsPinnedList.indexOf(q.symbol) >= 0 ? '0' : '0.8') + ');opacity:' + (_homeMarketsPinnedList.indexOf(q.symbol) >= 0 ? '1' : '0.45') + ';">' + (_homeMarketsPinnedList.indexOf(q.symbol) >= 0 ? '📌' : '📍') + '</span>' +
-          '<button class="home-market-delete" onclick="event.stopPropagation();removeHomeMarketTicker(\'' + q.symbol.replace(/'/g,"\\'") + '\')" title="Remove ' + sym + '">✕</button>' +
+        '</div>' +
+        '<div class="hm-swipe-trash" onclick="event.stopPropagation();removeHomeMarketTicker(\'' + q.symbol.replace(/'/g,"\\'") + '\');" title="Delete ' + sym + '">🗑️</div>' +
         '</div>';
       }).join('');
     }
