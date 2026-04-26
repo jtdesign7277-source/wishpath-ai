@@ -18,7 +18,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-26-v412-fm-sidebar-fonts';
+    var APP_VERSION = '2026-04-26-v413-portfolio-input';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -5937,8 +5937,7 @@
             </button>
             <div class="lc-input-bar" id="homePortfolioInputBar">
               <div class="lc-input-wrap">
-                <div style="position:absolute;top:6px;left:16px;font-size:0.72rem;font-weight:600;color:#c4b5fd;letter-spacing:0.04em;z-index:3;pointer-events:none;font-family:'IBM Plex Sans',system-ui,sans-serif;">Portfolio Coach</div>
-                <div class="lc-input" id="portfolioCoachInput" contenteditable="true" role="textbox" data-placeholder="Ask anything..." style="padding-top:28px;" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendPortfolioCoachMsg();}"></div>
+                <div class="lc-input" id="portfolioCoachInput" contenteditable="true" role="textbox" data-placeholder="Message your Portfolio Coach..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendPortfolioCoachMsg();}"></div>
                 <button class="lc-send-btn" onclick="sendPortfolioCoachMsg()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
               </div>
             </div>
@@ -6048,8 +6047,7 @@
             </button>
             <div class="lc-input-bar" id="portfolioInputBar">
               <div class="lc-input-wrap">
-                <div style="position:absolute;top:6px;left:16px;font-size:0.72rem;font-weight:600;color:#c4b5fd;letter-spacing:0.04em;z-index:3;pointer-events:none;font-family:'IBM Plex Sans',system-ui,sans-serif;">Portfolio Coach</div>
-                <div class="lc-input" id="fmPortfolioCoachInput" contenteditable="true" role="textbox" data-placeholder="Ask anything..." style="padding-top:28px;" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendPortfolioCoachMsg();}"></div>
+                <div class="lc-input" id="fmPortfolioCoachInput" contenteditable="true" role="textbox" data-placeholder="Message your Portfolio Coach..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendPortfolioCoachMsg();}"></div>
                 <button class="lc-send-btn" onclick="sendPortfolioCoachMsg()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
               </div>
             </div>
