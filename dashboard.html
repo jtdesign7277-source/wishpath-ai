@@ -18,7 +18,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-26-v406h-coach-sports-fix';
+    var APP_VERSION = '2026-04-26-v406i-transparent-scores';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -2972,7 +2972,7 @@
     .espn-league-pill:hover { background: rgba(113,50,245,0.15); color: #fff; border-color: rgba(113,50,245,0.3); }
     .espn-league-pill.active { background: #7132F5; color: #fff; border-color: #7132F5; }
     .espn-score-card {
-      background: #252525; border-radius: 10px; border: 1px solid rgba(255,255,255,0.06);
+      background: transparent; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08);
       padding: 14px; display: flex; flex-direction: column; gap: 8px; transition: transform 0.15s;
     }
     .espn-score-card:hover { transform: translateY(-2px); }
