@@ -18,7 +18,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-26-v409-wish-examples';
+    var APP_VERSION = '2026-04-26-v410-candlestick-fix';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -5475,6 +5475,7 @@
   <!-- End Meta Pixel Code -->
   <!-- Highcharts (licensed) -->
   <script src="https://code.highcharts.com/highcharts.js"></script>
+  <script src="https://code.highcharts.com/modules/stock.js"></script>
   <script src="https://code.highcharts.com/highcharts-3d.js"></script>
   <script src="https://code.highcharts.com/highcharts-more.js"></script>
   <script src="https://code.highcharts.com/modules/funnel3d.js"></script>
@@ -22591,10 +22592,28 @@
       switch (template.name) {
         case 'Candlestick Chart':
           return Object.assign({}, baseConfig, {
-            chart: Object.assign({}, baseConfig.chart, { type: 'line' }),
+            chart: Object.assign({}, baseConfig.chart, { type: 'candlestick' }),
             xAxis: { categories: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'] },
             yAxis: { title: { text: 'Price' } },
-            series: [{ name: 'Placeholder Price', data: [182, 186, 184, 189, 191] }]
+            plotOptions: {
+              candlestick: {
+                color: '#ef4444',
+                upColor: '#22c55e',
+                lineColor: '#ef4444',
+                upLineColor: '#22c55e'
+              }
+            },
+            series: [{
+              type: 'candlestick',
+              name: 'OHLC',
+              data: [
+                [180, 186, 179, 182],
+                [183, 188, 182, 186],
+                [186, 187, 183, 184],
+                [184, 190, 183, 189],
+                [189, 193, 188, 191]
+              ]
+            }]
           });
         case 'Portfolio Performance':
           return Object.assign({}, baseConfig, {
