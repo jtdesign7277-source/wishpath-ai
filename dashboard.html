@@ -2958,7 +2958,7 @@
     .fm-sub-tab { padding: 10px 16px; font-size: 0.78rem; font-weight: 600; color: var(--text-dim); cursor: pointer; border: none; border-bottom: 2px solid transparent; transition: all 0.15s; background: none; font-family: inherit; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
     .fm-sub-tab:hover { color: var(--text-muted); background: rgba(255,255,255,0.02); }
     .fm-sub-tab.active { color: var(--accent); border-bottom-color: var(--accent); background: linear-gradient(135deg, rgba(113,50,245,0.08) 0%, rgba(255,255,255,0.02) 100%); box-shadow: 0 0 12px rgba(113,50,245,0.08); }
-    .fm-sub-content { display: none; }
+    .fm-sub-content { display: none; overflow-y: auto; -webkit-overflow-scrolling: touch; }
     .fm-sub-content.active { display: block; }
 
     /* ESPN Sports Tab */
@@ -17459,8 +17459,8 @@
         var chgStr = (isUp ? '+' : '') + chg.toFixed(2) + '%';
 
         // Append live price as latest data point so sparkline visibly ticks
-        // Keep only last 26 bars (one trading day of 15-min intervals) to match Yahoo Finance single-day view
-        var liveBars = q.bars && q.bars.length ? q.bars.slice(-26) : [];
+        // Server-side filtering handles last trading day, use all bars received
+        var liveBars = q.bars && q.bars.length ? q.bars.slice() : [];
         if (q.price && liveBars.length) liveBars.push(q.price);
         var spark = buildSparkSVG(liveBars, isUp);
         var priceStr = displayPrice ? ('$' + formatNum(displayPrice)) : '--';
