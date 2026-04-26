@@ -18,7 +18,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-26-v406e-casino-polish';
+    var APP_VERSION = '2026-04-26-v406f-upcoming-games';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -17863,8 +17863,8 @@
       row += '<div style="min-width:55px;text-align:right;">' + statusHTML + '</div>';
       row += '</div>'; // end clickable area
       row += '</div>'; // end row
-      // Polymarket odds slot (only for live games)
-      if (isLive) {
+      // Polymarket odds slot (for live and upcoming/pre games)
+      if (isLive || isPre) {
         row += '<div class="wp-poly-odds-slot" data-evid="' + evId + '"></div>';
       }
       return row;
@@ -17885,6 +17885,7 @@
         var hasGames = false;
         var pinnedEvent = null;
         var allLiveEvents = [];
+        var hasLive = false;
 
         // Collect all live events and find pinned
         results.forEach(function(res) {
@@ -17897,6 +17898,7 @@
             allLiveEvents.push({ league: res.league, event: ev });
             if (_homeSportsPinned && ev.id === _homeSportsPinned) pinnedEvent = ev;
           });
+          if (liveEvents.length) hasLive = true;
         });
 
         // If pinned game is no longer live, clear pin
@@ -17905,12 +17907,13 @@
           localStorage.removeItem('wp_sports_pinned');
         }
 
-        // Header row: collapse arrow + LIVE SPORTS label + All Scores link
+        // Header label changes based on whether we have live or upcoming
+        var sectionLabel = hasLive ? 'Live Sports' : "Today’s Games";
         var arrowChar = _homeSportsCollapsed ? '▸' : '▾';
         html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding:6px 0;">';
         html += '<div style="display:flex;align-items:center;gap:8px;cursor:pointer;-webkit-tap-highlight-color:transparent;padding:4px 0;" onclick="toggleHomeSportsCollapse();">';
         html += '<span id="homeESPNArrow" style="font-size:14px;color:rgba(255,255,255,0.5);transition:transform 0.2s;">' + arrowChar + '</span>';
-        html += '<span style="font-size:14px;font-weight:700;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:0.1em;">Live Sports</span>';
+        html += '<span style="font-size:14px;font-weight:700;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:0.1em;">' + sectionLabel + '</span>';
         html += '</div>';
         html += '<span onclick="hideMobileHome();showView(\'fm\');setTimeout(function(){var btn=document.querySelector(\'.fm-sub-tab[onclick*=fmSports]\');switchFMTab(\'fmSports\',btn);},100);" style="font-size:13px;font-weight:700;color:rgba(113,50,245,0.8);cursor:pointer;-webkit-tap-highlight-color:transparent;padding:4px 0;">All Scores ›</span>';
         html += '</div>';
@@ -17923,27 +17926,47 @@
         }
         html += '</div>';
 
-        // Body (all games, hidden when collapsed)
+        // Body: show LIVE games first, then UPCOMING/SCHEDULED if no live
         results.forEach(function(res) {
+          // Live games
           var liveEvents = res.events.filter(function(ev) {
             var comp = ev.competitions && ev.competitions[0];
             if (!comp || !comp.status || !comp.status.type) return false;
             return comp.status.type.state === 'in';
           });
-          if (!liveEvents.length) return;
-          hasGames = true;
-          bodyHTML += '<div style="font-size:13px;font-weight:700;color:rgba(113,50,245,0.7);text-transform:uppercase;letter-spacing:0.08em;margin:8px 0 4px 0;">' + res.league + '</div>';
-          liveEvents.slice(0, 4).forEach(function(ev) {
-            bodyHTML += _buildGameRowHTML(ev, false);
-          });
+          if (liveEvents.length) {
+            hasGames = true;
+            bodyHTML += '<div style="font-size:13px;font-weight:700;color:rgba(113,50,245,0.7);text-transform:uppercase;letter-spacing:0.08em;margin:8px 0 4px 0;">' + res.league + '</div>';
+            liveEvents.slice(0, 4).forEach(function(ev) {
+              bodyHTML += _buildGameRowHTML(ev, false);
+            });
+          }
         });
+
+        // If no live games, show upcoming/scheduled for today
+        if (!hasLive) {
+          results.forEach(function(res) {
+            var upcoming = res.events.filter(function(ev) {
+              var comp = ev.competitions && ev.competitions[0];
+              if (!comp || !comp.status || !comp.status.type) return false;
+              return comp.status.type.state === 'pre';
+            });
+            if (upcoming.length) {
+              hasGames = true;
+              bodyHTML += '<div style="font-size:13px;font-weight:700;color:rgba(113,50,245,0.7);text-transform:uppercase;letter-spacing:0.08em;margin:8px 0 4px 0;">' + res.league + '</div>';
+              upcoming.slice(0, 5).forEach(function(ev) {
+                bodyHTML += _buildGameRowHTML(ev, false);
+              });
+            }
+          });
+        }
 
         html += '<div id="homeESPNBody" style="display:' + (_homeSportsCollapsed ? 'none' : 'block') + ';">';
         html += bodyHTML;
         html += '</div>';
 
         if (!hasGames) {
-          container.innerHTML = '<div style="color:rgba(255,255,255,0.25);font-size:11px;padding:6px 0;">No live games right now</div>';
+          container.innerHTML = '<div style="color:rgba(255,255,255,0.25);font-size:11px;padding:6px 0;">No games scheduled today</div>';
         } else {
           container.innerHTML = html;
           // Hydrate Polymarket odds for live games
