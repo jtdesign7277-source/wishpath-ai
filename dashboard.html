@@ -18,7 +18,7 @@
   <script>
   // Cache buster — increment APP_VERSION on every deploy to force reload
   (function(){
-    var APP_VERSION = '2026-04-26-v406i-transparent-scores';
+    var APP_VERSION = '2026-04-26-v407-collapsible-all';
     var key = 'wishpath_version';
     try {
       var stored = localStorage.getItem(key);
@@ -1069,14 +1069,14 @@
     .wish-textarea-wrap::before { content: ''; position: absolute; inset: -50%; background: conic-gradient(from 0deg, transparent 0%, rgba(140,100,240,0.7) 10%, transparent 20%, transparent 50%, rgba(113,50,245,0.6) 60%, transparent 70%, transparent 100%); animation: wishBorderSpin 3s linear infinite; z-index: 0; }
     @keyframes wishBorderSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     .wish-textarea-wrap-inner { position: relative; z-index: 1; background: rgba(10,10,15,0.95); border-radius: 12px; }
-    .wish-textarea { width: 100%; min-height: 140px; padding: 16px; background: transparent; border: none; border-radius: 12px; color: var(--text); font: inherit; font-size: 0.95rem; line-height: 1.6; outline: none; resize: none; transition: all 0.3s ease; position: relative; z-index: 1; }
+    .wish-textarea { width: 100%; min-height: 140px; padding: 16px 40px 16px 16px; background: transparent; border: none; border-radius: 12px; color: var(--text); font: inherit; font-size: 0.95rem; line-height: 1.6; outline: none; resize: none; transition: all 0.3s ease; position: relative; z-index: 1; }
     .wish-textarea:focus { box-shadow: 0 0 20px rgba(113,50,245,0.25); }
     .wish-textarea::placeholder { color: rgba(255,255,255,0.25); font-style: italic; }
     /* Home wish — rotating two-tone typewriter (heading-style: #d1d1db + #7132F5) */
     .home-wish-typewriter {
       position: absolute;
       inset: 0;
-      padding: 16px;
+      padding: 16px 40px 16px 16px;
       min-height: 140px;
       pointer-events: none;
       z-index: 0;
@@ -7224,24 +7224,45 @@
         <!-- Thin purple divider before news -->
         <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(113,50,245,0.35),transparent);margin:6px 0 10px 0;"></div>
         <!-- News -->
-        <div class="mobile-sec-label">News</div>
-        <div class="mobile-news-row" id="mobileNewsRow">
-          <div class="mobile-news-card" style="display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.3);font-size:13px;min-height:180px;">Loading...</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;">
+          <div style="display:flex;align-items:center;gap:8px;cursor:pointer;-webkit-tap-highlight-color:transparent;padding:4px 0;" onclick="toggleHomeNewsCollapse();">
+            <span id="homeNewsArrow" style="font-size:18px;color:rgba(255,255,255,0.85);transition:transform 0.2s;">▾</span>
+            <span style="font-size:14px;font-weight:700;color:rgba(255,255,255,0.9);text-transform:uppercase;letter-spacing:0.1em;">News</span>
+          </div>
+        </div>
+        <div id="homeNewsBody">
+          <div class="mobile-news-row" id="mobileNewsRow">
+            <div class="mobile-news-card" style="display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.3);font-size:13px;min-height:180px;">Loading...</div>
+          </div>
         </div>
         <!-- Quick Access -->
-        <div class="mobile-sec-label" style="margin-top:4px;">Quick Access</div>
-        <div class="mobile-nav-grid">
-          <div class="mobile-nav-tile" onclick="hideMobileHome();showView('coach')"><span class="mobile-nav-tile-icon">🤖</span><span class="mobile-nav-tile-label">AI Coach</span></div>
-          <div class="mobile-nav-tile" onclick="hideMobileHome();showView('todos')"><span class="mobile-nav-tile-icon">✅</span><span class="mobile-nav-tile-label">To-Dos</span></div>
-          <div class="mobile-nav-tile" onclick="hideMobileHome();showView('notes')"><span class="mobile-nav-tile-icon">📝</span><span class="mobile-nav-tile-label">Notes</span></div>
-          <div class="mobile-nav-tile" onclick="hideMobileHome();showView('library')"><span class="mobile-nav-tile-icon">📚</span><span class="mobile-nav-tile-label">Library</span></div>
-          <div class="mobile-nav-tile" onclick="hideMobileHome();showView('wishrunner')"><span class="mobile-nav-tile-icon">🎮</span><span class="mobile-nav-tile-label">Wish Runner</span></div>
-          <div class="mobile-nav-tile" onclick="hideMobileHome();showView('krakenspins');initKrakenSpins()"><span class="mobile-nav-tile-icon">🎰</span><span class="mobile-nav-tile-label">Kraken Spins</span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px;padding:6px 0;">
+          <div style="display:flex;align-items:center;gap:8px;cursor:pointer;-webkit-tap-highlight-color:transparent;padding:4px 0;" onclick="toggleHomeQuickAccessCollapse();">
+            <span id="homeQuickAccessArrow" style="font-size:18px;color:rgba(255,255,255,0.85);transition:transform 0.2s;">▾</span>
+            <span style="font-size:14px;font-weight:700;color:rgba(255,255,255,0.9);text-transform:uppercase;letter-spacing:0.1em;">Quick Access</span>
+          </div>
+        </div>
+        <div id="homeQuickAccessBody">
+          <div class="mobile-nav-grid">
+            <div class="mobile-nav-tile" onclick="hideMobileHome();showView('coach')"><span class="mobile-nav-tile-icon">🤖</span><span class="mobile-nav-tile-label">AI Coach</span></div>
+            <div class="mobile-nav-tile" onclick="hideMobileHome();showView('todos')"><span class="mobile-nav-tile-icon">✅</span><span class="mobile-nav-tile-label">To-Dos</span></div>
+            <div class="mobile-nav-tile" onclick="hideMobileHome();showView('notes')"><span class="mobile-nav-tile-icon">📝</span><span class="mobile-nav-tile-label">Notes</span></div>
+            <div class="mobile-nav-tile" onclick="hideMobileHome();showView('library')"><span class="mobile-nav-tile-icon">📚</span><span class="mobile-nav-tile-label">Library</span></div>
+            <div class="mobile-nav-tile" onclick="hideMobileHome();showView('wishrunner')"><span class="mobile-nav-tile-icon">🎮</span><span class="mobile-nav-tile-label">Wish Runner</span></div>
+            <div class="mobile-nav-tile" onclick="hideMobileHome();showView('krakenspins');initKrakenSpins()"><span class="mobile-nav-tile-icon">🎰</span><span class="mobile-nav-tile-label">Kraken Spins</span></div>
+          </div>
         </div>
         <!-- Recents -->
-        <div class="mobile-sec-label" style="margin-top:24px;">Recents</div>
-        <div class="mobile-recents-row" id="mobileRecentsRow">
-          <div class="mobile-recent-card" style="display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.3);font-size:13px;">Loading...</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:24px;padding:6px 0;">
+          <div style="display:flex;align-items:center;gap:8px;cursor:pointer;-webkit-tap-highlight-color:transparent;padding:4px 0;" onclick="toggleHomeRecentsCollapse();">
+            <span id="homeRecentsArrow" style="font-size:18px;color:rgba(255,255,255,0.85);transition:transform 0.2s;">▾</span>
+            <span style="font-size:14px;font-weight:700;color:rgba(255,255,255,0.9);text-transform:uppercase;letter-spacing:0.1em;">Recents</span>
+          </div>
+        </div>
+        <div id="homeRecentsBody">
+          <div class="mobile-recents-row" id="mobileRecentsRow">
+            <div class="mobile-recent-card" style="display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.3);font-size:13px;">Loading...</div>
+          </div>
         </div>
       </div>
     </div>
@@ -17688,6 +17709,57 @@
       var _ma = document.getElementById('homeMarketsArrow');
       if (_mb) _mb.style.display = 'none';
       if (_ma) _ma.textContent = '▸';
+    }
+
+    // --- Collapsible News ---
+    var _homeNewsCollapsed = localStorage.getItem('wp_news_collapsed') === '1';
+    function toggleHomeNewsCollapse() {
+      _homeNewsCollapsed = !_homeNewsCollapsed;
+      localStorage.setItem('wp_news_collapsed', _homeNewsCollapsed ? '1' : '0');
+      var body = document.getElementById('homeNewsBody');
+      var arrow = document.getElementById('homeNewsArrow');
+      if (body) body.style.display = _homeNewsCollapsed ? 'none' : 'block';
+      if (arrow) arrow.textContent = _homeNewsCollapsed ? '▸' : '▾';
+    }
+    if (_homeNewsCollapsed) {
+      var _nb = document.getElementById('homeNewsBody');
+      var _na = document.getElementById('homeNewsArrow');
+      if (_nb) _nb.style.display = 'none';
+      if (_na) _na.textContent = '▸';
+    }
+
+    // --- Collapsible Quick Access ---
+    var _homeQuickAccessCollapsed = localStorage.getItem('wp_quickaccess_collapsed') === '1';
+    function toggleHomeQuickAccessCollapse() {
+      _homeQuickAccessCollapsed = !_homeQuickAccessCollapsed;
+      localStorage.setItem('wp_quickaccess_collapsed', _homeQuickAccessCollapsed ? '1' : '0');
+      var body = document.getElementById('homeQuickAccessBody');
+      var arrow = document.getElementById('homeQuickAccessArrow');
+      if (body) body.style.display = _homeQuickAccessCollapsed ? 'none' : 'block';
+      if (arrow) arrow.textContent = _homeQuickAccessCollapsed ? '▸' : '▾';
+    }
+    if (_homeQuickAccessCollapsed) {
+      var _qb = document.getElementById('homeQuickAccessBody');
+      var _qa = document.getElementById('homeQuickAccessArrow');
+      if (_qb) _qb.style.display = 'none';
+      if (_qa) _qa.textContent = '▸';
+    }
+
+    // --- Collapsible Recents ---
+    var _homeRecentsCollapsed = localStorage.getItem('wp_recents_collapsed') === '1';
+    function toggleHomeRecentsCollapse() {
+      _homeRecentsCollapsed = !_homeRecentsCollapsed;
+      localStorage.setItem('wp_recents_collapsed', _homeRecentsCollapsed ? '1' : '0');
+      var body = document.getElementById('homeRecentsBody');
+      var arrow = document.getElementById('homeRecentsArrow');
+      if (body) body.style.display = _homeRecentsCollapsed ? 'none' : 'block';
+      if (arrow) arrow.textContent = _homeRecentsCollapsed ? '▸' : '▾';
+    }
+    if (_homeRecentsCollapsed) {
+      var _rb = document.getElementById('homeRecentsBody');
+      var _ra = document.getElementById('homeRecentsArrow');
+      if (_rb) _rb.style.display = 'none';
+      if (_ra) _ra.textContent = '▸';
     }
 
     function pinHomeSportsGame(evId) {

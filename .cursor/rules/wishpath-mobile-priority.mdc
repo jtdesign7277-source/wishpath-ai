@@ -1,0 +1,19 @@
+---
+description: WishPath.ai — prioritize mobile dashboard surfaces for daily tasks
+globs: dashboard.html, index.html, success.html, login.html, auth.js
+---
+
+# Mobile-first edits (WishPath)
+
+There is **no separate mobile repo**. Mobile and desktop share **`dashboard.html`** (and landing `index.html`, etc.).
+
+When the user says work is **for today** or targets the **mobile** experience, treat **mobile as primary**:
+
+1. **Tile home & shell:** `#mobileHome`, `#mobileHomeContent`, `.mobile-home-inner`, `.mobile-home-topbar`, `body.mobile-home-active`.
+2. **Navigation:** `#mobileNavBar`, `.wp-bottom-tabs`, `.mobile-nav-item`, `showMobileHome` / `hideMobileHome`, `selectMobileFMTab`, `body.fm-mobile-fullscreen`.
+3. **Styles:** `@media (max-width: 768px)` blocks, `env(safe-area-inset-*)`, touch targets ≥44px where relevant.
+4. **JS paths:** `switchMobileHomeTab`, mobile-specific DOM (`mobileStockGrid`, `mobilePortfolioTab`, etc.) — not only `#homeView` / desktop sidebar flows.
+
+**Desktop-only** (`#homeView` with sidebar, wide `.main-header-row`, etc.) is secondary unless the user explicitly asks for desktop or “both.”
+
+After changes, bump **`APP_VERSION`** in `dashboard.html` when shipping.
